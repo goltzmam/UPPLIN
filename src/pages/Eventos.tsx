@@ -39,20 +39,20 @@ export default function Eventos() {
       
       <main className="flex-1">
         {/* Search Header */}
-        <section className="bg-muted/30 border-b border-border py-8">
-          <div className="container">
-            <h1 className="font-display text-3xl font-bold mb-6">Explorar Eventos</h1>
-            <div className="flex gap-3">
-              <div className="relative flex-1 max-w-md">
+        <section className="bg-muted/30 border-b border-border py-6 sm:py-8 pt-20 sm:pt-24">
+          <div className="container px-4">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Explorar Eventos</h1>
+            <div className="flex gap-2 sm:gap-3">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar eventos..."
-                  className="pl-10"
+                  className="pl-10 h-10 sm:h-11"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <Button variant="outline" size="icon">
+              <Button variant="outline" size="icon" className="h-10 w-10 sm:h-11 sm:w-11 shrink-0">
                 <SlidersHorizontal className="h-4 w-4" />
               </Button>
             </div>
@@ -60,8 +60,8 @@ export default function Eventos() {
         </section>
 
         {/* Events Grid */}
-        <section className="py-8">
-          <div className="container">
+        <section className="py-6 sm:py-8">
+          <div className="container px-4">
             {isLoading ? (
               <PageLoading />
             ) : error ? (
@@ -71,7 +71,7 @@ export default function Eventos() {
                 description="Não foi possível carregar os eventos. Tente novamente."
               />
             ) : filteredEvents && filteredEvents.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filteredEvents.map((event) => {
                   const minPrice = event.ticket_types?.length
                     ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))

@@ -69,19 +69,19 @@ export function Header({ showSearch = false, onSearchVisible }: HeaderProps) {
           : "bg-transparent"
       )}
     >
-      <div className="container">
+      <div className="container px-4">
         <div className={cn(
           "flex items-center justify-between transition-all duration-300",
-          isScrolled ? "h-16" : "h-20"
+          isScrolled ? "h-14 sm:h-16" : "h-16 sm:h-20"
         )}>
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-2 sm:gap-3 group">
             <motion.div 
               className={cn(
-                "flex items-center justify-center rounded-2xl transition-all duration-300",
+                "flex items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-300",
                 isScrolled || !isHome
-                  ? "h-10 w-10 bg-primary"
-                  : "h-12 w-12 bg-white/10 backdrop-blur-sm border border-white/20"
+                  ? "h-8 w-8 sm:h-10 sm:w-10 bg-primary"
+                  : "h-10 w-10 sm:h-12 sm:w-12 bg-white/10 backdrop-blur-sm border border-white/20"
               )}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -89,12 +89,12 @@ export function Header({ showSearch = false, onSearchVisible }: HeaderProps) {
               <Calendar className={cn(
                 "transition-all duration-300",
                 isScrolled || !isHome
-                  ? "h-5 w-5 text-primary-foreground"
-                  : "h-6 w-6 text-white"
+                  ? "h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground"
+                  : "h-5 w-5 sm:h-6 sm:w-6 text-white"
               )} />
             </motion.div>
             <span className={cn(
-              "font-display text-xl font-bold transition-colors duration-300",
+              "font-display text-lg sm:text-xl font-bold transition-colors duration-300",
               isScrolled || !isHome ? "text-foreground" : "text-white"
             )}>
               Influente

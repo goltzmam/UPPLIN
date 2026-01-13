@@ -374,9 +374,9 @@ export default function Index() {
         </section>
 
         {/* Stats Section */}
-        <section className="py-20 bg-secondary text-secondary-foreground">
-          <div className="container">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-4">
+        <section className="py-12 sm:py-20 bg-secondary text-secondary-foreground">
+          <div className="container px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-4">
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}
@@ -386,10 +386,10 @@ export default function Index() {
                   transition={{ delay: index * 0.1 }}
                   className="text-center"
                 >
-                  <div className="font-display text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  <div className="font-display text-2xl sm:text-4xl md:text-5xl font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                     {stat.value}
                   </div>
-                  <div className="text-secondary-foreground/70">{stat.label}</div>
+                  <div className="text-xs sm:text-sm md:text-base text-secondary-foreground/70">{stat.label}</div>
                 </motion.div>
               ))}
             </div>
@@ -397,27 +397,27 @@ export default function Index() {
         </section>
 
         {/* For Organizers CTA */}
-        <section className="py-32 relative overflow-hidden">
+        <section className="py-16 sm:py-32 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
           
-          <div className="container relative">
+          <div className="container relative px-4">
             <div className="max-w-4xl mx-auto text-center">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
               >
-                <span className="inline-block px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+                <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-4 sm:mb-6">
                   Para Organizadores
                 </span>
-                <h2 className="font-display text-4xl md:text-6xl font-bold mb-6 leading-tight">
+                <h2 className="font-display text-2xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
                   Crie eventos extraordinários
                 </h2>
-                <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
+                <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-10 max-w-2xl mx-auto px-4">
                   A plataforma completa para vender ingressos, gerenciar participantes e criar experiências memoráveis.
                 </p>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
                   {[
                     { icon: Ticket, label: "Venda Ilimitada" },
                     { icon: BarChart3, label: "Analytics" },
@@ -430,24 +430,24 @@ export default function Index() {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ delay: index * 0.1 }}
-                      className="flex flex-col items-center gap-3 p-6 rounded-2xl bg-card border border-border"
+                      className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 rounded-xl sm:rounded-2xl bg-card border border-border"
                     >
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <feature.icon className="h-6 w-6 text-primary" />
+                      <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center">
+                        <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
                       </div>
-                      <span className="font-medium">{feature.label}</span>
+                      <span className="font-medium text-xs sm:text-base">{feature.label}</span>
                     </motion.div>
                   ))}
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Button asChild size="xl" className="rounded-full text-lg">
+                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
+                  <Button asChild size="lg" className="rounded-full text-sm sm:text-lg">
                     <Link to="/cadastro">
                       Começar grátis
-                      <ArrowRight className="h-5 w-5 ml-2" />
+                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
                     </Link>
                   </Button>
-                  <Button asChild variant="outline" size="xl" className="rounded-full text-lg">
+                  <Button asChild variant="outline" size="lg" className="rounded-full text-sm sm:text-lg">
                     <Link to="/precos">Ver preços</Link>
                   </Button>
                 </div>
@@ -457,28 +457,28 @@ export default function Index() {
         </section>
 
         {/* Testimonial */}
-        <section className="py-20 bg-muted/30">
-          <div className="container">
+        <section className="py-12 sm:py-20 bg-muted/30">
+          <div className="container px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="max-w-4xl mx-auto text-center"
             >
-              <div className="flex justify-center gap-1 mb-6">
+              <div className="flex justify-center gap-1 mb-4 sm:mb-6">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="h-6 w-6 fill-primary text-primary" />
+                  <Star key={i} className="h-5 w-5 sm:h-6 sm:w-6 fill-primary text-primary" />
                 ))}
               </div>
-              <blockquote className="font-display text-2xl md:text-3xl font-medium mb-6 leading-relaxed">
+              <blockquote className="font-display text-lg sm:text-2xl md:text-3xl font-medium mb-4 sm:mb-6 leading-relaxed px-4">
                 "A Influente revolucionou a forma como organizamos nossos eventos. 
                 Simples, rápida e extremamente confiável."
               </blockquote>
-              <div className="flex items-center justify-center gap-4">
-                <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent" />
+              <div className="flex items-center justify-center gap-3 sm:gap-4">
+                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-primary to-accent" />
                 <div className="text-left">
-                  <div className="font-semibold">Maria Silva</div>
-                  <div className="text-sm text-muted-foreground">Produtora, Festival XYZ</div>
+                  <div className="font-semibold text-sm sm:text-base">Maria Silva</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">Produtora, Festival XYZ</div>
                 </div>
               </div>
             </motion.div>
@@ -486,24 +486,24 @@ export default function Index() {
         </section>
 
         {/* Final CTA */}
-        <section className="py-32 bg-secondary text-secondary-foreground">
-          <div className="container">
+        <section className="py-16 sm:py-32 bg-secondary text-secondary-foreground">
+          <div className="container px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               className="max-w-3xl mx-auto text-center"
             >
-              <h2 className="font-display text-4xl md:text-6xl font-bold mb-6">
+              <h2 className="font-display text-2xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6">
                 Pronto para começar?
               </h2>
-              <p className="text-xl text-secondary-foreground/70 mb-10">
+              <p className="text-base sm:text-xl text-secondary-foreground/70 mb-6 sm:mb-10 px-4">
                 Junte-se a milhares de organizadores que confiam na Influente
               </p>
-              <Button asChild size="xl" variant="hero" className="rounded-full text-lg">
+              <Button asChild size="lg" variant="hero" className="rounded-full text-sm sm:text-lg">
                 <Link to="/cadastro">
                   Criar conta grátis
-                  <ArrowRight className="h-5 w-5 ml-2" />
+                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
                 </Link>
               </Button>
             </motion.div>

@@ -179,15 +179,15 @@ export default function OrganizerDashboard() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 py-8">
-        <div className="container">
+      <main className="flex-1 py-6 sm:py-8 pt-20 sm:pt-24">
+        <div className="container px-4">
           {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
             <div>
-              <h1 className="font-display text-3xl font-bold">Dashboard</h1>
-              <p className="text-muted-foreground">{organizer.display_name}</p>
+              <h1 className="font-display text-2xl sm:text-3xl font-bold">Dashboard</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">{organizer.display_name}</p>
             </div>
-            <Button asChild>
+            <Button asChild className="w-full sm:w-auto">
               <Link to="/organizador/evento/novo">
                 <Plus className="h-4 w-4 mr-2" />
                 Criar Evento
@@ -196,48 +196,48 @@ export default function OrganizerDashboard() {
           </div>
 
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-card rounded-xl border border-border p-5">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Calendar className="h-5 w-5 text-primary" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div className="bg-card rounded-xl border border-border p-3 sm:p-5">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{events?.length || 0}</p>
-                  <p className="text-sm text-muted-foreground">Eventos</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-card rounded-xl border border-border p-5">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-success/10 flex items-center justify-center">
-                  <Ticket className="h-5 w-5 text-success" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold">{totalTicketsSold}</p>
-                  <p className="text-sm text-muted-foreground">Ingressos Vendidos</p>
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-2xl font-bold">{events?.length || 0}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Eventos</p>
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-xl border border-border p-5">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <TrendingUp className="h-5 w-5 text-accent" />
+            <div className="bg-card rounded-xl border border-border p-3 sm:p-5">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+                  <Ticket className="h-4 w-4 sm:h-5 sm:w-5 text-success" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{formatPrice(totalRevenue)}</p>
-                  <p className="text-sm text-muted-foreground">Receita Total</p>
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-2xl font-bold">{totalTicketsSold}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Vendidos</p>
                 </div>
               </div>
             </div>
-            <div className="bg-card rounded-xl border border-border p-5">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-secondary/50 flex items-center justify-center">
-                  <BarChart3 className="h-5 w-5 text-secondary-foreground" />
+            <div className="bg-card rounded-xl border border-border p-3 sm:p-5">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                  <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-accent" />
                 </div>
-                <div>
-                  <p className="text-2xl font-bold">{events?.filter(e => e.status === "published").length || 0}</p>
-                  <p className="text-sm text-muted-foreground">Eventos Ativos</p>
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-2xl font-bold truncate">{formatPrice(totalRevenue)}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Receita</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-card rounded-xl border border-border p-3 sm:p-5">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg bg-secondary/50 flex items-center justify-center shrink-0">
+                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5 text-secondary-foreground" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-lg sm:text-2xl font-bold">{events?.filter(e => e.status === "published").length || 0}</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground truncate">Ativos</p>
                 </div>
               </div>
             </div>
@@ -245,8 +245,8 @@ export default function OrganizerDashboard() {
 
           {/* Events List */}
           <div className="bg-card rounded-2xl border border-border">
-            <div className="p-6 border-b border-border">
-              <h2 className="font-display text-xl font-bold">Meus Eventos</h2>
+            <div className="p-4 sm:p-6 border-b border-border">
+              <h2 className="font-display text-lg sm:text-xl font-bold">Meus Eventos</h2>
             </div>
 
             {eventsLoading ? (
@@ -258,14 +258,14 @@ export default function OrganizerDashboard() {
                   const totalTickets = event.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_total || 0), 0) || 0;
 
                   return (
-                    <div key={event.id} className="p-4 md:p-6 flex flex-col md:flex-row md:items-center gap-4">
+                    <div key={event.id} className="p-3 sm:p-4 md:p-6 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
                       {/* Image */}
-                      <div className="w-full md:w-24 h-32 md:h-16 rounded-lg overflow-hidden shrink-0 bg-muted">
+                      <div className="w-full sm:w-20 md:w-24 h-28 sm:h-14 md:h-16 rounded-lg overflow-hidden shrink-0 bg-muted">
                         {event.cover_image_url ? (
                           <img src={event.cover_image_url} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <Calendar className="h-6 w-6 text-muted-foreground" />
+                            <Calendar className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                           </div>
                         )}
                       </div>
@@ -273,40 +273,40 @@ export default function OrganizerDashboard() {
                       {/* Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <Badge variant={statusVariant(event.status || "draft") as any}>{statusLabel(event.status || "draft")}</Badge>
+                          <Badge variant={statusVariant(event.status || "draft") as any} className="text-xs">{statusLabel(event.status || "draft")}</Badge>
                         </div>
-                        <h3 className="font-semibold truncate">{event.title}</h3>
-                        <p className="text-sm text-muted-foreground">
+                        <h3 className="font-semibold text-sm sm:text-base truncate">{event.title}</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {format(new Date(event.start_at), "d 'de' MMM 'de' yyyy, HH:mm", { locale: ptBR })}
                         </p>
                       </div>
 
                       {/* Stats */}
-                      <div className="flex items-center gap-6 text-sm">
-                        <div className="text-center">
+                      <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 text-xs sm:text-sm">
+                        <div className="text-left sm:text-center">
                           <p className="font-semibold">{ticketsSold}/{totalTickets}</p>
                           <p className="text-muted-foreground">Vendidos</p>
                         </div>
-                      </div>
 
-                      {/* Actions */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => navigate(`/organizador/evento/${event.id}`)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/evento/${event.id}`)}>
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver Página
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        {/* Actions */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => navigate(`/organizador/evento/${event.id}`)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => navigate(`/evento/${event.id}`)}>
+                              <Eye className="h-4 w-4 mr-2" />
+                              Ver Página
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
                   );
                 })}

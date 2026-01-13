@@ -143,7 +143,7 @@ export default function Evento() {
 
       <main className="flex-1">
         {/* Cover */}
-        <div className="relative h-[40vh] min-h-[300px] bg-secondary">
+        <div className="relative h-[35vh] sm:h-[40vh] min-h-[250px] sm:min-h-[300px] bg-secondary">
           {event.cover_image_url ? (
             <img src={event.cover_image_url} alt={event.title} className="w-full h-full object-cover" />
           ) : (
@@ -152,119 +152,72 @@ export default function Evento() {
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
 
-        <div className="container relative -mt-24 z-10 pb-12">
-          <div className="grid lg:grid-cols-3 gap-8">
+        <div className="container relative -mt-16 sm:-mt-24 z-10 pb-8 sm:pb-12 px-4">
+          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Event Info */}
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-card rounded-2xl border border-border p-6 shadow-lg animate-fade-up">
-                <Badge className="mb-4">{format(eventDate, "EEEE", { locale: ptBR })}</Badge>
-                <h1 className="font-display text-3xl md:text-4xl font-bold mb-4">{event.title}</h1>
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+              <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 shadow-lg animate-fade-up">
+                <Badge className="mb-3 sm:mb-4">{format(eventDate, "EEEE", { locale: ptBR })}</Badge>
+                <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{event.title}</h1>
 
-                <div className="flex flex-wrap gap-4 text-muted-foreground mb-6">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-muted-foreground mb-4 sm:mb-6">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-primary" />
-                    <span>{format(eventDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                    <span className="text-sm sm:text-base">{format(eventDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Clock className="h-5 w-5 text-primary" />
-                    <span>{format(eventDate, "HH:mm")}</span>
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                    <span className="text-sm sm:text-base">{format(eventDate, "HH:mm")}</span>
                   </div>
                   {event.venue_name && (
                     <div className="flex items-center gap-2">
-                      <MapPin className="h-5 w-5 text-primary" />
-                      <span>{event.venue_name}</span>
+                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                      <span className="text-sm sm:text-base truncate">{event.venue_name}</span>
                     </div>
                   )}
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm"><Share2 className="h-4 w-4 mr-2" />Compartilhar</Button>
-                  <Button variant="outline" size="sm"><Heart className="h-4 w-4 mr-2" />Salvar</Button>
+                  <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                    <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    Compartilhar
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-xs sm:text-sm">
+                    <Heart className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    Salvar
+                  </Button>
                 </div>
               </div>
 
               {/* Description */}
-              <div className="bg-card rounded-2xl border border-border p-6 animate-fade-up stagger-1">
-                <h2 className="font-display text-xl font-bold mb-4">Sobre o evento</h2>
-                <p className="text-muted-foreground whitespace-pre-wrap">{event.description || "Sem descrição disponível."}</p>
+              <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-1">
+                <h2 className="font-display text-lg sm:text-xl font-bold mb-3 sm:mb-4">Sobre o evento</h2>
+                <p className="text-sm sm:text-base text-muted-foreground whitespace-pre-wrap">{event.description || "Sem descrição disponível."}</p>
               </div>
 
               {/* Location */}
               {event.address_text && (
-                <div className="bg-card rounded-2xl border border-border p-6 animate-fade-up stagger-2">
-                  <h2 className="font-display text-xl font-bold mb-4">Local</h2>
+                <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-2">
+                  <h2 className="font-display text-lg sm:text-xl font-bold mb-3 sm:mb-4">Local</h2>
                   <div className="flex items-start gap-3">
-                    <MapPin className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0 mt-0.5" />
                     <div>
-                      {event.venue_name && <p className="font-semibold">{event.venue_name}</p>}
-                      <p className="text-muted-foreground">{event.address_text}</p>
+                      {event.venue_name && <p className="font-semibold text-sm sm:text-base">{event.venue_name}</p>}
+                      <p className="text-sm sm:text-base text-muted-foreground">{event.address_text}</p>
                     </div>
                   </div>
                 </div>
               )}
+
+              {/* Ticket Selection - Mobile Only */}
+              <div className="lg:hidden">
+                <TicketSelectionCard />
+              </div>
             </div>
 
-            {/* Ticket Selection */}
-            <div className="space-y-4">
-              <div className="bg-card rounded-2xl border border-border p-6 shadow-lg sticky top-24 animate-fade-up stagger-1">
-                <h2 className="font-display text-xl font-bold mb-4">Ingressos</h2>
-
-                {event.ticket_types && event.ticket_types.length > 0 ? (
-                  <div className="space-y-4">
-                    {event.ticket_types.map((tt: any) => {
-                      const available = tt.quantity_total - tt.quantity_sold;
-                      const soldOut = available <= 0;
-                      const qty = selection[tt.id] || 0;
-
-                      return (
-                        <div key={tt.id} className={`p-4 rounded-xl border ${soldOut ? "opacity-50 bg-muted" : "border-border"}`}>
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <h3 className="font-semibold">{tt.name}</h3>
-                              <p className="text-sm text-muted-foreground">{available} disponíveis</p>
-                            </div>
-                            <span className="font-bold text-lg">{formatPrice(tt.price_cents)}</span>
-                          </div>
-
-                          {!soldOut && (
-                            <div className="flex items-center justify-end gap-3 mt-3">
-                              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateSelection(tt.id, -1)} disabled={qty === 0}>
-                                <Minus className="h-4 w-4" />
-                              </Button>
-                              <span className="w-8 text-center font-semibold">{qty}</span>
-                              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateSelection(tt.id, 1)} disabled={qty >= Math.min(10, available)}>
-                                <Plus className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          )}
-                          {soldOut && <Badge variant="destructive" className="mt-2">Esgotado</Badge>}
-                        </div>
-                      );
-                    })}
-
-                    {totalItems > 0 && (
-                      <div className="border-t border-border pt-4 mt-4">
-                        <div className="flex justify-between items-center mb-4">
-                          <span className="text-muted-foreground">{totalItems} ingresso(s)</span>
-                          <span className="font-display text-2xl font-bold">{formatPrice(totalCents)}</span>
-                        </div>
-                        <Button className="w-full" size="lg" onClick={handleCheckout} disabled={checkingOut}>
-                          <Ticket className="h-5 w-5 mr-2" />
-                          {checkingOut ? "Processando..." : "Comprar Ingressos"}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground text-center py-4">Ingressos em breve</p>
-                )}
-              </div>
-
-              {/* Organizer */}
-              <div className="bg-muted/50 rounded-xl p-4 text-center">
-                <p className="text-sm text-muted-foreground">Organizado por</p>
-                <p className="font-semibold">{event.organizer_accounts?.display_name || "Organizador"}</p>
-              </div>
+            {/* Ticket Selection - Desktop */}
+            <div className="hidden lg:block space-y-4">
+              <TicketSelectionCard />
             </div>
           </div>
         </div>
@@ -273,4 +226,70 @@ export default function Evento() {
       <Footer />
     </div>
   );
+
+  function TicketSelectionCard() {
+    return (
+      <>
+        <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 shadow-lg lg:sticky lg:top-24 animate-fade-up stagger-1">
+          <h2 className="font-display text-lg sm:text-xl font-bold mb-4">Ingressos</h2>
+
+          {event.ticket_types && event.ticket_types.length > 0 ? (
+            <div className="space-y-3 sm:space-y-4">
+              {event.ticket_types.map((tt: any) => {
+                const available = tt.quantity_total - tt.quantity_sold;
+                const soldOut = available <= 0;
+                const qty = selection[tt.id] || 0;
+
+                return (
+                  <div key={tt.id} className={`p-3 sm:p-4 rounded-xl border ${soldOut ? "opacity-50 bg-muted" : "border-border"}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-sm sm:text-base truncate">{tt.name}</h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">{available} disponíveis</p>
+                      </div>
+                      <span className="font-bold text-base sm:text-lg ml-2">{formatPrice(tt.price_cents)}</span>
+                    </div>
+
+                    {!soldOut && (
+                      <div className="flex items-center justify-end gap-2 sm:gap-3 mt-3">
+                        <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => updateSelection(tt.id, -1)} disabled={qty === 0}>
+                          <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                        <span className="w-6 sm:w-8 text-center font-semibold text-sm sm:text-base">{qty}</span>
+                        <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => updateSelection(tt.id, 1)} disabled={qty >= Math.min(10, available)}>
+                          <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                        </Button>
+                      </div>
+                    )}
+                    {soldOut && <Badge variant="destructive" className="mt-2 text-xs">Esgotado</Badge>}
+                  </div>
+                );
+              })}
+
+              {totalItems > 0 && (
+                <div className="border-t border-border pt-4 mt-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <span className="text-sm text-muted-foreground">{totalItems} ingresso(s)</span>
+                    <span className="font-display text-xl sm:text-2xl font-bold">{formatPrice(totalCents)}</span>
+                  </div>
+                  <Button className="w-full" size="lg" onClick={handleCheckout} disabled={checkingOut}>
+                    <Ticket className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                    {checkingOut ? "Processando..." : "Comprar Ingressos"}
+                  </Button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center py-4">Ingressos em breve</p>
+          )}
+        </div>
+
+        {/* Organizer */}
+        <div className="bg-muted/50 rounded-xl p-3 sm:p-4 text-center">
+          <p className="text-xs sm:text-sm text-muted-foreground">Organizado por</p>
+          <p className="font-semibold text-sm sm:text-base">{event.organizer_accounts?.display_name || "Organizador"}</p>
+        </div>
+      </>
+    );
+  }
 }
