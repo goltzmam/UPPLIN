@@ -308,26 +308,50 @@ export type Database = {
       }
       organizer_accounts: {
         Row: {
+          cnpj: string | null
           created_at: string | null
+          description: string | null
           display_name: string
+          email: string | null
           id: string
+          logo_url: string | null
           owner_user_id: string
+          phone: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          social_website: string | null
           status: Database["public"]["Enums"]["organizer_status"] | null
           updated_at: string | null
         }
         Insert: {
+          cnpj?: string | null
           created_at?: string | null
+          description?: string | null
           display_name: string
+          email?: string | null
           id?: string
+          logo_url?: string | null
           owner_user_id: string
+          phone?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_website?: string | null
           status?: Database["public"]["Enums"]["organizer_status"] | null
           updated_at?: string | null
         }
         Update: {
+          cnpj?: string | null
           created_at?: string | null
+          description?: string | null
           display_name?: string
+          email?: string | null
           id?: string
+          logo_url?: string | null
           owner_user_id?: string
+          phone?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_website?: string | null
           status?: Database["public"]["Enums"]["organizer_status"] | null
           updated_at?: string | null
         }
