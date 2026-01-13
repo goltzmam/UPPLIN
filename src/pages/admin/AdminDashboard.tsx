@@ -48,9 +48,9 @@ import {
   AlertCircle,
   Shield,
   TrendingUp,
-  DollarSign,
-  Percent
+  MessageCircle
 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
@@ -277,14 +277,22 @@ export default function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 sm:mb-8"
           >
-            <div className="flex items-center gap-3 mb-2">
-              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Shield className="h-5 w-5 text-primary" />
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h1 className="font-display text-2xl sm:text-3xl font-bold">Painel Administrativo</h1>
+                  <p className="text-sm text-muted-foreground">Gerencie toda a plataforma</p>
+                </div>
               </div>
-              <div>
-                <h1 className="font-display text-2xl sm:text-3xl font-bold">Painel Administrativo</h1>
-                <p className="text-sm text-muted-foreground">Gerencie toda a plataforma</p>
-              </div>
+              <Button asChild>
+                <Link to="/admin/chats">
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Central de Mensagens
+                </Link>
+              </Button>
             </div>
           </motion.div>
 
