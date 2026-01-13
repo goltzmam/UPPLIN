@@ -1,8 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Calendar, LayoutDashboard, Shield, Search, MapPin } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { Menu, X, User, LogOut, Calendar, LayoutDashboard, Shield, Search, MapPin, Ticket } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/auth";
+import { useUserRoles } from "@/hooks/use-user-roles";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,7 @@ export function Header({ showSearch = false, onSearchVisible }: HeaderProps) {
   const [searchValue, setSearchValue] = useState("");
   const [locationValue, setLocationValue] = useState("");
   const { user, profile, signOut } = useAuth();
+  const { isAdmin, isOrganizer } = useUserRoles();
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === "/";
@@ -203,17 +204,21 @@ export function Header({ showSearch = false, onSearchVisible }: HeaderProps) {
                     Meu Perfil
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/meus-ingressos")}>
-                    <Calendar className="mr-2 h-4 w-4" />
+                    <Ticket className="mr-2 h-4 w-4" />
                     Meus Ingressos
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/organizador")}>
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Área do Organizador
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/admin")}>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin
-                  </DropdownMenuItem>
+                  {isOrganizer && (
+                    <DropdownMenuItem onClick={() => navigate("/organizador")}>
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Área do Organizador
+                    </DropdownMenuItem>
+                  )}
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate("/admin")}>
+                      <Shield className="mr-2 h-4 w-4" />
+                      Admin
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
                     <LogOut className="mr-2 h-4 w-4" />
@@ -326,17 +331,29 @@ export function Header({ showSearch = false, onSearchVisible }: HeaderProps) {
                     className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Calendar className="h-4 w-4" />
+                    <Ticket className="h-4 w-4" />
                     Meus Ingressos
                   </Link>
-                  <Link
-                    to="/organizador"
-                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <LayoutDashboard className="h-4 w-4" />
-                    Área do Organizador
-                  </Link>
+                  {isOrganizer && (
+                    <Link
+                      to="/organizador"
+                      className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      Área do Organizador
+                    </Link>
+                  )}
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Shield className="h-4 w-4" />
+                      Admin
+                    </Link>
+                  )}
                   <button
                     onClick={() => {
                       handleSignOut();
