@@ -20,6 +20,8 @@ import CheckIn from "./pages/organizador/CheckIn";
 import OrganizadorLogin from "./pages/organizador/OrganizadorLogin";
 import OrganizadorCadastro from "./pages/organizador/OrganizadorCadastro";
 import OnboardingOrganizador from "./pages/organizador/OnboardingOrganizador";
+import OrganizadorPublico from "./pages/organizador/Organizador";
+import Cupons from "./pages/organizador/Cupons";
 import AdminLogin from "./pages/admin/AdminLogin";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -56,8 +58,10 @@ const App = () => (
             <Route path="/organizador/login" element={<OrganizadorLogin />} />
             <Route path="/organizador/cadastro" element={<OrganizadorCadastro />} />
             <Route path="/organizador/onboarding" element={<OnboardingOrganizador />} />
+            <Route path="/organizador/:id" element={<OrganizadorPublico />} />
             <Route path="/organizador" element={<OrganizerDashboard />} />
             <Route path="/organizador/evento/:eventId" element={<EventoForm />} />
+            <Route path="/organizador/cupons" element={<Cupons />} />
             <Route path="/organizador/check-in" element={<CheckIn />} />
 
             {/* Admin Routes */}
