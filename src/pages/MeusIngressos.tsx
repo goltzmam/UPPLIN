@@ -1,6 +1,7 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Calendar, MapPin, QrCode, Ticket, Download } from "lucide-react";
+import { Calendar, MapPin, QrCode, Ticket, Download, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Header } from "@/components/layout/Header";
@@ -10,19 +11,23 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { TicketQRCode } from "@/components/tickets/TicketQRCode";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
 
 export default function MeusIngressos() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const [selectedTicket, setSelectedTicket] = useState<any>(null);
 
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
+    } else if (!loading && user && !profile?.cpf) {
+      navigate("/onboarding");
     }
-  }, [loading, user, navigate]);
+  }, [loading, user, profile, navigate]);
 
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["my-tickets", user?.id],
@@ -120,7 +125,7 @@ export default function MeusIngressos() {
 
             {ticket.status === "issued" && !isPast && (
               <div className="flex gap-2 mt-4 pt-4 border-t border-border">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => setSelectedTicket(ticket)}>
                   <QrCode className="h-4 w-4 mr-2" />
                   Ver QR Code
                 </Button>
@@ -136,18 +141,47 @@ export default function MeusIngressos() {
     );
   };
 
+  const QRCodeModal = () => {
+    if (!selectedTicket) return null;
+    const eventDate = new Date(selectedTicket.events?.start_at);
+
+    return (
+      <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-center">Seu Ingresso</DialogTitle>
+          </DialogHeader>
+          <div className="p-6">
+            <TicketQRCode
+              ticketId={selectedTicket.id}
+              qrToken={selectedTicket.qr_token || selectedTicket.id}
+              eventTitle={selectedTicket.events?.title || "Evento"}
+              ticketType={selectedTicket.ticket_types?.name || "Ingresso"}
+              date={format(eventDate, "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+              status={selectedTicket.status as "issued" | "used" | "cancelled"}
+            />
+            <p className="text-center text-sm text-muted-foreground mt-4">
+              Apresente este QR Code na entrada do evento
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      <QRCodeModal />
 
-      <main className="flex-1 py-8">
-        <div className="container">
-          <h1 className="font-display text-3xl font-bold mb-8">Meus Ingressos</h1>
+      <main className="flex-1 py-8 pt-24">
+        <div className="container px-4">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Meus Ingressos</h1>
 
           <Tabs defaultValue="upcoming" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="upcoming">Próximos ({upcomingTickets.length})</TabsTrigger>
-              <TabsTrigger value="past">Anteriores ({pastTickets.length})</TabsTrigger>
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="upcoming" className="flex-1 sm:flex-none">Próximos ({upcomingTickets.length})</TabsTrigger>
+              <TabsTrigger value="past" className="flex-1 sm:flex-none">Anteriores ({pastTickets.length})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="upcoming" className="space-y-4">
