@@ -150,7 +150,7 @@ export default function Index() {
 
       <main>
         {/* Hero Section - Fullscreen Cinematic */}
-        <section ref={heroRef} className="relative h-screen min-h-[700px] flex items-center overflow-hidden">
+        <section ref={heroRef} className="relative min-h-[100svh] flex items-center overflow-hidden">
           {/* Background Video/Image */}
           <motion.div 
             style={{ scale: heroScale, y: heroY }}
@@ -164,7 +164,7 @@ export default function Index() {
           {/* Content */}
           <motion.div 
             style={{ opacity: heroOpacity }}
-            className="container relative z-10 pt-20"
+            className="container relative z-10 pt-20 px-4"
           >
             <div className="max-w-4xl mx-auto text-center">
               {/* Badge */}
@@ -172,13 +172,14 @@ export default function Index() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white/90 text-sm mb-8"
+                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white/90 text-xs sm:text-sm mb-6 sm:mb-8"
               >
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
                 </span>
-                Mais de 2 milhões de ingressos vendidos
+                <span className="hidden sm:inline">Mais de 2 milhões de ingressos vendidos</span>
+                <span className="sm:hidden">2M+ ingressos vendidos</span>
               </motion.div>
 
               {/* Headline */}
@@ -186,7 +187,7 @@ export default function Index() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                className="font-display text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[0.95] tracking-tight mb-6"
+                className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[0.95] tracking-tight mb-4 sm:mb-6"
               >
                 Experiências
                 <br />
@@ -200,11 +201,10 @@ export default function Index() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="text-xl md:text-2xl text-white/70 max-w-2xl mx-auto mb-12"
+                className="text-base sm:text-xl md:text-2xl text-white/70 max-w-2xl mx-auto mb-8 sm:mb-12 px-4"
               >
                 Descubra os melhores eventos do Brasil.
-                <br className="hidden md:block" />
-                Shows, festas, conferências e muito mais.
+                <span className="hidden sm:inline"><br />Shows, festas, conferências e muito mais.</span>
               </motion.p>
 
               {/* Search Bar - Hero Version */}
@@ -216,33 +216,36 @@ export default function Index() {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ delay: 0.6 }}
                     onSubmit={handleSearch}
-                    className="relative max-w-3xl mx-auto"
+                    className="relative max-w-3xl mx-auto px-2 sm:px-0"
                   >
-                    <div className="flex flex-col md:flex-row gap-3 p-3 bg-white/10 backdrop-blur-xl rounded-3xl border border-white/20">
-                      <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-white/10 rounded-2xl">
-                        <Search className="h-5 w-5 text-white/60" />
-                        <input
-                          type="text"
-                          placeholder="Buscar shows, festas, eventos..."
-                          value={searchValue}
-                          onChange={(e) => setSearchValue(e.target.value)}
-                          className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/50"
-                        />
-                      </div>
-                      <div className="flex items-center gap-3 px-4 py-3 bg-white/10 rounded-2xl md:w-48">
-                        <MapPin className="h-5 w-5 text-white/60" />
-                        <input
-                          type="text"
-                          placeholder="Localização"
-                          value={locationValue}
-                          onChange={(e) => setLocationValue(e.target.value)}
-                          className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/50"
-                        />
+                    <div className="flex flex-col gap-3 p-3 bg-white/10 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/20">
+                      {/* Mobile: Stacked layout */}
+                      <div className="flex flex-col sm:flex-row gap-3">
+                        <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-white/10 rounded-xl sm:rounded-2xl">
+                          <Search className="h-5 w-5 text-white/60 flex-shrink-0" />
+                          <input
+                            type="text"
+                            placeholder="Buscar eventos..."
+                            value={searchValue}
+                            onChange={(e) => setSearchValue(e.target.value)}
+                            className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/50 text-sm sm:text-base min-w-0"
+                          />
+                        </div>
+                        <div className="flex items-center gap-3 px-4 py-3 bg-white/10 rounded-xl sm:rounded-2xl sm:w-48">
+                          <MapPin className="h-5 w-5 text-white/60 flex-shrink-0" />
+                          <input
+                            type="text"
+                            placeholder="Localização"
+                            value={locationValue}
+                            onChange={(e) => setLocationValue(e.target.value)}
+                            className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/50 text-sm sm:text-base min-w-0"
+                          />
+                        </div>
                       </div>
                       <Button 
                         type="submit" 
                         size="lg" 
-                        className="rounded-2xl h-14 px-8 bg-primary hover:bg-primary/90 text-lg font-semibold"
+                        className="rounded-xl sm:rounded-2xl h-12 sm:h-14 px-8 bg-primary hover:bg-primary/90 text-base sm:text-lg font-semibold w-full sm:w-auto"
                       >
                         Buscar
                       </Button>
@@ -258,9 +261,9 @@ export default function Index() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50"
+            className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50"
           >
-            <span className="text-sm">Role para explorar</span>
+            <span className="text-xs sm:text-sm">Role para explorar</span>
             <motion.div
               animate={{ y: [0, 8, 0] }}
               transition={{ duration: 1.5, repeat: Infinity }}
@@ -271,25 +274,25 @@ export default function Index() {
         </section>
 
         {/* Categories - Horizontal Scroll */}
-        <section className="py-20 bg-background">
-          <div className="container">
+        <section className="py-12 sm:py-20 bg-background">
+          <div className="container px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="flex items-end justify-between mb-10"
+              className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-10"
             >
               <div>
-                <h2 className="font-display text-3xl md:text-4xl font-bold mb-2">
+                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
                   Explore por categoria
                 </h2>
-                <p className="text-muted-foreground text-lg">
+                <p className="text-muted-foreground text-sm sm:text-lg">
                   Encontre exatamente o que você procura
                 </p>
               </div>
             </motion.div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
               {categories.map((cat, index) => (
                 <motion.div
                   key={cat.name}
@@ -300,17 +303,17 @@ export default function Index() {
                 >
                   <Link
                     to={`/eventos?categoria=${cat.name.toLowerCase()}`}
-                    className="group block relative overflow-hidden rounded-3xl aspect-square"
+                    className="group block relative overflow-hidden rounded-2xl sm:rounded-3xl aspect-square"
                   >
                     <div className={cn(
                       "absolute inset-0 bg-gradient-to-br opacity-90 group-hover:opacity-100 transition-opacity",
                       cat.color
                     )} />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                      <span className="text-5xl mb-3 group-hover:scale-125 transition-transform duration-300">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-2">
+                      <span className="text-3xl sm:text-5xl mb-2 sm:mb-3 group-hover:scale-125 transition-transform duration-300">
                         {cat.emoji}
                       </span>
-                      <span className="font-semibold text-lg">{cat.name}</span>
+                      <span className="font-semibold text-xs sm:text-lg text-center">{cat.name}</span>
                     </div>
                   </Link>
                 </motion.div>
@@ -320,25 +323,25 @@ export default function Index() {
         </section>
 
         {/* Featured Events */}
-        <section className="py-20 bg-muted/30">
-          <div className="container">
+        <section className="py-12 sm:py-20 bg-muted/30">
+          <div className="container px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="flex items-end justify-between mb-10"
+              className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-10"
             >
               <div>
-                <h2 className="font-display text-3xl md:text-4xl font-bold mb-2">
+                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
                   Em destaque
                 </h2>
-                <p className="text-muted-foreground text-lg">
+                <p className="text-muted-foreground text-sm sm:text-lg">
                   Os eventos mais aguardados do momento
                 </p>
               </div>
               <Link 
                 to="/eventos" 
-                className="hidden md:flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all"
+                className="hidden sm:flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all"
               >
                 Ver todos
                 <ArrowRight className="h-4 w-4" />
@@ -346,21 +349,21 @@ export default function Index() {
             </motion.div>
 
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="rounded-3xl bg-card animate-pulse aspect-[4/5]" />
+                  <div key={i} className="rounded-2xl sm:rounded-3xl bg-card animate-pulse aspect-[4/5]" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {events.slice(0, 8).map((event, index) => (
                   <PremiumEventCard key={event.id} event={event} index={index} />
                 ))}
               </div>
             )}
 
-            <div className="flex justify-center mt-10 md:hidden">
-              <Button asChild variant="outline" size="lg" className="rounded-full">
+            <div className="flex justify-center mt-8 sm:mt-10 sm:hidden">
+              <Button asChild variant="outline" size="lg" className="rounded-full w-full max-w-xs">
                 <Link to="/eventos">
                   Ver todos os eventos
                   <ArrowRight className="h-4 w-4 ml-2" />
