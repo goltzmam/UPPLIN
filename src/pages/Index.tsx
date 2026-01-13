@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +26,8 @@ import {
 import { cn } from "@/lib/utils";
 
 // Premium Event Card with hover effects
-function PremiumEventCard({ event, index }: { event: any; index: number }) {
+const PremiumEventCard = React.forwardRef<HTMLDivElement, { event: any; index: number }>(
+  ({ event, index }, ref) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 40 }}
@@ -87,7 +88,8 @@ function PremiumEventCard({ event, index }: { event: any; index: number }) {
       </Link>
     </motion.div>
   );
-}
+});
+PremiumEventCard.displayName = "PremiumEventCard";
 
 export default function Index() {
   const [searchValue, setSearchValue] = useState("");
