@@ -14,6 +14,7 @@ import MeusIngressos from "./pages/MeusIngressos";
 import Checkout from "./pages/Checkout";
 import OrganizerDashboard from "./pages/organizador/Dashboard";
 import EventoForm from "./pages/organizador/EventoForm";
+import Admin from "./pages/admin/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
             <Route path="/checkout/:orderId" element={<Checkout />} />
             <Route path="/organizador" element={<OrganizerDashboard />} />
             <Route path="/organizador/evento/:eventId" element={<EventoForm />} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
