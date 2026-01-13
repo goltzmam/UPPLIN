@@ -1,14 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { MessageCircle, Eye, Search, Filter, Users, Building2, Shield, ArrowLeft } from "lucide-react";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { MessageCircle, Eye, Search, Users, Building2, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -19,12 +15,8 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatWindow } from "@/components/chat/ChatWindow";
-import { useAuth } from "@/lib/auth";
-import { useUserRoles } from "@/hooks/use-user-roles";
 import { supabase } from "@/integrations/supabase/client";
-import { PageLoading } from "@/components/ui/loading";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 interface Message {
@@ -66,24 +58,10 @@ interface Conversation {
 }
 
 export default function AdminChats() {
-  const { user, loading: authLoading } = useAuth();
-  const { isAdmin, isLoading: rolesLoading } = useUserRoles();
-  const navigate = useNavigate();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [filterType, setFilterType] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
   const [liveMessages, setLiveMessages] = useState<Message[]>([]);
-
-  // Redirect if not admin
-  useEffect(() => {
-    if (!authLoading && !rolesLoading) {
-      if (!user) {
-        navigate("/login");
-      } else if (!isAdmin) {
-        navigate("/");
-      }
-    }
-  }, [authLoading, rolesLoading, user, isAdmin, navigate]);
 
   // Fetch all conversations
   const { data: conversations = [], isLoading, refetch } = useQuery({
@@ -123,13 +101,11 @@ export default function AdminChats() {
 
       return enriched as Conversation[];
     },
-    enabled: isAdmin,
     refetchInterval: 5000,
   });
 
   // Real-time subscription for all new messages
   useEffect(() => {
-    if (!isAdmin) return;
 
     const channel = supabase
       .channel("admin-all-messages")
@@ -163,10 +139,7 @@ export default function AdminChats() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [isAdmin, refetch]);
-
-  if (authLoading || rolesLoading) return <><Header /><PageLoading /><Footer /></>;
-  if (!isAdmin) return null;
+  }, [refetch]);
 
   const getInitials = (name: string | null) => {
     if (!name) return "?";
@@ -208,23 +181,14 @@ export default function AdminChats() {
   });
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-
-      <main className="flex-1 pt-20 sm:pt-24">
-        <div className="container px-4 py-6">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-6">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex-1">
-              <h1 className="font-display text-2xl font-bold">Central de Mensagens</h1>
-              <p className="text-sm text-muted-foreground">
-                Monitore todas as conversas em tempo real
-              </p>
-            </div>
-          </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="font-display text-2xl font-bold">Central de Mensagens</h1>
+        <p className="text-sm text-muted-foreground">
+          Monitore todas as conversas em tempo real
+        </p>
+      </div>
 
           {/* Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -418,24 +382,20 @@ export default function AdminChats() {
             </Card>
           </div>
 
-          {/* Selected Conversation Chat */}
-          {selectedConversation && (
-            <Card className="mt-6 overflow-hidden">
-              <ChatWindow
-                conversationId={selectedConversation.id}
-                otherParticipant={{
-                  id: selectedConversation.participant_1.id,
-                  name: `${selectedConversation.participant_1.full_name || selectedConversation.participant_1.email} ↔ ${selectedConversation.participant_2.full_name || selectedConversation.participant_2.email}`,
-                }}
-                onClose={() => setSelectedConversation(null)}
-                className="h-[400px] border-0"
-              />
-            </Card>
-          )}
-        </div>
-      </main>
-
-      <Footer />
+      {/* Selected Conversation Chat */}
+      {selectedConversation && (
+        <Card className="overflow-hidden">
+          <ChatWindow
+            conversationId={selectedConversation.id}
+            otherParticipant={{
+              id: selectedConversation.participant_1.id,
+              name: `${selectedConversation.participant_1.full_name || selectedConversation.participant_1.email} ↔ ${selectedConversation.participant_2.full_name || selectedConversation.participant_2.email}`,
+            }}
+            onClose={() => setSelectedConversation(null)}
+            className="h-[400px] border-0"
+          />
+        </Card>
+      )}
     </div>
   );
 }

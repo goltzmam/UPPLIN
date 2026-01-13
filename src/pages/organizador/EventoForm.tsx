@@ -10,10 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageLoading } from "@/components/ui/loading";
-import { ImageUpload } from "@/components/ui/image-upload";
+import { MultiMediaUpload } from "@/components/events/MultiMediaUpload";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+
+interface MediaItem {
+  id: string;
+  url: string;
+  type: "image" | "video";
+  sort_order: number;
+}
 
 interface TicketTypeForm {
   id?: string;
@@ -38,7 +45,7 @@ export default function EventoForm() {
   const [endAt, setEndAt] = useState("");
   const [venueName, setVenueName] = useState("");
   const [addressText, setAddressText] = useState("");
-  const [coverImageUrl, setCoverImageUrl] = useState("");
+  const [media, setMedia] = useState<MediaItem[]>([]);
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [ticketTypes, setTicketTypes] = useState<TicketTypeForm[]>([]);
   const [saving, setSaving] = useState(false);
@@ -64,7 +71,7 @@ export default function EventoForm() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select(`*, ticket_types(*)`)
+        .select(`*, ticket_types(*), event_media(*)`)
         .eq("id", eventId)
         .maybeSingle();
       if (error) throw error;
@@ -93,7 +100,6 @@ export default function EventoForm() {
       setEndAt(event.end_at?.slice(0, 16) || "");
       setVenueName(event.venue_name || "");
       setAddressText(event.address_text || "");
-      setCoverImageUrl(event.cover_image_url || "");
       setStatus(event.status as "draft" | "published");
       setTicketTypes(
         event.ticket_types?.map((t: any) => ({
@@ -101,6 +107,14 @@ export default function EventoForm() {
           name: t.name,
           price_cents: t.price_cents,
           quantity_total: t.quantity_total,
+        })) || []
+      );
+      setMedia(
+        event.event_media?.map((m: any) => ({
+          id: m.id,
+          url: m.url,
+          type: m.type,
+          sort_order: m.sort_order,
         })) || []
       );
     }
@@ -136,6 +150,9 @@ export default function EventoForm() {
 
     try {
       let eventIdToUse = eventId;
+      
+      // Get cover image from first media item
+      const coverImageUrl = media.length > 0 && media[0].type === "image" ? media[0].url : null;
 
       if (isEditing) {
         // Update event
@@ -148,7 +165,7 @@ export default function EventoForm() {
             end_at: endAt || null,
             venue_name: venueName || null,
             address_text: addressText || null,
-            cover_image_url: coverImageUrl || null,
+            cover_image_url: coverImageUrl,
             status,
           })
           .eq("id", eventId);
@@ -166,7 +183,7 @@ export default function EventoForm() {
             end_at: endAt || null,
             venue_name: venueName || null,
             address_text: addressText || null,
-            cover_image_url: coverImageUrl || null,
+            cover_image_url: coverImageUrl,
             status,
           })
           .select()
@@ -197,6 +214,41 @@ export default function EventoForm() {
             })
             .eq("id", tt.id);
         }
+      }
+
+      // Handle media - delete removed, add new
+      if (isEditing) {
+        // Get existing media IDs
+        const existingIds = event?.event_media?.map((m: any) => m.id) || [];
+        const currentIds = media.filter(m => !m.id.startsWith("new-")).map(m => m.id);
+        
+        // Delete removed media
+        const toDelete = existingIds.filter((id: string) => !currentIds.includes(id));
+        if (toDelete.length > 0) {
+          await supabase.from("event_media").delete().in("id", toDelete);
+        }
+      }
+
+      // Insert new media
+      const newMedia = media.filter(m => m.id.startsWith("new-"));
+      if (newMedia.length > 0) {
+        await supabase.from("event_media").insert(
+          newMedia.map((m, idx) => ({
+            event_id: eventIdToUse,
+            url: m.url,
+            type: m.type,
+            sort_order: media.indexOf(m),
+          }))
+        );
+      }
+
+      // Update sort order for existing media
+      const existingMedia = media.filter(m => !m.id.startsWith("new-"));
+      for (const m of existingMedia) {
+        await supabase
+          .from("event_media")
+          .update({ sort_order: media.indexOf(m) })
+          .eq("id", m.id);
       }
 
       queryClient.invalidateQueries({ queryKey: ["organizer-events"] });
@@ -232,15 +284,17 @@ export default function EventoForm() {
           </h1>
 
           <div className="space-y-6 sm:space-y-8">
-            {/* Cover Image Upload */}
+            {/* Media Upload */}
             <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
-              <h2 className="font-display text-lg font-bold">Imagem de Capa</h2>
-              <ImageUpload
-                bucket="event-images"
-                folder={organizer?.id}
-                value={coverImageUrl}
-                onChange={(url) => setCoverImageUrl(url || "")}
-                aspectRatio="video"
+              <h2 className="font-display text-lg font-bold">Fotos e Vídeos</h2>
+              <p className="text-sm text-muted-foreground">
+                Adicione imagens e vídeos do seu evento. A primeira imagem será usada como capa.
+              </p>
+              <MultiMediaUpload
+                eventId={eventId || "novo"}
+                organizerId={organizer?.id || ""}
+                media={media}
+                onChange={setMedia}
               />
             </div>
 

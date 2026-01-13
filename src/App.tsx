@@ -19,6 +19,7 @@ import EventoForm from "./pages/organizador/EventoForm";
 import CheckIn from "./pages/organizador/CheckIn";
 import OrganizadorLogin from "./pages/organizador/OrganizadorLogin";
 import OrganizadorCadastro from "./pages/organizador/OrganizadorCadastro";
+import OnboardingOrganizador from "./pages/organizador/OnboardingOrganizador";
 import AdminLogin from "./pages/admin/AdminLogin";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -54,6 +55,7 @@ const App = () => (
             {/* Organizer Routes */}
             <Route path="/organizador/login" element={<OrganizadorLogin />} />
             <Route path="/organizador/cadastro" element={<OrganizadorCadastro />} />
+            <Route path="/organizador/onboarding" element={<OnboardingOrganizador />} />
             <Route path="/organizador" element={<OrganizerDashboard />} />
             <Route path="/organizador/evento/:eventId" element={<EventoForm />} />
             <Route path="/organizador/check-in" element={<CheckIn />} />

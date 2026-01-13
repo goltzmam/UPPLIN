@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
+import { EventMediaCarousel } from "@/components/events/EventMediaCarousel";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +32,7 @@ export default function Evento() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select(`*, ticket_types(*), organizer_accounts(display_name)`)
+        .select(`*, ticket_types(*), organizer_accounts(display_name), event_media(*)`)
         .eq("id", id)
         .eq("status", "published")
         .maybeSingle();
@@ -142,14 +143,14 @@ export default function Evento() {
       <Header />
 
       <main className="flex-1">
-        {/* Cover */}
-        <div className="relative h-[35vh] sm:h-[40vh] min-h-[250px] sm:min-h-[300px] bg-secondary">
-          {event.cover_image_url ? (
-            <img src={event.cover_image_url} alt={event.title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+        {/* Cover / Media Carousel */}
+        <div className="relative h-[35vh] sm:h-[45vh] min-h-[280px] sm:min-h-[350px] bg-secondary">
+          <EventMediaCarousel
+            media={event.event_media || []}
+            coverImage={event.cover_image_url}
+            title={event.title}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none" />
         </div>
 
         <div className="container relative -mt-16 sm:-mt-24 z-10 pb-8 sm:pb-12 px-4">
