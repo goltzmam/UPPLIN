@@ -41,6 +41,7 @@ export default function EventoForm() {
 
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("");
   const [startAt, setStartAt] = useState("");
   const [endAt, setEndAt] = useState("");
   const [venueName, setVenueName] = useState("");
@@ -49,6 +50,18 @@ export default function EventoForm() {
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [ticketTypes, setTicketTypes] = useState<TicketTypeForm[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const categories = [
+    { value: "shows", label: "Shows" },
+    { value: "festas", label: "Festas" },
+    { value: "teatro", label: "Teatro" },
+    { value: "esportes", label: "Esportes" },
+    { value: "cursos", label: "Cursos" },
+    { value: "gastronomia", label: "Gastronomia" },
+    { value: "workshops", label: "Workshops" },
+    { value: "conferencias", label: "Conferências" },
+    { value: "outros", label: "Outros" },
+  ];
 
   // Get organizer
   const { data: organizer, isLoading: orgLoading } = useQuery({
@@ -96,6 +109,7 @@ export default function EventoForm() {
     if (event) {
       setTitle(event.title);
       setDescription(event.description || "");
+      setCategory(event.category || "");
       setStartAt(event.start_at?.slice(0, 16) || "");
       setEndAt(event.end_at?.slice(0, 16) || "");
       setVenueName(event.venue_name || "");
@@ -161,6 +175,7 @@ export default function EventoForm() {
           .update({
             title,
             description,
+            category: category || null,
             start_at: startAt,
             end_at: endAt || null,
             venue_name: venueName || null,
@@ -179,6 +194,7 @@ export default function EventoForm() {
             organizer_id: organizer!.id,
             title,
             description,
+            category: category || null,
             start_at: startAt,
             end_at: endAt || null,
             venue_name: venueName || null,
@@ -310,6 +326,22 @@ export default function EventoForm() {
               <div className="space-y-2">
                 <Label htmlFor="description">Descrição</Label>
                 <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descreva seu evento..." rows={4} />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category">Categoria</Label>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger id="category">
+                    <SelectValue placeholder="Selecione uma categoria" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
