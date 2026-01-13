@@ -36,7 +36,7 @@ export function EventCard({
   };
 
   return (
-    <Link to={`/evento/${id}`} className="event-card group block">
+    <Link to={`/evento/${id}`} className="event-card group block bg-card rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all">
       {/* Cover Image */}
       <div className="relative aspect-[16/9] overflow-hidden">
         {coverImageUrl ? (
@@ -47,7 +47,7 @@ export function EventCard({
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-            <Calendar className="h-12 w-12 text-muted-foreground/50" />
+            <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground/50" />
           </div>
         )}
         
@@ -55,42 +55,42 @@ export function EventCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         
         {/* Date badge */}
-        <div className="absolute top-3 left-3">
-          <div className="bg-background/95 backdrop-blur-sm rounded-lg px-3 py-1.5 text-center shadow-lg">
-            <div className="text-lg font-bold leading-tight">{format(eventDate, "d")}</div>
-            <div className="text-xs uppercase text-muted-foreground">{format(eventDate, "MMM", { locale: ptBR })}</div>
+        <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
+          <div className="bg-background/95 backdrop-blur-sm rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 text-center shadow-lg">
+            <div className="text-sm sm:text-lg font-bold leading-tight">{format(eventDate, "d")}</div>
+            <div className="text-[10px] sm:text-xs uppercase text-muted-foreground">{format(eventDate, "MMM", { locale: ptBR })}</div>
           </div>
         </div>
 
         {/* Sold out badge */}
         {soldOut && (
-          <div className="absolute top-3 right-3">
-            <Badge variant="destructive" className="shadow-lg">Esgotado</Badge>
+          <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
+            <Badge variant="destructive" className="shadow-lg text-xs">Esgotado</Badge>
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
-        <h3 className="font-display font-bold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+      <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+        <h3 className="font-display font-bold text-sm sm:text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
           {title}
         </h3>
 
-        <div className="space-y-1.5 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <Calendar className="h-4 w-4 shrink-0" />
-            <span className="capitalize">{formattedDay}, {formattedDate} • {formattedTime}</span>
+        <div className="space-y-1 sm:space-y-1.5 text-xs sm:text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+            <span className="capitalize truncate">{formattedDay}, {formattedDate} • {formattedTime}</span>
           </div>
           {(venueName || addressText) && (
-            <div className="flex items-center gap-2">
-              <MapPin className="h-4 w-4 shrink-0" />
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
               <span className="truncate">{venueName || addressText}</span>
             </div>
           )}
         </div>
 
         <div className="pt-2 border-t border-border">
-          <span className={`font-semibold ${minPrice === 0 ? "text-success" : "text-foreground"}`}>
+          <span className={`font-semibold text-xs sm:text-sm ${minPrice === 0 ? "text-success" : "text-foreground"}`}>
             {formatPrice(minPrice)}
           </span>
         </div>

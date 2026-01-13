@@ -94,9 +94,9 @@ export default function Checkout() {
     <div className="min-h-screen flex flex-col bg-muted/30">
       <Header />
 
-      <main className="flex-1 py-8">
-        <div className="container max-w-4xl">
-          <h1 className="font-display text-3xl font-bold mb-8">Checkout</h1>
+      <main className="flex-1 py-6 sm:py-8 pt-20 sm:pt-24">
+        <div className="container max-w-4xl px-4">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Checkout</h1>
 
           {isExpired ? (
             <EmptyState
@@ -106,37 +106,37 @@ export default function Checkout() {
               action={<Button onClick={() => navigate("/eventos")}>Ver Eventos</Button>}
             />
           ) : (
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
               {/* Order Summary */}
-              <div className="md:col-span-2 space-y-6">
-                <div className="bg-card rounded-2xl border border-border p-6 animate-fade-up">
-                  <h2 className="font-display text-xl font-bold mb-4">{order.events?.title}</h2>
+              <div className="md:col-span-2 space-y-4 sm:space-y-6">
+                <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up">
+                  <h2 className="font-display text-lg sm:text-xl font-bold mb-4">{order.events?.title}</h2>
 
                   <div className="divide-y divide-border">
                     {order.order_items?.map((item: any) => (
-                      <div key={item.id} className="py-3 flex justify-between">
-                        <div>
-                          <p className="font-medium">{item.ticket_types?.name}</p>
-                          <p className="text-sm text-muted-foreground">{item.qty}x {formatPrice(item.unit_price_cents)}</p>
+                      <div key={item.id} className="py-3 flex justify-between gap-4">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-sm sm:text-base truncate">{item.ticket_types?.name}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground">{item.qty}x {formatPrice(item.unit_price_cents)}</p>
                         </div>
-                        <p className="font-semibold">{formatPrice(item.unit_price_cents * item.qty)}</p>
+                        <p className="font-semibold text-sm sm:text-base shrink-0">{formatPrice(item.unit_price_cents * item.qty)}</p>
                       </div>
                     ))}
                   </div>
 
                   <div className="border-t border-border pt-4 mt-4 flex justify-between items-center">
-                    <span className="font-display text-lg font-bold">Total</span>
-                    <span className="font-display text-2xl font-bold text-primary">{formatPrice(order.total_cents)}</span>
+                    <span className="font-display text-base sm:text-lg font-bold">Total</span>
+                    <span className="font-display text-xl sm:text-2xl font-bold text-primary">{formatPrice(order.total_cents)}</span>
                   </div>
                 </div>
 
                 {/* Timer */}
                 {expiresAt && (
-                  <div className="bg-accent/20 rounded-xl p-4 flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-accent" />
-                    <div>
-                      <p className="font-medium">Reserva expira em breve</p>
-                      <p className="text-sm text-muted-foreground">Complete o pagamento para garantir seus ingressos.</p>
+                  <div className="bg-accent/20 rounded-xl p-3 sm:p-4 flex items-center gap-3">
+                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-accent shrink-0" />
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm sm:text-base">Reserva expira em breve</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">Complete o pagamento para garantir seus ingressos.</p>
                     </div>
                   </div>
                 )}
@@ -144,8 +144,8 @@ export default function Checkout() {
 
               {/* Payment */}
               <div className="space-y-4">
-                <div className="bg-card rounded-2xl border border-border p-6 animate-fade-up stagger-1">
-                  <h2 className="font-display text-lg font-bold mb-4">Pagamento</h2>
+                <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-1">
+                  <h2 className="font-display text-base sm:text-lg font-bold mb-4">Pagamento</h2>
 
                   <div className="space-y-4">
                     <Button 
@@ -155,21 +155,21 @@ export default function Checkout() {
                       disabled={processing}
                     >
                       {processing ? (
-                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                        <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin mr-2" />
                       ) : (
-                        <CreditCard className="h-5 w-5 mr-2" />
+                        <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                       )}
                       {processing ? "Processando..." : "Pagar Agora"}
                     </Button>
 
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground justify-center">
-                      <ShieldCheck className="h-4 w-4" />
+                    <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground justify-center">
+                      <ShieldCheck className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span>Pagamento 100% seguro</span>
                     </div>
                   </div>
                 </div>
 
-                <p className="text-xs text-center text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-center text-muted-foreground">
                   Ao continuar, você concorda com os termos de uso e política de privacidade.
                 </p>
               </div>
