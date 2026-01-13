@@ -7,6 +7,7 @@ import { AuthProvider } from "@/lib/auth";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import Onboarding from "./pages/Onboarding";
 import Eventos from "./pages/Eventos";
 import Evento from "./pages/Evento";
 import Perfil from "./pages/Perfil";
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/eventos" element={<Eventos />} />
             <Route path="/evento/:id" element={<Evento />} />
             <Route path="/perfil" element={<Perfil />} />

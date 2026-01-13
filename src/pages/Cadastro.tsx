@@ -25,8 +25,8 @@ export default function Cadastro() {
     if (error) {
       toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Conta criada!", description: "Bem-vindo à Influente!" });
-      navigate("/");
+      toast({ title: "Conta criada!", description: "Complete seu cadastro para continuar." });
+      navigate("/onboarding");
     }
   };
 
