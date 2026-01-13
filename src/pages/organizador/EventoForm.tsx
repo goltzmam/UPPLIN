@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Trash2, Save, Eye, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Header } from "@/components/layout/Header";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageLoading } from "@/components/ui/loading";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -218,21 +219,33 @@ export default function EventoForm() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 py-8">
-        <div className="container max-w-3xl">
+      <main className="flex-1 py-8 pt-24">
+        <div className="container max-w-3xl px-4">
           {/* Back */}
           <Button variant="ghost" className="mb-4" onClick={() => navigate("/organizador")}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
 
-          <h1 className="font-display text-3xl font-bold mb-8">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">
             {isEditing ? "Editar Evento" : "Novo Evento"}
           </h1>
 
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
+            {/* Cover Image Upload */}
+            <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
+              <h2 className="font-display text-lg font-bold">Imagem de Capa</h2>
+              <ImageUpload
+                bucket="event-images"
+                folder={organizer?.id}
+                value={coverImageUrl}
+                onChange={(url) => setCoverImageUrl(url || "")}
+                aspectRatio="video"
+              />
+            </div>
+
             {/* Basic Info */}
-            <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
               <h2 className="font-display text-lg font-bold">Informações Básicas</h2>
 
               <div className="space-y-2">
@@ -245,7 +258,7 @@ export default function EventoForm() {
                 <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Descreva seu evento..." rows={4} />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="startAt">Data e Hora de Início *</Label>
                   <Input id="startAt" type="datetime-local" value={startAt} onChange={(e) => setStartAt(e.target.value)} />
@@ -255,15 +268,10 @@ export default function EventoForm() {
                   <Input id="endAt" type="datetime-local" value={endAt} onChange={(e) => setEndAt(e.target.value)} />
                 </div>
               </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="coverImageUrl">URL da Imagem de Capa</Label>
-                <Input id="coverImageUrl" value={coverImageUrl} onChange={(e) => setCoverImageUrl(e.target.value)} placeholder="https://..." />
-              </div>
             </div>
 
             {/* Location */}
-            <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
               <h2 className="font-display text-lg font-bold">Local</h2>
 
               <div className="space-y-2">
@@ -278,7 +286,7 @@ export default function EventoForm() {
             </div>
 
             {/* Ticket Types */}
-            <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-lg font-bold">Tipos de Ingresso</h2>
                 <Button variant="outline" size="sm" onClick={addTicketType}>
@@ -292,14 +300,14 @@ export default function EventoForm() {
                   {ticketTypes.map((tt, index) => {
                     if (tt.toDelete) return null;
                     return (
-                      <div key={tt.id || index} className="p-4 border border-border rounded-xl space-y-3">
+                      <div key={tt.id || index} className="p-3 sm:p-4 border border-border rounded-xl space-y-3">
                         <div className="flex items-center justify-between">
-                          <Label>Ingresso {index + 1}</Label>
+                          <Label className="text-sm">Ingresso {index + 1}</Label>
                           <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => removeTicketType(index)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                        <div className="grid grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <Label className="text-xs">Nome</Label>
                             <Input value={tt.name} onChange={(e) => updateTicketType(index, "name", e.target.value)} placeholder="VIP, Pista..." />
@@ -323,7 +331,7 @@ export default function EventoForm() {
             </div>
 
             {/* Status & Actions */}
-            <div className="bg-card rounded-2xl border border-border p-6 space-y-4">
+            <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
               <div className="space-y-2">
                 <Label>Status do Evento</Label>
                 <Select value={status} onValueChange={(v) => setStatus(v as "draft" | "published")}>
@@ -337,7 +345,7 @@ export default function EventoForm() {
                 </Select>
               </div>
 
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button onClick={handleSave} disabled={saving} className="flex-1">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                   {saving ? "Salvando..." : "Salvar Evento"}

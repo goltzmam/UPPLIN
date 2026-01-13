@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { User, Mail, CreditCard, Camera, Loader2, AlertCircle } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { PageLoading } from "@/components/ui/loading";
+import { AvatarUpload } from "@/components/ui/image-upload";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -19,7 +19,7 @@ export default function Perfil() {
 
   const [fullName, setFullName] = useState("");
   const [cpf, setCpf] = useState("");
-  const [photoUrl, setPhotoUrl] = useState("");
+  const [photoUrl, setPhotoUrl] = useState<string | null>("");
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -50,7 +50,6 @@ export default function Perfil() {
     
     const updates: any = { full_name: fullName };
     
-    // Only update CPF if it's not set yet
     if (!profile?.cpf && cpf) {
       updates.cpf = cpf.replace(/\D/g, "");
     }
@@ -83,27 +82,24 @@ export default function Perfil() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 py-8">
-        <div className="container max-w-2xl">
-          <h1 className="font-display text-3xl font-bold mb-8">Meu Perfil</h1>
+      <main className="flex-1 py-8 pt-24">
+        <div className="container max-w-2xl px-4">
+          <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Meu Perfil</h1>
 
-          <div className="bg-card rounded-2xl border border-border p-6 space-y-6 animate-fade-up">
-            {/* Avatar */}
-            <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                <AvatarImage src={photoUrl || undefined} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-xl">
-                  {getInitials(fullName)}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1">
-                <Label htmlFor="photoUrl">URL da Foto</Label>
-                <Input
-                  id="photoUrl"
-                  value={photoUrl}
-                  onChange={(e) => setPhotoUrl(e.target.value)}
-                  placeholder="https://..."
-                />
+          <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-6 animate-fade-up">
+            {/* Avatar Upload */}
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              <AvatarUpload
+                userId={user?.id || ""}
+                value={photoUrl}
+                onChange={(url) => setPhotoUrl(url)}
+                fallback={getInitials(fullName)}
+                size="lg"
+              />
+              <div className="text-center sm:text-left">
+                <p className="font-medium text-lg">{fullName || "Seu nome"}</p>
+                <p className="text-sm text-muted-foreground">{profile?.email}</p>
+                <p className="text-xs text-muted-foreground mt-1">Clique na foto para alterar</p>
               </div>
             </div>
 

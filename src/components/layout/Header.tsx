@@ -270,38 +270,108 @@ export function Header({ showSearch = false, onSearchVisible }: HeaderProps) {
             exit={{ opacity: 0, height: 0 }}
             className="md:hidden bg-background/95 backdrop-blur-xl border-t border-border"
           >
-            <nav className="container py-6 flex flex-col gap-2">
+            <nav className="container py-4 px-4 flex flex-col gap-1">
+              {/* Mobile Search */}
+              <form onSubmit={handleSearch} className="mb-4">
+                <div className="flex items-center gap-2 bg-muted rounded-xl px-4 py-3">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Buscar eventos..."
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    className="flex-1 bg-transparent border-none outline-none text-sm"
+                  />
+                  <Button type="submit" size="sm" className="rounded-lg h-8">
+                    Buscar
+                  </Button>
+                </div>
+              </form>
+
               <Link
                 to="/eventos"
-                className="px-4 py-3 text-lg font-medium hover:bg-muted rounded-xl transition-colors"
+                className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Explorar Eventos
               </Link>
               <Link
                 to="/organizadores"
-                className="px-4 py-3 text-lg font-medium hover:bg-muted rounded-xl transition-colors"
+                className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Para Organizadores
               </Link>
               <Link
                 to="/precos"
-                className="px-4 py-3 text-lg font-medium hover:bg-muted rounded-xl transition-colors"
+                className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Preços
               </Link>
-              {user && (
+              
+              {user ? (
                 <>
                   <div className="h-px bg-border my-2" />
                   <Link
-                    to="/organizador"
-                    className="px-4 py-3 text-lg font-medium hover:bg-muted rounded-xl transition-colors"
+                    to="/perfil"
+                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                   >
+                    <User className="h-4 w-4" />
+                    Meu Perfil
+                  </Link>
+                  <Link
+                    to="/meus-ingressos"
+                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Meus Ingressos
+                  </Link>
+                  <Link
+                    to="/organizador"
+                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
                     Área do Organizador
                   </Link>
+                  <button
+                    onClick={() => {
+                      handleSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3 text-destructive w-full text-left"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sair
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="h-px bg-border my-2" />
+                  <div className="flex flex-col gap-2 p-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        navigate("/login");
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full rounded-xl"
+                    >
+                      Entrar
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        navigate("/cadastro");
+                        setMobileMenuOpen(false);
+                      }}
+                      className="w-full rounded-xl"
+                    >
+                      Começar Grátis
+                    </Button>
+                  </div>
                 </>
               )}
             </nav>
