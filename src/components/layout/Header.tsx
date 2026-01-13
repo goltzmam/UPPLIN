@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Calendar, LayoutDashboard, Shield, Search, MapPin, Ticket } from "lucide-react";
+import { Menu, X, User, LogOut, Calendar, LayoutDashboard, Shield, Search, MapPin, Ticket, MessageCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -206,6 +206,10 @@ export function Header({ showSearch = false, onSearchVisible }: HeaderProps) {
                   <DropdownMenuItem onClick={() => navigate("/meus-ingressos")}>
                     <Ticket className="mr-2 h-4 w-4" />
                     Meus Ingressos
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/mensagens")}>
+                    <MessageCircle className="mr-2 h-4 w-4" />
+                    Mensagens
                   </DropdownMenuItem>
                   {isOrganizer && (
                     <DropdownMenuItem onClick={() => navigate("/organizador")}>

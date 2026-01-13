@@ -12,11 +12,13 @@ import Eventos from "./pages/Eventos";
 import Evento from "./pages/Evento";
 import Perfil from "./pages/Perfil";
 import MeusIngressos from "./pages/MeusIngressos";
+import Mensagens from "./pages/Mensagens";
 import Checkout from "./pages/Checkout";
 import OrganizerDashboard from "./pages/organizador/Dashboard";
 import EventoForm from "./pages/organizador/EventoForm";
-import Admin from "./pages/admin/AdminDashboard";
 import CheckIn from "./pages/organizador/CheckIn";
+import Admin from "./pages/admin/AdminDashboard";
+import AdminChats from "./pages/admin/AdminChats";
 import Precos from "./pages/Precos";
 import Organizadores from "./pages/Organizadores";
 import NotFound from "./pages/NotFound";
@@ -39,11 +41,13 @@ const App = () => (
             <Route path="/evento/:id" element={<Evento />} />
             <Route path="/perfil" element={<Perfil />} />
             <Route path="/meus-ingressos" element={<MeusIngressos />} />
+            <Route path="/mensagens" element={<Mensagens />} />
             <Route path="/checkout/:orderId" element={<Checkout />} />
             <Route path="/organizador" element={<OrganizerDashboard />} />
             <Route path="/organizador/evento/:eventId" element={<EventoForm />} />
             <Route path="/organizador/check-in" element={<CheckIn />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/chats" element={<AdminChats />} />
             <Route path="/precos" element={<Precos />} />
             <Route path="/organizadores" element={<Organizadores />} />
             <Route path="*" element={<NotFound />} />
