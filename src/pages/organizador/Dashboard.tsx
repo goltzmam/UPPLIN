@@ -1,6 +1,6 @@
 import { useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Calendar, BarChart3, Ticket, Users, TrendingUp, MoreVertical, Edit, Eye, QrCode } from "lucide-react";
+import { Plus, Calendar, BarChart3, Ticket, Users, TrendingUp, MoreVertical, Edit, Eye, QrCode, Tag } from "lucide-react";
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -187,7 +187,13 @@ export default function OrganizerDashboard() {
               <h1 className="font-display text-2xl sm:text-3xl font-bold">Dashboard</h1>
               <p className="text-sm sm:text-base text-muted-foreground">{organizer.display_name}</p>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex gap-2 w-full sm:w-auto flex-wrap">
+              <Button asChild variant="outline" className="flex-1 sm:flex-none">
+                <Link to="/organizador/cupons">
+                  <Tag className="h-4 w-4 mr-2" />
+                  Cupons
+                </Link>
+              </Button>
               <Button asChild variant="outline" className="flex-1 sm:flex-none">
                 <Link to="/organizador/check-in">
                   <QrCode className="h-4 w-4 mr-2" />

@@ -13,6 +13,7 @@ interface EventCardProps {
   addressText: string | null;
   minPrice?: number;
   soldOut?: boolean;
+  category?: string | null;
 }
 
 export function EventCard({
