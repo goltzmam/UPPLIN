@@ -8,6 +8,12 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import Eventos from "./pages/Eventos";
+import Evento from "./pages/Evento";
+import Perfil from "./pages/Perfil";
+import MeusIngressos from "./pages/MeusIngressos";
+import Checkout from "./pages/Checkout";
+import OrganizerDashboard from "./pages/organizador/Dashboard";
+import EventoForm from "./pages/organizador/EventoForm";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +30,12 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/eventos" element={<Eventos />} />
+            <Route path="/evento/:id" element={<Evento />} />
+            <Route path="/perfil" element={<Perfil />} />
+            <Route path="/meus-ingressos" element={<MeusIngressos />} />
+            <Route path="/checkout/:orderId" element={<Checkout />} />
+            <Route path="/organizador" element={<OrganizerDashboard />} />
+            <Route path="/organizador/evento/:eventId" element={<EventoForm />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
