@@ -106,9 +106,9 @@ export default function OrganizadorCadastro() {
 
       toast({ 
         title: "Conta criada com sucesso!", 
-        description: "Bem-vindo à área de organizadores." 
+        description: "Vamos configurar seu perfil." 
       });
-      navigate("/organizador");
+      navigate("/organizador/onboarding");
     } catch (err: any) {
       toast({ 
         title: "Erro ao criar conta", 
