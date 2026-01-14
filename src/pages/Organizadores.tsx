@@ -178,7 +178,7 @@ export default function Organizadores() {
                   className="flex flex-wrap gap-4"
                 >
                   <Button asChild size="xl" variant="hero" className="rounded-full text-lg">
-                    <Link to="/cadastro">
+                    <Link to="/organizador/cadastro">
                       Começar grátis
                       <ArrowRight className="h-5 w-5 ml-2" />
                     </Link>
@@ -426,7 +426,7 @@ export default function Organizadores() {
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
                 <Button asChild size="xl" variant="hero" className="rounded-full text-lg">
-                  <Link to="/cadastro">
+                  <Link to="/organizador/cadastro">
                     Criar conta grátis
                     <ArrowRight className="h-5 w-5 ml-2" />
                   </Link>

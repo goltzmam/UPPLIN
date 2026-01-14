@@ -227,7 +227,7 @@ export default function Precos() {
                       plan.featured && "bg-primary hover:bg-primary/90 text-primary-foreground"
                     )}
                   >
-                    <Link to={plan.name === "Enterprise" ? "/contato" : "/cadastro"}>
+                    <Link to={plan.name === "Enterprise" ? "/contato" : "/organizador/cadastro"}>
                       {plan.cta}
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Link>
@@ -324,7 +324,7 @@ export default function Precos() {
                 Crie sua conta em segundos e comece a vender ingressos hoje mesmo
               </p>
               <Button asChild size="xl" variant="hero" className="rounded-full">
-                <Link to="/cadastro">
+                <Link to="/organizador/cadastro">
                   Criar conta grátis
                   <ArrowRight className="h-5 w-5 ml-2" />
                 </Link>

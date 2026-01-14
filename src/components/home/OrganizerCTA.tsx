@@ -54,13 +54,13 @@ export function OrganizerCTA() {
             {/* CTAs */}
             <div className="flex flex-wrap gap-4">
               <Button size="xl" variant="hero" asChild className="group">
-                <Link to="/cadastro">
+                <Link to="/organizador/cadastro">
                   Criar meu evento
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </Link>
               </Button>
               <Button size="xl" variant="hero-outline" asChild>
-                <Link to="/eventos">
+                <Link to="/organizadores">
                   Ver como funciona
                 </Link>
               </Button>
