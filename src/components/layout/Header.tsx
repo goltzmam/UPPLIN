@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Calendar, Search, MapPin, Ticket, MessageCircle } from "lucide-react";
+import { Menu, X, User, LogOut, Calendar, Search, MapPin, Ticket, MessageCircle, Download } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -267,6 +267,15 @@ export function Header({ showSearch = false, onSearchVisible }: HeaderProps) {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Explorar Eventos
+              </Link>
+              
+              <Link
+                to="/instalar"
+                className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3 text-primary"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Download className="h-4 w-4" />
+                Baixar App
               </Link>
               
               {user ? (
