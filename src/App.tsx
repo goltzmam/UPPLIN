@@ -14,6 +14,7 @@ import Perfil from "./pages/Perfil";
 import MeusIngressos from "./pages/MeusIngressos";
 import Mensagens from "./pages/Mensagens";
 import Checkout from "./pages/Checkout";
+import Instalar from "./pages/Instalar";
 import OrganizerDashboard from "./pages/organizador/Dashboard";
 import EventoForm from "./pages/organizador/EventoForm";
 import CheckIn from "./pages/organizador/CheckIn";
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/checkout/:orderId" element={<Checkout />} />
             <Route path="/precos" element={<Precos />} />
             <Route path="/organizadores" element={<Organizadores />} />
+            <Route path="/instalar" element={<Instalar />} />
 
             {/* Organizer Routes */}
             <Route path="/organizador/login" element={<OrganizadorLogin />} />
