@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeaturedStories } from "@/components/home/FeaturedStories";
+import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { 
   Search, 
@@ -16,38 +17,9 @@ import {
   TrendingUp,
   Sparkles,
   ArrowRight,
-  Music,
-  PartyPopper,
-  Theater,
-  Trophy,
-  GraduationCap,
-  Utensils,
   ChevronRight,
-  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-// Story-style category item
-function CategoryStory({ icon: Icon, name, color, href }: { 
-  icon: React.ElementType; 
-  name: string; 
-  color: string;
-  href: string;
-}) {
-  return (
-    <Link to={href} className="flex flex-col items-center gap-2 shrink-0">
-      <div className="avatar-ring-gradient p-[2px] rounded-full">
-        <div className={cn(
-          "h-16 w-16 rounded-full flex items-center justify-center bg-background",
-          color
-        )}>
-          <Icon className="h-6 w-6" />
-        </div>
-      </div>
-      <span className="text-xs font-medium text-center max-w-[70px] truncate">{name}</span>
-    </Link>
-  );
-}
 
 // Trending section card
 function TrendingCard({ title, subtitle, image, href }: {
@@ -125,15 +97,6 @@ export default function Index() {
     }
   };
 
-  const categories = [
-    { name: "Shows", icon: Music, color: "text-pink-500", href: "/eventos?categoria=shows" },
-    { name: "Festas", icon: PartyPopper, color: "text-purple-500", href: "/eventos?categoria=festas" },
-    { name: "Teatro", icon: Theater, color: "text-orange-500", href: "/eventos?categoria=teatro" },
-    { name: "Esportes", icon: Trophy, color: "text-green-500", href: "/eventos?categoria=esportes" },
-    { name: "Cursos", icon: GraduationCap, color: "text-blue-500", href: "/eventos?categoria=cursos" },
-    { name: "Gastronomia", icon: Utensils, color: "text-red-500", href: "/eventos?categoria=gastronomia" },
-  ];
-
   const trending = [
     { 
       title: "Festivais de Verão", 
@@ -181,22 +144,14 @@ export default function Index() {
       </div>
 
       <main className="pt-[calc(3.5rem+3.5rem)]"> {/* Header (56px) + Search bar (56px) */}
-        {/* Featured Stories */}
-        <section className="border-b border-border/50">
-          <div className="container">
-            <FeaturedStories />
-          </div>
+        {/* Featured Stories - Instagram-style with gradient rings */}
+        <section className="border-b border-border/30">
+          <FeaturedStories />
         </section>
 
-        {/* Categories - Stories Style */}
-        <section className="py-4 border-b border-border/50">
-          <div className="container">
-            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
-              {categories.map((cat) => (
-                <CategoryStory key={cat.name} {...cat} />
-              ))}
-            </div>
-          </div>
+        {/* Categories - Pill-style chips */}
+        <section className="border-b border-border/30">
+          <CategoriesCarousel />
         </section>
 
         {/* Trending Section */}
