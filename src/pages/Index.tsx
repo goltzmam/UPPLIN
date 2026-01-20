@@ -9,6 +9,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { TikTokFeed } from "@/components/feed/TikTokFeed";
+import { FeedSearch } from "@/components/feed/FeedSearch";
 
 import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
@@ -30,6 +31,7 @@ const PAGE_SIZE = 10;
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   // Keep scroll position without re-rendering on every scroll tick (critical for mobile perf)
   const scrollPosRef = useRef(0);
   const navigate = useNavigate();
@@ -252,10 +254,18 @@ export default function Index() {
             />
           </div>
 
-          {/* Placeholder for balance */}
-          <div className="w-9" />
+          {/* Search button */}
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center border border-white/10"
+          >
+            <Search className="h-5 w-5 text-white" />
+          </button>
         </div>
       </div>
+
+      {/* Search Overlay */}
+      <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );
 
