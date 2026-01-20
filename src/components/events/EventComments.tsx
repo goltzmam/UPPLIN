@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -38,7 +38,6 @@ export function EventComments({ eventId }: EventCommentsProps) {
   const [content, setContent] = useState("");
   const [replyTo, setReplyTo] = useState<{ id: string; userName: string } | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
-  const [mentionSuggestions, setMentionSuggestions] = useState<any[]>([]);
   const [showMentions, setShowMentions] = useState(false);
   const [mentionQuery, setMentionQuery] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -89,17 +88,12 @@ export function EventComments({ eventId }: EventCommentsProps) {
     },
   });
 
-  // Filter mentions based on query
-  useEffect(() => {
-    if (mentionQuery && showMentions) {
-      const filtered = allUsers.filter((u) =>
+  // Filter mentions based on query - using useMemo to avoid infinite loop
+  const filteredMentions = mentionQuery && showMentions
+    ? allUsers.filter((u) =>
         u.full_name?.toLowerCase().includes(mentionQuery.toLowerCase())
-      ).slice(0, 5);
-      setMentionSuggestions(filtered);
-    } else {
-      setMentionSuggestions([]);
-    }
-  }, [mentionQuery, showMentions, allUsers]);
+      ).slice(0, 5)
+    : [];
 
   // Handle input change with mention detection
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -273,14 +267,14 @@ export function EventComments({ eventId }: EventCommentsProps) {
               
               {/* Mention suggestions */}
               <AnimatePresence>
-                {showMentions && mentionSuggestions.length > 0 && (
+                {showMentions && filteredMentions.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     className="absolute bottom-full left-0 right-0 mb-1 bg-popover border rounded-lg shadow-lg overflow-hidden z-50"
                   >
-                    {mentionSuggestions.map((u) => (
+                    {filteredMentions.map((u) => (
                       <button
                         key={u.id}
                         type="button"
