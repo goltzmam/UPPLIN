@@ -65,26 +65,36 @@ export function RightSidebar() {
             </div>
             <div className="space-y-4">
               {suggestedOrganizers.map((org) => (
-                <Link
+                <div
                   key={org.slug}
-                  to={`/organizador/${org.slug}`}
                   className="flex items-center gap-3 group"
                 >
-                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10 flex items-center justify-center text-lg shrink-0">
+                  <Link 
+                    to={`/organizador/${org.slug}`}
+                    className="h-11 w-11 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10 flex items-center justify-center text-lg shrink-0 hover:scale-105 transition-transform"
+                  >
                     {org.avatar}
-                  </div>
-                  <div className="flex-1 min-w-0">
+                  </Link>
+                  <Link to={`/organizador/${org.slug}`} className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
                       {org.name}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {org.followers} seguidores
                     </p>
-                  </div>
-                  <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs font-semibold shrink-0">
+                  </Link>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 rounded-lg text-xs font-semibold shrink-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // TODO: Follow logic
+                    }}
+                  >
                     Seguir
                   </Button>
-                </Link>
+                </div>
               ))}
             </div>
           </div>
