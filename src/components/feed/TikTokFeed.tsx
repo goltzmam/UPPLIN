@@ -374,12 +374,27 @@ export function TikTokFeed({
   const activeIndexRef = useRef(0);
   const scrollRafRef = useRef<number | null>(null);
 
+  // Keep references to each snap item for IntersectionObserver
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const visibilityRatiosRef = useRef<Map<number, number>>(new Map());
+
   const [isMuted, setIsMuted] = useState(true);
 
   // Pull-to-refresh (only affects when user is at the very top of the feed)
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const pullStartYRef = useRef(0);
+  const isRefreshingRef = useRef(false);
+  const pullDistanceRef = useRef(0);
+
+  const setPull = useCallback((v: number) => {
+    pullDistanceRef.current = v;
+    setPullDistance(v);
+  }, []);
+
+  useEffect(() => {
+    isRefreshingRef.current = isRefreshing;
+  }, [isRefreshing]);
 
   // Restore scroll position when mounting
   useEffect(() => {
@@ -388,6 +403,7 @@ export function TikTokFeed({
     }
   }, []);
 
+  // Scroll handler: keep it lightweight (no active video math here)
   const handleScroll = useCallback(() => {
     if (!containerRef.current) return;
 
@@ -398,15 +414,9 @@ export function TikTokFeed({
 
       const container = containerRef.current;
       const scrollTop = container.scrollTop;
+
       const itemHeight = container.clientHeight;
       const scrollHeight = container.scrollHeight;
-      const newIndex = Math.round(scrollTop / itemHeight);
-
-      if (newIndex !== activeIndexRef.current && newIndex >= 0 && newIndex < items.length) {
-        activeIndexRef.current = newIndex;
-        triggerFeedback({ haptic: "light" });
-        setActiveIndex(newIndex);
-      }
 
       onScrollChange?.(scrollTop);
 
@@ -417,59 +427,108 @@ export function TikTokFeed({
     });
   }, [items.length, hasMore, isLoadingMore, onLoadMore, onScrollChange]);
 
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (!onRefresh || isRefreshing) return;
-      const container = containerRef.current;
-      if (!container) return;
-      if (container.scrollTop === 0) {
-        pullStartYRef.current = e.touches[0].clientY;
-      }
-    },
-    [onRefresh, isRefreshing]
-  );
+  // IntersectionObserver-based active card (smooth on iOS, less jank than Math.round on scroll)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    if (typeof IntersectionObserver === "undefined") return;
 
-  const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!onRefresh || isRefreshing) return;
-      const container = containerRef.current;
-      if (!container) return;
+    visibilityRatiosRef.current = new Map();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const idxStr = (entry.target as HTMLElement).dataset.index;
+          const idx = idxStr ? Number(idxStr) : NaN;
+          if (!Number.isFinite(idx)) continue;
+          visibilityRatiosRef.current.set(idx, entry.isIntersecting ? entry.intersectionRatio : 0);
+        }
+
+        // Pick the most visible card
+        let bestIdx = activeIndexRef.current;
+        let bestRatio = visibilityRatiosRef.current.get(bestIdx) ?? 0;
+        for (const [idx, ratio] of visibilityRatiosRef.current.entries()) {
+          if (ratio > bestRatio) {
+            bestRatio = ratio;
+            bestIdx = idx;
+          }
+        }
+
+        // Only switch when there's a clear winner
+        if (bestIdx !== activeIndexRef.current && bestRatio >= 0.6) {
+          activeIndexRef.current = bestIdx;
+          triggerFeedback({ haptic: "light" });
+          setActiveIndex(bestIdx);
+        }
+      },
+      {
+        root: container,
+        threshold: [0, 0.25, 0.5, 0.6, 0.75, 1],
+      }
+    );
+
+    // Observe current items
+    itemRefs.current.forEach((el) => {
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [items.length]);
+
+  // Native touch listeners for pull-to-refresh (avoid React's non-passive touch handlers blocking scroll)
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !onRefresh) return;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (isRefreshingRef.current) return;
+      if (container.scrollTop !== 0) return;
+      pullStartYRef.current = e.touches[0]?.clientY ?? 0;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (isRefreshingRef.current) return;
       if (container.scrollTop !== 0) return;
 
-      const currentY = e.touches[0].clientY;
+      const currentY = e.touches[0]?.clientY ?? 0;
       const diff = currentY - pullStartYRef.current;
       if (diff <= 0) return;
 
-      // Apply resistance, cap max pull
       const distance = Math.min(diff * 0.35, 90);
-      setPullDistance(distance);
+      setPull(distance);
 
-      // Prevent the iOS rubber-band from fighting with our pull indicator
+      // Prevent iOS rubber-band ONLY when pulling down
       if (distance > 10) e.preventDefault();
-    },
-    [onRefresh, isRefreshing]
-  );
+    };
 
-  const handleTouchEnd = useCallback(async () => {
-    if (!onRefresh) {
-      setPullDistance(0);
-      return;
-    }
+    const onTouchEnd = async () => {
+      const threshold = 60;
+      const currentPull = pullDistanceRef.current;
 
-    const threshold = 60;
-    if (pullDistance >= threshold && !isRefreshing) {
-      setIsRefreshing(true);
-      setPullDistance(threshold * 0.6);
-      try {
-        await onRefresh();
-      } finally {
-        setIsRefreshing(false);
-        setPullDistance(0);
+      if (currentPull >= threshold && !isRefreshingRef.current) {
+        setIsRefreshing(true);
+        setPull(threshold * 0.6);
+        try {
+          await onRefresh();
+        } finally {
+          setIsRefreshing(false);
+          setPull(0);
+        }
+      } else {
+        setPull(0);
       }
-    } else {
-      setPullDistance(0);
-    }
-  }, [onRefresh, pullDistance, isRefreshing]);
+    };
+
+    container.addEventListener("touchstart", onTouchStart, { passive: true });
+    container.addEventListener("touchmove", onTouchMove, { passive: false });
+    container.addEventListener("touchend", onTouchEnd, { passive: true });
+
+    return () => {
+      container.removeEventListener("touchstart", onTouchStart);
+      container.removeEventListener("touchmove", onTouchMove);
+      container.removeEventListener("touchend", onTouchEnd);
+    };
+  }, [onRefresh, setPull]);
 
   useEffect(() => () => {
     if (scrollRafRef.current) window.cancelAnimationFrame(scrollRafRef.current);
@@ -553,9 +612,6 @@ export function TikTokFeed({
     <div
       ref={containerRef}
       onScroll={handleScroll}
-      onTouchStartCapture={handleTouchStart}
-      onTouchMoveCapture={handleTouchMove}
-      onTouchEndCapture={handleTouchEnd}
       style={{
         height: "calc(100dvh - var(--app-bottom-offset, 80px))",
         WebkitOverflowScrolling: "touch",
@@ -586,6 +642,10 @@ export function TikTokFeed({
       {items.map((item, index) => (
         <div 
           key={item.id} 
+          ref={(el) => {
+            itemRefs.current[index] = el;
+          }}
+          data-index={index}
           style={{ 
             height: 'calc(100dvh - var(--app-bottom-offset, 80px))',
             minHeight: 'calc(100dvh - var(--app-bottom-offset, 80px))'
