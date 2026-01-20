@@ -8,6 +8,8 @@ import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { FeedEventCard } from "@/components/events/FeedEventCard";
+import { FeaturedStories } from "@/components/home/FeaturedStories";
+import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { 
   Search, 
   MapPin, 
@@ -70,6 +72,7 @@ function TrendingCard({ title, subtitle, image, href }: {
 
 export default function Index() {
   const [searchValue, setSearchValue] = useState("");
+  const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
   const navigate = useNavigate();
 
   // Fetch events
@@ -153,6 +156,13 @@ export default function Index() {
           </div>
         </div>
 
+        {/* Featured Stories */}
+        <section className="border-b border-border/50">
+          <div className="container">
+            <FeaturedStories />
+          </div>
+        </section>
+
         {/* Categories - Stories Style */}
         <section className="py-4 border-b border-border/50">
           <div className="container">
@@ -185,50 +195,75 @@ export default function Index() {
           </div>
         </section>
 
-        {/* Feed Section - TikTok Style */}
+        {/* Feed Section - TikTok Style with Tabs */}
         <section className="py-6">
           <div className="container">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-lg font-bold">Para Você</h2>
-              <Button variant="ghost" size="sm" className="text-muted-foreground text-sm">
+            {/* Tab Navigation */}
+            <div className="flex items-center justify-center gap-6 mb-6 border-b border-border">
+              <button
+                onClick={() => setActiveTab("foryou")}
+                className={cn(
+                  "pb-3 text-base font-semibold transition-all border-b-2 -mb-px",
+                  activeTab === "foryou" 
+                    ? "border-foreground text-foreground" 
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Para Você
+              </button>
+              <button
+                onClick={() => setActiveTab("following")}
+                className={cn(
+                  "pb-3 text-base font-semibold transition-all border-b-2 -mb-px",
+                  activeTab === "following" 
+                    ? "border-foreground text-foreground" 
+                    : "border-transparent text-muted-foreground hover:text-foreground"
+                )}
+              >
                 Seguindo
-              </Button>
+              </button>
             </div>
 
-            {isLoading ? (
-              <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-3">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <div key={i} className="feed-card animate-pulse bg-muted" />
-                ))}
-              </div>
+            {activeTab === "foryou" ? (
+              <>
+                {isLoading ? (
+                  <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-3">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="feed-card animate-pulse bg-muted" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-3">
+                    {events.map((event: any, index: number) => (
+                      <FeedEventCard
+                        key={event.id}
+                        id={event.id}
+                        title={event.title}
+                        coverImageUrl={event.cover_image_url}
+                        startAt={event.start_at}
+                        venueName={event.venue_name}
+                        addressText={event.address_text}
+                        organizerName={event.organizer?.display_name}
+                        organizerAvatar={event.organizer?.logo_url}
+                        index={index}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Load more */}
+                <div className="flex justify-center mt-8">
+                  <Button variant="outline" size="lg" className="rounded-full" asChild>
+                    <Link to="/eventos">
+                      Ver mais eventos
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Link>
+                  </Button>
+                </div>
+              </>
             ) : (
-              <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-3">
-                {events.map((event: any, index: number) => (
-                  <FeedEventCard
-                    key={event.id}
-                    id={event.id}
-                    title={event.title}
-                    coverImageUrl={event.cover_image_url}
-                    startAt={event.start_at}
-                    venueName={event.venue_name}
-                    addressText={event.address_text}
-                    organizerName={event.organizer?.display_name}
-                    organizerAvatar={event.organizer?.logo_url}
-                    index={index}
-                  />
-                ))}
-              </div>
+              <FollowingFeed />
             )}
-
-            {/* Load more */}
-            <div className="flex justify-center mt-8">
-              <Button variant="outline" size="lg" className="rounded-full" asChild>
-                <Link to="/eventos">
-                  Ver mais eventos
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
-              </Button>
-            </div>
           </div>
         </section>
 

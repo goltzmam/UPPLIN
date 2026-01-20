@@ -200,7 +200,10 @@ export type Database = {
           created_at: string | null
           description: string | null
           end_at: string | null
+          featured_until: string | null
           id: string
+          is_featured: boolean | null
+          is_sponsored: boolean | null
           lat: number | null
           lng: number | null
           organizer_id: string
@@ -217,7 +220,10 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           end_at?: string | null
+          featured_until?: string | null
           id?: string
+          is_featured?: boolean | null
+          is_sponsored?: boolean | null
           lat?: number | null
           lng?: number | null
           organizer_id: string
@@ -234,7 +240,10 @@ export type Database = {
           created_at?: string | null
           description?: string | null
           end_at?: string | null
+          featured_until?: string | null
           id?: string
+          is_featured?: boolean | null
+          is_sponsored?: boolean | null
           lat?: number | null
           lng?: number | null
           organizer_id?: string
@@ -247,6 +256,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      follows: {
+        Row: {
+          created_at: string
+          id: string
+          organizer_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          organizer_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          organizer_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "follows_organizer_id_fkey"
             columns: ["organizer_id"]
             isOneToOne: false
             referencedRelation: "organizer_accounts"
