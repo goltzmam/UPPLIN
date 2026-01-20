@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Ticket, MessageCircle, Settings, Users } from "lucide-react";
+import { Menu, X, User, LogOut, Ticket, MessageCircle, Settings, Users, Bookmark } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -128,6 +128,10 @@ export function Header({ minimal = false }: HeaderProps) {
                       <Ticket className="mr-2 h-4 w-4" />
                       Meus Ingressos
                     </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/eventos-salvos")}>
+                      <Bookmark className="mr-2 h-4 w-4" />
+                      Eventos Salvos
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => navigate("/mensagens")}>
                       <MessageCircle className="mr-2 h-4 w-4" />
                       Mensagens
@@ -221,6 +225,14 @@ export function Header({ minimal = false }: HeaderProps) {
                   >
                     <Ticket className="h-5 w-5" />
                     Meus Ingressos
+                  </Link>
+                  <Link
+                    to="/eventos-salvos"
+                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Bookmark className="h-5 w-5" />
+                    Eventos Salvos
                   </Link>
                   <button
                     onClick={() => {
