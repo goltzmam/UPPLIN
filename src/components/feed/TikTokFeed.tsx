@@ -1,7 +1,7 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play, ChevronUp } from "lucide-react";
-import { format } from "date-fns";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play } from "lucide-react";
+import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ interface TikTokFeedItem {
   coverImageUrl: string | null;
   videoUrl?: string | null;
   startAt: string;
+  endAt?: string | null;
   venueName: string | null;
   addressText: string | null;
   organizerName?: string;
@@ -33,8 +34,7 @@ interface TikTokFeedProps {
   onScrollChange?: (position: number) => void;
 }
 
-// Height calculation: full viewport minus bottom nav only (overlay header doesn't take space)
-// Uses 100dvh for mobile-accurate viewport, and subtracts bottom nav with safe area
+// Height calculation: full viewport minus bottom nav only
 const FEED_HEIGHT = "calc(100dvh - var(--app-bottom-offset, 80px))";
 
 function formatEngagementCount(count: number): string {
@@ -47,23 +47,46 @@ function formatEngagementCount(count: number): string {
   return count.toString();
 }
 
+// Check if event is happening now
+function isEventLive(startAt: string, endAt?: string | null): boolean {
+  const now = new Date();
+  const start = new Date(startAt);
+  // If no end date, assume 3 hours duration
+  const end = endAt ? new Date(endAt) : addHours(start, 3);
+  return isWithinInterval(now, { start, end });
+}
+
+// Live badge component with pulsing animation
+function LiveBadge() {
+  return (
+    <div className="flex items-center gap-1.5 bg-red-600 px-2.5 py-1 rounded-full">
+      <span className="relative flex h-2 w-2">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+        <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+      </span>
+      <span className="text-white text-xs font-bold uppercase tracking-wide">AO VIVO</span>
+    </div>
+  );
+}
+
 function FeedCard({ 
   item, 
   isActive,
   isMuted,
-  onToggleMute,
-  showNextHint
+  onToggleMute
 }: { 
   item: TikTokFeedItem; 
   isActive: boolean;
   isMuted: boolean;
   onToggleMute: () => void;
-  showNextHint: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  
+  // Check if event is live
+  const isLive = useMemo(() => isEventLive(item.startAt, item.endAt), [item.startAt, item.endAt]);
   
   // Use persistent engagement
   const { 
@@ -127,7 +150,7 @@ function FeedCard({
 
   return (
     <div 
-      className="relative h-full w-full snap-start snap-always"
+      className="relative h-full w-full"
       onDoubleClick={handleDoubleTap}
       onClick={handleTap}
     >
@@ -186,38 +209,45 @@ function FeedCard({
         )}
       </AnimatePresence>
 
-      {/* Top - Organizer info - positioned below overlay header */}
-      <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-20 flex items-center gap-2 z-10">
-        <button
-          onClick={handleOrganizerClick}
-          className="flex items-center gap-2 min-w-0"
-        >
-          <div className="avatar-ring-gradient p-[2px] rounded-full shrink-0">
-            <div className="h-9 w-9 rounded-full bg-muted overflow-hidden">
-              {item.organizerAvatar ? (
-                <img src={item.organizerAvatar} alt={item.organizerName} className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-xs font-bold">
-                  {item.organizerName?.[0] || "O"}
-                </div>
-              )}
+      {/* Top - Organizer info + Live badge - positioned below overlay header */}
+      <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-3 z-10">
+        <div className="flex items-center justify-between gap-2">
+          {/* Organizer */}
+          <button
+            onClick={handleOrganizerClick}
+            className="flex items-center gap-2 min-w-0 flex-1"
+          >
+            <div className="avatar-ring-gradient p-[2px] rounded-full shrink-0">
+              <div className="h-9 w-9 rounded-full bg-muted overflow-hidden">
+                {item.organizerAvatar ? (
+                  <img src={item.organizerAvatar} alt={item.organizerName} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                    {item.organizerName?.[0] || "O"}
+                  </div>
+                )}
+              </div>
+            </div>
+            <span className="text-white text-sm font-semibold drop-shadow-lg truncate">
+              @{item.organizerName?.replace(/\s+/g, "").toLowerCase() || "organizador"}
+            </span>
+          </button>
+
+          {/* Right side badges */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Live badge */}
+            {isLive && <LiveBadge />}
+            
+            {/* Price badge */}
+            <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full">
+              <span className={cn(
+                "text-xs font-bold",
+                (item.minPrice || 0) === 0 ? "text-green-600" : "text-foreground"
+              )}>
+                {formatPrice(item.minPrice || 0)}
+              </span>
             </div>
           </div>
-          <span className="text-white text-sm font-semibold drop-shadow-lg truncate">
-            @{item.organizerName?.replace(/\s+/g, "").toLowerCase() || "organizador"}
-          </span>
-        </button>
-      </div>
-
-      {/* Price badge - positioned below overlay header */}
-      <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] right-3 z-10">
-        <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full">
-          <span className={cn(
-            "text-xs font-bold",
-            (item.minPrice || 0) === 0 ? "text-green-600" : "text-foreground"
-          )}>
-            {formatPrice(item.minPrice || 0)}
-          </span>
         </div>
       </div>
 
@@ -411,16 +441,15 @@ export function TikTokFeed({
     <div
       ref={containerRef}
       style={{ height: FEED_HEIGHT }}
-      className="relative overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
+      className="relative overflow-y-scroll snap-y snap-mandatory scrollbar-hide overscroll-contain"
     >
       {items.map((item, index) => (
-        <div key={item.id} className="h-full w-full">
+        <div key={item.id} style={{ height: FEED_HEIGHT }} className="w-full snap-start snap-always">
           <FeedCard
             item={item}
             isActive={index === activeIndex}
             isMuted={isMuted}
             onToggleMute={() => setIsMuted(!isMuted)}
-            showNextHint={index < items.length - 1 || !!hasMore}
           />
         </div>
       ))}
