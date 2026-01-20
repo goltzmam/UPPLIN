@@ -102,9 +102,7 @@ export default function Index() {
 
   const events = data?.pages.flatMap(page => page.data) || [];
 
-  // Demo assets - using reliable CDN sources
-  const DEMO_VIDEO_URL = "/videos/demo-carnaval.mp4";
-  
+  // Demo cover images (fallback when no cover is provided)
   const DEMO_COVER_URLS = [
     "https://images.unsplash.com/photo-1521337706264-a414f153a5fc?w=1200&q=80",
     "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&q=80",
@@ -114,22 +112,29 @@ export default function Index() {
     "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&q=80",
   ];
 
+  // Demo video URL from public CDN for first event display
+  const DEMO_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
+
   const feedItems = events.map((event: any, index: number) => {
+    // Find video from event_media
     const videoMedia = event.event_media?.find((m: any) => m.type === "video");
+    
+    // Calculate minimum price from ticket types
     const minPrice = event.ticket_types?.length > 0
       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
       : 0;
 
-    // Use actual video from event_media, or demo video for first item in dev
-    const demoCover = import.meta.env.DEV ? DEMO_COVER_URLS[index % DEMO_COVER_URLS.length] : null;
-    // Use the demo video for the first event to showcase the feature
-    const demoVideo = import.meta.env.DEV && index === 0 ? DEMO_VIDEO_URL : null;
+    // Use actual cover or fallback to demo cover
+    const coverImageUrl = event.cover_image_url || DEMO_COVER_URLS[index % DEMO_COVER_URLS.length];
+    
+    // Use actual video from event_media, or demo video for first item to showcase the feature
+    const videoUrl = videoMedia?.url || (index === 0 ? DEMO_VIDEO_URL : null);
 
     return {
       id: event.id,
       title: event.title,
-      coverImageUrl: event.cover_image_url || demoCover,
-      videoUrl: videoMedia?.url || demoVideo,
+      coverImageUrl,
+      videoUrl,
       startAt: event.start_at,
       endAt: event.end_at,
       venueName: event.venue_name,
