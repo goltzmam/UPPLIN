@@ -44,12 +44,12 @@ export function EventGridCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.3 }}
+      transition={{ delay: index * 0.03, duration: 0.35, ease: "easeOut" }}
       className="group relative"
     >
       <Link to={`/evento/${id}`} className="block">
         {/* Card Container with sophisticated hover */}
-        <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted shadow-sm hover:shadow-xl transition-shadow duration-500">
+        <div className="relative aspect-[3/4] rounded-2xl lg:rounded-3xl overflow-hidden bg-muted shadow-md hover:shadow-2xl transition-all duration-500">
           {/* Image with parallax effect on hover */}
           <motion.div 
             className="absolute inset-0"
@@ -133,7 +133,7 @@ export function EventGridCard({
             </motion.div>
 
             {/* Title */}
-            <h3 className="font-display text-lg font-bold text-white leading-tight line-clamp-2 mb-2 group-hover:text-white transition-colors">
+            <h3 className="font-display text-base lg:text-lg xl:text-xl font-bold text-white leading-tight line-clamp-2 mb-2 group-hover:text-white transition-colors">
               {title}
             </h3>
 
@@ -182,7 +182,7 @@ export function EventGridCard({
           </div>
 
           {/* Interactive border glow on hover */}
-          <div className="absolute inset-0 rounded-2xl ring-1 ring-white/0 group-hover:ring-white/20 transition-all duration-500 pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl lg:rounded-3xl ring-1 ring-white/0 group-hover:ring-white/20 transition-all duration-500 pointer-events-none" />
         </div>
       </Link>
     </motion.div>

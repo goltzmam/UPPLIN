@@ -138,16 +138,16 @@ export function NearbyEvents({ limit = 4 }: NearbyEventsProps) {
   // Don't show section if no location and no events
   if (!location && !locationError) {
     return (
-      <section className="py-8 border-b border-border/30">
+      <section className="py-8 lg:py-10 border-b border-border/30">
         <div className="container">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-                <MapPin className="h-5 w-5 text-white" />
+          <div className="flex items-center justify-between mb-6 lg:mb-8">
+            <div className="flex items-center gap-3 lg:gap-4">
+              <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <MapPin className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
               </div>
               <div>
-                <h2 className="font-display text-xl font-bold">Eventos Próximos</h2>
-                <p className="text-sm text-muted-foreground">Descubra o que está rolando perto de você</p>
+                <h2 className="font-display text-xl lg:text-2xl font-bold">Eventos Próximos</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">Descubra o que está rolando perto de você</p>
               </div>
             </div>
           </div>
@@ -155,28 +155,29 @@ export function NearbyEvents({ limit = 4 }: NearbyEventsProps) {
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center justify-center py-12 px-4 rounded-2xl bg-muted/50 border border-border/50"
+            className="flex flex-col items-center justify-center py-16 lg:py-20 px-6 rounded-3xl bg-gradient-to-br from-muted/50 to-muted/30 border border-border/50"
           >
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mb-4">
-              <Navigation className="h-8 w-8 text-blue-500" />
+            <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-3xl bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center mb-6 shadow-inner">
+              <Navigation className="h-10 w-10 lg:h-12 lg:w-12 text-blue-500" />
             </div>
-            <h3 className="font-semibold text-lg mb-2">Ative sua localização</h3>
-            <p className="text-muted-foreground text-sm text-center max-w-xs mb-4">
+            <h3 className="font-display font-bold text-xl lg:text-2xl mb-3">Ative sua localização</h3>
+            <p className="text-muted-foreground text-sm lg:text-base text-center max-w-sm mb-6">
               Permita acesso à sua localização para descobrir eventos incríveis perto de você
             </p>
             <Button 
               onClick={requestLocation}
               disabled={isRequestingLocation}
-              className="rounded-full"
+              size="lg"
+              className="rounded-full px-8"
             >
               {isRequestingLocation ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                   Obtendo localização...
                 </>
               ) : (
                 <>
-                  <MapPin className="h-4 w-4 mr-2" />
+                  <MapPin className="h-5 w-5 mr-2" />
                   Ativar Localização
                 </>
               )}
@@ -193,20 +194,20 @@ export function NearbyEvents({ limit = 4 }: NearbyEventsProps) {
 
   if (isLoading) {
     return (
-      <section className="py-8 border-b border-border/30">
+      <section className="py-8 lg:py-10 border-b border-border/30">
         <div className="container">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <MapPin className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-3 lg:gap-4 mb-6 lg:mb-8">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+              <MapPin className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
             </div>
             <div>
-              <h2 className="font-display text-xl font-bold">Eventos Próximos</h2>
-              <p className="text-sm text-muted-foreground">Carregando...</p>
+              <h2 className="font-display text-xl lg:text-2xl font-bold">Eventos Próximos</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">Carregando...</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
+              <div key={i} className="aspect-[3/4] rounded-2xl lg:rounded-3xl bg-muted animate-pulse" />
             ))}
           </div>
         </div>
@@ -219,28 +220,28 @@ export function NearbyEvents({ limit = 4 }: NearbyEventsProps) {
   }
 
   return (
-    <section className="py-8 border-b border-border/30">
+    <section className="py-8 lg:py-10 border-b border-border/30">
       <div className="container">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-              <MapPin className="h-5 w-5 text-white" />
+        <div className="flex items-center justify-between mb-6 lg:mb-8">
+          <div className="flex items-center gap-3 lg:gap-4">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-xl lg:rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20">
+              <MapPin className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
             </div>
             <div>
-              <h2 className="font-display text-xl font-bold">Eventos Próximos</h2>
-              <p className="text-sm text-muted-foreground">Perto de você agora</p>
+              <h2 className="font-display text-xl lg:text-2xl font-bold">Eventos Próximos</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">Perto de você agora</p>
             </div>
           </div>
           <Link 
             to="/eventos" 
-            className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors group"
+            className="hidden sm:flex px-5 py-2.5 rounded-full bg-muted hover:bg-muted/80 text-sm font-medium text-foreground items-center gap-2 transition-all group"
           >
             Ver todos
             <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {feedItems.map((item, index) => (
             <div key={item.id} className="relative">
               <EventGridCard

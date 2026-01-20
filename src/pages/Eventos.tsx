@@ -77,30 +77,31 @@ export default function Eventos() {
   const hasActiveFilters = search || selectedCategory !== "all";
 
   return (
-    <div className="min-h-screen flex flex-col pb-20 md:pb-0">
+    <div className="min-h-screen flex flex-col pb-20 md:pb-0 bg-background">
       <Header />
       
       <main className="flex-1">
-        {/* Search Header */}
-        <section className="bg-muted/30 border-b border-border py-6 sm:py-8 pt-20 sm:pt-24">
+        {/* Search Header - Enhanced */}
+        <section className="bg-gradient-to-b from-muted/50 to-background border-b border-border py-8 sm:py-10 pt-24 sm:pt-28 lg:pt-32">
           <div className="container px-4">
-            <h1 className="font-display text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Explorar Eventos</h1>
-            <div className="flex gap-2 sm:gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-2">Explorar Eventos</h1>
+            <p className="text-muted-foreground mb-6 lg:mb-8">Encontre experiências incríveis perto de você</p>
+            <div className="flex gap-3 sm:gap-4">
+              <div className="relative flex-1 max-w-2xl">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar eventos..."
-                  className="pl-10 h-10 sm:h-11"
+                  placeholder="Buscar eventos, artistas, locais..."
+                  className="pl-12 h-12 sm:h-14 text-base rounded-2xl bg-background border-border/50 focus:border-foreground"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
               <Sheet open={showFilters} onOpenChange={setShowFilters}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-10 w-10 sm:h-11 sm:w-11 shrink-0 relative">
-                    <SlidersHorizontal className="h-4 w-4" />
+                  <Button variant="outline" size="icon" className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 relative rounded-2xl border-border/50">
+                    <SlidersHorizontal className="h-5 w-5" />
                     {hasActiveFilters && (
-                      <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full" />
+                      <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-primary rounded-full border-2 border-background" />
                     )}
                   </Button>
                 </SheetTrigger>
@@ -143,19 +144,20 @@ export default function Eventos() {
               </Sheet>
             </div>
 
-            {/* Category Pills */}
-            <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
+            {/* Category Pills - Enhanced */}
+            <div className="flex gap-2 sm:gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${
+                  className={`px-5 py-2.5 sm:py-3 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
                     selectedCategory === cat.id
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card border border-border hover:bg-muted"
+                      ? "bg-foreground text-background shadow-lg"
+                      : "bg-card border border-border hover:bg-muted hover:border-muted-foreground/30"
                   }`}
                 >
-                  {cat.icon} {cat.label}
+                  <span className="mr-1.5">{cat.icon}</span>
+                  {cat.label}
                 </button>
               ))}
             </div>
@@ -185,13 +187,13 @@ export default function Eventos() {
           </div>
         </section>
 
-        {/* Events Grid */}
-        <section className="py-6 sm:py-8">
+        {/* Events Grid - Enhanced */}
+        <section className="py-8 sm:py-10 lg:py-12">
           <div className="container px-4">
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <CardSkeleton key={i} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 sm:gap-6">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <div key={i} className="aspect-[4/5] rounded-3xl bg-muted animate-pulse" />
                 ))}
               </div>
             ) : error ? (
@@ -202,10 +204,10 @@ export default function Eventos() {
               />
             ) : filteredEvents && filteredEvents.length > 0 ? (
               <>
-                <p className="text-sm text-muted-foreground mb-4">
+                <p className="text-sm text-muted-foreground mb-6">
                   {filteredEvents.length} evento(s) encontrado(s)
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 sm:gap-6">
                   {filteredEvents.map((event: any) => {
                     const minPrice = event.ticket_types?.length
                       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))

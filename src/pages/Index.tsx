@@ -259,7 +259,7 @@ export default function Index() {
   );
 
   // =====================================================================
-  // DESKTOP: Modern layout with polished sections
+  // DESKTOP: Modern layout with polished sections - Matching mobile quality
   // =====================================================================
   const DesktopLayout = () => (
     <div className="hidden md:block min-h-screen bg-background">
@@ -267,17 +267,17 @@ export default function Index() {
 
       {/* Search Bar - Fixed below header with refined styling */}
       <div className="fixed top-14 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
-        <div className="container py-3">
+        <div className="container py-4">
           <form 
             onSubmit={(e) => { e.preventDefault(); navigate("/eventos"); }} 
-            className="flex items-center gap-3 max-w-2xl mx-auto"
+            className="flex items-center gap-4 max-w-3xl mx-auto"
           >
-            <div className="flex-1 flex items-center gap-3 bg-muted/80 hover:bg-muted rounded-2xl px-5 py-3 transition-colors group">
+            <div className="flex-1 flex items-center gap-3 bg-muted/60 hover:bg-muted/80 rounded-2xl px-6 py-3.5 transition-all duration-200 group border border-transparent hover:border-border/50 hover:shadow-sm">
               <Search className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
               <input
                 type="text"
                 placeholder="Buscar eventos, artistas, locais..."
-                className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
+                className="flex-1 bg-transparent border-none outline-none text-base placeholder:text-muted-foreground"
                 onFocus={() => navigate("/eventos")}
               />
             </div>
@@ -286,64 +286,72 @@ export default function Index() {
       </div>
 
       <PullToRefresh onRefresh={handleRefresh}>
-        <main className="pt-[calc(3.5rem+4rem)]">
-          {/* Featured Stories Section */}
-          <section className="border-b border-border/30 bg-gradient-to-b from-muted/30 to-transparent">
-            <FeaturedStories />
+        <main className="pt-[calc(3.5rem+5rem)]">
+          {/* Hero Section with Stories */}
+          <section className="border-b border-border/30 bg-gradient-to-b from-muted/20 to-transparent">
+            <div className="container py-6">
+              <FeaturedStories />
+            </div>
           </section>
 
-          {/* Categories */}
-          <section className="border-b border-border/30">
-            <CategoriesCarousel />
+          {/* Categories - Enhanced for desktop */}
+          <section className="border-b border-border/30 bg-background">
+            <div className="container">
+              <CategoriesCarousel />
+            </div>
           </section>
 
           {/* Nearby Events - Geolocation */}
           <NearbyEvents limit={4} />
 
-          {/* Trending Section - Redesigned */}
-          <section className="py-8 border-b border-border/30">
+          {/* Trending Section - Premium Design */}
+          <section className="py-10 lg:py-12 border-b border-border/30">
             <div className="container">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-destructive flex items-center justify-center">
-                    <Flame className="h-5 w-5 text-white" />
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-destructive flex items-center justify-center shadow-lg shadow-accent/20">
+                    <Flame className="h-6 w-6 text-white" />
                   </div>
                   <div>
-                    <h2 className="font-display text-xl font-bold">Em Alta</h2>
-                    <p className="text-sm text-muted-foreground">Os mais buscados</p>
+                    <h2 className="font-display text-2xl lg:text-3xl font-bold">Em Alta</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">Os mais buscados da semana</p>
                   </div>
                 </div>
                 <Link 
                   to="/eventos" 
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors group"
+                  className="hidden sm:flex px-5 py-2.5 rounded-full bg-muted hover:bg-muted/80 text-sm font-medium text-foreground items-center gap-2 transition-all group"
                 >
                   Ver todos
                   <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </div>
               
-              {/* Trending cards with better layout */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Trending cards - Premium layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {trending.map((item, idx) => (
                   <Link 
                     key={item.title} 
                     to={item.href} 
-                    className="group relative rounded-2xl overflow-hidden aspect-[2.5/1] bg-muted"
+                    className="group relative rounded-3xl overflow-hidden aspect-[2.2/1] bg-muted shadow-lg hover:shadow-2xl transition-all duration-500"
                   >
                     <img 
                       src={item.image} 
                       alt={item.title} 
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
                     />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-                    <div className="absolute inset-0 p-6 flex flex-col justify-center">
-                      <div className="flex items-center gap-2 text-white/70 text-xs mb-2">
-                        <TrendingUp className="h-3.5 w-3.5" />
-                        <span className="uppercase tracking-wider font-medium">{item.subtitle}</span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
+                    <div className="absolute inset-0 p-8 flex flex-col justify-center">
+                      <div className="flex items-center gap-2 text-white/80 text-xs mb-3">
+                        <TrendingUp className="h-4 w-4" />
+                        <span className="uppercase tracking-widest font-semibold">{item.subtitle}</span>
                       </div>
-                      <h3 className="font-display text-2xl font-bold text-white group-hover:text-white/90 transition-colors">
+                      <h3 className="font-display text-3xl lg:text-4xl font-bold text-white group-hover:translate-x-1 transition-transform duration-300">
                         {item.title}
                       </h3>
+                      <div className="mt-4 flex items-center gap-2 text-white/60 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <span>Explorar categoria</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
                     </div>
                   </Link>
                 ))}
@@ -352,31 +360,31 @@ export default function Index() {
           </section>
 
           {/* Main Feed Section with Tabs */}
-          <section className="py-8">
+          <section className="py-10 lg:py-14">
             <div className="container">
               {/* Section header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-background" />
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-foreground flex items-center justify-center shadow-lg">
+                    <Calendar className="h-6 w-6 text-background" />
                   </div>
                   <div>
-                    <h2 className="font-display text-xl font-bold">Eventos</h2>
-                    <p className="text-sm text-muted-foreground">Descubra o que está rolando</p>
+                    <h2 className="font-display text-2xl lg:text-3xl font-bold">Eventos</h2>
+                    <p className="text-sm text-muted-foreground mt-0.5">Descubra o que está rolando</p>
                   </div>
                 </div>
               </div>
 
-              {/* Tab Navigation - Refined */}
-              <div className="sticky top-[112px] z-30 -mx-4 px-4 mb-6">
-                <div className="flex items-center gap-2 p-1 bg-muted/80 backdrop-blur-xl rounded-2xl w-fit">
+              {/* Tab Navigation - Premium pill design */}
+              <div className="sticky top-[136px] z-30 mb-8 py-3 -mx-4 px-4 bg-background/95 backdrop-blur-xl">
+                <div className="flex items-center gap-1.5 p-1.5 bg-muted/70 backdrop-blur-xl rounded-2xl w-fit shadow-sm border border-border/50">
                   <button
                     onClick={() => setActiveTab("foryou")}
                     className={cn(
-                      "px-6 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200",
+                      "px-8 py-3 text-sm font-semibold rounded-xl transition-all duration-300",
                       activeTab === "foryou" 
                         ? "bg-foreground text-background shadow-lg" 
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
                     Para Você
@@ -384,10 +392,10 @@ export default function Index() {
                   <button
                     onClick={() => setActiveTab("following")}
                     className={cn(
-                      "px-6 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200",
+                      "px-8 py-3 text-sm font-semibold rounded-xl transition-all duration-300",
                       activeTab === "following" 
                         ? "bg-foreground text-background shadow-lg" 
-                        : "text-muted-foreground hover:text-foreground"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                     )}
                   >
                     Seguindo
@@ -399,19 +407,19 @@ export default function Index() {
                 {activeTab === "foryou" ? (
                   <motion.div
                     key="foryou-desktop"
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
                   >
                     {isLoading ? (
-                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                          <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 lg:gap-6">
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                          <div key={i} className="aspect-[3/4] rounded-3xl bg-muted animate-pulse" />
                         ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 lg:gap-6">
                         {feedItems.map((item, index) => (
                           <EventGridCard
                             key={item.id}
@@ -431,17 +439,17 @@ export default function Index() {
                       </div>
                     )}
 
-                    {/* Load more button */}
-                    <div className="flex justify-center mt-10 pb-8">
+                    {/* Load more button - Premium styling */}
+                    <div className="flex justify-center mt-14 pb-10">
                       <Button 
                         variant="outline" 
                         size="lg" 
-                        className="rounded-full px-8 hover:bg-muted" 
+                        className="rounded-full px-10 py-6 text-base font-semibold hover:bg-foreground hover:text-background transition-all duration-300 border-2" 
                         asChild
                       >
                         <Link to="/eventos">
                           Ver mais eventos
-                          <ArrowRight className="h-4 w-4 ml-2" />
+                          <ArrowRight className="h-5 w-5 ml-2" />
                         </Link>
                       </Button>
                     </div>
@@ -449,10 +457,11 @@ export default function Index() {
                 ) : (
                   <motion.div
                     key="following-desktop"
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                    exit={{ opacity: 0, y: -12 }}
+                    transition={{ duration: 0.25, ease: "easeOut" }}
+                    className="min-h-[50vh]"
                   >
                     <FollowingFeed />
                   </motion.div>
