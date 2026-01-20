@@ -16,6 +16,8 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 
+const PAGE_SIZE = 12;
+
 const MUTE_STORAGE_KEY = "upplin_desktop_muted";
 
 export default function Index() {
