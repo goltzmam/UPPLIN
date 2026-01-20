@@ -117,7 +117,6 @@ export function useEventEngagement(eventId: string) {
           .from("saved_events")
           .insert({ event_id: eventId, user_id: user.id });
         if (error) throw error;
-        toast.success("Evento salvo!");
         return { action: "saved" };
       }
     },
