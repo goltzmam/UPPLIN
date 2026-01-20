@@ -46,42 +46,49 @@ export function EventCard({
   const displayUsername = organizerUsername || (organizerName ? organizerName.toLowerCase().replace(/\s+/g, '') : null);
 
   return (
-    <Link to={`/evento/${id}`} className="event-card group block bg-card rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all">
+    <Link to={`/evento/${id}`} className="group block bg-card rounded-2xl lg:rounded-3xl overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300">
       {/* Cover Image */}
-      <div className="relative aspect-[16/9] overflow-hidden">
+      <div className="relative aspect-[4/3] overflow-hidden">
         {coverImageUrl ? (
           <img
             src={coverImageUrl}
             alt={title}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-            <Calendar className="h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground/50" />
+            <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
           </div>
         )}
         
         {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
         
         {/* Date badge */}
-        <div className="absolute top-2 left-2 sm:top-3 sm:left-3">
-          <div className="bg-background/95 backdrop-blur-sm rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 text-center shadow-lg">
-            <div className="text-sm sm:text-lg font-bold leading-tight">{format(eventDate, "d")}</div>
-            <div className="text-[10px] sm:text-xs uppercase text-muted-foreground">{format(eventDate, "MMM", { locale: ptBR })}</div>
+        <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+          <div className="bg-background/95 backdrop-blur-md rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 text-center shadow-lg">
+            <div className="text-lg sm:text-xl font-bold leading-tight">{format(eventDate, "d")}</div>
+            <div className="text-[10px] sm:text-xs uppercase text-muted-foreground font-medium">{format(eventDate, "MMM", { locale: ptBR })}</div>
           </div>
         </div>
 
         {/* Sold out badge */}
         {soldOut && (
-          <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
-            <Badge variant="destructive" className="shadow-lg text-xs">Esgotado</Badge>
+          <div className="absolute top-3 right-3 sm:top-4 sm:right-4">
+            <Badge variant="destructive" className="shadow-lg text-xs font-semibold">Esgotado</Badge>
           </div>
         )}
+
+        {/* Price tag on image */}
+        <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4">
+          <div className={`px-3 py-1.5 rounded-xl backdrop-blur-md text-xs sm:text-sm font-bold ${minPrice === 0 ? "bg-success/90 text-white" : "bg-background/95 text-foreground"}`}>
+            {minPrice === 0 ? "Grátis" : `R$ ${(minPrice / 100).toFixed(0)}`}
+          </div>
+        </div>
       </div>
 
       {/* Content */}
-      <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+      <div className="p-4 sm:p-5 space-y-3">
         {/* Organizer link with hover preview */}
         {displayUsername && organizerId && (
           <OrganizerPreviewTooltip
@@ -91,27 +98,21 @@ export function EventCard({
           />
         )}
 
-        <h3 className="font-display font-bold text-sm sm:text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+        <h3 className="font-display font-bold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 group-hover:text-primary transition-colors">
           {title}
         </h3>
 
-        <div className="space-y-1 sm:space-y-1.5 text-xs sm:text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+        <div className="space-y-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 shrink-0 text-primary/60" />
             <span className="capitalize truncate">{formattedDay}, {formattedDate} • {formattedTime}</span>
           </div>
           {(venueName || addressText) && (
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 shrink-0 text-primary/60" />
               <span className="truncate">{venueName || addressText}</span>
             </div>
           )}
-        </div>
-
-        <div className="pt-2 border-t border-border">
-          <span className={`font-semibold text-xs sm:text-sm ${minPrice === 0 ? "text-success" : "text-foreground"}`}>
-            {formatPrice(minPrice)}
-          </span>
         </div>
       </div>
     </Link>

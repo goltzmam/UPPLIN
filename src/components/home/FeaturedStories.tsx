@@ -67,19 +67,19 @@ export function FeaturedStories() {
   ];
 
   return (
-    <div className="py-5">
+    <div className="py-4 md:py-2">
       {/* Section header */}
-      <div className="flex items-center gap-2 px-4 mb-4">
+      <div className="flex items-center gap-2 px-4 md:px-0 mb-4">
         <div className="relative">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 flex items-center justify-center">
-            <Play className="h-3 w-3 text-white fill-white ml-0.5" />
+          <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 flex items-center justify-center">
+            <Play className="h-3 w-3 md:h-3.5 md:w-3.5 text-white fill-white ml-0.5" />
           </div>
           <span className="absolute -top-1 -right-1 flex h-3 w-3">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-3 w-3 bg-pink-500"></span>
           </span>
         </div>
-        <h2 className="font-display text-base font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 bg-clip-text text-transparent">
+        <h2 className="font-display text-base md:text-lg font-bold bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 bg-clip-text text-transparent">
           Stories
         </h2>
       </div>
@@ -87,7 +87,7 @@ export function FeaturedStories() {
       {/* Draggable stories container */}
       <motion.div
         ref={containerRef}
-        className="flex gap-3 px-4 cursor-grab active:cursor-grabbing overflow-hidden"
+        className="flex gap-3 md:gap-4 px-4 md:px-0 cursor-grab active:cursor-grabbing overflow-hidden"
         drag="x"
         dragConstraints={containerRef}
         dragElastic={0.1}
@@ -114,8 +114,8 @@ export function FeaturedStories() {
               ) : (
                 <Link to={`/evento/${event.id}`} className="relative group block">
                   {/* Gradient ring effect */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 rounded-2xl opacity-100 group-hover:opacity-100 transition-opacity" />
-                  <div className="relative w-20 h-20 rounded-xl overflow-hidden ring-2 ring-background">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 rounded-2xl md:rounded-3xl opacity-100 group-hover:opacity-100 transition-opacity" />
+                  <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-xl md:rounded-2xl overflow-hidden ring-2 ring-background">
                     {event.cover_image_url ? (
                       <img
                         src={event.cover_image_url}
@@ -129,13 +129,13 @@ export function FeaturedStories() {
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
                       />
                     ) : (
-                      <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white font-bold text-lg">
+                      <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white font-bold text-lg md:text-xl">
                         {event.title[0]}
                       </div>
                     )}
                     {/* Play indicator overlay */}
                     <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Play className="h-6 w-6 text-white fill-white" />
+                      <Play className="h-6 w-6 md:h-7 md:w-7 text-white fill-white" />
                     </div>
                   </div>
                 </Link>

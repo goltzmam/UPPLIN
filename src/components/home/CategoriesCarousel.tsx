@@ -69,12 +69,12 @@ export function CategoriesCarousel() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   return (
-    <div className="py-4">
+    <div className="py-4 md:py-5">
 
       {/* Draggable categories container */}
       <motion.div
         ref={containerRef}
-        className="flex gap-2 px-4 cursor-grab active:cursor-grabbing overflow-hidden"
+        className="flex gap-2 md:gap-3 px-4 md:px-0 cursor-grab active:cursor-grabbing overflow-hidden"
         drag="x"
         dragConstraints={containerRef}
         dragElastic={0.1}
@@ -91,15 +91,15 @@ export function CategoriesCarousel() {
             >
               <Link 
                 to={category.href}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-border bg-background hover:bg-muted transition-all duration-200 flex-shrink-0 group"
+                className="flex items-center gap-2.5 px-4 md:px-5 py-2.5 md:py-3 rounded-full border border-border bg-background hover:bg-muted hover:border-muted-foreground/30 transition-all duration-200 flex-shrink-0 group shadow-sm hover:shadow-md"
               >
                 <div className={cn(
-                  "w-7 h-7 rounded-full flex items-center justify-center bg-gradient-to-br",
+                  "w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center bg-gradient-to-br shadow-sm",
                   category.gradient
                 )}>
-                  <Icon className="h-3.5 w-3.5 text-white" />
+                  <Icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
                 </div>
-                <span className="text-sm font-medium whitespace-nowrap group-hover:text-foreground transition-colors">
+                <span className="text-sm md:text-base font-medium whitespace-nowrap group-hover:text-foreground transition-colors">
                   {category.name}
                 </span>
               </Link>
