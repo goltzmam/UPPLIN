@@ -240,17 +240,35 @@ const FeedRow = React.memo(function FeedRow({
   const formattedTime = format(eventDate, "HH:mm");
   const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
+  // Video autoplay control - iOS requires muted + playsinline for autoplay
   useEffect(() => {
     const video = videoRef.current;
     if (!video || videoError) return;
+    
+    // Ensure video is muted before attempting autoplay (iOS requirement)
+    video.muted = isMuted;
+    
     if (shouldPlay) {
-      video.play().catch((err) => { if (err.name !== 'AbortError') setVideoError(true); });
+      // Small delay to ensure video element is ready
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => { 
+          if (err.name !== 'AbortError') {
+            console.warn('Video autoplay failed:', err.name);
+            // Don't set error - just show the cover image
+          }
+        });
+      }
     } else {
       video.pause();
     }
-  }, [shouldPlay, videoError]);
+  }, [shouldPlay, videoError, isMuted]);
 
-  useEffect(() => { if (videoRef.current) videoRef.current.muted = isMuted; }, [isMuted]);
+  useEffect(() => { 
+    if (videoRef.current) {
+      videoRef.current.muted = isMuted; 
+    }
+  }, [isMuted]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
@@ -278,22 +296,46 @@ const FeedRow = React.memo(function FeedRow({
   return (
     <div style={style} className="snap-start snap-always" onDoubleClick={handleDoubleTap} onClick={() => item.videoUrl && setIsPaused(p => !p)}>
       <div className="relative w-full h-full">
-        <div className="absolute inset-0 will-change-transform">
+        <div className="absolute inset-0 will-change-transform" style={{ contain: 'strict' }}>
           {item.videoUrl && !videoError ? (
             <>
-              {!videoLoaded && <VideoPlaceholder coverUrl={item.coverImageUrl} title={item.title} />}
-              <video ref={videoRef} src={isActive || shouldPreload ? item.videoUrl : undefined} loop playsInline muted={isMuted}
+              {/* Always show cover as background for faster perceived load */}
+              {item.coverImageUrl && (
+                <img 
+                  src={item.coverImageUrl} 
+                  alt="" 
+                  className="absolute inset-0 h-full w-full object-cover" 
+                  loading="eager"
+                  aria-hidden="true"
+                />
+              )}
+              {!videoLoaded && !item.coverImageUrl && <VideoPlaceholder coverUrl={null} title={item.title} />}
+              <video 
+                ref={videoRef} 
+                src={isActive || shouldPreload ? item.videoUrl : undefined} 
+                loop 
+                playsInline
+                webkit-playsinline="true"
+                x-webkit-airplay="deny"
+                muted={isMuted}
                 preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
                 onLoadedData={() => { setVideoLoaded(true); setVideoError(false); }}
                 onError={() => { setVideoError(true); setVideoLoaded(false); }}
-                className={cn("h-full w-full object-cover transition-opacity", videoLoaded ? "opacity-100" : "opacity-0")}
-                style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
+                className={cn(
+                  "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+                  videoLoaded ? "opacity-100" : "opacity-0"
+                )}
+                style={{ 
+                  transform: 'translateZ(0)', 
+                  backfaceVisibility: 'hidden',
+                  WebkitBackfaceVisibility: 'hidden'
+                }}
               />
             </>
           ) : item.coverImageUrl ? (
-            <img src={item.coverImageUrl} alt={item.title} className="h-full w-full object-cover" loading={isActive || shouldPreload ? "eager" : "lazy"} />
+            <img src={item.coverImageUrl} alt={item.title} className="absolute inset-0 h-full w-full object-cover" loading={isActive || shouldPreload ? "eager" : "lazy"} />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
+            <div className="absolute inset-0 h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
         </div>
