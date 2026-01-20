@@ -12,6 +12,7 @@ import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EventMediaCarousel } from "@/components/events/EventMediaCarousel";
 import { FollowButton } from "@/components/events/FollowButton";
+import { EventComments } from "@/components/events/EventComments";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -362,6 +363,11 @@ export default function Evento() {
                   </div>
                 </div>
               )}
+
+              {/* Comments Section */}
+              <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-4">
+                <EventComments eventId={event.id} />
+              </div>
 
               {/* Ticket Selection - Mobile Only */}
               <div className="lg:hidden">
