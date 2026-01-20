@@ -40,7 +40,7 @@ export default function Evento() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select(`*, ticket_types(*), organizer_accounts(*), event_media(*)`)
+        .select(`*, ticket_types(*), organizer_accounts!organizer_id(*), event_media(*)`)
         .eq("id", id)
         .eq("status", "published")
         .maybeSingle();
@@ -222,80 +222,124 @@ export default function Evento() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
       <main className="flex-1">
-        {/* Cover / Media Carousel */}
-        <div className="relative h-[35vh] sm:h-[45vh] min-h-[280px] sm:min-h-[350px] bg-secondary">
+        {/* Cover / Media Carousel - Larger on desktop */}
+        <div className="relative h-[40vh] md:h-[50vh] lg:h-[55vh] min-h-[300px] md:min-h-[400px] bg-secondary">
           <EventMediaCarousel
             media={event.event_media || []}
             coverImage={event.cover_image_url}
             title={event.title}
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent pointer-events-none" />
         </div>
 
-        <div className="container relative -mt-16 sm:-mt-24 z-10 pb-8 sm:pb-12 px-4">
+        <div className="container relative -mt-20 md:-mt-28 lg:-mt-32 z-10 pb-8 md:pb-12 lg:pb-16 px-4">
           <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
             {/* Event Info */}
-            <div className="lg:col-span-2 space-y-4 sm:space-y-6">
-              <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 shadow-lg animate-fade-up">
-                <Badge className="mb-2">{format(eventDate, "EEEE", { locale: ptBR })}</Badge>
+            <div className="lg:col-span-2 space-y-4 md:space-y-6">
+              {/* Main Card */}
+              <div className="bg-card rounded-2xl md:rounded-3xl border border-border p-5 md:p-8 shadow-xl animate-fade-up">
+                {/* Day badge */}
+                <Badge className="mb-3 text-sm px-4 py-1">
+                  {format(eventDate, "EEEE", { locale: ptBR })}
+                </Badge>
                 
-                {/* Organizer @ link with tooltip */}
+                {/* Organizer @ link - More prominent on desktop */}
                 {organizer && (
-                  <div className="mb-3">
-                    <OrganizerPreviewTooltip
-                      organizerId={organizer.id}
-                      organizerName={organizer.display_name}
-                    />
+                  <div className="mb-4 flex items-center gap-3">
+                    <Link 
+                      to={`/organizador/${organizer.id}`}
+                      className="flex items-center gap-2 group/org"
+                    >
+                      <Avatar className="h-8 w-8 md:h-10 md:w-10 ring-2 ring-border group-hover/org:ring-primary transition-all">
+                        <AvatarImage src={organizer.logo_url || undefined} />
+                        <AvatarFallback className="bg-muted text-sm font-medium">
+                          {getInitials(organizer.display_name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <span className="text-sm md:text-base font-semibold group-hover/org:text-primary transition-colors">
+                          {organizer.display_name}
+                        </span>
+                        {organizer.slug && (
+                          <span className="block text-xs md:text-sm text-muted-foreground group-hover/org:text-primary/70 transition-colors">
+                            @{organizer.slug}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                    <FollowButton organizerId={organizer.id} size="sm" className="ml-auto" />
                   </div>
                 )}
                 
-                <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{event.title}</h1>
+                {/* Title */}
+                <h1 className="font-display text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 md:mb-6 leading-tight">
+                  {event.title}
+                </h1>
 
-                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-muted-foreground mb-4 sm:mb-6">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                    <span className="text-sm sm:text-base">{format(eventDate, "d 'de' MMMM 'de' yyyy", { locale: ptBR })}</span>
+                {/* Event details grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6">
+                  <div className="flex items-center gap-3 p-3 md:p-4 rounded-xl bg-muted/50">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Data</p>
+                      <p className="font-semibold text-sm md:text-base">
+                        {format(eventDate, "d 'de' MMMM", { locale: ptBR })}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                    <span className="text-sm sm:text-base">{format(eventDate, "HH:mm")}</span>
+                  <div className="flex items-center gap-3 p-3 md:p-4 rounded-xl bg-muted/50">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      <Clock className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Horário</p>
+                      <p className="font-semibold text-sm md:text-base">{format(eventDate, "HH:mm")}</p>
+                    </div>
                   </div>
                   {event.venue_name && (
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
-                      <span className="text-sm sm:text-base truncate">{event.venue_name}</span>
+                    <div className="flex items-center gap-3 p-3 md:p-4 rounded-xl bg-muted/50">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <MapPin className="h-5 w-5 md:h-6 md:w-6 text-primary" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-xs text-muted-foreground">Local</p>
+                        <p className="font-semibold text-sm md:text-base truncate">{event.venue_name}</p>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-2">
+                {/* Action buttons */}
+                <div className="flex flex-wrap gap-2 md:gap-3">
                   <Button
                     variant="outline"
-                    size="sm"
-                    className="text-xs sm:text-sm"
+                    size="default"
+                    className="rounded-full"
                     onClick={() => {
                       triggerFeedback({ haptic: "selection", sound: "tap" });
                       handleShare();
                     }}
                   >
-                    <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                    <Share2 className="h-4 w-4 mr-2" />
                     Compartilhar
                   </Button>
                   <Button 
                     variant={isSaved ? "default" : "outline"} 
-                    size="sm" 
-                    className="text-xs sm:text-sm" 
+                    size="default"
+                    className="rounded-full" 
                     onClick={() => {
                       triggerFeedback({ haptic: "selection", sound: "tap" });
                       handleSave();
                     }}
                     disabled={savingEvent}
                   >
-                    <Heart className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${isSaved ? "fill-current" : ""}`} />
+                    <Heart className={`h-4 w-4 mr-2 ${isSaved ? "fill-current" : ""}`} />
                     {isSaved ? "Salvo" : "Salvar"}
                   </Button>
                 </div>

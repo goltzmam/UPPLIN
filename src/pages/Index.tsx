@@ -12,6 +12,7 @@ import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeaturedStories } from "@/components/home/FeaturedStories";
 import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
+import { NearbyEvents } from "@/components/home/NearbyEvents";
 import { EventGridCard } from "@/components/home/EventGridCard";
 import { 
   Search, 
@@ -296,6 +297,9 @@ export default function Index() {
             <CategoriesCarousel />
           </section>
 
+          {/* Nearby Events - Geolocation */}
+          <NearbyEvents limit={4} />
+
           {/* Trending Section - Redesigned */}
           <section className="py-8 border-b border-border/30">
             <div className="container">
@@ -419,6 +423,7 @@ export default function Index() {
                             organizerName={item.organizerName}
                             organizerAvatar={item.organizerAvatar}
                             organizerSlug={item.organizerSlug}
+                            organizerId={item.organizerId}
                             minPrice={item.minPrice}
                             index={index}
                           />
