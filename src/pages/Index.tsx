@@ -208,7 +208,7 @@ export default function Index() {
         </section>
 
         {/* Feed Section - TikTok Style with Tabs */}
-        <section className="py-6">
+        <section>
           <div className="container">
             {/* Tab Navigation */}
             <div className="flex items-center justify-center gap-6 mb-6 border-b border-border">
