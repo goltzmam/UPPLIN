@@ -221,24 +221,27 @@ export function Header({ minimal = false }: HeaderProps) {
             )}
           </nav>
 
-          {/* Mobile: Notification + Menu */}
+          {/* Mobile: Notification only for logged users, Menu for non-logged */}
           <div className="flex items-center gap-2 md:hidden">
-            {user && <NotificationCenter />}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-full"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            {user ? (
+              <NotificationCenter />
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Only for non-logged users */}
       <AnimatePresence>
-        {mobileMenuOpen && (
+        {mobileMenuOpen && !user && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -260,72 +263,28 @@ export function Header({ minimal = false }: HeaderProps) {
               >
                 Para Organizadores
               </Link>
-              
-              {user ? (
-                <>
-                  <div className="h-px bg-border my-2" />
-                  <Link
-                    to="/perfil"
-                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <User className="h-5 w-5 text-muted-foreground" />
-                    Meu Perfil
-                  </Link>
-                  <Link
-                    to="/meus-ingressos"
-                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Ticket className="h-5 w-5 text-muted-foreground" />
-                    Meus Ingressos
-                  </Link>
-                  <Link
-                    to="/eventos-salvos"
-                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Bookmark className="h-5 w-5 text-muted-foreground" />
-                    Eventos Salvos
-                  </Link>
-                  <div className="h-px bg-border my-2" />
-                  <button
-                    onClick={() => {
-                      handleSignOut();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="px-4 py-3 text-base font-medium hover:bg-destructive/10 rounded-xl transition-colors flex items-center gap-3 text-destructive w-full text-left"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    Sair
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="h-px bg-border my-2" />
-                  <div className="flex flex-col gap-2 p-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        navigate("/login");
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full rounded-xl"
-                    >
-                      Entrar
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        navigate("/cadastro");
-                        setMobileMenuOpen(false);
-                      }}
-                      className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90"
-                    >
-                      Criar Conta
-                    </Button>
-                  </div>
-                </>
-              )}
+              <div className="h-px bg-border my-2" />
+              <div className="flex flex-col gap-2 p-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    navigate("/login");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full rounded-xl"
+                >
+                  Entrar
+                </Button>
+                <Button
+                  onClick={() => {
+                    navigate("/cadastro");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full rounded-xl bg-foreground text-background hover:bg-foreground/90"
+                >
+                  Criar Conta
+                </Button>
+              </div>
             </nav>
           </motion.div>
         )}
