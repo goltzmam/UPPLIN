@@ -205,7 +205,7 @@ export default function Index() {
         {/* Safe area for notch */}
         <div className="h-[env(safe-area-inset-top,0px)]" />
         
-        {/* Top bar with logo, tabs and search */}
+        {/* Top bar with logo and tabs */}
         <div className="flex items-center justify-between px-4 py-3 pointer-events-auto">
           <Link to="/" className="font-display text-xl font-bold text-white drop-shadow-lg">
             UPPLIN
@@ -237,12 +237,8 @@ export default function Index() {
             </button>
           </div>
 
-          <button 
-            onClick={() => navigate("/eventos")}
-            className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
-          >
-            <Search className="h-5 w-5 text-white" />
-          </button>
+          {/* Placeholder for balance */}
+          <div className="w-9" />
         </div>
       </div>
     </div>
