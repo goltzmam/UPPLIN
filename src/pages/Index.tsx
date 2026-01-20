@@ -8,7 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
-import { TikTokFeed } from "@/components/feed/TikTokFeed";
+import { CategorySwipeFeed } from "@/components/feed/CategorySwipeFeed";
 import { FeaturedStories } from "@/components/home/FeaturedStories";
 import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
@@ -47,18 +47,13 @@ function TrendingCard({ title, subtitle, image, href }: {
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
-  const [forYouScrollPos, setForYouScrollPos] = useState(0);
-  const [followingScrollPos, setFollowingScrollPos] = useState(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch events with infinite scroll
+  // Desktop-only: Fetch events for grid display
   const { 
     data, 
     isLoading, 
-    fetchNextPage, 
-    hasNextPage, 
-    isFetchingNextPage 
   } = useInfiniteQuery({
     queryKey: ["homepage-events-infinite"],
     queryFn: async ({ pageParam = 0 }) => {
@@ -88,10 +83,10 @@ export default function Index() {
     initialPageParam: 0,
   });
 
-  // Flatten all pages into one array
+  // Flatten all pages into one array (for desktop grid)
   const events = data?.pages.flatMap(page => page.data) || [];
 
-  // Transform events for TikTok feed
+  // Transform events for desktop grid
   const feedItems = events.map((event: any) => {
     const videoMedia = event.event_media?.find((m: any) => m.type === "video");
     const minPrice = event.ticket_types?.length > 0
@@ -141,7 +136,7 @@ export default function Index() {
   // =====================================================================
   const MobileFeed = () => (
     <div className="fixed inset-0 z-0 md:hidden">
-      {/* Fullscreen Feed - behind everything */}
+      {/* Fullscreen Feed with Category Swipe */}
       <div className="absolute inset-0">
         <AnimatePresence mode="wait" initial={false}>
           {activeTab === "foryou" ? (
@@ -152,17 +147,9 @@ export default function Index() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
               className="h-full"
-              style={{ "--app-top-offset": "0px", "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))" } as React.CSSProperties}
+              style={{ "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))" } as React.CSSProperties}
             >
-              <TikTokFeed
-                items={feedItems}
-                isLoading={isLoading}
-                onLoadMore={fetchNextPage}
-                hasMore={!!hasNextPage}
-                isLoadingMore={isFetchingNextPage}
-                scrollPosition={forYouScrollPos}
-                onScrollChange={setForYouScrollPos}
-              />
+              <CategorySwipeFeed />
             </motion.div>
           ) : (
             <motion.div
@@ -181,47 +168,48 @@ export default function Index() {
         </AnimatePresence>
       </div>
 
-      {/* Overlay Header - TikTok style (transparent, over video) */}
-      <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
+      {/* Overlay Header - TikTok style */}
+      <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         {/* Safe area for notch */}
         <div className="h-[env(safe-area-inset-top,0px)]" />
         
-        {/* Top bar with logo and search */}
+        {/* Top bar with logo, tabs and search */}
         <div className="flex items-center justify-between px-4 py-3 pointer-events-auto">
           <Link to="/" className="font-display text-xl font-bold text-white drop-shadow-lg">
             UPPLIN
           </Link>
+          
+          {/* Center tabs */}
+          <div className="flex items-center gap-6">
+            <button
+              onClick={() => setActiveTab("following")}
+              className={cn(
+                "text-sm font-semibold transition-all",
+                activeTab === "following" 
+                  ? "text-white" 
+                  : "text-white/60"
+              )}
+            >
+              Seguindo
+            </button>
+            <button
+              onClick={() => setActiveTab("foryou")}
+              className={cn(
+                "text-sm font-semibold transition-all",
+                activeTab === "foryou" 
+                  ? "text-white" 
+                  : "text-white/60"
+              )}
+            >
+              Para você
+            </button>
+          </div>
+
           <button 
             onClick={() => navigate("/eventos")}
             className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
           >
             <Search className="h-5 w-5 text-white" />
-          </button>
-        </div>
-
-        {/* Tab Navigation - overlaid on video */}
-        <div className="flex items-center justify-center gap-8 px-4 pointer-events-auto">
-          <button
-            onClick={() => setActiveTab("following")}
-            className={cn(
-              "pb-2 text-base font-semibold transition-all border-b-2",
-              activeTab === "following" 
-                ? "border-white text-white" 
-                : "border-transparent text-white/60"
-            )}
-          >
-            Seguindo
-          </button>
-          <button
-            onClick={() => setActiveTab("foryou")}
-            className={cn(
-              "pb-2 text-base font-semibold transition-all border-b-2",
-              activeTab === "foryou" 
-                ? "border-white text-white" 
-                : "border-transparent text-white/60"
-            )}
-          >
-            Para você
           </button>
         </div>
       </div>
