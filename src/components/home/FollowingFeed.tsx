@@ -2,9 +2,10 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { FeedEventCard } from "@/components/events/FeedEventCard";
-import { Users } from "lucide-react";
+import { Users, Compass, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 
 interface EventWithOrganizer {
   id: string;
@@ -65,30 +66,112 @@ export function FollowingFeed() {
     enabled: !!user?.id,
   });
 
+  // Empty state component with dark theme for mobile
+  const EmptyState = ({ 
+    title, 
+    description, 
+    showLoginButton = false,
+    showExploreButton = false 
+  }: { 
+    title: string; 
+    description: string; 
+    showLoginButton?: boolean;
+    showExploreButton?: boolean;
+  }) => (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.1 }}
+        className="relative mb-6"
+      >
+        {/* Glow effect */}
+        <div className="absolute inset-0 bg-gradient-to-r from-accent/30 to-pink-500/30 rounded-full blur-2xl scale-150" />
+        <div className="relative h-20 w-20 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
+          <Users className="h-10 w-10 text-white/80" />
+        </div>
+      </motion.div>
+      
+      <motion.h3 
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.2 }}
+        className="font-display text-xl font-bold text-white mb-2"
+      >
+        {title}
+      </motion.h3>
+      
+      <motion.p 
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="text-white/60 text-sm mb-6 max-w-[280px]"
+      >
+        {description}
+      </motion.p>
+      
+      <motion.div
+        initial={{ y: 10, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4 }}
+        className="flex flex-col gap-3 w-full max-w-[200px]"
+      >
+        {showLoginButton && (
+          <Button asChild className="w-full bg-white text-black hover:bg-white/90">
+            <Link to="/login">Entrar</Link>
+          </Button>
+        )}
+        {showExploreButton && (
+          <Button asChild variant="outline" className="w-full border-white/20 text-white hover:bg-white/10">
+            <Link to="/explorar-organizadores" className="flex items-center gap-2">
+              <Compass className="h-4 w-4" />
+              Explorar Organizadores
+            </Link>
+          </Button>
+        )}
+      </motion.div>
+
+      {/* Suggested organizers preview */}
+      {showExploreButton && (
+        <motion.div
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="mt-8 w-full"
+        >
+          <div className="flex items-center gap-2 text-white/40 text-xs mb-3 justify-center">
+            <Sparkles className="h-3 w-3" />
+            <span>Organizadores em destaque</span>
+          </div>
+          <div className="flex justify-center gap-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div
+                key={i}
+                className="h-12 w-12 rounded-full bg-gradient-to-br from-white/20 to-white/5 border border-white/10"
+              />
+            ))}
+          </div>
+        </motion.div>
+      )}
+    </div>
+  );
+
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <Users className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <h3 className="font-display text-lg font-semibold mb-2">
-          Siga organizadores
-        </h3>
-        <p className="text-muted-foreground text-sm mb-4 max-w-xs">
-          Faça login para seguir organizadores e ver eventos personalizados para você
-        </p>
-        <Button asChild>
-          <Link to="/login">Entrar</Link>
-        </Button>
-      </div>
+      <EmptyState
+        title="Siga organizadores"
+        description="Faça login para seguir organizadores e ver eventos personalizados para você"
+        showLoginButton
+        showExploreButton
+      />
     );
   }
 
   if (isLoading) {
     return (
-      <div className="space-y-4 px-4">
+      <div className="space-y-4 px-4 pt-4">
         {[...Array(2)].map((_, i) => (
-          <div key={i} className="aspect-[4/5] bg-muted animate-pulse rounded-2xl" />
+          <div key={i} className="aspect-[4/5] bg-white/10 animate-pulse rounded-2xl" />
         ))}
       </div>
     );
@@ -96,22 +179,16 @@ export function FollowingFeed() {
 
   if (!followedEvents?.length) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-        <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center mb-4">
-          <Users className="h-8 w-8 text-muted-foreground" />
-        </div>
-        <h3 className="font-display text-lg font-semibold mb-2">
-          Nenhum evento ainda
-        </h3>
-        <p className="text-muted-foreground text-sm max-w-xs">
-          Siga organizadores para ver seus eventos aqui
-        </p>
-      </div>
+      <EmptyState
+        title="Nenhum evento ainda"
+        description="Siga organizadores para ver seus eventos aqui"
+        showExploreButton
+      />
     );
   }
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="space-y-4 px-4 pb-4">
       {followedEvents.map((event, index) => {
         const minPrice = event.ticket_types?.length
           ? Math.min(...event.ticket_types.map(t => t.price_cents || 0))
