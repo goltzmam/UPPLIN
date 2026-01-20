@@ -3,6 +3,7 @@ import { Calendar, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { OrganizerPreviewTooltip } from "./OrganizerPreviewTooltip";
 
 interface EventCardProps {
   id: string;
@@ -81,15 +82,13 @@ export function EventCard({
 
       {/* Content */}
       <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
-        {/* Organizer link */}
+        {/* Organizer link with hover preview */}
         {displayUsername && organizerId && (
-          <Link 
-            to={`/organizador/${organizerId}`}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center text-xs text-muted-foreground hover:text-primary transition-colors"
-          >
-            @{displayUsername}
-          </Link>
+          <OrganizerPreviewTooltip
+            organizerId={organizerId}
+            organizerName={organizerName}
+            organizerUsername={organizerUsername}
+          />
         )}
 
         <h3 className="font-display font-bold text-sm sm:text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
