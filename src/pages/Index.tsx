@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Header } from "@/components/layout/Header";
@@ -21,6 +21,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const PAGE_SIZE = 10;
 
 // Trending section card
 function TrendingCard({ title, subtitle, image, href }: {
@@ -50,25 +52,44 @@ export default function Index() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Fetch events with media
-  const { data: events = [], isLoading } = useQuery({
-    queryKey: ["homepage-events"],
-    queryFn: async () => {
-      const { data, error } = await supabase
+  // Fetch events with infinite scroll
+  const { 
+    data, 
+    isLoading, 
+    fetchNextPage, 
+    hasNextPage, 
+    isFetchingNextPage 
+  } = useInfiniteQuery({
+    queryKey: ["homepage-events-infinite"],
+    queryFn: async ({ pageParam = 0 }) => {
+      const from = pageParam * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      
+      const { data, error, count } = await supabase
         .from("events")
         .select(`
           *,
           organizer:organizer_id(display_name, logo_url),
           event_media(id, url, type, sort_order),
           ticket_types(price_cents)
-        `)
+        `, { count: "exact" })
         .eq("status", "published")
         .order("start_at", { ascending: true })
-        .limit(20);
+        .range(from, to);
+      
       if (error) throw error;
-      return data || [];
+      return { 
+        data: data || [], 
+        nextPage: (data?.length || 0) === PAGE_SIZE ? pageParam + 1 : undefined,
+        totalCount: count || 0
+      };
     },
+    getNextPageParam: (lastPage) => lastPage.nextPage,
+    initialPageParam: 0,
   });
+
+  // Flatten all pages into one array
+  const events = data?.pages.flatMap(page => page.data) || [];
 
   // Transform events for TikTok feed
   const feedItems = events.map((event: any) => {
@@ -219,7 +240,13 @@ export default function Index() {
               <>
                 {/* TikTok-style vertical feed on mobile */}
                 <div className="md:hidden -mx-4">
-                  <TikTokFeed items={feedItems} isLoading={isLoading} />
+                  <TikTokFeed 
+                    items={feedItems} 
+                    isLoading={isLoading} 
+                    onLoadMore={fetchNextPage}
+                    hasMore={!!hasNextPage}
+                    isLoadingMore={isFetchingNextPage}
+                  />
                 </div>
 
                 {/* Grid layout on desktop */}
@@ -282,34 +309,6 @@ export default function Index() {
           </div>
         </section>
 
-        {/* CTA for Organizers */}
-        <section className="py-12 bg-foreground text-background">
-          <div className="container text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="max-w-lg mx-auto"
-            >
-              <h2 className="font-display text-2xl sm:text-3xl font-bold mb-3">
-                Crie seu evento
-              </h2>
-              <p className="text-background/70 mb-6">
-                Venda ingressos e alcance milhares de pessoas. Comece grátis.
-              </p>
-              <Button 
-                size="lg" 
-                className="rounded-full bg-background text-foreground hover:bg-background/90"
-                asChild
-              >
-                <Link to="/organizador/cadastro">
-                  Começar agora
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Link>
-              </Button>
-            </motion.div>
-          </div>
-        </section>
         </main>
       </PullToRefresh>
 
