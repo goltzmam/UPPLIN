@@ -1,6 +1,6 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play } from "lucide-react";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play, X } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 import { useEventEngagement } from "@/hooks/use-event-engagement";
 import { ShareButton } from "@/components/events/ShareButton";
 import { triggerFeedback } from "@/lib/feedback";
+import { EventComments } from "@/components/events/EventComments";
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 
 interface TikTokFeedItem {
   id: string;
@@ -193,6 +195,7 @@ function FeedCard({
   const [showHeart, setShowHeart] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   
   // Check if event is live
   const isLive = useMemo(() => isEventLive(item.startAt, item.endAt), [item.startAt, item.endAt]);
@@ -427,7 +430,7 @@ function FeedCard({
               whileTap={{ scale: 0.85 }}
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/mensagens?event=${item.id}`);
+                setShowComments(true);
               }}
               className="flex flex-col items-center"
             >
@@ -480,6 +483,26 @@ function FeedCard({
           </div>
         </div>
       </div>
+
+      {/* Comments Drawer */}
+      <Drawer open={showComments} onOpenChange={setShowComments}>
+        <DrawerContent className="max-h-[85vh]">
+          <DrawerHeader className="border-b border-border">
+            <div className="flex items-center justify-between">
+              <DrawerTitle className="text-lg font-semibold">Comentários</DrawerTitle>
+              <button 
+                onClick={() => setShowComments(false)}
+                className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </DrawerHeader>
+          <div className="flex-1 overflow-y-auto p-4">
+            <EventComments eventId={item.id} />
+          </div>
+        </DrawerContent>
+      </Drawer>
     </div>
   );
 }
