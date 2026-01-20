@@ -249,7 +249,15 @@ export default function Index() {
                   transition={{ duration: 0.2, ease: "easeOut" }}
                 >
                   {/* TikTok-style vertical feed on mobile */}
-                  <div className="md:hidden">
+                  <div
+                    className="md:hidden"
+                    style={
+                      {
+                        "--app-top-offset": "160px", // header + search + tabs
+                        "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))",
+                      } as React.CSSProperties
+                    }
+                  >
                     <TikTokFeed
                       items={feedItems}
                       isLoading={isLoading}

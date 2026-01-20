@@ -10,6 +10,7 @@ import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { triggerFeedback } from "@/lib/feedback";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Checkout() {
@@ -293,7 +294,10 @@ export default function Checkout() {
                     <Button 
                       className="w-full" 
                       size="lg" 
-                      onClick={handlePayment} 
+                      onClick={() => {
+                        triggerFeedback({ haptic: "medium", sound: "confirm" });
+                        handlePayment();
+                      }} 
                       disabled={processing}
                     >
                       {processing ? (

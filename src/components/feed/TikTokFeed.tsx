@@ -1,12 +1,13 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play } from "lucide-react";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useEventEngagement } from "@/hooks/use-event-engagement";
 import { ShareButton } from "@/components/events/ShareButton";
+import { triggerFeedback } from "@/lib/feedback";
 
 interface TikTokFeedItem {
   id: string;
@@ -32,8 +33,9 @@ interface TikTokFeedProps {
   onScrollChange?: (position: number) => void;
 }
 
-// Height calculation: header (56px) + search (56px) + tabs (48px) + bottom nav (80px with safe area)
-const FEED_HEIGHT = "calc(100vh - 56px - 56px - 48px - 80px)";
+// Height calculation uses CSS variables injected by the page layout.
+// Defaults match the homepage: header (56) + search (56) + tabs (48) and bottom nav (~72 + safe area)
+const FEED_HEIGHT = "calc(100dvh - var(--app-top-offset, 160px) - var(--app-bottom-offset, 80px))";
 
 function formatEngagementCount(count: number): string {
   if (count >= 1000000) {
@@ -49,12 +51,14 @@ function FeedCard({
   item, 
   isActive,
   isMuted,
-  onToggleMute 
+  onToggleMute,
+  showNextHint
 }: { 
   item: TikTokFeedItem; 
   isActive: boolean;
   isMuted: boolean;
   onToggleMute: () => void;
+  showNextHint: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
@@ -100,6 +104,7 @@ function FeedCard({
 
   const handleDoubleTap = () => {
     if (!isLiked) {
+      triggerFeedback({ haptic: "selection", sound: "tap" });
       toggleLike();
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 600);
@@ -406,7 +411,7 @@ export function TikTokFeed({
     <div
       ref={containerRef}
       style={{ height: FEED_HEIGHT }}
-      className="overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
+      className="relative overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
     >
       {items.map((item, index) => (
         <div key={item.id} className="h-full w-full">
@@ -415,6 +420,7 @@ export function TikTokFeed({
             isActive={index === activeIndex}
             isMuted={isMuted}
             onToggleMute={() => setIsMuted(!isMuted)}
+            showNextHint={index < items.length - 1 || !!hasMore}
           />
         </div>
       ))}
