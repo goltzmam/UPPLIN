@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Users, Calendar, ExternalLink } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { FollowButton } from "@/components/events/FollowButton";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   HoverCard,
   HoverCardContent,
@@ -75,62 +77,112 @@ export function OrganizerPreviewTooltip({
         )}
       </HoverCardTrigger>
       <HoverCardContent 
-        className="w-72 p-0 overflow-hidden"
+        className="w-72 p-0 overflow-hidden border-border/50 shadow-xl"
         side="top"
         align="start"
         sideOffset={8}
+        asChild
       >
-        <div className="p-4 space-y-3">
-          {/* Header */}
-          <div className="flex items-start gap-3">
-            <Avatar className="h-12 w-12 border-2 border-border">
-              <AvatarImage src={organizer?.logo_url || undefined} alt={organizer?.display_name} />
-              <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                {(organizer?.display_name || organizerName || "O")[0].toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-sm truncate">
-                {organizer?.display_name || organizerName}
-              </h4>
-              <p className="text-xs text-muted-foreground">@{displayUsername}</p>
+        <motion.div
+          initial={{ opacity: 0, y: 8, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.96 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 400, 
+            damping: 25,
+            mass: 0.8
+          }}
+        >
+          <div className="p-4 space-y-3">
+            {/* Header */}
+            <div className="flex items-start gap-3">
+              <motion.div
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.05, type: "spring", stiffness: 300 }}
+              >
+                <Avatar className="h-12 w-12 border-2 border-border">
+                  <AvatarImage src={organizer?.logo_url || undefined} alt={organizer?.display_name} />
+                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                    {(organizer?.display_name || organizerName || "O")[0].toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </motion.div>
+              <div className="flex-1 min-w-0">
+                <motion.h4 
+                  className="font-semibold text-sm truncate"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.08 }}
+                >
+                  {organizer?.display_name || organizerName}
+                </motion.h4>
+                <motion.p 
+                  className="text-xs text-muted-foreground"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  @{displayUsername}
+                </motion.p>
+              </div>
             </div>
+
+            {/* Description */}
+            {organizer?.description && (
+              <motion.p 
+                className="text-xs text-muted-foreground line-clamp-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.12 }}
+              >
+                {organizer.description}
+              </motion.p>
+            )}
+
+            {/* Stats */}
+            <motion.div 
+              className="flex items-center gap-4 text-xs text-muted-foreground"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.14 }}
+            >
+              <div className="flex items-center gap-1">
+                <Users className="h-3.5 w-3.5" />
+                <span className="font-medium text-foreground">{organizer?.followersCount || 0}</span>
+                <span>seguidores</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3.5 w-3.5" />
+                <span className="font-medium text-foreground">{organizer?.eventsCount || 0}</span>
+                <span>eventos</span>
+              </div>
+            </motion.div>
+
+            {/* Actions */}
+            <motion.div 
+              className="flex items-center gap-2"
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.16 }}
+            >
+              <div onClick={(e) => e.stopPropagation()} className="flex-1">
+                <FollowButton organizerId={organizerId} size="sm" className="w-full text-xs h-8" />
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs h-8"
+                asChild
+              >
+                <Link to={`/organizador/${organizerId}`} onClick={(e) => e.stopPropagation()}>
+                  <ExternalLink className="h-3 w-3" />
+                </Link>
+              </Button>
+            </motion.div>
           </div>
-
-          {/* Description */}
-          {organizer?.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {organizer.description}
-            </p>
-          )}
-
-          {/* Stats */}
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Users className="h-3.5 w-3.5" />
-              <span className="font-medium text-foreground">{organizer?.followersCount || 0}</span>
-              <span>seguidores</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Calendar className="h-3.5 w-3.5" />
-              <span className="font-medium text-foreground">{organizer?.eventsCount || 0}</span>
-              <span>eventos</span>
-            </div>
-          </div>
-
-          {/* Action */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full text-xs h-8"
-            asChild
-          >
-            <Link to={`/organizador/${organizerId}`} onClick={(e) => e.stopPropagation()}>
-              Ver perfil
-              <ExternalLink className="h-3 w-3 ml-1.5" />
-            </Link>
-          </Button>
-        </div>
+        </motion.div>
       </HoverCardContent>
     </HoverCard>
   );
