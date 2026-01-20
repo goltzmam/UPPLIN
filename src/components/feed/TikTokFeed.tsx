@@ -337,13 +337,13 @@ function FeedCard({
         )}
       </AnimatePresence>
 
-      {/* Top - Organizer info + Live badge - positioned below overlay header */}
-      <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-3 z-10">
-        <div className="flex items-center justify-between gap-2">
+      {/* Top - Organizer info - positioned below overlay header */}
+      <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-16 z-10">
+        <div className="flex items-center gap-2">
           {/* Organizer */}
           <button
             onClick={handleOrganizerClick}
-            className="flex items-center gap-2 min-w-0 flex-1"
+            className="flex items-center gap-2 min-w-0"
           >
             <div className="avatar-ring-gradient p-[2px] rounded-full shrink-0">
               <div className="h-9 w-9 rounded-full bg-muted overflow-hidden">
@@ -361,46 +361,45 @@ function FeedCard({
             </span>
           </button>
 
-          {/* Right side badges */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Live badge */}
-            {isLive && <LiveBadge />}
-            
-            {/* Price badge */}
-            <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full">
-              <span className={cn(
-                "text-xs font-bold",
-                (item.minPrice || 0) === 0 ? "text-green-600" : "text-foreground"
-              )}>
-                {formatPrice(item.minPrice || 0)}
-              </span>
-            </div>
-          </div>
+          {/* Live badge */}
+          {isLive && <LiveBadge />}
         </div>
       </div>
 
       {/* Bottom content */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 pb-4 z-10">
-        <div className="flex items-end gap-3">
+      <div className="absolute bottom-0 left-0 right-0 p-4 pb-5 z-10">
+        <div className="flex items-end gap-4">
           {/* Event info - left side */}
-          <div className="flex-1 min-w-0 pr-2">
+          <div className="flex-1 min-w-0 pr-4">
             <Link 
               to={`/evento/${item.id}`}
               onClick={(e) => e.stopPropagation()}
               className="block"
             >
-              <h3 className="font-display text-base font-bold text-white leading-tight line-clamp-2 mb-1.5">
+              {/* Price badge inline with title */}
+              <div className="flex items-center gap-2 mb-2">
+                <div className={cn(
+                  "px-3 py-1 rounded-full text-xs font-bold",
+                  (item.minPrice || 0) === 0 
+                    ? "bg-green-500 text-white" 
+                    : "bg-white text-black"
+                )}>
+                  {formatPrice(item.minPrice || 0)}
+                </div>
+              </div>
+              
+              <h3 className="font-display text-lg font-bold text-white leading-tight line-clamp-2 mb-2">
                 {item.title}
               </h3>
               
-              <div className="flex flex-col gap-1 text-white/80 text-xs">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5 shrink-0" />
+              <div className="flex flex-col gap-1.5 text-white/85 text-sm">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 shrink-0" />
                   <span>{formattedDate} • {formattedTime}</span>
                 </div>
                 {(item.venueName || item.addressText) && (
-                  <div className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 shrink-0" />
                     <span className="truncate">{item.venueName || item.addressText}</span>
                   </div>
                 )}
@@ -408,43 +407,43 @@ function FeedCard({
             </Link>
           </div>
 
-          {/* Right side actions - compact vertical */}
-          <div className="flex flex-col items-center gap-3 shrink-0">
+          {/* Right side actions - vertical column */}
+          <div className="flex flex-col items-center gap-4 shrink-0">
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={(e) => {
                 e.stopPropagation();
                 toggleLike();
               }}
-              className="flex flex-col items-center gap-0.5"
+              className="flex flex-col items-center gap-1"
             >
-              <div className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                <Heart className={cn("h-5 w-5 text-white", isLiked && "fill-accent text-accent")} />
+              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
+                <Heart className={cn("h-5 w-5", isLiked ? "fill-accent text-accent" : "text-white")} />
               </div>
-              <span className="text-white text-[10px] font-medium">{formatEngagementCount(likeCount)}</span>
+              <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(likeCount)}</span>
             </motion.button>
             
             <motion.button
               whileTap={{ scale: 0.85 }}
               onClick={(e) => e.stopPropagation()}
-              className="flex flex-col items-center gap-0.5"
+              className="flex flex-col items-center gap-1"
             >
-              <div className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
                 <MessageCircle className="h-5 w-5 text-white" />
               </div>
-              <span className="text-white text-[10px] font-medium">Chat</span>
+              <span className="text-white text-[10px] font-semibold drop-shadow-lg">Chat</span>
             </motion.button>
             
-            <div className="flex flex-col items-center gap-0.5">
+            <div className="flex flex-col items-center gap-1">
               <ShareButton
                 eventId={item.id}
                 eventTitle={item.title}
                 eventDate={formattedDate}
                 eventImage={item.coverImageUrl}
                 iconOnly
-                className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white"
+                className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white border border-white/10"
               />
-              <span className="text-white text-[10px] font-medium">Share</span>
+              <span className="text-white text-[10px] font-semibold drop-shadow-lg">Share</span>
             </div>
             
             <motion.button
@@ -453,12 +452,12 @@ function FeedCard({
                 e.stopPropagation();
                 toggleSave();
               }}
-              className="flex flex-col items-center gap-0.5"
+              className="flex flex-col items-center gap-1"
             >
-              <div className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
-                <Bookmark className={cn("h-5 w-5 text-white", isSaved && "fill-white")} />
+              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
+                <Bookmark className={cn("h-5 w-5", isSaved ? "fill-white text-white" : "text-white")} />
               </div>
-              <span className="text-white text-[10px] font-medium">{formatEngagementCount(saveCount)}</span>
+              <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(saveCount)}</span>
             </motion.button>
 
             {item.videoUrl && (
@@ -470,7 +469,7 @@ function FeedCard({
                 }}
                 className="flex flex-col items-center"
               >
-                <div className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
                   {isMuted ? (
                     <VolumeX className="h-5 w-5 text-white" />
                   ) : (
