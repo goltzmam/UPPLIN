@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play, X } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { motion, AnimatePresence, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useEventEngagement } from "@/hooks/use-event-engagement";
 import { ShareButton } from "@/components/events/ShareButton";
@@ -185,42 +185,6 @@ const VideoPlaceholder = React.memo(function VideoPlaceholder({ coverUrl, title 
   );
 });
 
-// Video progress indicator component
-const VideoProgressBar = React.memo(function VideoProgressBar({ 
-  progress, 
-  isVisible,
-  isPaused
-}: { 
-  progress: number; 
-  isVisible: boolean;
-  isPaused: boolean;
-}) {
-  return (
-    <motion.div 
-      className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+100px)]"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: isVisible ? 1 : 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      <div className="relative h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
-        <motion.div 
-          className="absolute inset-y-0 left-0 bg-white rounded-full"
-          style={{ width: `${progress}%` }}
-          transition={{ duration: 0.1, ease: "linear" }}
-        />
-        {isPaused && (
-          <motion.div
-            className="absolute inset-y-0 left-0 bg-white/40"
-            style={{ width: `${progress}%` }}
-            animate={{ opacity: [0.4, 0.8, 0.4] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          />
-        )}
-      </div>
-    </motion.div>
-  );
-});
-
 interface RowData {
   items: TikTokFeedItem[];
   activeIndex: number;
@@ -255,8 +219,6 @@ const FeedRow = React.memo(function FeedRow({
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  const [videoProgress, setVideoProgress] = useState(0);
-  const [videoDuration, setVideoDuration] = useState(0);
 
   const { data: commentCount = 0 } = useQuery({
     queryKey: ["event-comment-count", item.id],
@@ -307,30 +269,6 @@ const FeedRow = React.memo(function FeedRow({
       videoRef.current.muted = isMuted; 
     }
   }, [isMuted]);
-
-  // Video progress tracking
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video || !isActive) return;
-
-    const handleTimeUpdate = () => {
-      if (video.duration > 0) {
-        setVideoProgress((video.currentTime / video.duration) * 100);
-      }
-    };
-
-    const handleLoadedMetadata = () => {
-      setVideoDuration(video.duration);
-    };
-
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    
-    return () => {
-      video.removeEventListener('timeupdate', handleTimeUpdate);
-      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-    };
-  }, [isActive]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
@@ -493,15 +431,6 @@ const FeedRow = React.memo(function FeedRow({
           </div>
         </div>
 
-        {/* Video progress indicator */}
-        {item.videoUrl && videoLoaded && !videoError && (
-          <VideoProgressBar 
-            progress={videoProgress} 
-            isVisible={isActive} 
-            isPaused={isPaused}
-          />
-        )}
-
         <Drawer open={showComments} onOpenChange={setShowComments}>
           <DrawerContent className="max-h-[85vh]">
             <DrawerHeader className="border-b border-border">
@@ -522,14 +451,13 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(0);
   const [activeIndex, setActiveIndex] = useState(() => {
-    // Restore scroll position from cache
     try {
       const cached = sessionStorage.getItem(SCROLL_POSITION_KEY);
       return cached ? parseInt(cached, 10) : 0;
     } catch { return 0; }
   });
-  const activeIndexRef = useRef(activeIndex);
-  const isAnimating = useRef(false);
+  const lastScrollTop = useRef(0);
+  const isScrolling = useRef(false);
 
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem(MUTE_STORAGE_KEY) === "true" || localStorage.getItem(MUTE_STORAGE_KEY) === null; } catch { return true; }
@@ -541,10 +469,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // Motion value for smooth snap animation
-  const y = useMotionValue(0);
-  const ySmooth = useTransform(y, (value) => value);
+  const touchStartY = useRef(0);
 
   useEffect(() => {
     const updateHeight = () => setContainerHeight(window.innerHeight - 80);
@@ -561,87 +486,77 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     } catch {}
   }, [activeIndex, onScrollChange]);
 
-  // Navigate to specific index with smooth animation
-  const goToIndex = useCallback((newIndex: number) => {
-    const clampedIndex = Math.max(0, Math.min(items.length - 1, newIndex));
-    if (clampedIndex === activeIndexRef.current || isAnimating.current) return;
-    
-    isAnimating.current = true;
-    triggerFeedback({ haptic: "light" });
-    
-    const targetY = -clampedIndex * containerHeight;
-    animate(y, targetY, {
-      type: "spring",
-      stiffness: 300,
-      damping: 30,
-      onComplete: () => {
-        isAnimating.current = false;
-        activeIndexRef.current = clampedIndex;
-        setActiveIndex(clampedIndex);
-        
-        // Load more when approaching end
-        if (clampedIndex >= items.length - 2 && hasMore && !isLoadingMore) {
-          onLoadMore?.();
-        }
-      }
-    });
-  }, [y, containerHeight, items.length, hasMore, isLoadingMore, onLoadMore]);
+  // Native scroll handler with snap detection
+  const handleScroll = useCallback(() => {
+    const container = containerRef.current;
+    if (!container || containerHeight === 0) return;
 
-  // Handle swipe gestures
-  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const velocity = info.velocity.y;
-    const offset = info.offset.y;
-    const swipeThreshold = containerHeight * 0.2;
-    const velocityThreshold = 300;
+    const scrollTop = container.scrollTop;
+    const newIndex = Math.round(scrollTop / containerHeight);
     
-    let newIndex = activeIndexRef.current;
-    
-    if (offset < -swipeThreshold || velocity < -velocityThreshold) {
-      // Swiped up - go to next
-      newIndex = activeIndexRef.current + 1;
-    } else if (offset > swipeThreshold || velocity > velocityThreshold) {
-      // Swiped down - go to previous or pull to refresh
-      if (activeIndexRef.current === 0 && offset > 80 && onRefresh && !isRefreshing) {
-        setIsRefreshing(true);
-        onRefresh().finally(() => {
-          setIsRefreshing(false);
-          setPullDistance(0);
-        });
-      } else {
-        newIndex = activeIndexRef.current - 1;
-      }
+    if (newIndex !== activeIndex && newIndex >= 0 && newIndex < items.length) {
+      setActiveIndex(newIndex);
+      triggerFeedback({ haptic: "light" });
     }
-    
-    goToIndex(newIndex);
-    setPullDistance(0);
-  }, [containerHeight, goToIndex, onRefresh, isRefreshing]);
 
-  // Handle drag for pull-to-refresh indicator
-  const handleDrag = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    if (activeIndexRef.current === 0 && info.offset.y > 0) {
-      setPullDistance(Math.min(info.offset.y * 0.5, 80));
+    // Load more when approaching end
+    if (newIndex >= items.length - 3 && hasMore && !isLoadingMore) {
+      onLoadMore?.();
     }
+
+    lastScrollTop.current = scrollTop;
+  }, [containerHeight, activeIndex, items.length, hasMore, isLoadingMore, onLoadMore]);
+
+  // Touch handlers for pull-to-refresh
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
   }, []);
 
-  // Initialize y position based on active index
-  useEffect(() => {
-    if (containerHeight > 0 && items.length > 0) {
-      y.set(-activeIndex * containerHeight);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    const container = containerRef.current;
+    if (!container || container.scrollTop > 0) return;
+
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+    if (deltaY > 0 && !isRefreshing) {
+      setPullDistance(Math.min(deltaY * 0.4, 80));
     }
-  }, [containerHeight, items.length, activeIndex, y]);
+  }, [isRefreshing]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (pullDistance >= 60 && onRefresh && !isRefreshing) {
+      setIsRefreshing(true);
+      onRefresh().finally(() => {
+        setIsRefreshing(false);
+        setPullDistance(0);
+      });
+    } else {
+      setPullDistance(0);
+    }
+  }, [pullDistance, onRefresh, isRefreshing]);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container && containerHeight > 0 && activeIndex > 0) {
+      container.scrollTop = activeIndex * containerHeight;
+    }
+  }, [containerHeight]);
 
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const container = containerRef.current;
+      if (!container) return;
+
       if (e.key === 'ArrowDown' || e.key === 'j') {
-        goToIndex(activeIndexRef.current + 1);
+        container.scrollTo({ top: (activeIndex + 1) * containerHeight, behavior: 'smooth' });
       } else if (e.key === 'ArrowUp' || e.key === 'k') {
-        goToIndex(activeIndexRef.current - 1);
+        container.scrollTo({ top: (activeIndex - 1) * containerHeight, behavior: 'smooth' });
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [goToIndex]);
+  }, [activeIndex, containerHeight]);
 
   if (isLoading || containerHeight === 0) return <div style={{ height: containerHeight || 'calc(100dvh - 80px)' }}><FeedSkeleton /></div>;
 
@@ -657,18 +572,8 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     );
   }
 
-  // Calculate visible range for performance (only render ±2 items)
-  const visibleRange = {
-    start: Math.max(0, activeIndex - 2),
-    end: Math.min(items.length - 1, activeIndex + 2)
-  };
-
   return (
-    <div 
-      ref={containerRef}
-      className="relative overflow-hidden touch-pan-y"
-      style={{ height: containerHeight }}
-    >
+    <div className="relative" style={{ height: containerHeight }}>
       {/* Scroll mini map */}
       <div className="fixed z-30 pointer-events-none" style={{ top: "50%", right: "8px", transform: "translateY(-50%)" }}>
         <ScrollMiniMap current={activeIndex} total={items.length} />
@@ -677,7 +582,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
       {/* Pull to refresh indicator */}
       {onRefresh && (
         <div className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
-          <div className={cn("mt-2 rounded-full bg-background/80 backdrop-blur px-3 py-1.5 border border-border/50 transition-opacity", pullDistance > 0 || isRefreshing ? "opacity-100" : "opacity-0")}
+          <div className={cn("mt-2 rounded-full bg-background/80 backdrop-blur px-3 py-1.5 border border-border/50 transition-all duration-200", pullDistance > 0 || isRefreshing ? "opacity-100" : "opacity-0")}
             style={{ transform: `translateY(${Math.min(pullDistance, 60)}px)` }}>
             {isRefreshing ? (
               <div className="flex items-center gap-2">
@@ -691,30 +596,29 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
         </div>
       )}
 
-      {/* Feed container with gesture handling */}
-      <motion.div
-        style={{ y: ySmooth }}
-        drag="y"
-        dragConstraints={{ top: -(items.length - 1) * containerHeight, bottom: 0 }}
-        dragElastic={0.1}
-        onDrag={handleDrag}
-        onDragEnd={handleDragEnd}
-        className="will-change-transform"
+      {/* Native scroll container with CSS snap */}
+      <div
+        ref={containerRef}
+        onScroll={handleScroll}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        className="h-full overflow-y-auto overscroll-y-contain scrollbar-hide"
+        style={{
+          scrollSnapType: 'y mandatory',
+          WebkitOverflowScrolling: 'touch',
+        }}
       >
         {items.map((item, index) => {
-          // Only render items in visible range for performance
-          const isInRange = index >= visibleRange.start && index <= visibleRange.end;
+          const isVisible = Math.abs(index - activeIndex) <= 2;
           
           return (
             <div
               key={item.id}
-              style={{ 
-                height: containerHeight,
-                visibility: isInRange ? 'visible' : 'hidden'
-              }}
+              style={{ height: containerHeight }}
               className="snap-start snap-always"
             >
-              {isInRange && (
+              {isVisible ? (
                 <FeedRow
                   index={index}
                   style={{ height: '100%' }}
@@ -723,11 +627,13 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
                   isMuted={isMuted}
                   onToggleMute={handleToggleMute}
                 />
+              ) : (
+                <div className="h-full bg-black" />
               )}
             </div>
           );
         })}
-      </motion.div>
+      </div>
 
       {/* Loading more indicator */}
       {isLoadingMore && (

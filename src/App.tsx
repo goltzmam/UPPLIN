@@ -40,31 +40,19 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Page transition variants
-const pageVariants = {
-  initial: { opacity: 0, y: 8 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0, y: -8 },
-};
-
-const pageTransition = {
-  duration: 0.25,
-  ease: [0.25, 0.46, 0.45, 0.94] as const, // Apple-like easing
-};
-
-// Animated routes wrapper
+// Animated routes wrapper - smooth fade without flashing
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
+    <AnimatePresence mode="popLayout" initial={false}>
       <motion.div
         key={location.pathname}
-        initial="initial"
-        animate="animate"
-        exit="exit"
-        variants={pageVariants}
-        transition={pageTransition}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15, ease: "easeOut" }}
+        style={{ minHeight: '100vh' }}
       >
         <Routes location={location}>
           {/* Public Routes */}
