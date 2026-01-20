@@ -591,12 +591,20 @@ export default function Index() {
               muted
               loop
               playsInline
-              preload="metadata"
+              webkit-playsinline="true"
+              preload="auto"
+              crossOrigin="anonymous"
               onLoadedData={() => setVideoLoaded(true)}
+              onCanPlay={() => setVideoLoaded(true)}
+              onError={(e) => console.warn("Video load error:", e)}
               className={cn(
                 "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
                 isHovered && videoLoaded ? "opacity-100" : "opacity-0"
               )}
+              style={{
+                transform: "translateZ(0)",
+                backfaceVisibility: "hidden",
+              }}
             />
           )}
 
