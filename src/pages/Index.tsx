@@ -9,7 +9,7 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { TikTokFeed } from "@/components/feed/TikTokFeed";
-import { FeaturedStories } from "@/components/home/FeaturedStories";
+
 import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { NearbyEvents } from "@/components/home/NearbyEvents";
@@ -288,14 +288,6 @@ export default function Index() {
 
       <PullToRefresh onRefresh={handleRefresh}>
         <main className="pt-[calc(3.5rem+5rem)]">
-          {/* Hero Section with Stories */}
-          <ScrollReveal variant="fadeIn" duration={0.5}>
-            <section className="border-b border-border/30 bg-gradient-to-b from-muted/20 to-transparent">
-              <div className="container py-6">
-                <FeaturedStories />
-              </div>
-            </section>
-          </ScrollReveal>
 
           {/* Categories - Enhanced for desktop */}
           <ScrollReveal variant="fadeUp" delay={0.1}>
