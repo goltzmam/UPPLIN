@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback, useMemo } from "react";
+import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play, X } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
@@ -276,7 +276,7 @@ function VideoPlaceholder({ coverUrl, title }: { coverUrl: string | null; title:
   );
 }
 
-function FeedCard({ 
+const FeedCard = React.memo(function FeedCard({ 
   item, 
   isActive,
   visibilityRatio,
@@ -298,6 +298,7 @@ function FeedCard({
   const [showSaveParticles, setShowSaveParticles] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const [showComments, setShowComments] = useState(false);
   
   const { data: commentCount = 0 } = useQuery({
@@ -311,11 +312,12 @@ function FeedCard({
       if (error) throw error;
       return count || 0;
     },
-    staleTime: 30000,
+    staleTime: 60000,
+    enabled: isActive,
   });
   
   const isLive = useMemo(() => isEventLive(item.startAt, item.endAt), [item.startAt, item.endAt]);
-  const shouldPlay = isActive && visibilityRatio >= 0.7 && !isPaused;
+  const shouldPlay = isActive && visibilityRatio >= 0.7 && !isPaused && !videoError;
   
   const { 
     isLiked, 
@@ -335,14 +337,26 @@ function FeedCard({
     return `R$ ${(cents / 100).toFixed(0)}`;
   };
 
+  // Video play/pause with better error handling
   useEffect(() => {
-    if (!videoRef.current) return;
+    const video = videoRef.current;
+    if (!video || videoError) return;
+    
     if (shouldPlay) {
-      videoRef.current.play().catch(() => {});
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => {
+          // Only set error for non-abort errors
+          if (err.name !== 'AbortError') {
+            console.warn('Video play failed:', err);
+            setVideoError(true);
+          }
+        });
+      }
     } else {
-      videoRef.current.pause();
+      video.pause();
     }
-  }, [shouldPlay]);
+  }, [shouldPlay, videoError]);
 
   useEffect(() => {
     if (videoRef.current) {
@@ -352,6 +366,12 @@ function FeedCard({
 
   const handleVideoLoaded = useCallback(() => {
     setVideoLoaded(true);
+    setVideoError(false);
+  }, []);
+
+  const handleVideoError = useCallback(() => {
+    setVideoError(true);
+    setVideoLoaded(false);
   }, []);
 
   const handleDoubleTap = () => {
@@ -403,25 +423,30 @@ function FeedCard({
       onDoubleClick={handleDoubleTap}
       onClick={handleTap}
     >
-      {/* Background Media */}
-      <div className="absolute inset-0">
-        {item.videoUrl ? (
+      {/* Background Media - optimized for performance */}
+      <div className="absolute inset-0 will-change-transform">
+        {item.videoUrl && !videoError ? (
           <>
             {!videoLoaded && (
               <VideoPlaceholder coverUrl={item.coverImageUrl} title={item.title} />
             )}
             <video
               ref={videoRef}
-              src={item.videoUrl}
+              src={isActive || shouldPreload ? item.videoUrl : undefined}
               loop
               playsInline
               muted={isMuted}
-              preload={shouldPreload || isActive ? "auto" : "metadata"}
+              preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
               onLoadedData={handleVideoLoaded}
+              onError={handleVideoError}
               className={cn(
-                "h-full w-full object-cover transition-opacity duration-300",
+                "h-full w-full object-cover",
                 videoLoaded ? "opacity-100" : "opacity-0"
               )}
+              style={{ 
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden'
+              }}
             />
           </>
         ) : item.coverImageUrl ? (
@@ -429,6 +454,7 @@ function FeedCard({
             src={item.coverImageUrl}
             alt={item.title}
             className="h-full w-full object-cover"
+            loading={isActive || shouldPreload ? "eager" : "lazy"}
           />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
@@ -643,7 +669,7 @@ function FeedCard({
       </Drawer>
     </div>
   );
-}
+});
 
 export function TikTokFeed({
   items,
@@ -935,9 +961,10 @@ export function TikTokFeed({
           data-index={index}
           style={{ 
             height: 'calc(100dvh - var(--app-bottom-offset, 80px))',
-            minHeight: 'calc(100dvh - var(--app-bottom-offset, 80px))'
+            minHeight: 'calc(100dvh - var(--app-bottom-offset, 80px))',
+            contain: 'layout style paint',
           }} 
-          className="w-full snap-start snap-always flex-shrink-0"
+          className="w-full snap-start snap-always flex-shrink-0 will-change-transform"
         >
           <FeedCard
             item={item}
