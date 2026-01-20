@@ -8,7 +8,7 @@ import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
-import { CategorySwipeFeed } from "@/components/feed/CategorySwipeFeed";
+import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeaturedStories } from "@/components/home/FeaturedStories";
 import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
@@ -47,6 +47,7 @@ function TrendingCard({ title, subtitle, image, href }: {
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
+  const [scrollPos, setScrollPos] = useState(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -136,7 +137,7 @@ export default function Index() {
   // =====================================================================
   const MobileFeed = () => (
     <div className="fixed inset-0 z-0 md:hidden">
-      {/* Fullscreen Feed with Category Swipe */}
+      {/* Fullscreen Feed */}
       <div className="absolute inset-0">
         <AnimatePresence mode="wait" initial={false}>
           {activeTab === "foryou" ? (
@@ -149,7 +150,12 @@ export default function Index() {
               className="h-full"
               style={{ "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))" } as React.CSSProperties}
             >
-              <CategorySwipeFeed />
+              <TikTokFeed
+                items={feedItems}
+                isLoading={isLoading}
+                scrollPosition={scrollPos}
+                onScrollChange={setScrollPos}
+              />
             </motion.div>
           ) : (
             <motion.div
