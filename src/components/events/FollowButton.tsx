@@ -136,7 +136,8 @@ export function FollowButton({
         disabled={isLoading}
         className={cn(
           "gap-1.5 transition-all relative overflow-hidden",
-          isFollowing && "hover:bg-destructive hover:text-destructive-foreground"
+          isFollowing && "hover:bg-destructive hover:text-destructive-foreground",
+          !isFollowing && variant === "outline" && "hover:bg-primary hover:text-primary-foreground hover:border-primary"
         )}
       >
         {isLoading ? (
