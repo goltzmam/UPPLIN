@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { MessageCircle, Send, Heart, MoreHorizontal, Trash2 } from "lucide-react";
+import { MessageCircle, Send, MoreHorizontal, Trash2, Reply } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -28,6 +28,7 @@ interface Comment {
   created_at: string;
   parent_id: string | null;
   profile?: {
+    id: string;
     full_name: string | null;
     photo_url: string | null;
   };
@@ -35,8 +36,12 @@ interface Comment {
 
 export function EventComments({ eventId }: EventCommentsProps) {
   const [content, setContent] = useState("");
-  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<{ id: string; userName: string } | null>(null);
   const [expandedReplies, setExpandedReplies] = useState<Set<string>>(new Set());
+  const [mentionSuggestions, setMentionSuggestions] = useState<any[]>([]);
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -68,6 +73,70 @@ export function EventComments({ eventId }: EventCommentsProps) {
       })) as Comment[];
     },
   });
+
+  // Fetch users for mentions
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ["users-for-mentions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, photo_url")
+        .not("full_name", "is", null)
+        .limit(100);
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  // Filter mentions based on query
+  useEffect(() => {
+    if (mentionQuery && showMentions) {
+      const filtered = allUsers.filter((u) =>
+        u.full_name?.toLowerCase().includes(mentionQuery.toLowerCase())
+      ).slice(0, 5);
+      setMentionSuggestions(filtered);
+    } else {
+      setMentionSuggestions([]);
+    }
+  }, [mentionQuery, showMentions, allUsers]);
+
+  // Handle input change with mention detection
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setContent(value);
+
+    // Check for @ mentions
+    const cursorPos = e.target.selectionStart;
+    const textBeforeCursor = value.substring(0, cursorPos);
+    const mentionMatch = textBeforeCursor.match(/@(\w*)$/);
+
+    if (mentionMatch) {
+      setShowMentions(true);
+      setMentionQuery(mentionMatch[1]);
+    } else {
+      setShowMentions(false);
+      setMentionQuery("");
+    }
+  };
+
+  // Insert mention
+  const insertMention = (user: { id: string; full_name: string }) => {
+    const cursorPos = textareaRef.current?.selectionStart || 0;
+    const textBeforeCursor = content.substring(0, cursorPos);
+    const textAfterCursor = content.substring(cursorPos);
+    
+    // Replace the @query with @username
+    const newTextBefore = textBeforeCursor.replace(/@\w*$/, `@${user.full_name} `);
+    setContent(newTextBefore + textAfterCursor);
+    setShowMentions(false);
+    setMentionQuery("");
+    
+    // Focus back on textarea
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
 
   // Add comment mutation
   const addComment = useMutation({
@@ -113,7 +182,13 @@ export function EventComments({ eventId }: EventCommentsProps) {
       toast({ title: "Faça login para comentar", variant: "destructive" });
       return;
     }
-    addComment.mutate({ content: content.trim(), parentId: replyTo || undefined });
+    addComment.mutate({ content: content.trim(), parentId: replyTo?.id });
+  };
+
+  const handleReply = (comment: Comment) => {
+    setReplyTo({ id: comment.id, userName: comment.profile?.full_name || "Usuário" });
+    setContent(`@${comment.profile?.full_name || "Usuário"} `);
+    textareaRef.current?.focus();
   };
 
   const parentComments = comments.filter((c) => !c.parent_id);
@@ -139,6 +214,21 @@ export function EventComments({ eventId }: EventCommentsProps) {
     setExpandedReplies(newExpanded);
   };
 
+  // Render content with highlighted mentions
+  const renderContent = (text: string) => {
+    const parts = text.split(/(@\w+(?:\s\w+)?)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith("@")) {
+        return (
+          <span key={i} className="text-primary font-medium">
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 mb-4">
@@ -156,25 +246,59 @@ export function EventComments({ eventId }: EventCommentsProps) {
                 {getInitials(profile?.full_name)}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-2 relative">
               {replyTo && (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>Respondendo a um comentário</span>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-3 py-1.5 rounded-full w-fit">
+                  <Reply className="h-3 w-3" />
+                  <span>Respondendo a {replyTo.userName}</span>
                   <button
                     type="button"
-                    onClick={() => setReplyTo(null)}
-                    className="text-primary hover:underline"
+                    onClick={() => {
+                      setReplyTo(null);
+                      setContent("");
+                    }}
+                    className="text-primary hover:underline ml-1"
                   >
-                    Cancelar
+                    ✕
                   </button>
                 </div>
               )}
               <Textarea
-                placeholder="Escreva um comentário..."
+                ref={textareaRef}
+                placeholder="Escreva um comentário... Use @ para mencionar"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={handleContentChange}
                 className="min-h-[60px] resize-none"
               />
+              
+              {/* Mention suggestions */}
+              <AnimatePresence>
+                {showMentions && mentionSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute bottom-full left-0 right-0 mb-1 bg-popover border rounded-lg shadow-lg overflow-hidden z-50"
+                  >
+                    {mentionSuggestions.map((u) => (
+                      <button
+                        key={u.id}
+                        type="button"
+                        onClick={() => insertMention(u)}
+                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted transition-colors text-left"
+                      >
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={u.photo_url || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {getInitials(u.full_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">{u.full_name}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
           <div className="flex justify-end">
@@ -251,12 +375,13 @@ export function EventComments({ eventId }: EventCommentsProps) {
                         </DropdownMenu>
                       )}
                     </div>
-                    <p className="text-sm">{comment.content}</p>
+                    <p className="text-sm">{renderContent(comment.content)}</p>
                     <div className="flex items-center gap-3 pt-1">
                       <button
-                        onClick={() => setReplyTo(comment.id)}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                        onClick={() => handleReply(comment)}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
                       >
+                        <Reply className="h-3 w-3" />
                         Responder
                       </button>
                       {hasReplies && (
@@ -321,7 +446,14 @@ export function EventComments({ eventId }: EventCommentsProps) {
                                 </DropdownMenu>
                               )}
                             </div>
-                            <p className="text-sm">{reply.content}</p>
+                            <p className="text-sm">{renderContent(reply.content)}</p>
+                            <button
+                              onClick={() => handleReply(reply)}
+                              className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 pt-1"
+                            >
+                              <Reply className="h-3 w-3" />
+                              Responder
+                            </button>
                           </div>
                         </div>
                       ))}

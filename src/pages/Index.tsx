@@ -153,34 +153,34 @@ export default function Index() {
     <div className="min-h-screen bg-background pb-20 md:pb-0">
       <Header />
 
-      <main className="pt-[calc(3.5rem+3.5rem)]"> {/* Header + Search bar height */}
-        {/* Search Bar - Fixed below header */}
-        <div className="fixed top-14 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 py-3">
-          <div className="container">
-            <form onSubmit={handleSearch} className="flex items-center gap-2">
-              <div className="flex-1 flex items-center gap-3 bg-muted rounded-full px-4 py-2.5">
-                <Search className="h-5 w-5 text-muted-foreground shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Buscar eventos, artistas..."
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
-                />
-              </div>
-              <Button 
-                type="button"
-                variant="outline" 
-                size="icon"
-                className="rounded-full shrink-0"
-                onClick={() => navigate("/eventos")}
-              >
-                <MapPin className="h-5 w-5" />
-              </Button>
-            </form>
-          </div>
+      {/* Search Bar - Fixed below header */}
+      <div className="fixed top-14 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 py-3">
+        <div className="container">
+          <form onSubmit={handleSearch} className="flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-3 bg-muted rounded-full px-4 py-2.5">
+              <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+              <input
+                type="text"
+                placeholder="Buscar eventos, artistas..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
+              />
+            </div>
+            <Button 
+              type="button"
+              variant="outline" 
+              size="icon"
+              className="rounded-full shrink-0"
+              onClick={() => navigate("/eventos")}
+            >
+              <MapPin className="h-5 w-5" />
+            </Button>
+          </form>
         </div>
+      </div>
 
+      <main className="pt-[calc(3.5rem+3.5rem)]"> {/* Header (56px) + Search bar (56px) */}
         {/* Featured Stories */}
         <section className="border-b border-border/50">
           <div className="container">
