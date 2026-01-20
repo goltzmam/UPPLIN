@@ -145,6 +145,7 @@ export function EventComments({ eventId }: EventCommentsProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-comments", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["event-comment-count", eventId] });
       setContent("");
       setReplyTo(null);
       toast({ title: "Comentário adicionado!" });
@@ -165,6 +166,7 @@ export function EventComments({ eventId }: EventCommentsProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["event-comments", eventId] });
+      queryClient.invalidateQueries({ queryKey: ["event-comment-count", eventId] });
       toast({ title: "Comentário excluído" });
     },
   });
