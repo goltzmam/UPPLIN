@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Ticket, MessageCircle, Settings, Users, Bookmark } from "lucide-react";
+import { Menu, X, User, LogOut, Ticket, MessageCircle, Settings, Users, Bookmark, Building2, ChevronRight } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -114,8 +114,8 @@ export function Header({ minimal = false }: HeaderProps) {
                 {/* Profile dropdown */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0">
-                      <Avatar className="h-9 w-9">
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:bg-muted">
+                      <Avatar className="h-9 w-9 ring-2 ring-transparent hover:ring-primary/20 transition-all">
                         <AvatarImage src={profile?.photo_url || undefined} alt={profile?.full_name || "User"} />
                         <AvatarFallback className="bg-foreground text-background text-sm font-medium">
                           {getInitials(profile?.full_name)}
@@ -123,49 +123,82 @@ export function Header({ minimal = false }: HeaderProps) {
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <div className="flex items-center justify-start gap-3 p-3">
-                      <Avatar className="h-10 w-10">
+                  <DropdownMenuContent className="w-64" align="end" forceMount sideOffset={8}>
+                    {/* User Info Header */}
+                    <div className="flex items-center gap-3 p-3 border-b border-border">
+                      <Avatar className="h-12 w-12">
                         <AvatarImage src={profile?.photo_url || undefined} />
-                        <AvatarFallback className="bg-foreground text-background">
+                        <AvatarFallback className="bg-foreground text-background text-lg">
                           {getInitials(profile?.full_name)}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col space-y-0.5 leading-none">
+                      <div className="flex flex-col flex-1 min-w-0">
                         {profile?.full_name && (
-                          <p className="font-medium text-sm">{profile.full_name}</p>
+                          <p className="font-semibold text-sm truncate">{profile.full_name}</p>
                         )}
-                        <p className="text-xs text-muted-foreground truncate max-w-[150px]">
+                        <p className="text-xs text-muted-foreground truncate">
                           {profile?.email}
                         </p>
                       </div>
                     </div>
+                    
+                    {/* Quick Links */}
+                    <div className="p-1.5">
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/eventos")}
+                        className="rounded-lg py-2.5 cursor-pointer"
+                      >
+                        <span className="font-medium">Explorar Eventos</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/organizadores")}
+                        className="rounded-lg py-2.5 cursor-pointer bg-muted"
+                      >
+                        <Building2 className="mr-2 h-4 w-4" />
+                        <span className="font-medium">Para Organizadores</span>
+                        <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" />
+                      </DropdownMenuItem>
+                    </div>
+
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate("/perfil")}>
-                      <User className="mr-2 h-4 w-4" />
-                      Meu Perfil
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/meus-ingressos")}>
-                      <Ticket className="mr-2 h-4 w-4" />
-                      Meus Ingressos
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/eventos-salvos")}>
-                      <Bookmark className="mr-2 h-4 w-4" />
-                      Eventos Salvos
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/mensagens")}>
-                      <MessageCircle className="mr-2 h-4 w-4" />
-                      Mensagens
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate("/configuracoes")}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Configurações
-                    </DropdownMenuItem>
+                    
+                    {/* Account Section */}
+                    <div className="p-1.5">
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/perfil")}
+                        className="rounded-lg py-2.5 cursor-pointer"
+                      >
+                        <User className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Meu Perfil
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/meus-ingressos")}
+                        className="rounded-lg py-2.5 cursor-pointer"
+                      >
+                        <Ticket className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Meus Ingressos
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => navigate("/eventos-salvos")}
+                        className="rounded-lg py-2.5 cursor-pointer"
+                      >
+                        <Bookmark className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Eventos Salvos
+                      </DropdownMenuItem>
+                    </div>
+                    
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sair
-                    </DropdownMenuItem>
+                    
+                    {/* Logout */}
+                    <div className="p-1.5">
+                      <DropdownMenuItem 
+                        onClick={handleSignOut} 
+                        className="rounded-lg py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        Sair
+                      </DropdownMenuItem>
+                    </div>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -236,7 +269,7 @@ export function Header({ minimal = false }: HeaderProps) {
                     className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <User className="h-5 w-5" />
+                    <User className="h-5 w-5 text-muted-foreground" />
                     Meu Perfil
                   </Link>
                   <Link
@@ -244,7 +277,7 @@ export function Header({ minimal = false }: HeaderProps) {
                     className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Ticket className="h-5 w-5" />
+                    <Ticket className="h-5 w-5 text-muted-foreground" />
                     Meus Ingressos
                   </Link>
                   <Link
@@ -252,15 +285,16 @@ export function Header({ minimal = false }: HeaderProps) {
                     className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <Bookmark className="h-5 w-5" />
+                    <Bookmark className="h-5 w-5 text-muted-foreground" />
                     Eventos Salvos
                   </Link>
+                  <div className="h-px bg-border my-2" />
                   <button
                     onClick={() => {
                       handleSignOut();
                       setMobileMenuOpen(false);
                     }}
-                    className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors flex items-center gap-3 text-destructive w-full text-left"
+                    className="px-4 py-3 text-base font-medium hover:bg-destructive/10 rounded-xl transition-colors flex items-center gap-3 text-destructive w-full text-left"
                   >
                     <LogOut className="h-5 w-5" />
                     Sair
