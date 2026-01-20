@@ -2,8 +2,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
+import { AnimatePresence, motion } from "framer-motion";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
@@ -35,6 +36,74 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Page transition variants
+const pageVariants = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+};
+
+const pageTransition = {
+  duration: 0.25,
+  ease: [0.25, 0.46, 0.45, 0.94] as const, // Apple-like easing
+};
+
+// Animated routes wrapper
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={pageVariants}
+        transition={pageTransition}
+      >
+        <Routes location={location}>
+          {/* Public Routes */}
+          <Route path="/" element={<Index />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/eventos" element={<Eventos />} />
+          <Route path="/evento/:id" element={<Evento />} />
+          <Route path="/perfil" element={<Perfil />} />
+          <Route path="/meus-ingressos" element={<MeusIngressos />} />
+          <Route path="/mensagens" element={<Mensagens />} />
+          <Route path="/checkout/:orderId" element={<Checkout />} />
+          <Route path="/precos" element={<Precos />} />
+          <Route path="/organizadores" element={<Organizadores />} />
+          <Route path="/explorar-organizadores" element={<ExplorarOrganizadores />} />
+          <Route path="/eventos-salvos" element={<EventosSalvos />} />
+          <Route path="/instalar" element={<Instalar />} />
+
+          {/* Organizer Routes */}
+          <Route path="/organizador/login" element={<OrganizadorLogin />} />
+          <Route path="/organizador/cadastro" element={<OrganizadorCadastro />} />
+          <Route path="/organizador/onboarding" element={<OnboardingOrganizador />} />
+          <Route path="/organizador/:id" element={<OrganizadorPublico />} />
+          <Route path="/organizador" element={<OrganizerDashboard />} />
+          <Route path="/organizador/evento/:eventId" element={<EventoForm />} />
+          <Route path="/organizador/cupons" element={<Cupons />} />
+          <Route path="/organizador/check-in" element={<CheckIn />} />
+
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<AdminDashboard />} />
+            <Route path="chats" element={<AdminChats />} />
+          </Route>
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -42,43 +111,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/cadastro" element={<Cadastro />} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/eventos" element={<Eventos />} />
-            <Route path="/evento/:id" element={<Evento />} />
-            <Route path="/perfil" element={<Perfil />} />
-            <Route path="/meus-ingressos" element={<MeusIngressos />} />
-            <Route path="/mensagens" element={<Mensagens />} />
-            <Route path="/checkout/:orderId" element={<Checkout />} />
-            <Route path="/precos" element={<Precos />} />
-            <Route path="/organizadores" element={<Organizadores />} />
-            <Route path="/explorar-organizadores" element={<ExplorarOrganizadores />} />
-            <Route path="/eventos-salvos" element={<EventosSalvos />} />
-            <Route path="/instalar" element={<Instalar />} />
-
-            {/* Organizer Routes */}
-            <Route path="/organizador/login" element={<OrganizadorLogin />} />
-            <Route path="/organizador/cadastro" element={<OrganizadorCadastro />} />
-            <Route path="/organizador/onboarding" element={<OnboardingOrganizador />} />
-            <Route path="/organizador/:id" element={<OrganizadorPublico />} />
-            <Route path="/organizador" element={<OrganizerDashboard />} />
-            <Route path="/organizador/evento/:eventId" element={<EventoForm />} />
-            <Route path="/organizador/cupons" element={<Cupons />} />
-            <Route path="/organizador/check-in" element={<CheckIn />} />
-
-            {/* Admin Routes */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="chats" element={<AdminChats />} />
-            </Route>
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AnimatedRoutes />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
