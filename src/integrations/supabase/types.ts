@@ -558,6 +558,7 @@ export type Database = {
           logo_url: string | null
           owner_user_id: string
           phone: string | null
+          slug: string | null
           social_facebook: string | null
           social_instagram: string | null
           social_website: string | null
@@ -574,6 +575,7 @@ export type Database = {
           logo_url?: string | null
           owner_user_id: string
           phone?: string | null
+          slug?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_website?: string | null
@@ -590,6 +592,7 @@ export type Database = {
           logo_url?: string | null
           owner_user_id?: string
           phone?: string | null
+          slug?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_website?: string | null
