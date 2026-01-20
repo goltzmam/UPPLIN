@@ -196,13 +196,13 @@ export default function Index() {
             </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-3">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
                   <div key={i} className="feed-card animate-pulse bg-muted" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-3">
                 {events.map((event: any, index: number) => (
                   <FeedEventCard
                     key={event.id}
