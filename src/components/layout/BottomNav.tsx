@@ -37,13 +37,10 @@ export function BottomNav() {
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden pointer-events-none"
     >
-      {/* Completely transparent - no background, just subtle blur */}
-      <div className="absolute inset-0 backdrop-blur-sm" />
-      
-      {/* Content */}
-      <div className="relative px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+8px)]">
+      {/* Content - pointer events only on children */}
+      <div className="relative px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+8px)] pointer-events-auto">
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || 
