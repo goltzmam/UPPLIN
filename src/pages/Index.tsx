@@ -3,25 +3,25 @@ import { Link, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeedSearch } from "@/components/feed/FeedSearch";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
+import { DesktopFeedCard } from "@/components/feed/DesktopFeedCard";
 import { 
   Search, 
   ArrowRight,
   Flame,
-  Calendar,
-  MapPin,
   Sparkles,
   Users,
-  Play,
+  Bell,
+  User,
+  Compass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
 
 const PAGE_SIZE = 12;
 
@@ -36,12 +36,29 @@ const categories = [
   { name: "Arte", icon: "🎨", href: "/eventos?categoria=arte" },
 ];
 
+const MUTE_STORAGE_KEY = "upplin_desktop_muted";
+
 export default function Index() {
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [globalMuted, setGlobalMuted] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem(MUTE_STORAGE_KEY) !== "false";
+    }
+    return true;
+  });
   const scrollPosRef = useRef(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  const toggleGlobalMute = useCallback(() => {
+    setGlobalMuted((prev) => {
+      const next = !prev;
+      localStorage.setItem(MUTE_STORAGE_KEY, String(next));
+      return next;
+    });
+  }, []);
 
   const {
     data,
@@ -419,7 +436,13 @@ export default function Index() {
                   ) : (
                     <>
                       {feedItems.map((item, index) => (
-                        <DesktopFeedCard key={item.id} item={item} index={index} />
+                        <DesktopFeedCard 
+                          key={item.id} 
+                          item={item} 
+                          index={index}
+                          globalMuted={globalMuted}
+                          onToggleGlobalMute={toggleGlobalMute}
+                        />
                       ))}
                     </>
                   )}
@@ -503,161 +526,6 @@ export default function Index() {
     </div>
   );
 
-  // Desktop Feed Card Component
-  const DesktopFeedCard = ({ item, index }: { item: typeof feedItems[0]; index: number }) => {
-    const eventDate = new Date(item.startAt);
-    const formattedDate = format(eventDate, "d 'de' MMMM", { locale: ptBR });
-    const formattedTime = format(eventDate, "HH:mm");
-    const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const [isHovered, setIsHovered] = useState(false);
-    const [videoLoaded, setVideoLoaded] = useState(false);
-
-    // Play video on hover
-    useEffect(() => {
-      const video = videoRef.current;
-      if (!video || !item.videoUrl) return;
-      
-      if (isHovered && videoLoaded) {
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-        video.currentTime = 0;
-      }
-    }, [isHovered, videoLoaded, item.videoUrl]);
-
-    return (
-      <motion.article
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05, duration: 0.3 }}
-        className="p-4"
-      >
-        {/* Organizer Header */}
-        <div className="flex items-center gap-3 mb-3">
-          <Link
-            to={`/organizador/${item.organizerId}`}
-            className="flex items-center gap-3 group"
-          >
-            <div className="h-10 w-10 rounded-full bg-muted overflow-hidden ring-2 ring-border group-hover:ring-primary transition-colors">
-              {item.organizerAvatar ? (
-                <img
-                  src={item.organizerAvatar}
-                  alt={item.organizerName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-sm font-bold">
-                  {item.organizerName?.[0] || "O"}
-                </div>
-              )}
-            </div>
-            <div>
-              <span className="font-semibold text-sm group-hover:text-primary transition-colors">
-                {item.organizerName}
-              </span>
-              <span className="block text-xs text-muted-foreground">
-                @{item.organizerSlug || item.organizerName?.replace(/\s+/g, "").toLowerCase()}
-              </span>
-            </div>
-          </Link>
-        </div>
-
-        {/* Media Container */}
-        <Link
-          to={`/evento/${item.id}`}
-          className="block relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted mb-3 group"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          {/* Cover Image */}
-          {item.coverImageUrl && (
-            <img
-              src={item.coverImageUrl}
-              alt={item.title}
-              className={cn(
-                "absolute inset-0 h-full w-full object-cover transition-all duration-500",
-                isHovered && item.videoUrl && videoLoaded ? "opacity-0" : "opacity-100 group-hover:scale-105"
-              )}
-              loading="lazy"
-            />
-          )}
-
-          {/* Video (plays on hover) */}
-          {item.videoUrl && (
-            <video
-              ref={videoRef}
-              src={item.videoUrl}
-              muted
-              loop
-              playsInline
-              webkit-playsinline="true"
-              preload="auto"
-              crossOrigin="anonymous"
-              onLoadedData={() => setVideoLoaded(true)}
-              onCanPlay={() => setVideoLoaded(true)}
-              onError={(e) => console.warn("Video load error:", e)}
-              className={cn(
-                "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
-                isHovered && videoLoaded ? "opacity-100" : "opacity-0"
-              )}
-              style={{
-                transform: "translateZ(0)",
-                backfaceVisibility: "hidden",
-              }}
-            />
-          )}
-
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-
-          {/* Top Badges */}
-          <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
-            <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
-              <span className="text-xs font-bold text-white">{formattedDate}</span>
-            </div>
-            <div className={cn(
-              "px-3 py-1.5 rounded-full backdrop-blur-md border",
-              (item.minPrice || 0) === 0
-                ? "bg-success/30 border-success/40 text-success"
-                : "bg-black/60 border-white/10 text-white"
-            )}>
-              <span className="text-xs font-bold">{formatPrice(item.minPrice || 0)}</span>
-            </div>
-          </div>
-
-          {/* Video Play Indicator */}
-          {item.videoUrl && (
-            <div className={cn(
-              "absolute bottom-3 right-3 h-10 w-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10 transition-opacity",
-              isHovered ? "opacity-0" : "opacity-100"
-            )}>
-              <Play className="h-5 w-5 text-white ml-0.5" />
-            </div>
-          )}
-        </Link>
-
-        {/* Event Info */}
-        <Link to={`/evento/${item.id}`} className="block group">
-          <h3 className="font-display text-lg font-bold leading-tight mb-1 group-hover:text-primary transition-colors line-clamp-2">
-            {item.title}
-          </h3>
-          <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              {formattedDate} • {formattedTime}
-            </span>
-            {item.venueName && (
-              <span className="flex items-center gap-1.5 truncate">
-                <MapPin className="h-4 w-4 shrink-0" />
-                {item.venueName}
-              </span>
-            )}
-          </div>
-        </Link>
-      </motion.article>
-    );
-  };
 
   return (
     <>
