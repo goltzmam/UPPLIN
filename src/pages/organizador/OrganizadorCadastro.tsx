@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText } from "lucide-react";
+import { Calendar, Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,8 +10,34 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
+// Animation variants for step transitions
+const stepVariants = {
+  enter: (direction: number) => ({
+    x: direction > 0 ? 100 : -100,
+    opacity: 0,
+    scale: 0.95,
+  }),
+  center: {
+    x: 0,
+    opacity: 1,
+    scale: 1,
+  },
+  exit: (direction: number) => ({
+    x: direction < 0 ? 100 : -100,
+    opacity: 0,
+    scale: 0.95,
+  }),
+};
+
+const stepTransition = {
+  type: "spring" as const,
+  stiffness: 300,
+  damping: 30,
+};
+
 export default function OrganizadorCadastro() {
   const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState(0);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -48,14 +75,19 @@ export default function OrganizadorCadastro() {
     return numbers.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
   };
 
+  const goToStep = (newStep: number) => {
+    setDirection(newStep > step ? 1 : -1);
+    setStep(newStep);
+  };
+
   const handleStep1 = (e: React.FormEvent) => {
     e.preventDefault();
-    setStep(2);
+    goToStep(2);
   };
 
   const handleStep2 = (e: React.FormEvent) => {
     e.preventDefault();
-    setStep(3);
+    goToStep(3);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,114 +174,207 @@ export default function OrganizadorCadastro() {
             </p>
           </div>
 
-          {/* Progress Steps */}
-          <div className="flex items-center gap-2">
+          {/* Progress Steps - Enhanced */}
+          <div className="flex items-center justify-center gap-3">
             {[1, 2, 3].map((s) => (
-              <div key={s} className="flex-1 flex items-center gap-2">
-                <div className={`h-2 flex-1 rounded-full transition-colors ${step >= s ? "bg-primary" : "bg-muted"}`} />
+              <div key={s} className="flex items-center gap-3">
+                <motion.div
+                  className={`relative h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${
+                    step > s 
+                      ? "bg-primary text-primary-foreground" 
+                      : step === s 
+                        ? "bg-primary text-primary-foreground ring-4 ring-primary/20" 
+                        : "bg-muted text-muted-foreground"
+                  }`}
+                  animate={{
+                    scale: step === s ? 1.1 : 1,
+                  }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                >
+                  {step > s ? (
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    >
+                      <Check className="h-5 w-5" />
+                    </motion.div>
+                  ) : (
+                    s
+                  )}
+                </motion.div>
+                {s < 3 && (
+                  <motion.div 
+                    className="w-12 h-1 rounded-full bg-muted overflow-hidden"
+                  >
+                    <motion.div
+                      className="h-full bg-primary"
+                      initial={{ width: "0%" }}
+                      animate={{ width: step > s ? "100%" : "0%" }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                    />
+                  </motion.div>
+                )}
               </div>
             ))}
           </div>
-          <p className="text-sm text-muted-foreground text-center">
-            Etapa {step} de 3: {step === 1 ? "Dados da conta" : step === 2 ? "Dados da empresa" : "Redes sociais"}
-          </p>
+          
+          <motion.p 
+            key={step}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-sm text-muted-foreground text-center font-medium"
+          >
+            {step === 1 ? "Dados da conta" : step === 2 ? "Dados da empresa" : "Redes sociais"}
+          </motion.p>
 
-          {/* Step 1: Account */}
-          {step === 1 && (
-            <form onSubmit={handleStep1} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-sm">Seu nome completo</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="fullName" placeholder="Seu nome" className="pl-10 h-11" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="email" type="email" placeholder="seu@email.com" className="pl-10 h-11" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm">Senha</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="password" type="password" placeholder="Mínimo 6 caracteres" className="pl-10 h-11" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-                </div>
-              </div>
-              <Button type="submit" className="w-full h-11">Continuar</Button>
-            </form>
-          )}
+          {/* Form Steps with Animation */}
+          <div className="relative overflow-hidden">
+            <AnimatePresence mode="wait" custom={direction}>
+              {/* Step 1: Account */}
+              {step === 1 && (
+                <motion.form
+                  key="step1"
+                  custom={direction}
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={stepTransition}
+                  onSubmit={handleStep1}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName" className="text-sm">Seu nome completo</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="fullName" placeholder="Seu nome" className="pl-10 h-11" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email" className="text-sm">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="email" type="email" placeholder="seu@email.com" className="pl-10 h-11" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password" className="text-sm">Senha</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="password" type="password" placeholder="Mínimo 6 caracteres" className="pl-10 h-11" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
+                    </div>
+                  </div>
+                  <Button type="submit" className="w-full h-11 gap-2">
+                    Continuar
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </motion.form>
+              )}
 
-          {/* Step 2: Company */}
-          {step === 2 && (
-            <form onSubmit={handleStep2} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="companyName" className="text-sm">Nome da Produtora/Organizadora</Label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="companyName" placeholder="Ex: Eventos XYZ" className="pl-10 h-11" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cnpj" className="text-sm">CNPJ</Label>
-                <div className="relative">
-                  <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="cnpj" placeholder="00.000.000/0000-00" className="pl-10 h-11" value={cnpj} onChange={(e) => setCnpj(formatCNPJ(e.target.value))} required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="phone" className="text-sm">Telefone</Label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="phone" placeholder="(00) 00000-0000" className="pl-10 h-11" value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} required />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm">Descrição da empresa (opcional)</Label>
-                <Textarea id="description" placeholder="Conte um pouco sobre sua empresa..." className="min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
-              </div>
-              <div className="flex gap-3">
-                <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setStep(1)}>Voltar</Button>
-                <Button type="submit" className="flex-1 h-11">Continuar</Button>
-              </div>
-            </form>
-          )}
+              {/* Step 2: Company */}
+              {step === 2 && (
+                <motion.form
+                  key="step2"
+                  custom={direction}
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={stepTransition}
+                  onSubmit={handleStep2}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="companyName" className="text-sm">Nome da Produtora/Organizadora</Label>
+                    <div className="relative">
+                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="companyName" placeholder="Ex: Eventos XYZ" className="pl-10 h-11" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cnpj" className="text-sm">CNPJ</Label>
+                    <div className="relative">
+                      <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="cnpj" placeholder="00.000.000/0000-00" className="pl-10 h-11" value={cnpj} onChange={(e) => setCnpj(formatCNPJ(e.target.value))} required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-sm">Telefone</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="phone" placeholder="(00) 00000-0000" className="pl-10 h-11" value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} required />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="description" className="text-sm">Descrição da empresa (opcional)</Label>
+                    <Textarea id="description" placeholder="Conte um pouco sobre sua empresa..." className="min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
+                  </div>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1 h-11 gap-2" onClick={() => goToStep(1)}>
+                      <ChevronLeft className="h-4 w-4" />
+                      Voltar
+                    </Button>
+                    <Button type="submit" className="flex-1 h-11 gap-2">
+                      Continuar
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </motion.form>
+              )}
 
-          {/* Step 3: Social */}
-          {step === 3 && (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="instagram" className="text-sm">Instagram (opcional)</Label>
-                <div className="relative">
-                  <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="instagram" placeholder="@seuperfil" className="pl-10 h-11" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="facebook" className="text-sm">Facebook (opcional)</Label>
-                <div className="relative">
-                  <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="facebook" placeholder="facebook.com/suapagina" className="pl-10 h-11" value={facebook} onChange={(e) => setFacebook(e.target.value)} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="website" className="text-sm">Website (opcional)</Label>
-                <div className="relative">
-                  <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input id="website" placeholder="https://seusite.com" className="pl-10 h-11" value={website} onChange={(e) => setWebsite(e.target.value)} />
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button type="button" variant="outline" className="flex-1 h-11" onClick={() => setStep(2)}>Voltar</Button>
-                <Button type="submit" className="flex-1 h-11" disabled={loading}>
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Conta"}
-                </Button>
-              </div>
-            </form>
-          )}
-
+              {/* Step 3: Social */}
+              {step === 3 && (
+                <motion.form
+                  key="step3"
+                  custom={direction}
+                  variants={stepVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  transition={stepTransition}
+                  onSubmit={handleSubmit}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <Label htmlFor="instagram" className="text-sm">Instagram (opcional)</Label>
+                    <div className="relative">
+                      <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="instagram" placeholder="@seuperfil" className="pl-10 h-11" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="facebook" className="text-sm">Facebook (opcional)</Label>
+                    <div className="relative">
+                      <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="facebook" placeholder="facebook.com/suapagina" className="pl-10 h-11" value={facebook} onChange={(e) => setFacebook(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="website" className="text-sm">Website (opcional)</Label>
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input id="website" placeholder="https://seusite.com" className="pl-10 h-11" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1 h-11 gap-2" onClick={() => goToStep(2)}>
+                      <ChevronLeft className="h-4 w-4" />
+                      Voltar
+                    </Button>
+                    <Button type="submit" className="flex-1 h-11 gap-2" disabled={loading}>
+                      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                        <>
+                          <Check className="h-4 w-4" />
+                          Criar Conta
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </motion.form>
+              )}
+            </AnimatePresence>
+          </div>
           <div className="text-center">
             <Link to="/cadastro" className="text-sm text-muted-foreground hover:text-primary">
               Cadastrar como participante →
