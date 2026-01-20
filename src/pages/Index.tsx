@@ -211,7 +211,7 @@ export default function Index() {
         <section>
           <div className="container">
             {/* Tab Navigation */}
-            <div className="flex items-center justify-center gap-6 mb-6 border-b border-border">
+            <div className="flex items-center justify-center gap-6 border-b border-border">
               <button
                 onClick={() => setActiveTab("foryou")}
                 className={cn(
