@@ -65,6 +65,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+
+        // Fullscreen video/feed UI overlays
+        video: {
+          overlay: "hsl(var(--video-overlay) / <alpha-value>)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

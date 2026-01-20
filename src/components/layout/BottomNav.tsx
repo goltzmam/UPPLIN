@@ -39,8 +39,14 @@ export function BottomNav() {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden pointer-events-none"
     >
+      {/* TikTok-style overlay: dark gradient over video (no solid bar) */}
+      <div className="absolute inset-0 pointer-events-none">
+        {/* No blur here (blur can turn into a white/gray bar on light pages). */}
+        <div className="absolute inset-0 bg-gradient-to-t from-video-overlay/90 via-video-overlay/40 to-transparent" />
+      </div>
+
       {/* Content - pointer events only on children */}
-      <div className="relative px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+8px)] pointer-events-auto">
+      <div className="relative px-3 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+10px)] pointer-events-auto">
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || 
@@ -55,19 +61,20 @@ export function BottomNav() {
                   key={item.path}
                   to={item.path}
                   onClick={() => triggerHaptic('medium')}
-                  className="relative flex items-center justify-center -mt-6"
+                  className="relative flex items-center justify-center -mt-5"
                 >
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.92 }}
                     className="relative"
                   >
-                    {/* Glow effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-accent via-pink-500 to-orange-400 rounded-full blur-xl opacity-70" />
-                    
-                    {/* Button */}
-                    <div className="relative bg-gradient-to-r from-accent via-pink-500 to-orange-400 rounded-full p-4 shadow-xl">
-                      <Plus className="h-6 w-6 text-white" strokeWidth={3} />
+                    {/* Pill button (TikTok-like) */}
+                    <div className="relative h-11 w-[70px] rounded-2xl overflow-hidden shadow-xl">
+                      <div className="absolute inset-y-0 left-0 w-4 bg-accent" />
+                      <div className="absolute inset-y-0 right-0 w-4 bg-destructive" />
+                      <div className="absolute inset-0 mx-2 rounded-2xl bg-primary-foreground flex items-center justify-center">
+                        <Plus className="h-6 w-6 text-primary" strokeWidth={3} />
+                      </div>
                     </div>
                   </motion.div>
                 </Link>
@@ -88,10 +95,10 @@ export function BottomNav() {
                   <Icon 
                     className={cn(
                       "h-7 w-7 transition-all duration-200",
-                      isActive 
-                        ? "text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.5)]" 
-                        : "text-white/60",
-                      isActive && item.fillOnActive && "fill-white"
+                      isActive
+                        ? "text-primary-foreground drop-shadow-lg"
+                        : "text-primary-foreground/60",
+                      isActive && item.fillOnActive && "fill-primary-foreground"
                     )} 
                     strokeWidth={isActive ? 2.5 : 1.5}
                   />
@@ -100,7 +107,7 @@ export function BottomNav() {
                 <span 
                   className={cn(
                     "text-[10px] font-medium mt-1 transition-colors duration-200",
-                    isActive ? "text-white" : "text-white/60"
+                    isActive ? "text-primary-foreground" : "text-primary-foreground/60"
                   )}
                 >
                   {item.label}
