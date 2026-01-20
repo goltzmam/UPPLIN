@@ -231,12 +231,12 @@ export default function Index() {
             UPPLIN
           </Link>
           
-          {/* Center tabs */}
-          <div className="flex items-center gap-6">
+          {/* Center tabs with animated underline */}
+          <div className="relative flex items-center gap-6">
             <button
               onClick={() => setActiveTab("following")}
               className={cn(
-                "text-sm font-semibold transition-all",
+                "relative text-sm font-semibold transition-all pb-1",
                 activeTab === "following" 
                   ? "text-white" 
                   : "text-white/60"
@@ -247,7 +247,7 @@ export default function Index() {
             <button
               onClick={() => setActiveTab("foryou")}
               className={cn(
-                "text-sm font-semibold transition-all",
+                "relative text-sm font-semibold transition-all pb-1",
                 activeTab === "foryou" 
                   ? "text-white" 
                   : "text-white/60"
@@ -255,6 +255,17 @@ export default function Index() {
             >
               Para você
             </button>
+            
+            {/* Animated underline indicator */}
+            <motion.div
+              layoutId="tab-underline-mobile"
+              className="absolute bottom-0 h-0.5 bg-white rounded-full"
+              style={{
+                left: activeTab === "following" ? "0px" : "calc(50% + 12px)",
+                width: activeTab === "following" ? "54px" : "62px",
+              }}
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+            />
           </div>
 
           {/* Placeholder for balance */}
