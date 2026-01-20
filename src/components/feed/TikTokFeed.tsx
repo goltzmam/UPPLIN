@@ -24,6 +24,7 @@ interface TikTokFeedItem {
   venueName: string | null;
   addressText: string | null;
   organizerName?: string;
+  organizerSlug?: string | null;
   organizerAvatar?: string | null;
   organizerId?: string | null;
   minPrice?: number;
@@ -363,14 +364,16 @@ const FeedRow = React.memo(function FeedRow({
         <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-16 z-10">
           <div className="flex items-center gap-2">
             <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (item.organizerId) navigate(`/organizador/${item.organizerId}`); }}
-              className="flex items-center gap-2 min-w-0">
+              className="flex items-center gap-2 min-w-0 group/org">
               <div className="avatar-ring-gradient p-[2px] rounded-full shrink-0">
                 <div className="h-9 w-9 rounded-full bg-muted overflow-hidden">
                   {item.organizerAvatar ? <img src={item.organizerAvatar} alt={item.organizerName} className="h-full w-full object-cover" />
                     : <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-xs font-bold">{item.organizerName?.[0] || "O"}</div>}
                 </div>
               </div>
-              <span className="text-white text-sm font-semibold drop-shadow-lg truncate">@{item.organizerName?.replace(/\s+/g, "").toLowerCase() || "organizador"}</span>
+              <span className="text-white text-sm font-semibold drop-shadow-lg truncate group-hover/org:text-accent transition-colors">
+                @{item.organizerSlug || item.organizerName?.replace(/\s+/g, "").toLowerCase() || "organizador"}
+              </span>
             </button>
             {isLive && <LiveBadge />}
           </div>

@@ -69,7 +69,7 @@ export default function Index() {
         .from("events")
         .select(`
           *,
-          organizer:organizer_id(display_name, logo_url),
+          organizer:organizer_id(id, display_name, logo_url, slug),
           event_media(id, url, type, sort_order),
           ticket_types(price_cents)
         `, { count: "exact" })
@@ -124,6 +124,7 @@ export default function Index() {
       venueName: event.venue_name,
       addressText: event.address_text,
       organizerName: event.organizer?.display_name,
+      organizerSlug: event.organizer?.slug,
       organizerAvatar: event.organizer?.logo_url,
       organizerId: event.organizer_id,
       minPrice,

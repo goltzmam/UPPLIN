@@ -39,11 +39,14 @@ export function BottomNav() {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
     >
-      {/* Glass morphism background */}
-      <div className="absolute inset-0 bg-background/70 backdrop-blur-2xl border-t border-white/10" />
+      {/* Premium glass morphism background - fully transparent with subtle blur */}
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-2xl border-t border-white/5" />
+      
+      {/* Subtle top gradient for depth */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       
       {/* Safe area padding for iOS */}
-      <div className="relative px-2 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
+      <div className="relative px-2 pt-3 pb-[calc(env(safe-area-inset-bottom,8px)+4px)]">
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || 
