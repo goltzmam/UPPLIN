@@ -354,7 +354,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   if (isLoading) {
     return (
-      <div className="h-[calc(100vh-120px)] bg-muted animate-pulse flex items-center justify-center">
+      <div className="h-[calc(100vh-224px)] bg-muted animate-pulse flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
       </div>
     );
@@ -362,7 +362,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   if (items.length === 0) {
     return (
-      <div className="h-[calc(100vh-120px)] flex items-center justify-center text-center p-8">
+      <div className="h-[calc(100vh-224px)] flex items-center justify-center text-center p-8">
         <div>
           <p className="text-muted-foreground mb-2">Nenhum evento encontrado</p>
           <p className="text-sm text-muted-foreground/70">
@@ -376,7 +376,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   return (
     <div
       ref={containerRef}
-      className="h-[calc(100vh-120px)] overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
+      className="h-[calc(100vh-224px)] overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
     >
       {items.map((item, index) => (
         <div key={item.id} className="h-full w-full">
