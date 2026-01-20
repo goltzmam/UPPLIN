@@ -1,12 +1,12 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check } from "lucide-react";
+import { Calendar, Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -39,8 +39,35 @@ export default function OrganizadorCadastro() {
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const triggerConfetti = useCallback(() => {
+    const duration = 3000;
+    const animationEnd = Date.now() + duration;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 9999 };
+
+    const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+    const interval = setInterval(() => {
+      const timeLeft = animationEnd - Date.now();
+      if (timeLeft <= 0) {
+        return clearInterval(interval);
+      }
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 }
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 }
+      });
+    }, 250);
+  }, []);
 
   // Step 1 - Account
   const [fullName, setFullName] = useState("");
@@ -136,11 +163,19 @@ export default function OrganizadorCadastro() {
         if (orgError) throw orgError;
       }
 
+      // Show success animation with confetti
+      setShowSuccess(true);
+      triggerConfetti();
+
       toast({ 
         title: "Conta criada com sucesso!", 
         description: "Vamos configurar seu perfil." 
       });
-      navigate("/organizador/onboarding");
+
+      // Navigate after animation
+      setTimeout(() => {
+        navigate("/organizador/onboarding");
+      }, 2500);
     } catch (err: any) {
       toast({ 
         title: "Erro ao criar conta", 
@@ -152,23 +187,70 @@ export default function OrganizadorCadastro() {
     }
   };
 
+  // Success Screen
+  if (showSuccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="text-center space-y-6"
+        >
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1, rotate: [0, -10, 10, 0] }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 400 }}
+            className="mx-auto h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center"
+          >
+            <PartyPopper className="h-12 w-12 text-primary" />
+          </motion.div>
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4 }}
+          >
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-foreground">
+              Bem-vindo à UPPLIN!
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Sua conta foi criada com sucesso
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+            <p className="text-sm text-muted-foreground mt-2">Preparando seu painel...</p>
+          </motion.div>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md space-y-6 sm:space-y-8">
-          <div className="text-center lg:text-left">
-            <Link to="/" className="lg:hidden inline-flex items-center gap-2 mb-6">
-              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-foreground flex items-center justify-center">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-background" />
+          {/* Mobile Header */}
+          <div className="lg:hidden flex flex-col items-center gap-4">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="h-10 w-10 rounded-xl bg-foreground flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-background" />
               </div>
-              <span className="font-display text-lg sm:text-xl font-bold text-foreground">UPPLIN</span>
+              <span className="font-display text-xl font-bold text-foreground">UPPLIN</span>
             </Link>
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/10 border border-border text-foreground text-sm font-medium mb-4">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-foreground text-sm font-medium">
               <Building2 className="h-4 w-4" />
               Área do Organizador
             </div>
+          </div>
+          
+          <div className="text-center lg:text-left space-y-2">
             <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground">Criar conta de organizador</h2>
-            <p className="text-sm sm:text-base text-muted-foreground mt-2">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Já tem conta?{" "}
               <Link to="/organizador/login" className="text-primary hover:underline font-medium">Entrar</Link>
             </p>
