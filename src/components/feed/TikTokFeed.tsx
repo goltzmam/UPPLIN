@@ -763,16 +763,6 @@ export function TikTokFeed({
       }}
       className="relative overflow-y-auto snap-y snap-mandatory scrollbar-hide overscroll-y-contain"
     >
-      {/* Progress indicator - top right */}
-      <div 
-        className="fixed z-30 pointer-events-none"
-        style={{ 
-          top: "calc(env(safe-area-inset-top, 0px) + 16px)", 
-          right: "16px" 
-        }}
-      >
-        <ProgressIndicator current={activeIndex + 1} total={items.length} />
-      </div>
 
       {/* Mini scroll map - right side center */}
       <div 
