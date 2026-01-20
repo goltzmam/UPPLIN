@@ -88,8 +88,8 @@ export function EventComments({ eventId }: EventCommentsProps) {
     },
   });
 
-  // Filter mentions based on query - using useMemo to avoid infinite loop
-  const filteredMentions = mentionQuery && showMentions
+  // Filter mentions based on query - derived value to avoid infinite loop
+  const filteredMentions = (mentionQuery && showMentions)
     ? allUsers.filter((u) =>
         u.full_name?.toLowerCase().includes(mentionQuery.toLowerCase())
       ).slice(0, 5)
