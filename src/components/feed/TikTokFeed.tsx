@@ -25,6 +25,9 @@ interface TikTokFeedItem {
 interface TikTokFeedProps {
   items: TikTokFeedItem[];
   isLoading?: boolean;
+  onLoadMore?: () => void;
+  hasMore?: boolean;
+  isLoadingMore?: boolean;
 }
 
 function formatEngagementCount(count: number): string {
@@ -315,24 +318,31 @@ function FeedCard({
   );
 }
 
-export function TikTokFeed({ items, isLoading }: TikTokFeedProps) {
+export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMore }: TikTokFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
 
-  // Handle scroll to detect active item
+  // Handle scroll to detect active item and load more
   const handleScroll = useCallback(() => {
     if (!containerRef.current) return;
 
     const container = containerRef.current;
     const scrollTop = container.scrollTop;
     const itemHeight = container.clientHeight;
+    const scrollHeight = container.scrollHeight;
     const newIndex = Math.round(scrollTop / itemHeight);
 
     if (newIndex !== activeIndex && newIndex >= 0 && newIndex < items.length) {
       setActiveIndex(newIndex);
     }
-  }, [activeIndex, items.length]);
+
+    // Load more when near bottom (2 items before end)
+    const nearBottom = scrollTop + itemHeight * 2 >= scrollHeight - itemHeight;
+    if (nearBottom && hasMore && !isLoadingMore && onLoadMore) {
+      onLoadMore();
+    }
+  }, [activeIndex, items.length, hasMore, isLoadingMore, onLoadMore]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -378,6 +388,13 @@ export function TikTokFeed({ items, isLoading }: TikTokFeedProps) {
           />
         </div>
       ))}
+      
+      {/* Loading indicator for infinite scroll */}
+      {isLoadingMore && (
+        <div className="h-20 flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
     </div>
   );
 }
