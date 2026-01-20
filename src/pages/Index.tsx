@@ -283,12 +283,12 @@ export default function Index() {
   // DESKTOP/TABLET: Instagram-style layout with sidebars
   // =====================================================================
   const DesktopLayout = () => (
-    <div className="hidden md:flex min-h-screen bg-background">
-      {/* Left Sidebar - Navigation */}
+    <div className="hidden md:flex min-h-screen bg-background w-full">
+      {/* Left Sidebar - Navigation (hidden on md, visible on lg+) */}
       <DesktopSidebar />
 
       {/* Main Content - Centered Feed */}
-      <main className="flex-1 max-w-[470px] mx-auto border-x border-border/30">
+      <main className="flex-1 w-full max-w-[600px] lg:max-w-[500px] xl:max-w-[470px] mx-auto border-x border-border/30">
         <PullToRefresh onRefresh={handleRefresh}>
           <div className="pb-20">
             <AnimatePresence mode="wait" initial={false}>

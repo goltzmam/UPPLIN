@@ -66,7 +66,7 @@ export function DesktopSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col w-[72px] xl:w-[244px] h-screen border-r border-border/50 px-3 py-6 sticky top-0 shrink-0">
+    <aside className="hidden lg:flex flex-col w-[72px] xl:w-[220px] 2xl:w-[244px] h-screen border-r border-border/50 px-3 py-6 sticky top-0 shrink-0">
       {/* Logo */}
       <Link to="/" className="px-3 py-4 mb-4">
         <span className="hidden xl:block font-display text-2xl font-bold">UPPLIN</span>
@@ -100,7 +100,7 @@ export function DesktopSidebar() {
           isActive={false}
         />
         
-        {user && (
+        {user ? (
           <>
             <NavItem
               to="/organizador/evento"
@@ -120,52 +120,41 @@ export function DesktopSidebar() {
               label="Salvos"
               isActive={isActive("/eventos-salvos")}
             />
+            <NavItem
+              to="/perfil"
+              icon={<User className="h-6 w-6" />}
+              label="Perfil"
+              isActive={isActive("/perfil")}
+            />
           </>
+        ) : (
+          <NavItem
+            to="/login"
+            icon={<User className="h-6 w-6" />}
+            label="Entrar"
+            isActive={isActive("/login")}
+          />
         )}
       </nav>
 
-      {/* Profile / Login */}
-      <div className="mt-auto pt-4">
-        {user ? (
+      {/* Profile Menu (only for logged in users) */}
+      {user && (
+        <div className="mt-auto pt-4">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-muted transition-all w-full text-left">
-                <div className="h-7 w-7 rounded-full bg-muted overflow-hidden ring-2 ring-border">
-                  {user.user_metadata?.avatar_url ? (
-                    <img 
-                      src={user.user_metadata.avatar_url} 
-                      alt="Perfil" 
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-accent to-pink-500 text-white text-xs font-bold">
-                      {user.email?.[0]?.toUpperCase() || "U"}
-                    </div>
-                  )}
-                </div>
-                <span className="hidden xl:block text-sm font-medium truncate max-w-[140px]">
-                  {user.user_metadata?.full_name || user.email?.split("@")[0]}
-                </span>
-                <Menu className="h-4 w-4 ml-auto hidden xl:block text-muted-foreground" />
+              <button className="flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-muted transition-all w-full text-left">
+                <Menu className="h-6 w-6" />
+                <span className="hidden xl:block text-sm font-medium">Mais</span>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={() => navigate("/perfil")}>
-                <User className="h-4 w-4 mr-2" />
-                Meu Perfil
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/meus-ingressos")}>
-                <Ticket className="h-4 w-4 mr-2" />
-                Meus Ingressos
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/eventos-salvos")}>
-                <Bookmark className="h-4 w-4 mr-2" />
-                Eventos Salvos
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+            <DropdownMenuContent align="start" side="top" className="w-56">
               <DropdownMenuItem onClick={() => navigate("/perfil")}>
                 <Settings className="h-4 w-4 mr-2" />
                 Configurações
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/organizador/dashboard")}>
+                <Ticket className="h-4 w-4 mr-2" />
+                Painel do Organizador
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout} className="text-destructive">
@@ -173,16 +162,8 @@ export function DesktopSidebar() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        ) : (
-          <Link
-            to="/login"
-            className="flex items-center gap-4 px-3 py-3 rounded-lg hover:bg-muted transition-all"
-          >
-            <User className="h-6 w-6" />
-            <span className="hidden xl:block text-sm font-medium">Entrar</span>
-          </Link>
-        )}
-      </div>
+        </div>
+      )}
     </aside>
   );
 }

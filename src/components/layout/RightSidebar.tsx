@@ -41,8 +41,8 @@ export function RightSidebar() {
   const { user } = useAuth();
 
   return (
-    <aside className="hidden lg:block w-[320px] xl:w-[340px] h-screen sticky top-0 overflow-y-auto shrink-0 border-l border-border/50">
-      <div className="p-5 pt-6 space-y-6">
+    <aside className="hidden xl:block w-[280px] 2xl:w-[320px] h-screen sticky top-0 overflow-y-auto shrink-0 pl-6 pr-4">
+      <div className="py-6 space-y-6">
         {/* Search */}
         <button
           onClick={() => navigate("/eventos")}
