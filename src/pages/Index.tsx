@@ -82,16 +82,14 @@ export default function Index() {
 
   const events = data?.pages.flatMap(page => page.data) || [];
 
-  const DEMO_VIDEO_URLS = [
-    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
-    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/river.mp4",
-    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/bee.mp4",
-  ];
-
+  // Demo assets - using reliable CDN sources
   const DEMO_COVER_URLS = [
     "https://images.unsplash.com/photo-1521337706264-a414f153a5fc?w=1200&q=80",
     "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&q=80",
     "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&q=80",
+    "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=1200&q=80",
+    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&q=80",
+    "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&q=80",
   ];
 
   const feedItems = events.map((event: any, index: number) => {
@@ -100,14 +98,14 @@ export default function Index() {
       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
       : 0;
 
-    const demoVideo = import.meta.env.DEV ? DEMO_VIDEO_URLS[index % DEMO_VIDEO_URLS.length] : null;
+    // Use actual video from event_media, or null for demo (show cover image instead)
     const demoCover = import.meta.env.DEV ? DEMO_COVER_URLS[index % DEMO_COVER_URLS.length] : null;
 
     return {
       id: event.id,
       title: event.title,
       coverImageUrl: event.cover_image_url || demoCover,
-      videoUrl: videoMedia?.url || demoVideo,
+      videoUrl: videoMedia?.url || null, // Only use real videos, no demo videos
       startAt: event.start_at,
       endAt: event.end_at,
       venueName: event.venue_name,
