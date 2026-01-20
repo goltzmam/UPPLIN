@@ -1,10 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { List, ListImperativeAPI } from "react-window";
 import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play, X } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useEventEngagement } from "@/hooks/use-event-engagement";
 import { ShareButton } from "@/components/events/ShareButton";
@@ -42,6 +41,7 @@ interface TikTokFeedProps {
 }
 
 const MUTE_STORAGE_KEY = "upplin_feed_muted";
+const SCROLL_POSITION_KEY = "upplin_feed_scroll_position";
 
 function formatEngagementCount(count: number): string {
   if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
@@ -406,10 +406,17 @@ const FeedRow = React.memo(function FeedRow({
 });
 
 export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMore, scrollPosition = 0, onScrollChange, onRefresh }: TikTokFeedProps) {
-  const listRef = useRef<ListImperativeAPI>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(0);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const activeIndexRef = useRef(0);
+  const [activeIndex, setActiveIndex] = useState(() => {
+    // Restore scroll position from cache
+    try {
+      const cached = sessionStorage.getItem(SCROLL_POSITION_KEY);
+      return cached ? parseInt(cached, 10) : 0;
+    } catch { return 0; }
+  });
+  const activeIndexRef = useRef(activeIndex);
+  const isAnimating = useRef(false);
 
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem(MUTE_STORAGE_KEY) === "true" || localStorage.getItem(MUTE_STORAGE_KEY) === null; } catch { return true; }
@@ -422,6 +429,10 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Motion value for smooth snap animation
+  const y = useMotionValue(0);
+  const ySmooth = useTransform(y, (value) => value);
+
   useEffect(() => {
     const updateHeight = () => setContainerHeight(window.innerHeight - 80);
     updateHeight();
@@ -429,17 +440,95 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
-  const rowProps = useMemo(() => ({ items, activeIndex, isMuted, onToggleMute: handleToggleMute }), [items, activeIndex, isMuted, handleToggleMute]);
+  // Save scroll position to cache
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SCROLL_POSITION_KEY, String(activeIndex));
+      onScrollChange?.(activeIndex);
+    } catch {}
+  }, [activeIndex, onScrollChange]);
 
-  const handleRowsRendered = useCallback((visible: { startIndex: number; stopIndex: number }) => {
-    const mid = Math.round((visible.startIndex + visible.stopIndex) / 2);
-    if (mid !== activeIndexRef.current) {
-      activeIndexRef.current = mid;
-      triggerFeedback({ haptic: "light" });
-      setActiveIndex(mid);
+  // Navigate to specific index with smooth animation
+  const goToIndex = useCallback((newIndex: number) => {
+    const clampedIndex = Math.max(0, Math.min(items.length - 1, newIndex));
+    if (clampedIndex === activeIndexRef.current || isAnimating.current) return;
+    
+    isAnimating.current = true;
+    triggerFeedback({ haptic: "light" });
+    
+    const targetY = -clampedIndex * containerHeight;
+    animate(y, targetY, {
+      type: "spring",
+      stiffness: 300,
+      damping: 30,
+      onComplete: () => {
+        isAnimating.current = false;
+        activeIndexRef.current = clampedIndex;
+        setActiveIndex(clampedIndex);
+        
+        // Load more when approaching end
+        if (clampedIndex >= items.length - 2 && hasMore && !isLoadingMore) {
+          onLoadMore?.();
+        }
+      }
+    });
+  }, [y, containerHeight, items.length, hasMore, isLoadingMore, onLoadMore]);
+
+  // Handle swipe gestures
+  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    const velocity = info.velocity.y;
+    const offset = info.offset.y;
+    const swipeThreshold = containerHeight * 0.2;
+    const velocityThreshold = 300;
+    
+    let newIndex = activeIndexRef.current;
+    
+    if (offset < -swipeThreshold || velocity < -velocityThreshold) {
+      // Swiped up - go to next
+      newIndex = activeIndexRef.current + 1;
+    } else if (offset > swipeThreshold || velocity > velocityThreshold) {
+      // Swiped down - go to previous or pull to refresh
+      if (activeIndexRef.current === 0 && offset > 80 && onRefresh && !isRefreshing) {
+        setIsRefreshing(true);
+        onRefresh().finally(() => {
+          setIsRefreshing(false);
+          setPullDistance(0);
+        });
+      } else {
+        newIndex = activeIndexRef.current - 1;
+      }
     }
-    if (visible.stopIndex >= items.length - 2 && hasMore && !isLoadingMore) onLoadMore?.();
-  }, [items.length, hasMore, isLoadingMore, onLoadMore]);
+    
+    goToIndex(newIndex);
+    setPullDistance(0);
+  }, [containerHeight, goToIndex, onRefresh, isRefreshing]);
+
+  // Handle drag for pull-to-refresh indicator
+  const handleDrag = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (activeIndexRef.current === 0 && info.offset.y > 0) {
+      setPullDistance(Math.min(info.offset.y * 0.5, 80));
+    }
+  }, []);
+
+  // Initialize y position based on active index
+  useEffect(() => {
+    if (containerHeight > 0 && items.length > 0) {
+      y.set(-activeIndex * containerHeight);
+    }
+  }, [containerHeight, items.length, activeIndex, y]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowDown' || e.key === 'j') {
+        goToIndex(activeIndexRef.current + 1);
+      } else if (e.key === 'ArrowUp' || e.key === 'k') {
+        goToIndex(activeIndexRef.current - 1);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [goToIndex]);
 
   if (isLoading || containerHeight === 0) return <div style={{ height: containerHeight || 'calc(100dvh - 80px)' }}><FeedSkeleton /></div>;
 
@@ -455,33 +544,79 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     );
   }
 
+  // Calculate visible range for performance (only render ±2 items)
+  const visibleRange = {
+    start: Math.max(0, activeIndex - 2),
+    end: Math.min(items.length - 1, activeIndex + 2)
+  };
+
   return (
-    <div className="relative" style={{ height: containerHeight }}>
+    <div 
+      ref={containerRef}
+      className="relative overflow-hidden touch-pan-y"
+      style={{ height: containerHeight }}
+    >
+      {/* Scroll mini map */}
       <div className="fixed z-30 pointer-events-none" style={{ top: "50%", right: "8px", transform: "translateY(-50%)" }}>
         <ScrollMiniMap current={activeIndex} total={items.length} />
       </div>
 
+      {/* Pull to refresh indicator */}
       {onRefresh && (
         <div className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
-          <div className={cn("mt-2 rounded-full bg-background/80 backdrop-blur px-3 py-1.5 border border-border/50", pullDistance > 0 || isRefreshing ? "opacity-100" : "opacity-0")}
+          <div className={cn("mt-2 rounded-full bg-background/80 backdrop-blur px-3 py-1.5 border border-border/50 transition-opacity", pullDistance > 0 || isRefreshing ? "opacity-100" : "opacity-0")}
             style={{ transform: `translateY(${Math.min(pullDistance, 60)}px)` }}>
-            <span className="text-xs text-foreground/80">{isRefreshing ? "Atualizando..." : pullDistance >= 60 ? "Solte para atualizar" : "Puxe para atualizar"}</span>
+            {isRefreshing ? (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+                <span className="text-xs text-foreground/80">Atualizando...</span>
+              </div>
+            ) : (
+              <span className="text-xs text-foreground/80">{pullDistance >= 60 ? "Solte para atualizar" : "Puxe para atualizar"}</span>
+            )}
           </div>
         </div>
       )}
 
-      <List
-        listRef={listRef}
-        rowCount={items.length}
-        rowHeight={containerHeight}
-        rowProps={rowProps}
-        onRowsRendered={handleRowsRendered}
-        overscanCount={1}
-        style={{ height: containerHeight, overflowX: 'hidden', scrollSnapType: 'y mandatory', WebkitOverflowScrolling: 'touch' }}
-        className="scrollbar-hide scroll-smooth-ios"
-        rowComponent={({ index, style, ...props }) => <FeedRow key={items[index].id} index={index} style={style} {...props} />}
-      />
+      {/* Feed container with gesture handling */}
+      <motion.div
+        style={{ y: ySmooth }}
+        drag="y"
+        dragConstraints={{ top: -(items.length - 1) * containerHeight, bottom: 0 }}
+        dragElastic={0.1}
+        onDrag={handleDrag}
+        onDragEnd={handleDragEnd}
+        className="will-change-transform"
+      >
+        {items.map((item, index) => {
+          // Only render items in visible range for performance
+          const isInRange = index >= visibleRange.start && index <= visibleRange.end;
+          
+          return (
+            <div
+              key={item.id}
+              style={{ 
+                height: containerHeight,
+                visibility: isInRange ? 'visible' : 'hidden'
+              }}
+              className="snap-start snap-always"
+            >
+              {isInRange && (
+                <FeedRow
+                  index={index}
+                  style={{ height: '100%' }}
+                  items={items}
+                  activeIndex={activeIndex}
+                  isMuted={isMuted}
+                  onToggleMute={handleToggleMute}
+                />
+              )}
+            </div>
+          );
+        })}
+      </motion.div>
 
+      {/* Loading more indicator */}
       {isLoadingMore && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
           <div className="bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 border border-border/50">
