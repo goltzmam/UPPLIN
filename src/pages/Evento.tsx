@@ -14,6 +14,7 @@ import { EventMediaCarousel } from "@/components/events/EventMediaCarousel";
 import { FollowButton } from "@/components/events/FollowButton";
 import { EventComments } from "@/components/events/EventComments";
 import { EventReviews } from "@/components/events/EventReviews";
+import { OrganizerPreviewTooltip } from "@/components/events/OrganizerPreviewTooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -240,7 +241,18 @@ export default function Evento() {
             {/* Event Info */}
             <div className="lg:col-span-2 space-y-4 sm:space-y-6">
               <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 shadow-lg animate-fade-up">
-                <Badge className="mb-3 sm:mb-4">{format(eventDate, "EEEE", { locale: ptBR })}</Badge>
+                <Badge className="mb-2">{format(eventDate, "EEEE", { locale: ptBR })}</Badge>
+                
+                {/* Organizer @ link with tooltip */}
+                {organizer && (
+                  <div className="mb-3">
+                    <OrganizerPreviewTooltip
+                      organizerId={organizer.id}
+                      organizerName={organizer.display_name}
+                    />
+                  </div>
+                )}
+                
                 <h1 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">{event.title}</h1>
 
                 <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:gap-4 text-muted-foreground mb-4 sm:mb-6">
