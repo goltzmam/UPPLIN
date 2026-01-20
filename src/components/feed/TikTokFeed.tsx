@@ -185,6 +185,42 @@ const VideoPlaceholder = React.memo(function VideoPlaceholder({ coverUrl, title 
   );
 });
 
+// Video progress indicator component
+const VideoProgressBar = React.memo(function VideoProgressBar({ 
+  progress, 
+  isVisible,
+  isPaused
+}: { 
+  progress: number; 
+  isVisible: boolean;
+  isPaused: boolean;
+}) {
+  return (
+    <motion.div 
+      className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+100px)]"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isVisible ? 1 : 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      <div className="relative h-1 bg-white/20 rounded-full overflow-hidden backdrop-blur-sm">
+        <motion.div 
+          className="absolute inset-y-0 left-0 bg-white rounded-full"
+          style={{ width: `${progress}%` }}
+          transition={{ duration: 0.1, ease: "linear" }}
+        />
+        {isPaused && (
+          <motion.div
+            className="absolute inset-y-0 left-0 bg-white/40"
+            style={{ width: `${progress}%` }}
+            animate={{ opacity: [0.4, 0.8, 0.4] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
+        )}
+      </div>
+    </motion.div>
+  );
+});
+
 interface RowData {
   items: TikTokFeedItem[];
   activeIndex: number;
@@ -219,6 +255,8 @@ const FeedRow = React.memo(function FeedRow({
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(0);
 
   const { data: commentCount = 0 } = useQuery({
     queryKey: ["event-comment-count", item.id],
@@ -269,6 +307,30 @@ const FeedRow = React.memo(function FeedRow({
       videoRef.current.muted = isMuted; 
     }
   }, [isMuted]);
+
+  // Video progress tracking
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isActive) return;
+
+    const handleTimeUpdate = () => {
+      if (video.duration > 0) {
+        setVideoProgress((video.currentTime / video.duration) * 100);
+      }
+    };
+
+    const handleLoadedMetadata = () => {
+      setVideoDuration(video.duration);
+    };
+
+    video.addEventListener('timeupdate', handleTimeUpdate);
+    video.addEventListener('loadedmetadata', handleLoadedMetadata);
+    
+    return () => {
+      video.removeEventListener('timeupdate', handleTimeUpdate);
+      video.removeEventListener('loadedmetadata', handleLoadedMetadata);
+    };
+  }, [isActive]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
@@ -430,6 +492,15 @@ const FeedRow = React.memo(function FeedRow({
             </div>
           </div>
         </div>
+
+        {/* Video progress indicator */}
+        {item.videoUrl && videoLoaded && !videoError && (
+          <VideoProgressBar 
+            progress={videoProgress} 
+            isVisible={isActive} 
+            isPaused={isPaused}
+          />
+        )}
 
         <Drawer open={showComments} onOpenChange={setShowComments}>
           <DrawerContent className="max-h-[85vh]">
