@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { List, ListImperativeAPI } from "react-window";
 import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play, X } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -12,6 +13,7 @@ import { EventComments } from "@/components/events/EventComments";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { FeedSkeleton } from "./FeedSkeleton";
 
 interface TikTokFeedItem {
   id: string;
@@ -39,23 +41,14 @@ interface TikTokFeedProps {
   onRefresh?: () => Promise<void>;
 }
 
-// Height calculation constant for consistency
-const FEED_HEIGHT_STYLE = { height: 'calc(100dvh - var(--app-bottom-offset, 80px))' };
-
-// LocalStorage key for mute preference
 const MUTE_STORAGE_KEY = "upplin_feed_muted";
 
 function formatEngagementCount(count: number): string {
-  if (count >= 1000000) {
-    return `${(count / 1000000).toFixed(1)}M`;
-  }
-  if (count >= 1000) {
-    return `${(count / 1000).toFixed(1)}k`;
-  }
+  if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+  if (count >= 1000) return `${(count / 1000).toFixed(1)}k`;
   return count.toString();
 }
 
-// Check if event is happening now
 function isEventLive(startAt: string, endAt?: string | null): boolean {
   const now = new Date();
   const start = new Date(startAt);
@@ -63,7 +56,6 @@ function isEventLive(startAt: string, endAt?: string | null): boolean {
   return isWithinInterval(now, { start, end });
 }
 
-// Live badge component with pulsing animation
 function LiveBadge() {
   return (
     <div className="flex items-center gap-1.5 bg-red-600 px-2.5 py-1 rounded-full">
@@ -76,8 +68,7 @@ function LiveBadge() {
   );
 }
 
-// Premium like particles animation
-function LikeParticles({ show }: { show: boolean }) {
+const LikeParticles = React.memo(function LikeParticles({ show }: { show: boolean }) {
   const particles = useMemo(() => 
     Array.from({ length: 12 }).map((_, i) => ({
       id: i,
@@ -90,53 +81,29 @@ function LikeParticles({ show }: { show: boolean }) {
 
   return (
     <AnimatePresence>
-      {show && (
-        <>
-          {particles.map((particle) => (
-            <motion.div
-              key={particle.id}
-              initial={{ 
-                scale: 0, 
-                x: 0, 
-                y: 0,
-                opacity: 1 
-              }}
-              animate={{ 
-                scale: [0, 1, 0.5],
-                x: Math.cos(particle.angle * Math.PI / 180) * particle.distance,
-                y: Math.sin(particle.angle * Math.PI / 180) * particle.distance,
-                opacity: [1, 1, 0]
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ 
-                duration: 0.6, 
-                delay: particle.delay,
-                ease: "easeOut"
-              }}
-              className="absolute pointer-events-none"
-              style={{
-                width: particle.size,
-                height: particle.size,
-              }}
-            >
-              <Heart className="w-full h-full text-accent fill-accent" />
-            </motion.div>
-          ))}
-          {/* Central burst */}
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: [0, 1.5, 1], opacity: [0, 1, 0] }}
-            transition={{ duration: 0.4 }}
-            className="absolute w-16 h-16 rounded-full bg-accent/20 pointer-events-none"
-          />
-        </>
-      )}
+      {show && particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
+          animate={{ 
+            scale: [0, 1, 0.5],
+            x: Math.cos(particle.angle * Math.PI / 180) * particle.distance,
+            y: Math.sin(particle.angle * Math.PI / 180) * particle.distance,
+            opacity: [1, 1, 0]
+          }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.6, delay: particle.delay, ease: "easeOut" }}
+          className="absolute pointer-events-none"
+          style={{ width: particle.size, height: particle.size }}
+        >
+          <Heart className="w-full h-full text-accent fill-accent" />
+        </motion.div>
+      ))}
     </AnimatePresence>
   );
-}
+});
 
-// Bookmark save particles animation
-function SaveParticles({ show }: { show: boolean }) {
+const SaveParticles = React.memo(function SaveParticles({ show }: { show: boolean }) {
   const particles = useMemo(() => 
     Array.from({ length: 8 }).map((_, i) => ({
       id: i,
@@ -149,148 +116,100 @@ function SaveParticles({ show }: { show: boolean }) {
 
   return (
     <AnimatePresence>
-      {show && (
-        <>
-          {particles.map((particle) => (
-            <motion.div
-              key={particle.id}
-              initial={{ 
-                scale: 0, 
-                x: 0, 
-                y: 0,
-                opacity: 1 
-              }}
-              animate={{ 
-                scale: [0, 1, 0.3],
-                x: Math.cos(particle.angle * Math.PI / 180) * particle.distance,
-                y: Math.sin(particle.angle * Math.PI / 180) * particle.distance,
-                opacity: [1, 1, 0]
-              }}
-              exit={{ opacity: 0 }}
-              transition={{ 
-                duration: 0.5, 
-                delay: particle.delay,
-                ease: "easeOut"
-              }}
-              className="absolute pointer-events-none"
-              style={{
-                width: particle.size,
-                height: particle.size,
-              }}
-            >
-              <Bookmark className="w-full h-full text-white fill-white" />
-            </motion.div>
-          ))}
-          {/* Central pulse */}
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: [0, 1.3, 1], opacity: [0, 0.6, 0] }}
-            transition={{ duration: 0.35 }}
-            className="absolute w-12 h-12 rounded-full bg-white/30 pointer-events-none"
-          />
-        </>
-      )}
+      {show && particles.map((particle) => (
+        <motion.div
+          key={particle.id}
+          initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
+          animate={{ 
+            scale: [0, 1, 0.3],
+            x: Math.cos(particle.angle * Math.PI / 180) * particle.distance,
+            y: Math.sin(particle.angle * Math.PI / 180) * particle.distance,
+            opacity: [1, 1, 0]
+          }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.5, delay: particle.delay, ease: "easeOut" }}
+          className="absolute pointer-events-none"
+          style={{ width: particle.size, height: particle.size }}
+        >
+          <Bookmark className="w-full h-full text-white fill-white" />
+        </motion.div>
+      ))}
     </AnimatePresence>
   );
-}
+});
 
-// Mini scroll map component
-function ScrollMiniMap({ 
-  current, 
-  total, 
-  maxVisible = 7 
-}: { 
-  current: number; 
-  total: number;
-  maxVisible?: number;
-}) {
+const ScrollMiniMap = React.memo(function ScrollMiniMap({ current, total, maxVisible = 7 }: { current: number; total: number; maxVisible?: number }) {
   const visibleRange = useMemo(() => {
     const half = Math.floor(maxVisible / 2);
     let start = Math.max(0, current - half);
     let end = Math.min(total - 1, start + maxVisible - 1);
-    
-    if (end - start < maxVisible - 1) {
-      start = Math.max(0, end - maxVisible + 1);
-    }
-    
+    if (end - start < maxVisible - 1) start = Math.max(0, end - maxVisible + 1);
     const dots: number[] = [];
-    for (let i = start; i <= end; i++) {
-      dots.push(i);
-    }
+    for (let i = start; i <= end; i++) dots.push(i);
     return { dots, start, end };
   }, [current, total, maxVisible]);
 
+  if (total <= 1) return null;
+
   return (
     <div className="flex flex-col items-center gap-1.5">
-      {visibleRange.start > 0 && (
-        <div className="w-1 h-1 rounded-full bg-white/30" />
-      )}
+      {visibleRange.start > 0 && <div className="w-1 h-1 rounded-full bg-white/30" />}
       {visibleRange.dots.map((idx) => (
         <motion.div
           key={idx}
-          animate={{
-            scale: idx === current ? 1 : 0.6,
-            opacity: idx === current ? 1 : 0.4,
-          }}
+          animate={{ scale: idx === current ? 1 : 0.6, opacity: idx === current ? 1 : 0.4 }}
           transition={{ duration: 0.2 }}
-          className={cn(
-            "rounded-full transition-all",
-            idx === current 
-              ? "w-1.5 h-3 bg-white" 
-              : "w-1 h-1 bg-white/50"
-          )}
+          className={cn("rounded-full", idx === current ? "w-1.5 h-3 bg-white" : "w-1 h-1 bg-white/50")}
         />
       ))}
-      {visibleRange.end < total - 1 && (
-        <div className="w-1 h-1 rounded-full bg-white/30" />
-      )}
+      {visibleRange.end < total - 1 && <div className="w-1 h-1 rounded-full bg-white/30" />}
     </div>
   );
-}
+});
 
-// Premium placeholder while video loads
-function VideoPlaceholder({ coverUrl, title }: { coverUrl: string | null; title: string }) {
+const VideoPlaceholder = React.memo(function VideoPlaceholder({ coverUrl, title }: { coverUrl: string | null; title: string }) {
   return (
     <div className="absolute inset-0 z-[1]">
       {coverUrl ? (
-        <img
-          src={coverUrl}
-          alt={title}
-          className="h-full w-full object-cover"
-        />
+        <img src={coverUrl} alt={title} className="h-full w-full object-cover" loading="eager" />
       ) : (
         <div className="h-full w-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
       )}
       <div className="absolute inset-0 overflow-hidden">
-        <div 
-          className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
-          style={{
-            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)'
-          }}
-        />
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)' }} />
       </div>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     </div>
   );
-}
+});
 
-const FeedCard = React.memo(function FeedCard({ 
-  item, 
-  isActive,
-  visibilityRatio,
-  isMuted,
-  onToggleMute,
-  shouldPreload,
-}: { 
-  item: TikTokFeedItem; 
-  isActive: boolean;
-  visibilityRatio: number;
+interface RowData {
+  items: TikTokFeedItem[];
+  activeIndex: number;
   isMuted: boolean;
   onToggleMute: () => void;
-  shouldPreload?: boolean;
+}
+
+const FeedRow = React.memo(function FeedRow({ 
+  index, 
+  style, 
+  items, 
+  activeIndex, 
+  isMuted, 
+  onToggleMute 
+}: { 
+  index: number; 
+  style: React.CSSProperties;
+  items: TikTokFeedItem[];
+  activeIndex: number;
+  isMuted: boolean;
+  onToggleMute: () => void;
 }) {
+  const item = items[index];
+  const isActive = index === activeIndex;
+  const shouldPreload = Math.abs(index - activeIndex) <= 1;
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
@@ -300,81 +219,40 @@ const FeedCard = React.memo(function FeedCard({
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [showComments, setShowComments] = useState(false);
-  
+
   const { data: commentCount = 0 } = useQuery({
     queryKey: ["event-comment-count", item.id],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from("event_comments")
-        .select("*", { count: "exact", head: true })
-        .eq("event_id", item.id);
-      
+      const { count, error } = await supabase.from("event_comments").select("*", { count: "exact", head: true }).eq("event_id", item.id);
       if (error) throw error;
       return count || 0;
     },
     staleTime: 60000,
     enabled: isActive,
   });
-  
+
   const isLive = useMemo(() => isEventLive(item.startAt, item.endAt), [item.startAt, item.endAt]);
-  const shouldPlay = isActive && visibilityRatio >= 0.7 && !isPaused && !videoError;
-  
-  const { 
-    isLiked, 
-    likeCount, 
-    isSaved, 
-    saveCount, 
-    toggleLike, 
-    toggleSave 
-  } = useEventEngagement(item.id);
+  const shouldPlay = isActive && !isPaused && !videoError;
+  const { isLiked, likeCount, isSaved, saveCount, toggleLike, toggleSave } = useEventEngagement(item.id);
 
   const eventDate = new Date(item.startAt);
   const formattedDate = format(eventDate, "d MMM", { locale: ptBR });
   const formattedTime = format(eventDate, "HH:mm");
+  const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
-  const formatPrice = (cents: number) => {
-    if (cents === 0) return "Grátis";
-    return `R$ ${(cents / 100).toFixed(0)}`;
-  };
-
-  // Video play/pause with better error handling
   useEffect(() => {
     const video = videoRef.current;
     if (!video || videoError) return;
-    
     if (shouldPlay) {
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => {
-          // Only set error for non-abort errors
-          if (err.name !== 'AbortError') {
-            console.warn('Video play failed:', err);
-            setVideoError(true);
-          }
-        });
-      }
+      video.play().catch((err) => { if (err.name !== 'AbortError') setVideoError(true); });
     } else {
       video.pause();
     }
   }, [shouldPlay, videoError]);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = isMuted;
-    }
-  }, [isMuted]);
+  useEffect(() => { if (videoRef.current) videoRef.current.muted = isMuted; }, [isMuted]);
 
-  const handleVideoLoaded = useCallback(() => {
-    setVideoLoaded(true);
-    setVideoError(false);
-  }, []);
-
-  const handleVideoError = useCallback(() => {
-    setVideoError(true);
-    setVideoLoaded(false);
-  }, []);
-
-  const handleDoubleTap = () => {
+  const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
       triggerFeedback({ haptic: "selection", sound: "tap" });
       toggleLike();
@@ -383,611 +261,236 @@ const FeedCard = React.memo(function FeedCard({
       setTimeout(() => setShowHeart(false), 600);
       setTimeout(() => setShowLikeParticles(false), 700);
     }
-  };
-  
-  const handleLikeClick = () => {
+  }, [isLiked, toggleLike]);
+
+  const handleLikeClick = useCallback(() => {
     triggerFeedback({ haptic: "light", sound: "tap" });
-    if (!isLiked) {
-      setShowLikeParticles(true);
-      setTimeout(() => setShowLikeParticles(false), 700);
-    }
+    if (!isLiked) { setShowLikeParticles(true); setTimeout(() => setShowLikeParticles(false), 700); }
     toggleLike();
-  };
+  }, [isLiked, toggleLike]);
 
-  const handleSaveClick = () => {
+  const handleSaveClick = useCallback(() => {
     triggerFeedback({ haptic: "light", sound: "tap" });
-    if (!isSaved) {
-      setShowSaveParticles(true);
-      setTimeout(() => setShowSaveParticles(false), 600);
-    }
+    if (!isSaved) { setShowSaveParticles(true); setTimeout(() => setShowSaveParticles(false), 600); }
     toggleSave();
-  };
-
-  const handleTap = () => {
-    if (item.videoUrl) {
-      setIsPaused(!isPaused);
-    }
-  };
-
-  const handleOrganizerClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    if (item.organizerId) {
-      navigate(`/organizador/${item.organizerId}`);
-    }
-  };
+  }, [isSaved, toggleSave]);
 
   return (
-    <div 
-      className="relative h-full w-full"
-      onDoubleClick={handleDoubleTap}
-      onClick={handleTap}
-    >
-      {/* Background Media - optimized for performance */}
-      <div className="absolute inset-0 will-change-transform">
-        {item.videoUrl && !videoError ? (
-          <>
-            {!videoLoaded && (
-              <VideoPlaceholder coverUrl={item.coverImageUrl} title={item.title} />
-            )}
-            <video
-              ref={videoRef}
-              src={isActive || shouldPreload ? item.videoUrl : undefined}
-              loop
-              playsInline
-              muted={isMuted}
-              preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
-              onLoadedData={handleVideoLoaded}
-              onError={handleVideoError}
-              className={cn(
-                "h-full w-full object-cover",
-                videoLoaded ? "opacity-100" : "opacity-0"
-              )}
-              style={{ 
-                transform: 'translateZ(0)',
-                backfaceVisibility: 'hidden'
-              }}
-            />
-          </>
-        ) : item.coverImageUrl ? (
-          <img
-            src={item.coverImageUrl}
-            alt={item.title}
-            className="h-full w-full object-cover"
-            loading={isActive || shouldPreload ? "eager" : "lazy"}
-          />
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
-        )}
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
-      </div>
-
-      {/* Double tap heart animation */}
-      <AnimatePresence>
-        {showHeart && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1.2, opacity: 1 }}
-            exit={{ scale: 1.5, opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
-          >
-            <div className="relative flex items-center justify-center">
-              <Heart className="h-24 w-24 text-accent fill-accent" />
-              <LikeParticles show={showLikeParticles} />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Pause overlay */}
-      <AnimatePresence>
-        {isPaused && item.videoUrl && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 flex items-center justify-center bg-black/20 z-10"
-          >
-            <div className="h-16 w-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
-              <Play className="h-8 w-8 text-white ml-1" />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Top - Organizer info */}
-      <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-16 z-10">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleOrganizerClick}
-            className="flex items-center gap-2 min-w-0"
-          >
-            <div className="avatar-ring-gradient p-[2px] rounded-full shrink-0">
-              <div className="h-9 w-9 rounded-full bg-muted overflow-hidden">
-                {item.organizerAvatar ? (
-                  <img src={item.organizerAvatar} alt={item.organizerName} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-xs font-bold">
-                    {item.organizerName?.[0] || "O"}
-                  </div>
-                )}
-              </div>
-            </div>
-            <span className="text-white text-sm font-semibold drop-shadow-lg truncate">
-              @{item.organizerName?.replace(/\s+/g, "").toLowerCase() || "organizador"}
-            </span>
-          </button>
-          {isLive && <LiveBadge />}
+    <div style={style} className="snap-start snap-always" onDoubleClick={handleDoubleTap} onClick={() => item.videoUrl && setIsPaused(p => !p)}>
+      <div className="relative w-full h-full">
+        <div className="absolute inset-0 will-change-transform">
+          {item.videoUrl && !videoError ? (
+            <>
+              {!videoLoaded && <VideoPlaceholder coverUrl={item.coverImageUrl} title={item.title} />}
+              <video ref={videoRef} src={isActive || shouldPreload ? item.videoUrl : undefined} loop playsInline muted={isMuted}
+                preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
+                onLoadedData={() => { setVideoLoaded(true); setVideoError(false); }}
+                onError={() => { setVideoError(true); setVideoLoaded(false); }}
+                className={cn("h-full w-full object-cover transition-opacity", videoLoaded ? "opacity-100" : "opacity-0")}
+                style={{ transform: 'translateZ(0)', backfaceVisibility: 'hidden' }}
+              />
+            </>
+          ) : item.coverImageUrl ? (
+            <img src={item.coverImageUrl} alt={item.title} className="h-full w-full object-cover" loading={isActive || shouldPreload ? "eager" : "lazy"} />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
         </div>
-      </div>
 
-      {/* Bottom content */}
-      <div className="absolute bottom-0 left-0 right-0 p-4 pb-5 z-10">
-        <div className="flex items-end gap-4">
-          <div className="flex-1 min-w-0 pr-4">
-            <Link 
-              to={`/evento/${item.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="block"
-            >
-              <div className="flex items-center gap-2 mb-2">
-                <div className={cn(
-                  "px-3 py-1 rounded-full text-xs font-bold",
-                  (item.minPrice || 0) === 0 
-                    ? "bg-green-500 text-white" 
-                    : "bg-white text-black"
-                )}>
-                  {formatPrice(item.minPrice || 0)}
+        <AnimatePresence>
+          {showHeart && (
+            <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1.2, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+              <div className="relative"><Heart className="h-24 w-24 text-accent fill-accent" /><LikeParticles show={showLikeParticles} /></div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {isPaused && item.videoUrl && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 flex items-center justify-center bg-black/20 z-10">
+              <div className="h-16 w-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+                <Play className="h-8 w-8 text-white ml-1" />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-16 z-10">
+          <div className="flex items-center gap-2">
+            <button onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (item.organizerId) navigate(`/organizador/${item.organizerId}`); }}
+              className="flex items-center gap-2 min-w-0">
+              <div className="avatar-ring-gradient p-[2px] rounded-full shrink-0">
+                <div className="h-9 w-9 rounded-full bg-muted overflow-hidden">
+                  {item.organizerAvatar ? <img src={item.organizerAvatar} alt={item.organizerName} className="h-full w-full object-cover" />
+                    : <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-xs font-bold">{item.organizerName?.[0] || "O"}</div>}
                 </div>
               </div>
-              
-              <h3 className="font-display text-lg font-bold text-white leading-tight line-clamp-2 mb-2">
-                {item.title}
-              </h3>
-              
-              <div className="flex flex-col gap-1.5 text-white/85 text-sm">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 shrink-0" />
-                  <span>{formattedDate} • {formattedTime}</span>
-                </div>
-                {(item.venueName || item.addressText) && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{item.venueName || item.addressText}</span>
-                  </div>
-                )}
-              </div>
-            </Link>
+              <span className="text-white text-sm font-semibold drop-shadow-lg truncate">@{item.organizerName?.replace(/\s+/g, "").toLowerCase() || "organizador"}</span>
+            </button>
+            {isLive && <LiveBadge />}
           </div>
+        </div>
 
-          {/* Right side actions */}
-          <div className="flex flex-col items-center gap-4 shrink-0">
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleLikeClick();
-              }}
-              className="flex flex-col items-center gap-1 relative"
-            >
-              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 relative">
-                <motion.div
-                  animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Heart className={cn("h-5 w-5 transition-all", isLiked ? "fill-accent text-accent" : "text-white")} />
-                </motion.div>
-                <LikeParticles show={showLikeParticles && !showHeart} />
-              </div>
-              <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(likeCount)}</span>
-            </motion.button>
-            
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowComments(true);
-              }}
-              className="flex flex-col items-center gap-1"
-            >
-              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
-                <MessageCircle className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(commentCount)}</span>
-            </motion.button>
-            
-            <ShareButton
-              eventId={item.id}
-              eventTitle={item.title}
-              eventDate={formattedDate}
-              eventImage={item.coverImageUrl}
-              iconOnly
-              className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white border border-white/10"
-            />
-            
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                handleSaveClick();
-              }}
-              className="flex flex-col items-center gap-1 relative"
-            >
-              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 relative">
-                <motion.div
-                  animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Bookmark className={cn("h-5 w-5 transition-all", isSaved ? "fill-white text-white" : "text-white")} />
-                </motion.div>
-                <SaveParticles show={showSaveParticles} />
-              </div>
-              <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(saveCount)}</span>
-            </motion.button>
-
-            {item.videoUrl && (
-              <motion.button
-                whileTap={{ scale: 0.85 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleMute();
-                }}
-                className="flex flex-col items-center"
-              >
-                <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
-                  {isMuted ? (
-                    <VolumeX className="h-5 w-5 text-white" />
-                  ) : (
-                    <Volume2 className="h-5 w-5 text-white" />
-                  )}
+        <div className="absolute bottom-0 left-0 right-0 p-4 pb-5 z-10">
+          <div className="flex items-end gap-4">
+            <div className="flex-1 min-w-0 pr-4">
+              <Link to={`/evento/${item.id}`} onClick={(e) => e.stopPropagation()} className="block">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={cn("px-3 py-1 rounded-full text-xs font-bold", (item.minPrice || 0) === 0 ? "bg-green-500 text-white" : "bg-white text-black")}>{formatPrice(item.minPrice || 0)}</div>
                 </div>
+                <h3 className="font-display text-lg font-bold text-white leading-tight line-clamp-2 mb-2">{item.title}</h3>
+                <div className="flex flex-col gap-1.5 text-white/85 text-sm">
+                  <div className="flex items-center gap-2"><Calendar className="h-4 w-4 shrink-0" /><span>{formattedDate} • {formattedTime}</span></div>
+                  {(item.venueName || item.addressText) && <div className="flex items-center gap-2"><MapPin className="h-4 w-4 shrink-0" /><span className="truncate">{item.venueName || item.addressText}</span></div>}
+                </div>
+              </Link>
+            </div>
+
+            <div className="flex flex-col items-center gap-4 shrink-0">
+              <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleLikeClick(); }} className="flex flex-col items-center gap-1 relative">
+                <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 relative">
+                  <motion.div animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
+                    <Heart className={cn("h-5 w-5 transition-all", isLiked ? "fill-accent text-accent" : "text-white")} />
+                  </motion.div>
+                  <LikeParticles show={showLikeParticles && !showHeart} />
+                </div>
+                <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(likeCount)}</span>
               </motion.button>
-            )}
+
+              <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center gap-1">
+                <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10"><MessageCircle className="h-5 w-5 text-white" /></div>
+                <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(commentCount)}</span>
+              </motion.button>
+
+              <ShareButton eventId={item.id} eventTitle={item.title} eventDate={formattedDate} eventImage={item.coverImageUrl} iconOnly
+                className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white border border-white/10" />
+
+              <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleSaveClick(); }} className="flex flex-col items-center gap-1 relative">
+                <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 relative">
+                  <motion.div animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
+                    <Bookmark className={cn("h-5 w-5 transition-all", isSaved ? "fill-white text-white" : "text-white")} />
+                  </motion.div>
+                  <SaveParticles show={showSaveParticles} />
+                </div>
+                <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(saveCount)}</span>
+              </motion.button>
+
+              {item.videoUrl && (
+                <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); onToggleMute(); }} className="flex flex-col items-center">
+                  <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
+                    {isMuted ? <VolumeX className="h-5 w-5 text-white" /> : <Volume2 className="h-5 w-5 text-white" />}
+                  </div>
+                </motion.button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Comments Drawer */}
-      <Drawer open={showComments} onOpenChange={setShowComments}>
-        <DrawerContent className="max-h-[85vh]">
-          <DrawerHeader className="border-b border-border">
-            <div className="flex items-center justify-between">
-              <DrawerTitle className="text-lg font-semibold">Comentários</DrawerTitle>
-              <button 
-                onClick={() => setShowComments(false)}
-                className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          </DrawerHeader>
-          <div className="flex-1 overflow-y-auto p-4">
-            <EventComments eventId={item.id} />
-          </div>
-        </DrawerContent>
-      </Drawer>
+        <Drawer open={showComments} onOpenChange={setShowComments}>
+          <DrawerContent className="max-h-[85vh]">
+            <DrawerHeader className="border-b border-border">
+              <div className="flex items-center justify-between">
+                <DrawerTitle className="text-lg font-semibold">Comentários</DrawerTitle>
+                <button onClick={() => setShowComments(false)} className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"><X className="h-4 w-4" /></button>
+              </div>
+            </DrawerHeader>
+            <div className="flex-1 overflow-y-auto p-4"><EventComments eventId={item.id} /></div>
+          </DrawerContent>
+        </Drawer>
+      </div>
     </div>
   );
 });
 
-export function TikTokFeed({
-  items,
-  isLoading,
-  onLoadMore,
-  hasMore,
-  isLoadingMore,
-  scrollPosition = 0,
-  onScrollChange,
-  onRefresh,
-}: TikTokFeedProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
+export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMore, scrollPosition = 0, onScrollChange, onRefresh }: TikTokFeedProps) {
+  const listRef = useRef<ListImperativeAPI>(null);
+  const [containerHeight, setContainerHeight] = useState(0);
   const [activeIndex, setActiveIndex] = useState(0);
   const activeIndexRef = useRef(0);
-  const scrollRafRef = useRef<number | null>(null);
-  const ticking = useRef(false);
-
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [visibilityRatios, setVisibilityRatios] = useState<Map<number, number>>(new Map());
-  const visibilityRatiosRef = useRef<Map<number, number>>(new Map());
 
   const [isMuted, setIsMuted] = useState(() => {
-    try {
-      const stored = localStorage.getItem(MUTE_STORAGE_KEY);
-      return stored !== null ? stored === "true" : true;
-    } catch {
-      return true;
-    }
+    try { return localStorage.getItem(MUTE_STORAGE_KEY) === "true" || localStorage.getItem(MUTE_STORAGE_KEY) === null; } catch { return true; }
   });
 
   const handleToggleMute = useCallback(() => {
-    setIsMuted(prev => {
-      const newValue = !prev;
-      try {
-        localStorage.setItem(MUTE_STORAGE_KEY, String(newValue));
-      } catch {}
-      return newValue;
-    });
+    setIsMuted(prev => { const v = !prev; try { localStorage.setItem(MUTE_STORAGE_KEY, String(v)); } catch {} return v; });
   }, []);
 
-  // Pull-to-refresh
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const pullStartYRef = useRef(0);
-  const isRefreshingRef = useRef(false);
-  const pullDistanceRef = useRef(0);
 
-  const setPull = useCallback((d: number) => {
-    pullDistanceRef.current = d;
-    setPullDistance(d);
+  useEffect(() => {
+    const updateHeight = () => setContainerHeight(window.innerHeight - 80);
+    updateHeight();
+    window.addEventListener('resize', updateHeight);
+    return () => window.removeEventListener('resize', updateHeight);
   }, []);
 
-  useEffect(() => {
-    isRefreshingRef.current = isRefreshing;
-  }, [isRefreshing]);
+  const rowProps = useMemo(() => ({ items, activeIndex, isMuted, onToggleMute: handleToggleMute }), [items, activeIndex, isMuted, handleToggleMute]);
 
-  // Ultra-smooth scroll handler with passive event + RAF throttle
-  const handleScroll = useCallback(() => {
-    if (!containerRef.current || ticking.current) return;
+  const handleRowsRendered = useCallback((visible: { startIndex: number; stopIndex: number }) => {
+    const mid = Math.round((visible.startIndex + visible.stopIndex) / 2);
+    if (mid !== activeIndexRef.current) {
+      activeIndexRef.current = mid;
+      triggerFeedback({ haptic: "light" });
+      setActiveIndex(mid);
+    }
+    if (visible.stopIndex >= items.length - 2 && hasMore && !isLoadingMore) onLoadMore?.();
+  }, [items.length, hasMore, isLoadingMore, onLoadMore]);
 
-    ticking.current = true;
-    requestAnimationFrame(() => {
-      const container = containerRef.current;
-      if (!container) {
-        ticking.current = false;
-        return;
-      }
-      onScrollChange?.(container.scrollTop);
-
-      const { scrollTop, scrollHeight, clientHeight } = container;
-      const remaining = scrollHeight - scrollTop - clientHeight;
-      if (remaining < clientHeight * 2 && hasMore && !isLoadingMore) {
-        onLoadMore?.();
-      }
-      ticking.current = false;
-    });
-  }, [onScrollChange, onLoadMore, hasMore, isLoadingMore]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const idx = parseInt(entry.target.getAttribute("data-index") || "0", 10);
-          visibilityRatiosRef.current.set(idx, entry.intersectionRatio);
-        });
-        setVisibilityRatios(new Map(visibilityRatiosRef.current));
-
-        let bestIdx = activeIndexRef.current;
-        let bestRatio = 0;
-        visibilityRatiosRef.current.forEach((ratio, idx) => {
-          if (ratio > bestRatio) {
-            bestRatio = ratio;
-            bestIdx = idx;
-          }
-        });
-
-        if (bestIdx !== activeIndexRef.current && bestRatio >= 0.7) {
-          activeIndexRef.current = bestIdx;
-          triggerFeedback({ haptic: "light" });
-          setActiveIndex(bestIdx);
-        }
-      },
-      {
-        root: container,
-        threshold: [0, 0.25, 0.5, 0.6, 0.7, 0.75, 0.9, 1],
-      }
-    );
-
-    itemRefs.current.forEach((el) => {
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [items.length]);
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container || !onRefresh) return;
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (isRefreshingRef.current) return;
-      if (container.scrollTop !== 0) return;
-      pullStartYRef.current = e.touches[0]?.clientY ?? 0;
-    };
-
-    const onTouchMove = (e: TouchEvent) => {
-      if (isRefreshingRef.current) return;
-      if (container.scrollTop !== 0) return;
-
-      const currentY = e.touches[0]?.clientY ?? 0;
-      const diff = currentY - pullStartYRef.current;
-      if (diff <= 0) return;
-
-      const distance = Math.min(diff * 0.35, 90);
-      setPull(distance);
-
-      if (distance > 10) e.preventDefault();
-    };
-
-    const onTouchEnd = async () => {
-      const threshold = 60;
-      const currentPull = pullDistanceRef.current;
-
-      if (currentPull >= threshold && !isRefreshingRef.current) {
-        setIsRefreshing(true);
-        setPull(threshold * 0.6);
-        try {
-          await onRefresh();
-        } finally {
-          setIsRefreshing(false);
-          setPull(0);
-        }
-      } else {
-        setPull(0);
-      }
-    };
-
-    container.addEventListener("touchstart", onTouchStart, { passive: true });
-    container.addEventListener("touchmove", onTouchMove, { passive: false });
-    container.addEventListener("touchend", onTouchEnd, { passive: true });
-
-    return () => {
-      container.removeEventListener("touchstart", onTouchStart);
-      container.removeEventListener("touchmove", onTouchMove);
-      container.removeEventListener("touchend", onTouchEnd);
-    };
-  }, [onRefresh, setPull]);
-
-  useEffect(() => () => {
-    if (scrollRafRef.current) window.cancelAnimationFrame(scrollRafRef.current);
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div 
-        style={{ height: 'calc(100dvh - var(--app-bottom-offset, 80px))' }} 
-        className="relative overflow-hidden bg-black"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
-        <div className="absolute inset-0 overflow-hidden">
-          <div 
-            className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)'
-            }}
-          />
-        </div>
-        <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-3">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-zinc-700 animate-pulse" />
-            <div className="h-4 w-32 rounded bg-zinc-700 animate-pulse" />
-          </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 p-4 pb-6">
-          <div className="flex items-end gap-4">
-            <div className="flex-1 space-y-2">
-              <div className="h-5 w-3/4 rounded bg-zinc-700 animate-pulse" />
-              <div className="h-4 w-1/2 rounded bg-zinc-700 animate-pulse" />
-              <div className="h-3 w-2/3 rounded bg-zinc-700 animate-pulse" />
-            </div>
-            <div className="flex flex-col items-center gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-10 w-10 rounded-full bg-zinc-700 animate-pulse" />
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin" />
-            <span className="text-white/60 text-sm font-medium">Carregando feed...</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading || containerHeight === 0) return <div style={{ height: containerHeight || 'calc(100dvh - 80px)' }}><FeedSkeleton /></div>;
 
   if (items.length === 0) {
     return (
-      <div 
-        style={FEED_HEIGHT_STYLE} 
-        className="flex items-center justify-center text-center p-8 bg-background"
-      >
+      <div style={{ height: containerHeight }} className="flex items-center justify-center text-center p-8 bg-background">
         <div>
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-            <Calendar className="h-8 w-8 text-muted-foreground" />
-          </div>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center"><Calendar className="h-8 w-8 text-muted-foreground" /></div>
           <p className="text-foreground font-medium mb-1">Nenhum evento encontrado</p>
-          <p className="text-sm text-muted-foreground">
-            Explore categorias ou siga organizadores
-          </p>
+          <p className="text-sm text-muted-foreground">Explore categorias ou siga organizadores</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      ref={containerRef}
-      onScroll={handleScroll}
-      style={{
-        height: "calc(100dvh - var(--app-bottom-offset, 80px))",
-        WebkitOverflowScrolling: "touch",
-        touchAction: "pan-y",
-        scrollBehavior: "auto",
-        willChange: "scroll-position",
-      }}
-      className="relative overflow-y-auto snap-y snap-mandatory scrollbar-hide overscroll-y-contain scroll-smooth-ios"
-    >
-      <div 
-        className="fixed z-30 pointer-events-none"
-        style={{ 
-          top: "50%", 
-          right: "8px",
-          transform: "translateY(-50%)"
-        }}
-      >
+    <div className="relative" style={{ height: containerHeight }}>
+      <div className="fixed z-30 pointer-events-none" style={{ top: "50%", right: "8px", transform: "translateY(-50%)" }}>
         <ScrollMiniMap current={activeIndex} total={items.length} />
       </div>
 
       {onRefresh && (
-        <div
-          className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20"
-          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-        >
-          <div
-            className={cn(
-              "mt-2 rounded-full bg-background/80 backdrop-blur px-3 py-1.5 border border-border/50",
-              pullDistance > 0 || isRefreshing ? "opacity-100" : "opacity-0"
-            )}
-            style={{ transform: `translateY(${Math.min(pullDistance, 60)}px)` }}
-          >
-            <span className="text-xs text-foreground/80">
-              {isRefreshing ? "Atualizando..." : pullDistance >= 60 ? "Solte para atualizar" : "Puxe para atualizar"}
-            </span>
+        <div className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+          <div className={cn("mt-2 rounded-full bg-background/80 backdrop-blur px-3 py-1.5 border border-border/50", pullDistance > 0 || isRefreshing ? "opacity-100" : "opacity-0")}
+            style={{ transform: `translateY(${Math.min(pullDistance, 60)}px)` }}>
+            <span className="text-xs text-foreground/80">{isRefreshing ? "Atualizando..." : pullDistance >= 60 ? "Solte para atualizar" : "Puxe para atualizar"}</span>
           </div>
         </div>
       )}
 
-      {items.map((item, index) => (
-        <div 
-          key={item.id} 
-          ref={(el) => {
-            itemRefs.current[index] = el;
-          }}
-          data-index={index}
-          style={{ 
-            height: 'calc(100dvh - var(--app-bottom-offset, 80px))',
-            minHeight: 'calc(100dvh - var(--app-bottom-offset, 80px))',
-            contain: 'layout style paint',
-          }} 
-          className="w-full snap-start snap-always flex-shrink-0 will-change-transform"
-        >
-          <FeedCard
-            item={item}
-            isActive={index === activeIndex}
-            visibilityRatio={visibilityRatios.get(index) ?? 0}
-            isMuted={isMuted}
-            onToggleMute={handleToggleMute}
-            shouldPreload={index === activeIndex + 1}
-          />
-        </div>
-      ))}
-      
+      <List
+        listRef={listRef}
+        rowCount={items.length}
+        rowHeight={containerHeight}
+        rowProps={rowProps}
+        onRowsRendered={handleRowsRendered}
+        overscanCount={1}
+        style={{ height: containerHeight, overflowX: 'hidden', scrollSnapType: 'y mandatory', WebkitOverflowScrolling: 'touch' }}
+        className="scrollbar-hide scroll-smooth-ios"
+        rowComponent={({ index, style, ...props }) => <FeedRow key={items[index].id} index={index} style={style} {...props} />}
+      />
+
       {isLoadingMore && (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20"
-        >
-          <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full">
-            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            <span className="text-white/80 text-xs">Carregando...</span>
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20">
+          <div className="bg-background/80 backdrop-blur-sm rounded-full px-4 py-2 border border-border/50">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-primary/20 border-t-primary rounded-full animate-spin" />
+              <span className="text-xs text-foreground/80">Carregando...</span>
+            </div>
           </div>
-        </motion.div>
+        </div>
       )}
     </div>
   );
