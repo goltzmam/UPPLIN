@@ -14,6 +14,7 @@ import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { NearbyEvents } from "@/components/home/NearbyEvents";
 import { EventGridCard } from "@/components/home/EventGridCard";
+import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { 
   Search, 
   TrendingUp,
@@ -288,92 +289,103 @@ export default function Index() {
       <PullToRefresh onRefresh={handleRefresh}>
         <main className="pt-[calc(3.5rem+5rem)]">
           {/* Hero Section with Stories */}
-          <section className="border-b border-border/30 bg-gradient-to-b from-muted/20 to-transparent">
-            <div className="container py-6">
-              <FeaturedStories />
-            </div>
-          </section>
+          <ScrollReveal variant="fadeIn" duration={0.5}>
+            <section className="border-b border-border/30 bg-gradient-to-b from-muted/20 to-transparent">
+              <div className="container py-6">
+                <FeaturedStories />
+              </div>
+            </section>
+          </ScrollReveal>
 
           {/* Categories - Enhanced for desktop */}
-          <section className="border-b border-border/30 bg-background">
-            <div className="container">
-              <CategoriesCarousel />
-            </div>
-          </section>
+          <ScrollReveal variant="fadeUp" delay={0.1}>
+            <section className="border-b border-border/30 bg-background">
+              <div className="container">
+                <CategoriesCarousel />
+              </div>
+            </section>
+          </ScrollReveal>
 
           {/* Nearby Events - Geolocation */}
-          <NearbyEvents limit={4} />
+          <ScrollReveal variant="fadeUp" delay={0.15}>
+            <NearbyEvents limit={4} />
+          </ScrollReveal>
 
-          {/* Trending Section - Premium Design */}
-          <section className="py-10 lg:py-12 border-b border-border/30">
-            <div className="container">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-destructive flex items-center justify-center shadow-lg shadow-accent/20">
-                    <Flame className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-2xl lg:text-3xl font-bold">Em Alta</h2>
-                    <p className="text-sm text-muted-foreground mt-0.5">Os mais buscados da semana</p>
-                  </div>
-                </div>
-                <Link 
-                  to="/eventos" 
-                  className="hidden sm:flex px-5 py-2.5 rounded-full bg-muted hover:bg-muted/80 text-sm font-medium text-foreground items-center gap-2 transition-all group"
-                >
-                  Ver todos
-                  <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-              </div>
-              
-              {/* Trending cards - Premium layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                {trending.map((item, idx) => (
-                  <Link 
-                    key={item.title} 
-                    to={item.href} 
-                    className="group relative rounded-3xl overflow-hidden aspect-[2.2/1] bg-muted shadow-lg hover:shadow-2xl transition-all duration-500"
-                  >
-                    <img 
-                      src={item.image} 
-                      alt={item.title} 
-                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
-                    <div className="absolute inset-0 p-8 flex flex-col justify-center">
-                      <div className="flex items-center gap-2 text-white/80 text-xs mb-3">
-                        <TrendingUp className="h-4 w-4" />
-                        <span className="uppercase tracking-widest font-semibold">{item.subtitle}</span>
-                      </div>
-                      <h3 className="font-display text-3xl lg:text-4xl font-bold text-white group-hover:translate-x-1 transition-transform duration-300">
-                        {item.title}
-                      </h3>
-                      <div className="mt-4 flex items-center gap-2 text-white/60 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <span>Explorar categoria</span>
-                        <ArrowRight className="h-4 w-4" />
-                      </div>
+          {/* Trending Section - Premium Design with Scroll Reveal */}
+          <ScrollReveal variant="fadeUp" delay={0.2}>
+            <section className="py-10 lg:py-12 border-b border-border/30">
+              <div className="container">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent to-destructive flex items-center justify-center shadow-lg shadow-accent/20">
+                      <Flame className="h-6 w-6 text-white" />
                     </div>
+                    <div>
+                      <h2 className="font-display text-2xl lg:text-3xl font-bold">Em Alta</h2>
+                      <p className="text-sm text-muted-foreground mt-0.5">Os mais buscados da semana</p>
+                    </div>
+                  </div>
+                  <Link 
+                    to="/eventos" 
+                    className="hidden sm:flex px-5 py-2.5 rounded-full bg-muted hover:bg-muted/80 text-sm font-medium text-foreground items-center gap-2 transition-all group"
+                  >
+                    Ver todos
+                    <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                   </Link>
-                ))}
+                </div>
+                
+                {/* Trending cards - Premium layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {trending.map((item, idx) => (
+                    <ScrollReveal key={item.title} variant="scale" delay={0.1 * idx}>
+                      <Link 
+                        to={item.href} 
+                        className="group relative rounded-3xl overflow-hidden aspect-[2.2/1] bg-muted shadow-lg hover:shadow-2xl transition-all duration-500 block"
+                      >
+                        <img 
+                          src={item.image} 
+                          alt={item.title} 
+                          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent" />
+                        <div className="absolute inset-0 p-8 flex flex-col justify-center">
+                          <div className="flex items-center gap-2 text-white/80 text-xs mb-3">
+                            <TrendingUp className="h-4 w-4" />
+                            <span className="uppercase tracking-widest font-semibold">{item.subtitle}</span>
+                          </div>
+                          <h3 className="font-display text-3xl lg:text-4xl font-bold text-white group-hover:translate-x-1 transition-transform duration-300">
+                            {item.title}
+                          </h3>
+                          <div className="mt-4 flex items-center gap-2 text-white/60 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            <span>Explorar categoria</span>
+                            <ArrowRight className="h-4 w-4" />
+                          </div>
+                        </div>
+                      </Link>
+                    </ScrollReveal>
+                  ))}
+                </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </ScrollReveal>
 
           {/* Main Feed Section with Tabs */}
           <section className="py-10 lg:py-14">
             <div className="container">
               {/* Section header */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-foreground flex items-center justify-center shadow-lg">
-                    <Calendar className="h-6 w-6 text-background" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-2xl lg:text-3xl font-bold">Eventos</h2>
-                    <p className="text-sm text-muted-foreground mt-0.5">Descubra o que está rolando</p>
+              <ScrollReveal variant="fadeUp">
+                <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-foreground flex items-center justify-center shadow-lg">
+                      <Calendar className="h-6 w-6 text-background" />
+                    </div>
+                    <div>
+                      <h2 className="font-display text-2xl lg:text-3xl font-bold">Eventos</h2>
+                      <p className="text-sm text-muted-foreground mt-0.5">Descubra o que está rolando</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ScrollReveal>
 
               {/* Tab Navigation - Premium pill design */}
               <div className="sticky top-[136px] z-30 mb-8 py-3 -mx-4 px-4 bg-background/95 backdrop-blur-xl">
