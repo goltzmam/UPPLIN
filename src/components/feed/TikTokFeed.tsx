@@ -437,14 +437,20 @@ export function TikTokFeed({
     );
   }
 
+  // Calculate item height based on container
+  const itemHeight = `calc(100dvh - var(--app-bottom-offset, 80px))`;
+
   return (
     <div
       ref={containerRef}
-      style={{ height: FEED_HEIGHT }}
-      className="relative overflow-y-scroll snap-y snap-mandatory scrollbar-hide overscroll-contain"
+      className="relative h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide overscroll-y-contain touch-pan-y"
     >
       {items.map((item, index) => (
-        <div key={item.id} style={{ height: FEED_HEIGHT }} className="w-full snap-start snap-always">
+        <div 
+          key={item.id} 
+          style={{ height: itemHeight, minHeight: itemHeight }} 
+          className="w-full snap-start snap-always shrink-0"
+        >
           <FeedCard
             item={item}
             isActive={index === activeIndex}
