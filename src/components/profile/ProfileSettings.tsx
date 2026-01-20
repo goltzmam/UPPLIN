@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { User, Mail, CreditCard, Loader2, AlertCircle, Bell, LogOut } from "lucide-react";
+import { Link } from "react-router-dom";
+import { User, Mail, CreditCard, Loader2, AlertCircle, Bell, LogOut, Ticket, Bookmark, Search, Building2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,8 +74,38 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
 
   const cpfLocked = !!profile.cpf && profile.cpf_locked;
 
+  const quickLinks = [
+    { icon: Ticket, label: "Meus Ingressos", path: "/meus-ingressos", description: "Ver todos os ingressos" },
+    { icon: Bookmark, label: "Eventos Salvos", path: "/eventos-salvos", description: "Eventos que você salvou" },
+    { icon: Search, label: "Explorar Eventos", path: "/eventos", description: "Descobrir novos eventos" },
+    { icon: Building2, label: "Para Organizadores", path: "/organizadores", description: "Criar e gerenciar eventos", highlight: true },
+  ];
+
   return (
     <div className="space-y-6 max-w-md mx-auto">
+      {/* Quick Links Card */}
+      <div className="bg-card rounded-2xl border border-border overflow-hidden">
+        <h3 className="font-display font-semibold text-lg px-4 sm:px-6 pt-4 sm:pt-6 pb-3">Acesso Rápido</h3>
+        <div className="divide-y divide-border">
+          {quickLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`flex items-center gap-4 px-4 sm:px-6 py-4 hover:bg-muted/50 transition-colors ${link.highlight ? "bg-muted/30" : ""}`}
+            >
+              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${link.highlight ? "bg-primary/10" : "bg-muted"}`}>
+                <link.icon className={`h-5 w-5 ${link.highlight ? "text-primary" : "text-muted-foreground"}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{link.label}</p>
+                <p className="text-xs text-muted-foreground truncate">{link.description}</p>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+            </Link>
+          ))}
+        </div>
+      </div>
+
       {/* Profile Data Card */}
       <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
         <h3 className="font-display font-semibold text-lg">Dados Pessoais</h3>
@@ -162,7 +193,7 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
       {/* Logout */}
       <Button
         variant="outline"
-        className="w-full text-destructive hover:text-destructive hover:bg-destructive/10"
+        className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
         onClick={signOut}
       >
         <LogOut className="h-4 w-4 mr-2" />
