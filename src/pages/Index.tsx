@@ -104,6 +104,7 @@ export default function Index() {
       coverImageUrl: event.cover_image_url,
       videoUrl: videoMedia?.url || null,
       startAt: event.start_at,
+      endAt: event.end_at,
       venueName: event.venue_name,
       addressText: event.address_text,
       organizerName: event.organizer?.display_name,
