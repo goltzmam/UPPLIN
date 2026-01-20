@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ShimmerSkeleton } from "@/components/ui/skeleton";
 
 interface LoadingProps {
   className?: string;
@@ -32,15 +33,17 @@ export function PageLoading() {
 
 export function CardSkeleton() {
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden animate-pulse">
-      <div className="aspect-[16/9] bg-muted" />
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+      <div className="relative aspect-[16/9]">
+        <ShimmerSkeleton className="absolute inset-0 rounded-none" />
+      </div>
       <div className="p-4 space-y-3">
-        <div className="h-5 bg-muted rounded w-3/4" />
+        <ShimmerSkeleton className="h-5 w-3/4" />
         <div className="space-y-2">
-          <div className="h-4 bg-muted rounded w-1/2" />
-          <div className="h-4 bg-muted rounded w-2/3" />
+          <ShimmerSkeleton className="h-4 w-1/2" />
+          <ShimmerSkeleton className="h-4 w-2/3" />
         </div>
-        <div className="h-4 bg-muted rounded w-1/4" />
+        <ShimmerSkeleton className="h-4 w-1/4" />
       </div>
     </div>
   );

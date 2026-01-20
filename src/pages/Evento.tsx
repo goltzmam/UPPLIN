@@ -17,6 +17,7 @@ import { EventReviews } from "@/components/events/EventReviews";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { triggerFeedback } from "@/lib/feedback";
 import { supabase } from "@/integrations/supabase/client";
 
 interface TicketSelection {
@@ -260,7 +261,15 @@ export default function Evento() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="text-xs sm:text-sm" onClick={handleShare}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs sm:text-sm"
+                    onClick={() => {
+                      triggerFeedback({ haptic: "selection", sound: "tap" });
+                      handleShare();
+                    }}
+                  >
                     <Share2 className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                     Compartilhar
                   </Button>
@@ -268,7 +277,10 @@ export default function Evento() {
                     variant={isSaved ? "default" : "outline"} 
                     size="sm" 
                     className="text-xs sm:text-sm" 
-                    onClick={handleSave}
+                    onClick={() => {
+                      triggerFeedback({ haptic: "selection", sound: "tap" });
+                      handleSave();
+                    }}
                     disabled={savingEvent}
                   >
                     <Heart className={`h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 ${isSaved ? "fill-current" : ""}`} />
@@ -417,11 +429,29 @@ export default function Evento() {
 
                   {!soldOut && (
                     <div className="flex items-center justify-end gap-2 sm:gap-3 mt-3">
-                      <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => updateSelection(tt.id, -1)} disabled={qty === 0}>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7 sm:h-8 sm:w-8"
+                        onClick={() => {
+                          triggerFeedback({ haptic: "selection", sound: "tap" });
+                          updateSelection(tt.id, -1);
+                        }}
+                        disabled={qty === 0}
+                      >
                         <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                       <span className="w-6 sm:w-8 text-center font-semibold text-sm sm:text-base">{qty}</span>
-                      <Button variant="outline" size="icon" className="h-7 w-7 sm:h-8 sm:w-8" onClick={() => updateSelection(tt.id, 1)} disabled={qty >= Math.min(10, available)}>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="h-7 w-7 sm:h-8 sm:w-8"
+                        onClick={() => {
+                          triggerFeedback({ haptic: "selection", sound: "tap" });
+                          updateSelection(tt.id, 1);
+                        }}
+                        disabled={qty >= Math.min(10, available)}
+                      >
                         <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
@@ -437,10 +467,18 @@ export default function Evento() {
                   <span className="text-sm text-muted-foreground">{totalItems} ingresso(s)</span>
                   <span className="font-display text-xl sm:text-2xl font-bold">{formatPrice(totalCents)}</span>
                 </div>
-                <Button className="w-full" size="lg" onClick={handleCheckout} disabled={checkingOut}>
-                  <Ticket className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
-                  {checkingOut ? "Processando..." : "Comprar Ingressos"}
-                </Button>
+                 <Button
+                   className="w-full"
+                   size="lg"
+                   onClick={() => {
+                     triggerFeedback({ haptic: "medium", sound: "confirm" });
+                     handleCheckout();
+                   }}
+                   disabled={checkingOut}
+                 >
+                   <Ticket className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                   {checkingOut ? "Processando..." : "Comprar Ingressos"}
+                 </Button>
               </div>
             )}
           </div>

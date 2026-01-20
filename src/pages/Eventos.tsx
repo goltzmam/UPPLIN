@@ -8,7 +8,7 @@ import { EventCard } from "@/components/events/EventCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { PageLoading } from "@/components/ui/loading";
+import { CardSkeleton } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
@@ -185,7 +185,11 @@ export default function Eventos() {
         <section className="py-6 sm:py-8">
           <div className="container px-4">
             {isLoading ? (
-              <PageLoading />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <CardSkeleton key={i} />
+                ))}
+              </div>
             ) : error ? (
               <EmptyState
                 icon={<Calendar className="h-8 w-8 text-muted-foreground" />}
