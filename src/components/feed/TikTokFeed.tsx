@@ -475,7 +475,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   const touchStartY = useRef(0);
 
   useEffect(() => {
-    const updateHeight = () => setContainerHeight(window.innerHeight - 80);
+    const updateHeight = () => setContainerHeight(window.innerHeight);
     updateHeight();
     window.addEventListener('resize', updateHeight);
     return () => window.removeEventListener('resize', updateHeight);
@@ -561,7 +561,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeIndex, containerHeight]);
 
-  if (isLoading || containerHeight === 0) return <div style={{ height: containerHeight || 'calc(100dvh - 80px)' }}><FeedSkeleton /></div>;
+  if (isLoading || containerHeight === 0) return <div style={{ height: containerHeight || '100dvh' }}><FeedSkeleton /></div>;
 
   if (items.length === 0) {
     return (
