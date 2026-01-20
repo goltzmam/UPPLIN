@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Flame, Users, Search } from "lucide-react";
+import { ArrowRight, Flame, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 
@@ -31,9 +31,9 @@ const trending = [
 ];
 
 const suggestedOrganizers = [
-  { name: "Festival Brasil", slug: "festival-brasil", followers: "12.5k" },
-  { name: "Noite SP", slug: "noite-sp", followers: "8.2k" },
-  { name: "Rock in Rio", slug: "rock-in-rio", followers: "45.1k" },
+  { name: "Festival Brasil", slug: "festival-brasil", followers: "12.5k", avatar: "🎪" },
+  { name: "Noite SP", slug: "noite-sp", followers: "8.2k", avatar: "🌃" },
+  { name: "Rock in Rio", slug: "rock-in-rio", followers: "45.1k", avatar: "🎸" },
 ];
 
 export function RightSidebar() {
@@ -41,39 +41,37 @@ export function RightSidebar() {
   const { user } = useAuth();
 
   return (
-    <aside className="hidden xl:block w-[280px] 2xl:w-[320px] h-screen sticky top-0 overflow-y-auto shrink-0 pl-6 pr-4">
-      <div className="py-6 space-y-6">
-        {/* Search */}
+    <aside className="hidden lg:block w-[280px] xl:w-[320px] 2xl:w-[350px] h-screen sticky top-0 overflow-y-auto shrink-0 border-l border-border/30">
+      <div className="py-6 px-5 space-y-6">
+        {/* Search Bar */}
         <button
           onClick={() => navigate("/eventos")}
-          className="w-full flex items-center gap-3 bg-muted/50 rounded-xl px-4 py-3 text-muted-foreground hover:bg-muted transition-colors"
+          className="w-full flex items-center gap-3 bg-muted/60 hover:bg-muted rounded-xl px-4 py-3 text-muted-foreground transition-all duration-200 group"
         >
-          <Search className="h-5 w-5" />
+          <Search className="h-4 w-4 group-hover:text-foreground transition-colors" />
           <span className="text-sm">Buscar eventos...</span>
         </button>
 
-        {/* User CTA or Suggested for You */}
+        {/* Suggestions or CTA */}
         {user ? (
-          <div>
+          <div className="bg-card rounded-2xl p-4 border border-border/50">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-muted-foreground">
+              <span className="text-sm font-medium text-muted-foreground">
                 Sugestões para você
-              </h3>
+              </span>
               <Link to="/explorar-organizadores" className="text-xs font-semibold text-primary hover:underline">
                 Ver tudo
               </Link>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {suggestedOrganizers.map((org) => (
                 <Link
                   key={org.slug}
                   to={`/organizador/${org.slug}`}
                   className="flex items-center gap-3 group"
                 >
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-accent via-pink-500 to-purple-600 p-0.5">
-                    <div className="h-full w-full rounded-full bg-background flex items-center justify-center text-sm font-bold">
-                      {org.name[0]}
-                    </div>
+                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-primary/20 via-accent/20 to-primary/10 flex items-center justify-center text-lg shrink-0">
+                    {org.avatar}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
@@ -83,20 +81,23 @@ export function RightSidebar() {
                       {org.followers} seguidores
                     </p>
                   </div>
-                  <button className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors">
+                  <Button variant="outline" size="sm" className="h-8 rounded-lg text-xs font-semibold shrink-0">
                     Seguir
-                  </button>
+                  </Button>
                 </Link>
               ))}
             </div>
           </div>
         ) : (
-          <div className="bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 rounded-2xl p-5 border border-primary/20">
-            <h3 className="font-display font-bold mb-2">Crie seu evento</h3>
+          <div className="bg-gradient-to-br from-primary/10 via-accent/5 to-background rounded-2xl p-5 border border-primary/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h3 className="font-semibold">Crie seu evento</h3>
+            </div>
             <p className="text-sm text-muted-foreground mb-4">
               Comece a vender ingressos hoje mesmo
             </p>
-            <Button asChild size="sm" className="w-full rounded-full">
+            <Button asChild size="sm" className="w-full rounded-lg">
               <Link to="/organizador/cadastro">
                 Começar grátis
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -105,10 +106,10 @@ export function RightSidebar() {
           </div>
         )}
 
-        {/* Trending */}
+        {/* Trending Section */}
         <div>
           <div className="flex items-center gap-2 mb-3">
-            <Flame className="h-4 w-4 text-accent" />
+            <Flame className="h-4 w-4 text-orange-500" />
             <h3 className="text-sm font-semibold">Em Alta</h3>
           </div>
           <div className="space-y-3">
@@ -116,16 +117,16 @@ export function RightSidebar() {
               <Link
                 key={item.title}
                 to={item.href}
-                className="group block rounded-xl overflow-hidden"
+                className="group block rounded-xl overflow-hidden border border-border/50 hover:border-border transition-colors"
               >
-                <div className="relative aspect-[2.5/1] bg-muted">
+                <div className="relative aspect-[2.2/1] bg-muted">
                   <img
                     src={item.image}
                     alt={item.title}
                     className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-                  <div className="absolute bottom-2 left-3 right-3">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                  <div className="absolute bottom-2.5 left-3 right-3">
                     <div className="text-white/70 text-[10px] uppercase tracking-wide mb-0.5">
                       {item.subtitle}
                     </div>
@@ -139,13 +140,13 @@ export function RightSidebar() {
 
         {/* Categories */}
         <div>
-          <h3 className="text-sm font-semibold mb-3">Explorar</h3>
+          <h3 className="text-sm font-semibold mb-3">Explorar categorias</h3>
           <div className="flex flex-wrap gap-2">
             {categories.map((cat) => (
               <Link
                 key={cat.name}
                 to={cat.href}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full text-xs hover:bg-muted/80 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 bg-muted/60 hover:bg-muted rounded-full text-xs font-medium transition-colors"
               >
                 <span>{cat.icon}</span>
                 <span>{cat.name}</span>
@@ -156,7 +157,7 @@ export function RightSidebar() {
 
         {/* Footer Links */}
         <div className="pt-4 border-t border-border/50">
-          <div className="flex flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground/60">
+          <div className="flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-muted-foreground/60">
             <Link to="#" className="hover:text-muted-foreground hover:underline">Sobre</Link>
             <span>·</span>
             <Link to="#" className="hover:text-muted-foreground hover:underline">Ajuda</Link>
@@ -167,7 +168,7 @@ export function RightSidebar() {
             <span>·</span>
             <Link to="#" className="hover:text-muted-foreground hover:underline">Privacidade</Link>
           </div>
-          <p className="text-xs text-muted-foreground/50 mt-3">
+          <p className="text-[11px] text-muted-foreground/50 mt-3">
             © 2026 UPPLIN
           </p>
         </div>

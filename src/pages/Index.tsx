@@ -289,6 +289,43 @@ export default function Index() {
 
       {/* Main Content - Centered Feed */}
       <main className="flex-1 w-full max-w-[600px] lg:max-w-[500px] xl:max-w-[470px] mx-auto border-x border-border/30">
+        {/* Desktop Feed Tabs */}
+        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
+          <div className="flex items-center justify-center h-14">
+            <div className="relative flex items-center gap-1">
+              <button
+                onClick={() => setActiveTab("foryou")}
+                className={cn(
+                  "relative px-6 py-3 text-sm font-semibold transition-colors",
+                  activeTab === "foryou" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70"
+                )}
+              >
+                Para você
+              </button>
+              <button
+                onClick={() => setActiveTab("following")}
+                className={cn(
+                  "relative px-6 py-3 text-sm font-semibold transition-colors",
+                  activeTab === "following" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70"
+                )}
+              >
+                Seguindo
+              </button>
+              
+              {/* Animated underline */}
+              <motion.div
+                layoutId="desktop-tab-underline"
+                className="absolute bottom-0 h-[2px] bg-foreground rounded-full"
+                style={{
+                  left: activeTab === "foryou" ? "8px" : "calc(50% + 8px)",
+                  width: activeTab === "foryou" ? "72px" : "64px",
+                }}
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            </div>
+          </div>
+        </div>
+
         <PullToRefresh onRefresh={handleRefresh}>
           <div className="pb-20">
             <AnimatePresence mode="wait" initial={false}>
