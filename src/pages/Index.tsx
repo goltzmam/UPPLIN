@@ -1,27 +1,25 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeedSearch } from "@/components/feed/FeedSearch";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
-import { EventGridCard } from "@/components/home/EventGridCard";
-import { ScrollReveal } from "@/components/animations/ScrollReveal";
 import { 
   Search, 
-  TrendingUp,
   ArrowRight,
-  ChevronRight,
   Flame,
   Calendar,
   MapPin,
   Sparkles,
+  Users,
+  Play,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -260,236 +258,398 @@ export default function Index() {
   );
 
   // =====================================================================
-  // DESKTOP: Clean grid layout without stories
+  // DESKTOP/TABLET: Social-style vertical feed with sidebar
   // =====================================================================
   const DesktopLayout = () => (
-    <div className="hidden md:block min-h-screen bg-background">
-      <Header />
+    <div className="hidden md:flex min-h-screen bg-background">
+      {/* Left Sidebar - Categories & Trending */}
+      <aside className="hidden lg:block w-64 xl:w-72 shrink-0 border-r border-border/50 h-screen sticky top-0 overflow-y-auto">
+        <div className="p-5 pt-20">
+          {/* Logo */}
+          <Link to="/" className="font-display text-2xl font-bold mb-8 block">
+            UPPLIN
+          </Link>
 
-      {/* Hero Search Section */}
-      <section className="pt-20 pb-8 bg-gradient-to-b from-muted/50 to-background">
-        <div className="container">
-          <div className="max-w-2xl mx-auto text-center mb-8">
-            <h1 className="font-display text-3xl lg:text-4xl font-bold mb-3">
-              Descubra eventos incríveis
-            </h1>
-            <p className="text-muted-foreground">
-              Shows, festas, festivais e muito mais perto de você
-            </p>
-          </div>
-          
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto">
-            <button 
-              onClick={() => navigate("/eventos")}
-              className="w-full flex items-center gap-3 bg-background border border-border rounded-2xl px-5 py-4 hover:border-accent/50 hover:shadow-lg transition-all group"
+          {/* Tab Navigation */}
+          <div className="space-y-1 mb-8">
+            <button
+              onClick={() => setActiveTab("foryou")}
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all",
+                activeTab === "foryou"
+                  ? "bg-foreground text-background font-semibold"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
             >
-              <Search className="h-5 w-5 text-muted-foreground group-hover:text-accent transition-colors" />
-              <span className="text-muted-foreground text-left flex-1">Buscar eventos, artistas, locais...</span>
-              <div className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground/60">
-                <kbd className="px-2 py-1 bg-muted rounded text-[10px]">⌘</kbd>
-                <kbd className="px-2 py-1 bg-muted rounded text-[10px]">K</kbd>
-              </div>
+              <Sparkles className="h-5 w-5" />
+              Para Você
+            </button>
+            <button
+              onClick={() => setActiveTab("following")}
+              className={cn(
+                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all",
+                activeTab === "following"
+                  ? "bg-foreground text-background font-semibold"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <Users className="h-5 w-5" />
+              Seguindo
             </button>
           </div>
 
-          {/* Categories Pills */}
-          <div className="flex flex-wrap justify-center gap-2 mt-6 max-w-3xl mx-auto">
-            {categories.map((cat) => (
-              <Link
-                key={cat.name}
-                to={cat.href}
-                className="flex items-center gap-2 px-4 py-2 bg-background border border-border rounded-full hover:border-accent/50 hover:bg-accent/5 transition-all text-sm"
-              >
-                <span>{cat.icon}</span>
-                <span>{cat.name}</span>
-              </Link>
-            ))}
+          {/* Categories */}
+          <div className="mb-8">
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+              Categorias
+            </h3>
+            <div className="space-y-1">
+              {categories.slice(0, 6).map((cat) => (
+                <Link
+                  key={cat.name}
+                  to={cat.href}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                >
+                  <span className="text-lg">{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+
+          {/* Trending */}
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
+              Em Alta
+            </h3>
+            <div className="space-y-3">
+              {trending.map((item) => (
+                <Link
+                  key={item.title}
+                  to={item.href}
+                  className="group block rounded-xl overflow-hidden"
+                >
+                  <div className="relative aspect-[2/1] bg-muted">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <div className="flex items-center gap-1.5 text-white/70 text-[10px] mb-0.5">
+                        <Flame className="h-3 w-3 text-accent" />
+                        <span className="uppercase tracking-wide">{item.subtitle}</span>
+                      </div>
+                      <p className="text-white text-sm font-semibold">{item.title}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
-      </section>
+      </aside>
 
-      <PullToRefresh onRefresh={handleRefresh}>
-        <main>
-          {/* Trending Section */}
-          <ScrollReveal variant="fadeUp" delay={0.1}>
-            <section className="py-10 border-b border-border/30">
-              <div className="container">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
-                      <Flame className="h-5 w-5 text-accent" />
+      {/* Main Content - Vertical Feed */}
+      <main className="flex-1 max-w-2xl mx-auto">
+        {/* Sticky Header */}
+        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
+          <div className="flex items-center justify-between px-4 py-3">
+            {/* Mobile/Tablet Logo */}
+            <Link to="/" className="font-display text-xl font-bold lg:hidden">
+              UPPLIN
+            </Link>
+
+            {/* Centered Tabs (mobile/tablet) */}
+            <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl lg:mx-auto">
+              <button
+                onClick={() => setActiveTab("foryou")}
+                className={cn(
+                  "px-5 py-2 text-sm font-medium rounded-lg transition-all",
+                  activeTab === "foryou"
+                    ? "bg-foreground text-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Para Você
+              </button>
+              <button
+                onClick={() => setActiveTab("following")}
+                className={cn(
+                  "px-5 py-2 text-sm font-medium rounded-lg transition-all",
+                  activeTab === "following"
+                    ? "bg-foreground text-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Seguindo
+              </button>
+            </div>
+
+            {/* Search Button */}
+            <button
+              onClick={() => navigate("/eventos")}
+              className="h-10 w-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+            >
+              <Search className="h-5 w-5 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+
+        {/* Feed Content */}
+        <PullToRefresh onRefresh={handleRefresh}>
+          <div className="pb-20">
+            <AnimatePresence mode="wait" initial={false}>
+              {activeTab === "foryou" ? (
+                <motion.div
+                  key="foryou-desktop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="divide-y divide-border/30"
+                >
+                  {isLoading ? (
+                    <div className="space-y-4 p-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="aspect-[4/5] rounded-2xl bg-muted animate-pulse" />
+                      ))}
                     </div>
-                    <div>
-                      <h2 className="font-display text-xl lg:text-2xl font-bold">Em Alta</h2>
-                      <p className="text-xs text-muted-foreground">Os mais buscados</p>
-                    </div>
-                  </div>
-                  <Link 
-                    to="/eventos" 
-                    className="flex items-center gap-1 text-sm text-muted-foreground hover:text-accent transition-colors"
-                  >
-                    Ver todos
-                    <ChevronRight className="h-4 w-4" />
-                  </Link>
-                </div>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {trending.map((item, idx) => (
-                    <Link 
-                      key={item.title}
-                      to={item.href} 
-                      className="group relative rounded-2xl overflow-hidden aspect-[2.5/1] bg-muted"
-                    >
-                      <img 
-                        src={item.image} 
-                        alt={item.title} 
-                        className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
-                      <div className="absolute inset-0 p-6 flex flex-col justify-center">
-                        <div className="flex items-center gap-2 text-white/70 text-xs mb-2">
-                          <TrendingUp className="h-3.5 w-3.5" />
-                          <span className="uppercase tracking-wider font-medium">{item.subtitle}</span>
-                        </div>
-                        <h3 className="font-display text-2xl lg:text-3xl font-bold text-white">
-                          {item.title}
-                        </h3>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </section>
-          </ScrollReveal>
+                  ) : (
+                    <>
+                      {feedItems.map((item, index) => (
+                        <DesktopFeedCard key={item.id} item={item} index={index} />
+                      ))}
+                    </>
+                  )}
 
-          {/* Main Feed Section */}
-          <section className="py-10">
-            <div className="container">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
-                    <Calendar className="h-5 w-5 text-background" />
-                  </div>
-                  <div>
-                    <h2 className="font-display text-xl lg:text-2xl font-bold">Eventos</h2>
-                    <p className="text-xs text-muted-foreground">Descubra o que está rolando</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Tab Navigation */}
-              <div className="sticky top-14 z-30 mb-6 py-3 -mx-4 px-4 bg-background/95 backdrop-blur-xl border-b border-border/30">
-                <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl w-fit">
-                  <button
-                    onClick={() => setActiveTab("foryou")}
-                    className={cn(
-                      "px-6 py-2.5 text-sm font-medium rounded-lg transition-all",
-                      activeTab === "foryou" 
-                        ? "bg-foreground text-background shadow-sm" 
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    Para Você
-                  </button>
-                  <button
-                    onClick={() => setActiveTab("following")}
-                    className={cn(
-                      "px-6 py-2.5 text-sm font-medium rounded-lg transition-all",
-                      activeTab === "following" 
-                        ? "bg-foreground text-background shadow-sm" 
-                        : "text-muted-foreground hover:text-foreground"
-                    )}
-                  >
-                    Seguindo
-                  </button>
-                </div>
-              </div>
-
-              <AnimatePresence mode="wait" initial={false}>
-                {activeTab === "foryou" ? (
-                  <motion.div
-                    key="foryou-desktop"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    {isLoading ? (
-                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
-                        {[...Array(12)].map((_, i) => (
-                          <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 lg:gap-5">
-                        {feedItems.map((item, index) => (
-                          <EventGridCard
-                            key={item.id}
-                            id={item.id}
-                            title={item.title}
-                            coverImageUrl={item.coverImageUrl}
-                            startAt={item.startAt}
-                            venueName={item.venueName}
-                            organizerName={item.organizerName}
-                            organizerAvatar={item.organizerAvatar}
-                            organizerSlug={item.organizerSlug}
-                            organizerId={item.organizerId}
-                            minPrice={item.minPrice}
-                            index={index}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {hasNextPage && (
-                      <div className="flex justify-center mt-10">
-                        <Button 
-                          variant="outline" 
-                          onClick={() => fetchNextPage()}
-                          disabled={isFetchingNextPage}
-                          className="rounded-full px-8"
-                        >
-                          {isFetchingNextPage ? "Carregando..." : "Carregar mais"}
-                        </Button>
-                      </div>
-                    )}
-
-                    <div className="flex justify-center mt-8 pb-10">
-                      <Button 
-                        variant="outline" 
-                        size="lg" 
-                        className="rounded-full px-8 border-2 hover:bg-foreground hover:text-background transition-all" 
-                        asChild
+                  {hasNextPage && (
+                    <div className="flex justify-center py-8">
+                      <Button
+                        variant="outline"
+                        onClick={() => fetchNextPage()}
+                        disabled={isFetchingNextPage}
+                        className="rounded-full px-8"
                       >
-                        <Link to="/eventos">
-                          Ver todos os eventos
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Link>
+                        {isFetchingNextPage ? "Carregando..." : "Carregar mais"}
                       </Button>
                     </div>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="following-desktop"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="min-h-[50vh]"
-                  >
-                    <FollowingFeed />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </section>
-        </main>
-      </PullToRefresh>
+                  )}
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="following-desktop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="min-h-[50vh] p-4"
+                >
+                  <FollowingFeed />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </PullToRefresh>
+      </main>
 
-      <Footer />
+      {/* Right Sidebar - Search & Suggestions (XL screens) */}
+      <aside className="hidden xl:block w-80 shrink-0 border-l border-border/50 h-screen sticky top-0 overflow-y-auto">
+        <div className="p-5 pt-6">
+          {/* Search */}
+          <button
+            onClick={() => navigate("/eventos")}
+            className="w-full flex items-center gap-3 bg-muted/50 rounded-xl px-4 py-3 text-muted-foreground hover:bg-muted transition-colors mb-6"
+          >
+            <Search className="h-5 w-5" />
+            <span className="text-sm">Buscar eventos...</span>
+          </button>
+
+          {/* CTA */}
+          <div className="bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 rounded-2xl p-5 mb-6 border border-primary/20">
+            <h3 className="font-display font-bold mb-2">Crie seu evento</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Comece a vender ingressos hoje mesmo
+            </p>
+            <Button asChild size="sm" className="w-full rounded-full">
+              <Link to="/organizador/cadastro">
+                Começar grátis
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Link>
+            </Button>
+          </div>
+
+          {/* Quick Categories */}
+          <div>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
+              Explorar
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((cat) => (
+                <Link
+                  key={cat.name}
+                  to={cat.href}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full text-xs hover:bg-muted/80 transition-colors"
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </aside>
     </div>
   );
+
+  // Desktop Feed Card Component
+  const DesktopFeedCard = ({ item, index }: { item: typeof feedItems[0]; index: number }) => {
+    const eventDate = new Date(item.startAt);
+    const formattedDate = format(eventDate, "d 'de' MMMM", { locale: ptBR });
+    const formattedTime = format(eventDate, "HH:mm");
+    const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [isHovered, setIsHovered] = useState(false);
+    const [videoLoaded, setVideoLoaded] = useState(false);
+
+    // Play video on hover
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video || !item.videoUrl) return;
+      
+      if (isHovered && videoLoaded) {
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+        video.currentTime = 0;
+      }
+    }, [isHovered, videoLoaded, item.videoUrl]);
+
+    return (
+      <motion.article
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05, duration: 0.3 }}
+        className="p-4"
+      >
+        {/* Organizer Header */}
+        <div className="flex items-center gap-3 mb-3">
+          <Link
+            to={`/organizador/${item.organizerId}`}
+            className="flex items-center gap-3 group"
+          >
+            <div className="h-10 w-10 rounded-full bg-muted overflow-hidden ring-2 ring-border group-hover:ring-primary transition-colors">
+              {item.organizerAvatar ? (
+                <img
+                  src={item.organizerAvatar}
+                  alt={item.organizerName}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-sm font-bold">
+                  {item.organizerName?.[0] || "O"}
+                </div>
+              )}
+            </div>
+            <div>
+              <span className="font-semibold text-sm group-hover:text-primary transition-colors">
+                {item.organizerName}
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                @{item.organizerSlug || item.organizerName?.replace(/\s+/g, "").toLowerCase()}
+              </span>
+            </div>
+          </Link>
+        </div>
+
+        {/* Media Container */}
+        <Link
+          to={`/evento/${item.id}`}
+          className="block relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted mb-3 group"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          {/* Cover Image */}
+          {item.coverImageUrl && (
+            <img
+              src={item.coverImageUrl}
+              alt={item.title}
+              className={cn(
+                "absolute inset-0 h-full w-full object-cover transition-all duration-500",
+                isHovered && item.videoUrl && videoLoaded ? "opacity-0" : "opacity-100 group-hover:scale-105"
+              )}
+              loading="lazy"
+            />
+          )}
+
+          {/* Video (plays on hover) */}
+          {item.videoUrl && (
+            <video
+              ref={videoRef}
+              src={item.videoUrl}
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              onLoadedData={() => setVideoLoaded(true)}
+              className={cn(
+                "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+                isHovered && videoLoaded ? "opacity-100" : "opacity-0"
+              )}
+            />
+          )}
+
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+          {/* Top Badges */}
+          <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+            <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
+              <span className="text-xs font-bold text-white">{formattedDate}</span>
+            </div>
+            <div className={cn(
+              "px-3 py-1.5 rounded-full backdrop-blur-md border",
+              (item.minPrice || 0) === 0
+                ? "bg-success/30 border-success/40 text-success"
+                : "bg-black/60 border-white/10 text-white"
+            )}>
+              <span className="text-xs font-bold">{formatPrice(item.minPrice || 0)}</span>
+            </div>
+          </div>
+
+          {/* Video Play Indicator */}
+          {item.videoUrl && (
+            <div className={cn(
+              "absolute bottom-3 right-3 h-10 w-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10 transition-opacity",
+              isHovered ? "opacity-0" : "opacity-100"
+            )}>
+              <Play className="h-5 w-5 text-white ml-0.5" />
+            </div>
+          )}
+        </Link>
+
+        {/* Event Info */}
+        <Link to={`/evento/${item.id}`} className="block group">
+          <h3 className="font-display text-lg font-bold leading-tight mb-1 group-hover:text-primary transition-colors line-clamp-2">
+            {item.title}
+          </h3>
+          <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4" />
+              {formattedDate} • {formattedTime}
+            </span>
+            {item.venueName && (
+              <span className="flex items-center gap-1.5 truncate">
+                <MapPin className="h-4 w-4 shrink-0" />
+                {item.venueName}
+              </span>
+            )}
+          </div>
+        </Link>
+      </motion.article>
+    );
+  };
 
   return (
     <>
