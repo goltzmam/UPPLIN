@@ -7,7 +7,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
-import { FeedEventCard } from "@/components/events/FeedEventCard";
+import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeaturedStories } from "@/components/home/FeaturedStories";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { 
@@ -22,7 +22,8 @@ import {
   Trophy,
   GraduationCap,
   Utensils,
-  ChevronRight
+  ChevronRight,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -75,7 +76,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
   const navigate = useNavigate();
 
-  // Fetch events
+  // Fetch events with media
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["homepage-events"],
     queryFn: async () => {
@@ -83,7 +84,9 @@ export default function Index() {
         .from("events")
         .select(`
           *,
-          organizer:organizer_id(display_name, logo_url)
+          organizer:organizer_id(display_name, logo_url),
+          event_media(id, url, type, sort_order),
+          ticket_types(price_cents)
         `)
         .eq("status", "published")
         .order("start_at", { ascending: true })
@@ -91,6 +94,27 @@ export default function Index() {
       if (error) throw error;
       return data || [];
     },
+  });
+
+  // Transform events for TikTok feed
+  const feedItems = events.map((event: any) => {
+    const videoMedia = event.event_media?.find((m: any) => m.type === "video");
+    const minPrice = event.ticket_types?.length > 0
+      ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
+      : 0;
+
+    return {
+      id: event.id,
+      title: event.title,
+      coverImageUrl: event.cover_image_url,
+      videoUrl: videoMedia?.url || null,
+      startAt: event.start_at,
+      venueName: event.venue_name,
+      addressText: event.address_text,
+      organizerName: event.organizer?.display_name,
+      organizerAvatar: event.organizer?.logo_url,
+      minPrice,
+    };
   });
 
   const handleSearch = (e: React.FormEvent) => {
@@ -226,39 +250,63 @@ export default function Index() {
 
             {activeTab === "foryou" ? (
               <>
-                {isLoading ? (
-                  <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-3">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div key={i} className="feed-card animate-pulse bg-muted" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-3">
-                    {events.map((event: any, index: number) => (
-                      <FeedEventCard
-                        key={event.id}
-                        id={event.id}
-                        title={event.title}
-                        coverImageUrl={event.cover_image_url}
-                        startAt={event.start_at}
-                        venueName={event.venue_name}
-                        addressText={event.address_text}
-                        organizerName={event.organizer?.display_name}
-                        organizerAvatar={event.organizer?.logo_url}
-                        index={index}
-                      />
-                    ))}
-                  </div>
-                )}
+                {/* TikTok-style vertical feed on mobile */}
+                <div className="md:hidden -mx-4">
+                  <TikTokFeed items={feedItems} isLoading={isLoading} />
+                </div>
 
-                {/* Load more */}
-                <div className="flex justify-center mt-8">
-                  <Button variant="outline" size="lg" className="rounded-full" asChild>
-                    <Link to="/eventos">
-                      Ver mais eventos
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
-                  </Button>
+                {/* Grid layout on desktop */}
+                <div className="hidden md:block">
+                  {isLoading ? (
+                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="feed-card animate-pulse bg-muted" />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      {feedItems.map((item, index) => (
+                        <motion.div
+                          key={item.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="feed-card group"
+                        >
+                          <Link to={`/evento/${item.id}`} className="block h-full">
+                            <div className="absolute inset-0">
+                              {item.coverImageUrl ? (
+                                <img
+                                  src={item.coverImageUrl}
+                                  alt={item.title}
+                                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                />
+                              ) : (
+                                <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                            </div>
+                            <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+                              <h3 className="font-display text-lg font-bold text-white leading-tight line-clamp-2 mb-1">
+                                {item.title}
+                              </h3>
+                              <p className="text-white/70 text-sm">{item.organizerName}</p>
+                            </div>
+                          </Link>
+                        </motion.div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Load more */}
+                  <div className="flex justify-center mt-8">
+                    <Button variant="outline" size="lg" className="rounded-full" asChild>
+                      <Link to="/eventos">
+                        Ver mais eventos
+                        <ArrowRight className="h-4 w-4 ml-2" />
+                      </Link>
+                    </Button>
+                  </div>
                 </div>
               </>
             ) : (

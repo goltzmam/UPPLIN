@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Ticket, MessageCircle, Bell, Settings } from "lucide-react";
+import { Menu, X, User, LogOut, Ticket, MessageCircle, Settings, Users } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 
 interface HeaderProps {
   showSearch?: boolean;
@@ -52,7 +53,6 @@ export function Header({ minimal = false }: HeaderProps) {
             </motion.div>
           </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-1">
             <Link 
               to="/eventos" 
@@ -62,6 +62,16 @@ export function Header({ minimal = false }: HeaderProps) {
               )}
             >
               Explorar
+            </Link>
+            <Link 
+              to="/explorar-organizadores" 
+              className={cn(
+                "px-4 py-2 text-sm font-medium rounded-full transition-colors hover:bg-muted flex items-center gap-1.5",
+                location.pathname === "/explorar-organizadores" && "bg-muted"
+              )}
+            >
+              <Users className="h-4 w-4" />
+              Organizadores
             </Link>
             <Link 
               to="/organizadores" 
@@ -78,10 +88,7 @@ export function Header({ minimal = false }: HeaderProps) {
             {user ? (
               <div className="flex items-center gap-2">
                 {/* Notifications */}
-                <Button variant="ghost" size="icon" className="rounded-full relative">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full animate-pulse-dot" />
-                </Button>
+                <NotificationCenter />
 
                 {/* Profile dropdown */}
                 <DropdownMenu>
@@ -158,12 +165,7 @@ export function Header({ minimal = false }: HeaderProps) {
 
           {/* Mobile: Notification + Menu */}
           <div className="flex items-center gap-2 md:hidden">
-            {user && (
-              <Button variant="ghost" size="icon" className="rounded-full relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
-              </Button>
-            )}
+            {user && <NotificationCenter />}
             <Button
               variant="ghost"
               size="icon"

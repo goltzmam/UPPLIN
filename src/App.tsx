@@ -29,6 +29,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminChats from "./pages/admin/AdminChats";
 import Precos from "./pages/Precos";
 import Organizadores from "./pages/Organizadores";
+import ExplorarOrganizadores from "./pages/ExplorarOrganizadores";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/checkout/:orderId" element={<Checkout />} />
             <Route path="/precos" element={<Precos />} />
             <Route path="/organizadores" element={<Organizadores />} />
+            <Route path="/explorar-organizadores" element={<ExplorarOrganizadores />} />
             <Route path="/instalar" element={<Instalar />} />
 
             {/* Organizer Routes */}
