@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EventMediaCarousel } from "@/components/events/EventMediaCarousel";
+import { FollowButton } from "@/components/events/FollowButton";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -347,6 +348,9 @@ export default function Evento() {
                             <Globe className="h-4 w-4" />
                           </a>
                         )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-3">
+                        <FollowButton organizerId={organizer.id} size="sm" />
                         <Link to={`/organizador/${organizer.id}`}>
                           <Button variant="outline" size="sm" className="text-xs">
                             <Building2 className="h-3 w-3 mr-1" />
