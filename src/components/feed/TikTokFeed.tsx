@@ -659,6 +659,7 @@ export function TikTokFeed({
   const [activeIndex, setActiveIndex] = useState(0);
   const activeIndexRef = useRef(0);
   const scrollRafRef = useRef<number | null>(null);
+  const ticking = useRef(false);
 
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [visibilityRatios, setVisibilityRatios] = useState<Map<number, number>>(new Map());
@@ -699,24 +700,25 @@ export function TikTokFeed({
     isRefreshingRef.current = isRefreshing;
   }, [isRefreshing]);
 
+  // Ultra-smooth scroll handler with passive event + RAF throttle
   const handleScroll = useCallback(() => {
-    if (!containerRef.current) return;
-    if (scrollRafRef.current !== null) return;
+    if (!containerRef.current || ticking.current) return;
 
-    scrollRafRef.current = window.requestAnimationFrame(() => {
+    ticking.current = true;
+    requestAnimationFrame(() => {
       const container = containerRef.current;
       if (!container) {
-        scrollRafRef.current = null;
+        ticking.current = false;
         return;
       }
       onScrollChange?.(container.scrollTop);
 
       const { scrollTop, scrollHeight, clientHeight } = container;
       const remaining = scrollHeight - scrollTop - clientHeight;
-      if (remaining < clientHeight && hasMore && !isLoadingMore) {
+      if (remaining < clientHeight * 2 && hasMore && !isLoadingMore) {
         onLoadMore?.();
       }
-      scrollRafRef.current = null;
+      ticking.current = false;
     });
   }, [onScrollChange, onLoadMore, hasMore, isLoadingMore]);
 
@@ -889,8 +891,10 @@ export function TikTokFeed({
         height: "calc(100dvh - var(--app-bottom-offset, 80px))",
         WebkitOverflowScrolling: "touch",
         touchAction: "pan-y",
+        scrollBehavior: "auto",
+        willChange: "scroll-position",
       }}
-      className="relative overflow-y-auto snap-y snap-mandatory scrollbar-hide overscroll-y-contain"
+      className="relative overflow-y-auto snap-y snap-mandatory scrollbar-hide overscroll-y-contain scroll-smooth-ios"
     >
       <div 
         className="fixed z-30 pointer-events-none"

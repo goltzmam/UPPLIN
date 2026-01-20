@@ -418,4 +418,23 @@
   .animate-text-reveal {
     animation: text-reveal 0.8s ease-out forwards;
   }
+
+  /* Ultra smooth iOS-style scrolling */
+  .scroll-smooth-ios {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+  
+  /* Performance optimizations for mobile scroll */
+  @supports (-webkit-touch-callout: none) {
+    .scroll-smooth-ios {
+      scroll-snap-type: y mandatory;
+    }
+  }
+  
+  /* Touch manipulation improvements */
+  .touch-manipulation {
+    touch-action: manipulation;
+  }
 }

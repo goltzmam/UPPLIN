@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { User, Mail, CreditCard, Loader2, AlertCircle, Bell, LogOut, Ticket, Bookmark, Search, Building2, ChevronRight } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle, Bell, LogOut, Ticket, Bookmark, Search, Building2, ChevronRight, Camera, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +9,15 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface Profile {
   id: string;
   full_name: string | null;
   email: string;
   photo_url: string | null;
+  cover_photo_url?: string | null;
   cpf?: string | null;
   cpf_locked?: boolean;
 }
@@ -32,6 +35,10 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
   const [fullName, setFullName] = useState(profile.full_name || "");
   const [cpf, setCpf] = useState(profile.cpf || "");
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
 
   const formatCpf = (value: string) => {
     const digits = value.replace(/\D/g, "").slice(0, 11);
@@ -64,6 +71,84 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
     }
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Formato inválido", description: "Selecione uma imagem", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "Máximo 5MB", variant: "destructive" });
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}/avatar.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      await onProfileUpdate({ photo_url: photoUrl });
+      toast({ title: "Foto atualizada!" });
+    } catch (error: any) {
+      toast({ title: "Erro ao enviar foto", description: error.message, variant: "destructive" });
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: "Formato inválido", description: "Selecione uma imagem", variant: "destructive" });
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Arquivo muito grande", description: "Máximo 10MB", variant: "destructive" });
+      return;
+    }
+
+    setUploadingCover(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}/cover.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const coverUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      await onProfileUpdate({ cover_photo_url: coverUrl });
+      toast({ title: "Capa atualizada!" });
+    } catch (error: any) {
+      toast({ title: "Erro ao enviar capa", description: error.message, variant: "destructive" });
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
   const handleNotificationToggle = async () => {
     if (isSubscribed) {
       await unsubscribe();
@@ -81,8 +166,83 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
     { icon: Building2, label: "Para Organizadores", path: "/organizadores", description: "Criar e gerenciar eventos", highlight: true },
   ];
 
+  const getInitials = (name: string | null) => {
+    if (!name) return "U";
+    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+  };
+
   return (
     <div className="space-y-6 max-w-md mx-auto">
+      {/* Profile Photos Card */}
+      <div className="bg-card rounded-2xl border border-border overflow-hidden">
+        <h3 className="font-display font-semibold text-lg px-4 sm:px-6 pt-4 sm:pt-6 pb-3">Foto do Perfil</h3>
+        
+        {/* Cover Photo */}
+        <div className="px-4 sm:px-6 pb-4">
+          <div 
+            className="relative h-28 rounded-xl overflow-hidden bg-gradient-to-br from-muted to-muted-foreground/20 cursor-pointer group"
+            onClick={() => coverInputRef.current?.click()}
+          >
+            {profile.cover_photo_url ? (
+              <img 
+                src={profile.cover_photo_url} 
+                alt="Capa" 
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              {uploadingCover ? (
+                <Loader2 className="h-6 w-6 text-white animate-spin" />
+              ) : (
+                <Camera className="h-6 w-6 text-white" />
+              )}
+            </div>
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleCoverUpload}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-2 text-center">Clique para trocar a foto de capa</p>
+        </div>
+
+        {/* Avatar */}
+        <div className="px-4 sm:px-6 pb-6 flex flex-col items-center">
+          <div 
+            className="relative cursor-pointer group"
+            onClick={() => photoInputRef.current?.click()}
+          >
+            <Avatar className="h-24 w-24 ring-4 ring-background">
+              <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "User"} />
+              <AvatarFallback className="bg-foreground text-background text-2xl font-semibold">
+                {getInitials(profile.full_name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              {uploadingPhoto ? (
+                <Loader2 className="h-6 w-6 text-white animate-spin" />
+              ) : (
+                <Camera className="h-6 w-6 text-white" />
+              )}
+            </div>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoUpload}
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">Clique para trocar a foto de perfil</p>
+        </div>
+      </div>
+
       {/* Quick Links Card */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
         <h3 className="font-display font-semibold text-lg px-4 sm:px-6 pt-4 sm:pt-6 pb-3">Acesso Rápido</h3>
