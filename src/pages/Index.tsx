@@ -52,6 +52,8 @@ export default function Index() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
+  const feedContainerRef = useRef<HTMLElement>(null);
+
   const toggleGlobalMute = useCallback(() => {
     setGlobalMuted((prev) => {
       const next = !prev;
@@ -94,6 +96,27 @@ export default function Index() {
     getNextPageParam: (lastPage) => lastPage.nextPage,
     initialPageParam: 0,
   });
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!hasNextPage || isFetchingNextPage) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: "400px" }
+    );
+
+    const sentinel = document.getElementById("feed-sentinel");
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const events = data?.pages.flatMap(page => page.data) || [];
 
@@ -369,7 +392,7 @@ export default function Index() {
       </aside>
 
       {/* Main Content - Vertical Feed */}
-      <main className="flex-1 max-w-2xl mx-auto">
+      <main className="flex-1 max-w-2xl mx-auto" ref={feedContainerRef}>
         {/* Sticky Header */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
           <div className="flex items-center justify-between px-4 py-3">
@@ -378,7 +401,7 @@ export default function Index() {
               UPPLIN
             </Link>
 
-            {/* Centered Tabs (mobile/tablet) */}
+            {/* Centered Tabs */}
             <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl lg:mx-auto">
               <button
                 onClick={() => setActiveTab("foryou")}
@@ -404,13 +427,58 @@ export default function Index() {
               </button>
             </div>
 
-            {/* Search Button */}
-            <button
-              onClick={() => navigate("/eventos")}
-              className="h-10 w-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
-            >
-              <Search className="h-5 w-5 text-muted-foreground" />
-            </button>
+            {/* Right Actions: Search, Notifications, Profile */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate("/eventos")}
+                className="h-10 w-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
+                aria-label="Buscar"
+              >
+                <Search className="h-5 w-5 text-muted-foreground" />
+              </button>
+              
+              {user && (
+                <>
+                  <button
+                    onClick={() => navigate("/perfil")}
+                    className="h-10 w-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors relative"
+                    aria-label="Notificações"
+                  >
+                    <Bell className="h-5 w-5 text-muted-foreground" />
+                    {/* Notification dot - can be conditionally shown based on unread count */}
+                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accent" />
+                  </button>
+                  <button
+                    onClick={() => navigate("/perfil")}
+                    className="h-10 w-10 rounded-full bg-muted overflow-hidden ring-2 ring-border hover:ring-primary transition-colors"
+                    aria-label="Perfil"
+                  >
+                    {user.user_metadata?.avatar_url ? (
+                      <img 
+                        src={user.user_metadata.avatar_url} 
+                        alt="Perfil" 
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-accent to-pink-500 text-white text-sm font-bold">
+                        {user.email?.[0]?.toUpperCase() || <User className="h-5 w-5" />}
+                      </div>
+                    )}
+                  </button>
+                </>
+              )}
+              
+              {!user && (
+                <Button
+                  onClick={() => navigate("/login")}
+                  size="sm"
+                  variant="default"
+                  className="rounded-full"
+                >
+                  Entrar
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -444,20 +512,27 @@ export default function Index() {
                           onToggleGlobalMute={toggleGlobalMute}
                         />
                       ))}
+                      
+                      {/* Infinite scroll sentinel */}
+                      <div id="feed-sentinel" className="h-1" />
+                      
+                      {/* Loading indicator */}
+                      {isFetchingNextPage && (
+                        <div className="flex justify-center py-8">
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <div className="h-5 w-5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+                            <span className="text-sm">Carregando mais...</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* No more content indicator */}
+                      {!hasNextPage && feedItems.length > 0 && (
+                        <div className="flex justify-center py-8 text-muted-foreground text-sm">
+                          Você viu todos os eventos 🎉
+                        </div>
+                      )}
                     </>
-                  )}
-
-                  {hasNextPage && (
-                    <div className="flex justify-center py-8">
-                      <Button
-                        variant="outline"
-                        onClick={() => fetchNextPage()}
-                        disabled={isFetchingNextPage}
-                        className="rounded-full px-8"
-                      >
-                        {isFetchingNextPage ? "Carregando..." : "Carregar mais"}
-                      </Button>
-                    </div>
                   )}
                 </motion.div>
               ) : (
