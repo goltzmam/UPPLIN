@@ -19,11 +19,11 @@ export function PullToRefresh({ children, onRefresh, className }: PullToRefreshP
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      {/* Pull indicator */}
+      {/* Pull indicator (doesn't move the content) */}
       <motion.div
-        className="absolute left-0 right-0 flex items-center justify-center z-50 pointer-events-none"
+        className="fixed left-0 right-0 flex items-center justify-center z-50 pointer-events-none"
         style={{
-          top: -60,
+          top: 112, // header (56) + search bar (56)
           height: 60,
         }}
         animate={{
@@ -61,15 +61,7 @@ export function PullToRefresh({ children, onRefresh, className }: PullToRefreshP
         </motion.div>
       </motion.div>
 
-      {/* Content with pull transform */}
-      <motion.div
-        animate={{
-          y: pullDistance > 0 ? pullDistance * 0.5 : 0,
-        }}
-        transition={{ type: "spring", damping: 20, stiffness: 300 }}
-      >
-        {children}
-      </motion.div>
+      {children}
     </div>
   );
 }
