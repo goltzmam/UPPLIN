@@ -49,6 +49,8 @@ function TrendingCard({ title, subtitle, image, href }: {
 export default function Index() {
   const [searchValue, setSearchValue] = useState("");
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
+  const [forYouScrollPos, setForYouScrollPos] = useState(0);
+  const [followingScrollPos, setFollowingScrollPos] = useState(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -254,6 +256,8 @@ export default function Index() {
                       onLoadMore={fetchNextPage}
                       hasMore={!!hasNextPage}
                       isLoadingMore={isFetchingNextPage}
+                      scrollPosition={forYouScrollPos}
+                      onScrollChange={setForYouScrollPos}
                     />
                   </div>
 

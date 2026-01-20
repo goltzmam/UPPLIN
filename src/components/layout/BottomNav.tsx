@@ -1,14 +1,16 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, PlusSquare, Heart, User } from "lucide-react";
+import { Home, Search, Heart, User, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 
 interface NavItem {
-  icon: React.ReactNode;
+  icon: React.ElementType;
+  activeIcon?: React.ElementType;
   label: string;
   path: string;
   requiresAuth?: boolean;
+  isCreate?: boolean;
 }
 
 export function BottomNav() {
@@ -16,66 +18,132 @@ export function BottomNav() {
   const { user } = useAuth();
 
   const navItems: NavItem[] = [
-    { icon: <Home className="h-6 w-6" />, label: "Início", path: "/" },
-    { icon: <Search className="h-6 w-6" />, label: "Explorar", path: "/eventos" },
-    { icon: <PlusSquare className="h-6 w-6" />, label: "Criar", path: "/organizador/cadastro" },
-    { icon: <Heart className="h-6 w-6" />, label: "Salvos", path: "/perfil?tab=salvos", requiresAuth: true },
-    { icon: <User className="h-6 w-6" />, label: "Perfil", path: user ? "/perfil" : "/login" },
+    { icon: Home, label: "Início", path: "/" },
+    { icon: Search, label: "Explorar", path: "/eventos" },
+    { icon: Plus, label: "Criar", path: "/organizador/cadastro", isCreate: true },
+    { icon: Heart, label: "Salvos", path: "/eventos-salvos", requiresAuth: true },
+    { icon: User, label: "Perfil", path: user ? "/perfil" : "/login" },
   ];
 
-  // Don't show on certain pages
-  const hiddenPaths = ["/checkout", "/organizador", "/admin"];
+  // Only hide on checkout, organizer dashboard, and admin pages
+  const hiddenPaths = ["/checkout", "/organizador/dashboard", "/admin"];
   const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
   
   if (shouldHide) return null;
 
   return (
-    <nav className="bottom-nav md:hidden">
-      <div className="flex items-center justify-around">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path || 
-            (item.path === "/" && location.pathname === "/") ||
-            (item.path !== "/" && location.pathname.startsWith(item.path.split("?")[0]));
-          
-          // Special styling for create button
-          const isCreate = item.label === "Criar";
+    <motion.nav 
+      initial={{ y: 100 }}
+      animate={{ y: 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+    >
+      {/* Glass morphism background */}
+      <div className="absolute inset-0 bg-background/70 backdrop-blur-2xl border-t border-white/10" />
+      
+      {/* Safe area padding for iOS */}
+      <div className="relative px-2 pt-2 pb-[env(safe-area-inset-bottom,8px)]">
+        <div className="flex items-center justify-around">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path || 
+              (item.path === "/" && location.pathname === "/") ||
+              (item.path !== "/" && location.pathname.startsWith(item.path.split("?")[0]));
+            
+            const Icon = item.icon;
 
-          return (
-            <Link
-              key={item.path}
-              to={item.requiresAuth && !user ? "/login" : item.path}
-              className={cn(
-                "bottom-nav-item relative",
-                isActive && "active",
-                isCreate && "relative"
-              )}
-            >
-              {isCreate ? (
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-accent to-pink-500 rounded-lg blur-sm opacity-50" />
-                  <div className="relative bg-foreground text-background rounded-lg p-1.5">
-                    <PlusSquare className="h-5 w-5" />
-                  </div>
-                </div>
-              ) : (
-                <>
+            if (item.isCreate) {
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="relative flex items-center justify-center -mt-4"
+                >
                   <motion.div
-                    whileTap={{ scale: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.92 }}
+                    className="relative"
+                  >
+                    {/* Glow effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-accent via-pink-500 to-orange-400 rounded-2xl blur-lg opacity-60" />
+                    
+                    {/* Button */}
+                    <div className="relative bg-gradient-to-r from-accent via-pink-500 to-orange-400 rounded-2xl p-3 shadow-lg shadow-accent/30">
+                      <Plus className="h-6 w-6 text-white" strokeWidth={2.5} />
+                    </div>
+                  </motion.div>
+                </Link>
+              );
+            }
+
+            return (
+              <Link
+                key={item.path}
+                to={item.requiresAuth && !user ? "/login" : item.path}
+                className="relative flex flex-col items-center justify-center py-1.5 px-4 group"
+              >
+                <motion.div
+                  whileTap={{ scale: 0.85 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  className="relative"
+                >
+                  {/* Active indicator glow */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="nav-glow"
+                      className="absolute -inset-2 bg-accent/20 rounded-full blur-md"
+                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                    />
+                  )}
+                  
+                  <motion.div
+                    animate={{ 
+                      scale: isActive ? 1 : 1,
+                    }}
                     className={cn(
-                      "transition-colors",
-                      isActive ? "text-foreground" : "text-muted-foreground"
+                      "relative transition-colors duration-200",
+                      isActive ? "text-foreground" : "text-muted-foreground/70"
                     )}
                   >
-                    {item.icon}
+                    <Icon 
+                      className={cn(
+                        "h-6 w-6 transition-all duration-200",
+                        isActive && "fill-foreground"
+                      )} 
+                      strokeWidth={isActive ? 2.5 : 1.5}
+                    />
                   </motion.div>
-                  <span className="text-[10px] font-medium">{item.label}</span>
-                  <div className={cn("nav-dot", isActive && "opacity-100")} />
-                </>
-              )}
-            </Link>
-          );
-        })}
+                </motion.div>
+                
+                {/* Label with slide up animation */}
+                <motion.span 
+                  initial={false}
+                  animate={{ 
+                    opacity: 1,
+                    y: 0,
+                  }}
+                  className={cn(
+                    "text-[10px] font-medium mt-0.5 transition-colors duration-200",
+                    isActive ? "text-foreground" : "text-muted-foreground/70"
+                  )}
+                >
+                  {item.label}
+                </motion.span>
+                
+                {/* Active dot indicator */}
+                <motion.div
+                  initial={false}
+                  animate={{ 
+                    scale: isActive ? 1 : 0,
+                    opacity: isActive ? 1 : 0 
+                  }}
+                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  className="absolute -bottom-0.5 w-1 h-1 rounded-full bg-accent"
+                />
+              </Link>
+            );
+          })}
+        </div>
       </div>
-    </nav>
+    </motion.nav>
   );
 }

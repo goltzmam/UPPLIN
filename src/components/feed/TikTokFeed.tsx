@@ -28,7 +28,12 @@ interface TikTokFeedProps {
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
+  scrollPosition?: number;
+  onScrollChange?: (position: number) => void;
 }
+
+// Height calculation: header (56px) + search (56px) + tabs (48px) + bottom nav (80px with safe area)
+const FEED_HEIGHT = "calc(100vh - 56px - 56px - 48px - 80px)";
 
 function formatEngagementCount(count: number): string {
   if (count >= 1000000) {
@@ -318,10 +323,25 @@ function FeedCard({
   );
 }
 
-export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMore }: TikTokFeedProps) {
+export function TikTokFeed({ 
+  items, 
+  isLoading, 
+  onLoadMore, 
+  hasMore, 
+  isLoadingMore,
+  scrollPosition = 0,
+  onScrollChange 
+}: TikTokFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
+
+  // Restore scroll position when mounting
+  useEffect(() => {
+    if (containerRef.current && scrollPosition > 0) {
+      containerRef.current.scrollTop = scrollPosition;
+    }
+  }, []);
 
   // Handle scroll to detect active item and load more
   const handleScroll = useCallback(() => {
@@ -337,12 +357,15 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
       setActiveIndex(newIndex);
     }
 
+    // Save scroll position
+    onScrollChange?.(scrollTop);
+
     // Load more when near bottom (2 items before end)
     const nearBottom = scrollTop + itemHeight * 2 >= scrollHeight - itemHeight;
     if (nearBottom && hasMore && !isLoadingMore && onLoadMore) {
       onLoadMore();
     }
-  }, [activeIndex, items.length, hasMore, isLoadingMore, onLoadMore]);
+  }, [activeIndex, items.length, hasMore, isLoadingMore, onLoadMore, onScrollChange]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -354,7 +377,10 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   if (isLoading) {
     return (
-      <div className="h-[calc(100vh-224px)] bg-muted animate-pulse flex items-center justify-center">
+      <div 
+        style={{ height: FEED_HEIGHT }} 
+        className="bg-muted animate-pulse flex items-center justify-center"
+      >
         <div className="text-muted-foreground">Carregando...</div>
       </div>
     );
@@ -362,7 +388,10 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   if (items.length === 0) {
     return (
-      <div className="h-[calc(100vh-224px)] flex items-center justify-center text-center p-8">
+      <div 
+        style={{ height: FEED_HEIGHT }} 
+        className="flex items-center justify-center text-center p-8"
+      >
         <div>
           <p className="text-muted-foreground mb-2">Nenhum evento encontrado</p>
           <p className="text-sm text-muted-foreground/70">
@@ -376,7 +405,8 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   return (
     <div
       ref={containerRef}
-      className="h-[calc(100vh-224px)] overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
+      style={{ height: FEED_HEIGHT }}
+      className="overflow-y-scroll snap-y snap-mandatory scrollbar-hide"
     >
       {items.map((item, index) => (
         <div key={item.id} className="h-full w-full">
@@ -389,11 +419,18 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
         </div>
       ))}
       
-      {/* Loading indicator for infinite scroll */}
+      {/* Discrete loading indicator for infinite scroll */}
       {isLoadingMore && (
-        <div className="h-20 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-muted-foreground border-t-transparent rounded-full animate-spin" />
-        </div>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20"
+        >
+          <div className="flex items-center gap-2 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full">
+            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+            <span className="text-white/80 text-xs">Carregando...</span>
+          </div>
+        </motion.div>
       )}
     </div>
   );
