@@ -117,12 +117,12 @@ export function FollowingFeed() {
         className="flex flex-col gap-3 w-full max-w-[200px]"
       >
         {showLoginButton && (
-          <Button asChild className="w-full bg-white text-black hover:bg-white/90">
+          <Button asChild className="w-full bg-white text-black hover:bg-white/90 font-semibold">
             <Link to="/login">Entrar</Link>
           </Button>
         )}
         {showExploreButton && (
-          <Button asChild variant="outline" className="w-full border-white/20 text-white hover:bg-white/10">
+          <Button asChild className="w-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 font-semibold">
             <Link to="/explorar-organizadores" className="flex items-center gap-2">
               <Compass className="h-4 w-4" />
               Explorar Organizadores
