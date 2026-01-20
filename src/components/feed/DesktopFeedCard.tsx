@@ -10,9 +10,9 @@ import {
   MessageCircle,
   Bookmark,
   Play,
+  Pause,
   Volume2,
   VolumeX,
-  Share2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEventEngagement } from "@/hooks/use-event-engagement";
@@ -100,11 +100,13 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  const [isHovered, setIsHovered] = useState(false);
+  // Changed: isPlaying state for click-to-play instead of hover
+  const [isPlaying, setIsPlaying] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showLikeParticles, setShowLikeParticles] = useState(false);
   const [showBigHeart, setShowBigHeart] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [showControls, setShowControls] = useState(false);
 
   const { isLiked, likeCount, isSaved, saveCount, toggleLike, toggleSave } =
     useEventEngagement(item.id);
@@ -128,20 +130,19 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
   const formatPrice = (cents: number) =>
     cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
-  // Play/pause video on hover
+  // Click-to-play/pause video
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !item.videoUrl) return;
 
     video.muted = globalMuted;
 
-    if (isHovered && videoLoaded) {
-      video.play().catch(() => {});
+    if (isPlaying && videoLoaded) {
+      video.play().catch(() => setIsPlaying(false));
     } else {
       video.pause();
-      video.currentTime = 0;
     }
-  }, [isHovered, videoLoaded, item.videoUrl, globalMuted]);
+  }, [isPlaying, videoLoaded, item.videoUrl, globalMuted]);
 
   // Sync mute state
   useEffect(() => {
@@ -149,6 +150,13 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
       videoRef.current.muted = globalMuted;
     }
   }, [globalMuted]);
+
+  const handleVideoClick = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!item.videoUrl || !videoLoaded) return;
+    setIsPlaying((prev) => !prev);
+    triggerFeedback({ haptic: "light" });
+  }, [item.videoUrl, videoLoaded]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
@@ -191,35 +199,37 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
         ref={cardRef}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.04, duration: 0.3 }}
-        className="p-4"
+        transition={{ delay: index * 0.03, duration: 0.3 }}
+        className="pb-4 mb-4 border-b border-border/30"
         onDoubleClick={handleDoubleTap}
       >
         {/* Organizer Header */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-3 px-1">
           <Link
             to={`/organizador/${item.organizerId}`}
             className="flex items-center gap-3 group"
           >
-            <div className="h-10 w-10 rounded-full bg-muted overflow-hidden ring-2 ring-border group-hover:ring-primary transition-colors">
-              {item.organizerAvatar ? (
-                <img
-                  src={item.organizerAvatar}
-                  alt={item.organizerName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-sm font-bold">
-                  {item.organizerName?.[0] || "O"}
-                </div>
-              )}
+            <div className="h-9 w-9 rounded-full bg-gradient-to-br from-accent via-pink-500 to-purple-600 p-0.5">
+              <div className="h-full w-full rounded-full bg-background overflow-hidden">
+                {item.organizerAvatar ? (
+                  <img
+                    src={item.organizerAvatar}
+                    alt={item.organizerName}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full bg-muted flex items-center justify-center text-xs font-bold">
+                    {item.organizerName?.[0] || "O"}
+                  </div>
+                )}
+              </div>
             </div>
             <div>
-              <span className="font-semibold text-sm group-hover:text-primary transition-colors block">
+              <span className="font-semibold text-sm group-hover:text-primary transition-colors block leading-tight">
                 {item.organizerName || "Organizador"}
               </span>
               <span className="text-xs text-muted-foreground">
-                @{item.organizerSlug || item.organizerName?.replace(/\s+/g, "").toLowerCase()}
+                {item.venueName || item.addressText}
               </span>
             </div>
           </Link>
@@ -227,25 +237,27 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
 
         {/* Media Container */}
         <div
-          className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-muted mb-3 cursor-pointer group"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          onClick={() => navigate(`/evento/${item.id}`)}
+          className="relative aspect-square rounded-sm overflow-hidden bg-muted cursor-pointer group"
+          onMouseEnter={() => setShowControls(true)}
+          onMouseLeave={() => setShowControls(false)}
+          onClick={handleVideoClick}
         >
           {/* Fallback background gradient when no image */}
           {!item.coverImageUrl && (
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 via-zinc-700 to-zinc-900" />
           )}
           
-          {/* Cover Image - Always visible, only fade when video is playing */}
+          {/* Cover Image - Always visible, fades when video plays */}
           {item.coverImageUrl && (
             <img
               src={item.coverImageUrl}
               alt={item.title}
-              className="absolute inset-0 h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
+              className={cn(
+                "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+                isPlaying && videoLoaded ? "opacity-0" : "opacity-100"
+              )}
               loading="lazy"
               onError={(e) => {
-                // Hide broken image and show gradient fallback
                 e.currentTarget.style.display = 'none';
               }}
             />
@@ -265,7 +277,7 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
               onCanPlay={() => setVideoLoaded(true)}
               className={cn(
                 "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
-                isHovered && videoLoaded ? "opacity-100" : "opacity-0"
+                isPlaying && videoLoaded ? "opacity-100" : "opacity-0"
               )}
               style={{
                 transform: "translateZ(0)",
@@ -274,54 +286,51 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
             />
           )}
 
-          {/* Gradient Overlay */}
-          <div
-            className={cn(
-              "absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity duration-300",
-              isHovered ? "opacity-100" : "opacity-0"
-            )}
-          />
-
-          {/* Top Badges */}
-          <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
-            <div className="px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10">
-              <span className="text-xs font-bold text-white">{formattedDate}</span>
-            </div>
-            <div
-              className={cn(
-                "px-3 py-1.5 rounded-full backdrop-blur-md border",
-                (item.minPrice || 0) === 0
-                  ? "bg-success/30 border-success/40 text-success"
-                  : "bg-black/60 border-white/10 text-white"
+          {/* Play/Pause Overlay */}
+          {item.videoUrl && videoLoaded && (
+            <AnimatePresence>
+              {(showControls || !isPlaying) && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute inset-0 flex items-center justify-center bg-black/20"
+                >
+                  <motion.div
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: 1 }}
+                    className={cn(
+                      "h-16 w-16 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/20",
+                      isPlaying && "opacity-0 group-hover:opacity-100 transition-opacity"
+                    )}
+                  >
+                    {isPlaying ? (
+                      <Pause className="h-7 w-7 text-white" />
+                    ) : (
+                      <Play className="h-7 w-7 text-white ml-1" />
+                    )}
+                  </motion.div>
+                </motion.div>
               )}
-            >
-              <span className="text-xs font-bold">{formatPrice(item.minPrice || 0)}</span>
-            </div>
-          </div>
-
-          {/* Play Indicator (when not hovered) */}
-          {item.videoUrl && !isHovered && (
-            <div className="absolute bottom-3 right-3 h-10 w-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10">
-              <Play className="h-5 w-5 text-white ml-0.5" />
-            </div>
+            </AnimatePresence>
           )}
 
-          {/* Volume Control (visible on hover) */}
-          {item.videoUrl && isHovered && (
+          {/* Volume Control (visible when playing) */}
+          {item.videoUrl && isPlaying && (
             <motion.button
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
               onClick={(e) => {
                 e.stopPropagation();
                 onToggleGlobalMute();
               }}
-              className="absolute top-3 right-20 h-10 w-10 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-black/80 transition-colors z-10"
+              className="absolute bottom-3 right-3 h-9 w-9 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-black/80 transition-colors z-10"
             >
               {globalMuted ? (
-                <VolumeX className="h-5 w-5 text-white" />
+                <VolumeX className="h-4 w-4 text-white" />
               ) : (
-                <Volume2 className="h-5 w-5 text-white" />
+                <Volume2 className="h-4 w-4 text-white" />
               )}
             </motion.button>
           )}
@@ -342,159 +351,104 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Hover Actions Sidebar */}
-          <AnimatePresence>
-            {isHovered && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.2 }}
-                className="absolute right-3 bottom-16 flex flex-col items-center gap-3 z-10"
-              >
-                {/* Like Button */}
-                <motion.button
-                  whileTap={{ scale: 0.85 }}
-                  onClick={handleLikeClick}
-                  className="flex flex-col items-center gap-1 relative"
-                >
-                  <div className="h-11 w-11 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-black/80 transition-colors">
-                    <motion.div
-                      animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <Heart
-                        className={cn(
-                          "h-5 w-5 transition-all",
-                          isLiked ? "fill-accent text-accent" : "text-white"
-                        )}
-                      />
-                    </motion.div>
-                    <LikeParticles show={showLikeParticles && !showBigHeart} />
-                  </div>
-                  <span className="text-white text-[10px] font-semibold drop-shadow-lg">
-                    {formatEngagementCount(likeCount)}
-                  </span>
-                </motion.button>
-
-                {/* Comment Button */}
-                <motion.button
-                  whileTap={{ scale: 0.85 }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowComments(true);
-                  }}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <div className="h-11 w-11 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-black/80 transition-colors">
-                    <MessageCircle className="h-5 w-5 text-white" />
-                  </div>
-                  <span className="text-white text-[10px] font-semibold drop-shadow-lg">
-                    {formatEngagementCount(commentCount)}
-                  </span>
-                </motion.button>
-
-                {/* Save Button */}
-                <motion.button
-                  whileTap={{ scale: 0.85 }}
-                  onClick={handleSaveClick}
-                  className="flex flex-col items-center gap-1"
-                >
-                  <div className="h-11 w-11 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-black/80 transition-colors">
-                    <motion.div
-                      animate={{ scale: isSaved ? [1, 1.15, 1] : 1 }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      <Bookmark
-                        className={cn(
-                          "h-5 w-5 transition-all",
-                          isSaved ? "fill-white text-white" : "text-white"
-                        )}
-                      />
-                    </motion.div>
-                  </div>
-                  <span className="text-white text-[10px] font-semibold drop-shadow-lg">
-                    {formatEngagementCount(saveCount)}
-                  </span>
-                </motion.button>
-
-                {/* Share Button */}
-                <div className="h-11 w-11 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-black/80 transition-colors">
-                  <ShareButton
-                    eventId={item.id}
-                    eventTitle={item.title}
-                    iconOnly
-                    className="text-white"
-                  />
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </div>
 
-        {/* Event Info */}
-        <Link to={`/evento/${item.id}`} className="block group">
-          <h3 className="font-display text-lg font-bold leading-tight mb-1.5 group-hover:text-primary transition-colors line-clamp-2">
-            {item.title}
-          </h3>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              {formattedDate} • {formattedTime}
-            </span>
-            {item.venueName && (
-              <span className="flex items-center gap-1.5 truncate">
-                <MapPin className="h-4 w-4 shrink-0" />
-                {item.venueName}
-              </span>
-            )}
-          </div>
-        </Link>
-
         {/* Action Bar */}
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-border/50">
+        <div className="flex items-center justify-between mt-3 px-1">
           <div className="flex items-center gap-4">
-            <button
+            <motion.button
+              whileTap={{ scale: 0.85 }}
               onClick={handleLikeClick}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="relative"
             >
-              <Heart
-                className={cn(
-                  "h-5 w-5 transition-all",
-                  isLiked ? "fill-accent text-accent" : ""
-                )}
-              />
-              <span>{formatEngagementCount(likeCount)}</span>
-            </button>
+              <motion.div
+                animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <Heart
+                  className={cn(
+                    "h-6 w-6 transition-all",
+                    isLiked ? "fill-accent text-accent" : "hover:text-muted-foreground/80"
+                  )}
+                />
+              </motion.div>
+              <LikeParticles show={showLikeParticles && !showBigHeart} />
+            </motion.button>
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 setShowComments(true);
               }}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="hover:text-muted-foreground/80 transition-colors"
             >
-              <MessageCircle className="h-5 w-5" />
-              <span>{formatEngagementCount(commentCount)}</span>
+              <MessageCircle className="h-6 w-6" />
             </button>
-            <button
-              onClick={handleSaveClick}
-              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            <ShareButton
+              eventId={item.id}
+              eventTitle={item.title}
+              iconOnly
+              className="h-6 w-6 hover:text-muted-foreground/80"
+            />
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            onClick={handleSaveClick}
+          >
+            <motion.div
+              animate={{ scale: isSaved ? [1, 1.15, 1] : 1 }}
+              transition={{ duration: 0.25 }}
             >
               <Bookmark
                 className={cn(
-                  "h-5 w-5 transition-all",
-                  isSaved ? "fill-foreground" : ""
+                  "h-6 w-6 transition-all",
+                  isSaved ? "fill-foreground" : "hover:text-muted-foreground/80"
                 )}
               />
-              <span>{formatEngagementCount(saveCount)}</span>
-            </button>
-          </div>
-          <ShareButton
-            eventId={item.id}
-            eventTitle={item.title}
-            className="text-muted-foreground hover:text-foreground"
-          />
+            </motion.div>
+          </motion.button>
+        </div>
+
+        {/* Engagement Count */}
+        <div className="mt-2 px-1">
+          <span className="text-sm font-semibold">
+            {formatEngagementCount(likeCount)} curtidas
+          </span>
+        </div>
+
+        {/* Event Info */}
+        <div className="mt-1 px-1">
+          <Link to={`/evento/${item.id}`} className="group">
+            <span className="font-semibold text-sm mr-1.5 group-hover:text-primary transition-colors">
+              {item.organizerName}
+            </span>
+            <span className="text-sm">{item.title}</span>
+          </Link>
+        </div>
+
+        {/* Comments Preview */}
+        {commentCount > 0 && (
+          <button
+            onClick={() => setShowComments(true)}
+            className="mt-1 px-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Ver todos os {commentCount} comentários
+          </button>
+        )}
+
+        {/* Date/Time */}
+        <div className="mt-1 px-1 flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Calendar className="h-3.5 w-3.5" />
+            {formattedDate} às {formattedTime}
+          </span>
+          <span className={cn(
+            "px-2 py-0.5 rounded-full text-[10px] font-semibold",
+            (item.minPrice || 0) === 0
+              ? "bg-success/20 text-success"
+              : "bg-muted text-foreground"
+          )}>
+            {formatPrice(item.minPrice || 0)}
+          </span>
         </div>
       </motion.article>
 

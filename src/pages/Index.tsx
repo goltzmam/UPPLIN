@@ -4,37 +4,17 @@ import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { DesktopSidebar } from "@/components/layout/DesktopSidebar";
+import { RightSidebar } from "@/components/layout/RightSidebar";
 import { Button } from "@/components/ui/button";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeedSearch } from "@/components/feed/FeedSearch";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { DesktopFeedCard } from "@/components/feed/DesktopFeedCard";
-import { 
-  Search, 
-  ArrowRight,
-  Flame,
-  Sparkles,
-  Users,
-  Bell,
-  User,
-  Compass,
-} from "lucide-react";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-
-const PAGE_SIZE = 12;
-
-const categories = [
-  { name: "Festas", icon: "🎉", href: "/eventos?categoria=festas" },
-  { name: "Shows", icon: "🎤", href: "/eventos?categoria=shows" },
-  { name: "Festivais", icon: "🎪", href: "/eventos?categoria=festivais" },
-  { name: "Esportes", icon: "⚽", href: "/eventos?categoria=esportes" },
-  { name: "Teatro", icon: "🎭", href: "/eventos?categoria=teatro" },
-  { name: "Workshops", icon: "💡", href: "/eventos?categoria=workshops" },
-  { name: "Gastronomia", icon: "🍽️", href: "/eventos?categoria=gastronomia" },
-  { name: "Arte", icon: "🎨", href: "/eventos?categoria=arte" },
-];
 
 const MUTE_STORAGE_KEY = "upplin_desktop_muted";
 
@@ -298,191 +278,15 @@ export default function Index() {
   );
 
   // =====================================================================
-  // DESKTOP/TABLET: Social-style vertical feed with sidebar
+  // DESKTOP/TABLET: Instagram-style layout with sidebars
   // =====================================================================
   const DesktopLayout = () => (
     <div className="hidden md:flex min-h-screen bg-background">
-      {/* Left Sidebar - Categories & Trending */}
-      <aside className="hidden lg:block w-64 xl:w-72 shrink-0 border-r border-border/50 h-screen sticky top-0 overflow-y-auto">
-        <div className="p-5 pt-20">
-          {/* Logo */}
-          <Link to="/" className="font-display text-2xl font-bold mb-8 block">
-            UPPLIN
-          </Link>
+      {/* Left Sidebar - Navigation */}
+      <DesktopSidebar />
 
-          {/* Tab Navigation */}
-          <div className="space-y-1 mb-8">
-            <button
-              onClick={() => setActiveTab("foryou")}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all",
-                activeTab === "foryou"
-                  ? "bg-foreground text-background font-semibold"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <Sparkles className="h-5 w-5" />
-              Para Você
-            </button>
-            <button
-              onClick={() => setActiveTab("following")}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all",
-                activeTab === "following"
-                  ? "bg-foreground text-background font-semibold"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <Users className="h-5 w-5" />
-              Seguindo
-            </button>
-          </div>
-
-          {/* Categories */}
-          <div className="mb-8">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-              Categorias
-            </h3>
-            <div className="space-y-1">
-              {categories.slice(0, 6).map((cat) => (
-                <Link
-                  key={cat.name}
-                  to={cat.href}
-                  className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-                >
-                  <span className="text-lg">{cat.icon}</span>
-                  <span>{cat.name}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Trending */}
-          <div>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 px-1">
-              Em Alta
-            </h3>
-            <div className="space-y-3">
-              {trending.map((item) => (
-                <Link
-                  key={item.title}
-                  to={item.href}
-                  className="group block rounded-xl overflow-hidden"
-                >
-                  <div className="relative aspect-[2/1] bg-muted">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="absolute inset-0 h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <div className="flex items-center gap-1.5 text-white/70 text-[10px] mb-0.5">
-                        <Flame className="h-3 w-3 text-accent" />
-                        <span className="uppercase tracking-wide">{item.subtitle}</span>
-                      </div>
-                      <p className="text-white text-sm font-semibold">{item.title}</p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main Content - Vertical Feed */}
-      <main className="flex-1 max-w-2xl mx-auto" ref={feedContainerRef}>
-        {/* Sticky Header */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
-          <div className="flex items-center justify-between px-4 py-3">
-            {/* Mobile/Tablet Logo */}
-            <Link to="/" className="font-display text-xl font-bold lg:hidden">
-              UPPLIN
-            </Link>
-
-            {/* Centered Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl lg:mx-auto">
-              <button
-                onClick={() => setActiveTab("foryou")}
-                className={cn(
-                  "px-5 py-2 text-sm font-medium rounded-lg transition-all",
-                  activeTab === "foryou"
-                    ? "bg-foreground text-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Para Você
-              </button>
-              <button
-                onClick={() => setActiveTab("following")}
-                className={cn(
-                  "px-5 py-2 text-sm font-medium rounded-lg transition-all",
-                  activeTab === "following"
-                    ? "bg-foreground text-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Seguindo
-              </button>
-            </div>
-
-            {/* Right Actions: Search, Notifications, Profile */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => navigate("/eventos")}
-                className="h-10 w-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors"
-                aria-label="Buscar"
-              >
-                <Search className="h-5 w-5 text-muted-foreground" />
-              </button>
-              
-              {user && (
-                <>
-                  <button
-                    onClick={() => navigate("/perfil")}
-                    className="h-10 w-10 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors relative"
-                    aria-label="Notificações"
-                  >
-                    <Bell className="h-5 w-5 text-muted-foreground" />
-                    {/* Notification dot - can be conditionally shown based on unread count */}
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-accent" />
-                  </button>
-                  <button
-                    onClick={() => navigate("/perfil")}
-                    className="h-10 w-10 rounded-full bg-muted overflow-hidden ring-2 ring-border hover:ring-primary transition-colors"
-                    aria-label="Perfil"
-                  >
-                    {user.user_metadata?.avatar_url ? (
-                      <img 
-                        src={user.user_metadata.avatar_url} 
-                        alt="Perfil" 
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-gradient-to-br from-accent to-pink-500 text-white text-sm font-bold">
-                        {user.email?.[0]?.toUpperCase() || <User className="h-5 w-5" />}
-                      </div>
-                    )}
-                  </button>
-                </>
-              )}
-              
-              {!user && (
-                <Button
-                  onClick={() => navigate("/login")}
-                  size="sm"
-                  variant="default"
-                  className="rounded-full"
-                >
-                  Entrar
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Feed Content */}
+      {/* Main Content - Centered Feed */}
+      <main className="flex-1 max-w-[470px] mx-auto border-x border-border/30">
         <PullToRefresh onRefresh={handleRefresh}>
           <div className="pb-20">
             <AnimatePresence mode="wait" initial={false}>
@@ -493,12 +297,11 @@ export default function Index() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.15 }}
-                  className="divide-y divide-border/30"
                 >
                   {isLoading ? (
                     <div className="space-y-4 p-4">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className="aspect-[4/5] rounded-2xl bg-muted animate-pulse" />
+                      {[...Array(3)].map((_, i) => (
+                        <div key={i} className="aspect-square rounded-sm bg-muted animate-pulse" />
                       ))}
                     </div>
                   ) : (
@@ -513,20 +316,14 @@ export default function Index() {
                         />
                       ))}
                       
-                      {/* Infinite scroll sentinel */}
                       <div id="feed-sentinel" className="h-1" />
                       
-                      {/* Loading indicator */}
                       {isFetchingNextPage && (
                         <div className="flex justify-center py-8">
-                          <div className="flex items-center gap-2 text-muted-foreground">
-                            <div className="h-5 w-5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
-                            <span className="text-sm">Carregando mais...</span>
-                          </div>
+                          <div className="h-5 w-5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
                         </div>
                       )}
                       
-                      {/* No more content indicator */}
                       {!hasNextPage && feedItems.length > 0 && (
                         <div className="flex justify-center py-8 text-muted-foreground text-sm">
                           Você viu todos os eventos 🎉
@@ -552,55 +349,10 @@ export default function Index() {
         </PullToRefresh>
       </main>
 
-      {/* Right Sidebar - Search & Suggestions (XL screens) */}
-      <aside className="hidden xl:block w-80 shrink-0 border-l border-border/50 h-screen sticky top-0 overflow-y-auto">
-        <div className="p-5 pt-6">
-          {/* Search */}
-          <button
-            onClick={() => navigate("/eventos")}
-            className="w-full flex items-center gap-3 bg-muted/50 rounded-xl px-4 py-3 text-muted-foreground hover:bg-muted transition-colors mb-6"
-          >
-            <Search className="h-5 w-5" />
-            <span className="text-sm">Buscar eventos...</span>
-          </button>
-
-          {/* CTA */}
-          <div className="bg-gradient-to-br from-primary/20 via-accent/10 to-primary/5 rounded-2xl p-5 mb-6 border border-primary/20">
-            <h3 className="font-display font-bold mb-2">Crie seu evento</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Comece a vender ingressos hoje mesmo
-            </p>
-            <Button asChild size="sm" className="w-full rounded-full">
-              <Link to="/organizador/cadastro">
-                Começar grátis
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Link>
-            </Button>
-          </div>
-
-          {/* Quick Categories */}
-          <div>
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-              Explorar
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {categories.map((cat) => (
-                <Link
-                  key={cat.name}
-                  to={cat.href}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-muted rounded-full text-xs hover:bg-muted/80 transition-colors"
-                >
-                  <span>{cat.icon}</span>
-                  <span>{cat.name}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      </aside>
+      {/* Right Sidebar - Categories, Trending, Suggestions */}
+      <RightSidebar />
     </div>
   );
-
 
   return (
     <>
