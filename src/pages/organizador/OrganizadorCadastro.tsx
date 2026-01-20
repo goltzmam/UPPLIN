@@ -1,14 +1,23 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Calendar, Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ValidatedInput } from "@/components/ui/validated-input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { 
+  isValidEmail, 
+  isValidName, 
+  isValidPassword, 
+  isValidCNPJ, 
+  isValidPhone,
+  formatCNPJ,
+  formatPhone
+} from "@/lib/validation";
 
 // Animation variants for step transitions
 const stepVariants = {
@@ -85,22 +94,17 @@ export default function OrganizadorCadastro() {
   const [facebook, setFacebook] = useState("");
   const [website, setWebsite] = useState("");
 
-  const formatCNPJ = (value: string) => {
-    const numbers = value.replace(/\D/g, "").slice(0, 14);
-    return numbers
-      .replace(/^(\d{2})(\d)/, "$1.$2")
-      .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
-      .replace(/\.(\d{3})(\d)/, ".$1/$2")
-      .replace(/(\d{4})(\d)/, "$1-$2");
-  };
+  // Validation rules
+  const nameRules = useMemo(() => [{ test: isValidName }], []);
+  const emailRules = useMemo(() => [{ test: isValidEmail }], []);
+  const passwordRules = useMemo(() => [{ test: isValidPassword }], []);
+  const companyRules = useMemo(() => [{ test: (v: string) => v.trim().length >= 2 }], []);
+  const cnpjRules = useMemo(() => [{ test: isValidCNPJ }], []);
+  const phoneRules = useMemo(() => [{ test: isValidPhone }], []);
 
-  const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, "").slice(0, 11);
-    if (numbers.length <= 10) {
-      return numbers.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
-    }
-    return numbers.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3");
-  };
+  // Step validation
+  const isStep1Valid = isValidName(fullName) && isValidEmail(email) && isValidPassword(password);
+  const isStep2Valid = companyName.trim().length >= 2 && isValidCNPJ(cnpj) && isValidPhone(phone);
 
   const goToStep = (newStep: number) => {
     setDirection(newStep > step ? 1 : -1);
@@ -109,12 +113,12 @@ export default function OrganizadorCadastro() {
 
   const handleStep1 = (e: React.FormEvent) => {
     e.preventDefault();
-    goToStep(2);
+    if (isStep1Valid) goToStep(2);
   };
 
   const handleStep2 = (e: React.FormEvent) => {
     e.preventDefault();
-    goToStep(3);
+    if (isStep2Valid) goToStep(3);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,7 +126,6 @@ export default function OrganizadorCadastro() {
     setLoading(true);
 
     try {
-      // Create user account using supabase directly to get the user data
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -134,9 +137,7 @@ export default function OrganizadorCadastro() {
       
       if (authError) throw authError;
 
-      // Wait for the user to be created
       if (authData?.user) {
-        // Add organizer role
         const { error: roleError } = await supabase
           .from("user_roles")
           .insert({ user_id: authData.user.id, role: "organizer" });
@@ -145,7 +146,6 @@ export default function OrganizadorCadastro() {
           console.error("Role error:", roleError);
         }
 
-        // Create organizer account
         const { error: orgError } = await supabase
           .from("organizer_accounts")
           .insert({
@@ -163,7 +163,6 @@ export default function OrganizadorCadastro() {
         if (orgError) throw orgError;
       }
 
-      // Show success animation with confetti
       setShowSuccess(true);
       triggerConfetti();
 
@@ -172,7 +171,6 @@ export default function OrganizadorCadastro() {
         description: "Vamos configurar seu perfil." 
       });
 
-      // Navigate after animation
       setTimeout(() => {
         navigate("/organizador/onboarding");
       }, 2500);
@@ -214,7 +212,7 @@ export default function OrganizadorCadastro() {
               Bem-vindo à UPPLIN!
             </h1>
             <p className="text-muted-foreground mt-2">
-              Sua conta foi criada com sucesso
+              Sua conta de organizador foi criada
             </p>
           </motion.div>
           <motion.div
@@ -256,7 +254,7 @@ export default function OrganizadorCadastro() {
             </p>
           </div>
 
-          {/* Progress Steps - Enhanced */}
+          {/* Progress Steps */}
           <div className="flex items-center justify-center gap-3">
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center gap-3">
@@ -268,9 +266,7 @@ export default function OrganizadorCadastro() {
                         ? "bg-primary text-primary-foreground ring-4 ring-primary/20" 
                         : "bg-muted text-muted-foreground"
                   }`}
-                  animate={{
-                    scale: step === s ? 1.1 : 1,
-                  }}
+                  animate={{ scale: step === s ? 1.1 : 1 }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 >
                   {step > s ? (
@@ -286,9 +282,7 @@ export default function OrganizadorCadastro() {
                   )}
                 </motion.div>
                 {s < 3 && (
-                  <motion.div 
-                    className="w-12 h-1 rounded-full bg-muted overflow-hidden"
-                  >
+                  <motion.div className="w-12 h-1 rounded-full bg-muted overflow-hidden">
                     <motion.div
                       className="h-full bg-primary"
                       initial={{ width: "0%" }}
@@ -310,10 +304,9 @@ export default function OrganizadorCadastro() {
             {step === 1 ? "Dados da conta" : step === 2 ? "Dados da empresa" : "Redes sociais"}
           </motion.p>
 
-          {/* Form Steps with Animation */}
+          {/* Form Steps */}
           <div className="relative overflow-hidden">
             <AnimatePresence mode="wait" custom={direction}>
-              {/* Step 1: Account */}
               {step === 1 && (
                 <motion.form
                   key="step1"
@@ -328,33 +321,53 @@ export default function OrganizadorCadastro() {
                 >
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-sm">Seu nome completo</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="fullName" placeholder="Seu nome" className="pl-10 h-11" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
-                    </div>
+                    <ValidatedInput 
+                      id="fullName" 
+                      placeholder="Seu nome" 
+                      className="h-11" 
+                      value={fullName} 
+                      onChange={(e) => setFullName(e.target.value)} 
+                      required
+                      icon={<User className="h-4 w-4" />}
+                      validationRules={nameRules}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="email" className="text-sm">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="email" type="email" placeholder="seu@email.com" className="pl-10 h-11" value={email} onChange={(e) => setEmail(e.target.value)} required />
-                    </div>
+                    <ValidatedInput 
+                      id="email" 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      className="h-11" 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      required
+                      icon={<Mail className="h-4 w-4" />}
+                      validationRules={emailRules}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="password" className="text-sm">Senha</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="password" type="password" placeholder="Mínimo 6 caracteres" className="pl-10 h-11" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
-                    </div>
+                    <ValidatedInput 
+                      id="password" 
+                      type="password" 
+                      placeholder="Mínimo 6 caracteres" 
+                      className="h-11" 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      required 
+                      minLength={6}
+                      icon={<Lock className="h-4 w-4" />}
+                      validationRules={passwordRules}
+                    />
                   </div>
-                  <Button type="submit" className="w-full h-11 gap-2">
+                  <Button type="submit" className="w-full h-11 gap-2" disabled={!isStep1Valid}>
                     Continuar
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </motion.form>
               )}
 
-              {/* Step 2: Company */}
               {step === 2 && (
                 <motion.form
                   key="step2"
@@ -369,35 +382,59 @@ export default function OrganizadorCadastro() {
                 >
                   <div className="space-y-2">
                     <Label htmlFor="companyName" className="text-sm">Nome da Produtora/Organizadora</Label>
-                    <div className="relative">
-                      <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="companyName" placeholder="Ex: Eventos XYZ" className="pl-10 h-11" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
-                    </div>
+                    <ValidatedInput 
+                      id="companyName" 
+                      placeholder="Ex: Eventos XYZ" 
+                      className="h-11" 
+                      value={companyName} 
+                      onChange={(e) => setCompanyName(e.target.value)} 
+                      required
+                      icon={<Building2 className="h-4 w-4" />}
+                      validationRules={companyRules}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="cnpj" className="text-sm">CNPJ</Label>
-                    <div className="relative">
-                      <FileText className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="cnpj" placeholder="00.000.000/0000-00" className="pl-10 h-11" value={cnpj} onChange={(e) => setCnpj(formatCNPJ(e.target.value))} required />
-                    </div>
+                    <ValidatedInput 
+                      id="cnpj" 
+                      placeholder="00.000.000/0000-00" 
+                      className="h-11" 
+                      value={cnpj} 
+                      onChange={(e) => setCnpj(formatCNPJ(e.target.value))} 
+                      required
+                      icon={<FileText className="h-4 w-4" />}
+                      validationRules={cnpjRules}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="phone" className="text-sm">Telefone</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="phone" placeholder="(00) 00000-0000" className="pl-10 h-11" value={phone} onChange={(e) => setPhone(formatPhone(e.target.value))} required />
-                    </div>
+                    <ValidatedInput 
+                      id="phone" 
+                      placeholder="(00) 00000-0000" 
+                      className="h-11" 
+                      value={phone} 
+                      onChange={(e) => setPhone(formatPhone(e.target.value))} 
+                      required
+                      icon={<Phone className="h-4 w-4" />}
+                      validationRules={phoneRules}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="description" className="text-sm">Descrição da empresa (opcional)</Label>
-                    <Textarea id="description" placeholder="Conte um pouco sobre sua empresa..." className="min-h-[80px]" value={description} onChange={(e) => setDescription(e.target.value)} />
+                    <Textarea 
+                      id="description" 
+                      placeholder="Conte um pouco sobre sua empresa..." 
+                      className="min-h-[80px]" 
+                      value={description} 
+                      onChange={(e) => setDescription(e.target.value)} 
+                    />
                   </div>
                   <div className="flex gap-3">
                     <Button type="button" variant="outline" className="flex-1 h-11 gap-2" onClick={() => goToStep(1)}>
                       <ChevronLeft className="h-4 w-4" />
                       Voltar
                     </Button>
-                    <Button type="submit" className="flex-1 h-11 gap-2">
+                    <Button type="submit" className="flex-1 h-11 gap-2" disabled={!isStep2Valid}>
                       Continuar
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -405,7 +442,6 @@ export default function OrganizadorCadastro() {
                 </motion.form>
               )}
 
-              {/* Step 3: Social */}
               {step === 3 && (
                 <motion.form
                   key="step3"
@@ -420,24 +456,39 @@ export default function OrganizadorCadastro() {
                 >
                   <div className="space-y-2">
                     <Label htmlFor="instagram" className="text-sm">Instagram (opcional)</Label>
-                    <div className="relative">
-                      <Instagram className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="instagram" placeholder="@seuperfil" className="pl-10 h-11" value={instagram} onChange={(e) => setInstagram(e.target.value)} />
-                    </div>
+                    <ValidatedInput 
+                      id="instagram" 
+                      placeholder="@seuperfil" 
+                      className="h-11" 
+                      value={instagram} 
+                      onChange={(e) => setInstagram(e.target.value)}
+                      icon={<Instagram className="h-4 w-4" />}
+                      showValidation={false}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="facebook" className="text-sm">Facebook (opcional)</Label>
-                    <div className="relative">
-                      <Facebook className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="facebook" placeholder="facebook.com/suapagina" className="pl-10 h-11" value={facebook} onChange={(e) => setFacebook(e.target.value)} />
-                    </div>
+                    <ValidatedInput 
+                      id="facebook" 
+                      placeholder="facebook.com/suapagina" 
+                      className="h-11" 
+                      value={facebook} 
+                      onChange={(e) => setFacebook(e.target.value)}
+                      icon={<Facebook className="h-4 w-4" />}
+                      showValidation={false}
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="website" className="text-sm">Website (opcional)</Label>
-                    <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input id="website" placeholder="https://seusite.com" className="pl-10 h-11" value={website} onChange={(e) => setWebsite(e.target.value)} />
-                    </div>
+                    <ValidatedInput 
+                      id="website" 
+                      placeholder="https://seusite.com" 
+                      className="h-11" 
+                      value={website} 
+                      onChange={(e) => setWebsite(e.target.value)}
+                      icon={<Globe className="h-4 w-4" />}
+                      showValidation={false}
+                    />
                   </div>
                   <div className="flex gap-3">
                     <Button type="button" variant="outline" className="flex-1 h-11 gap-2" onClick={() => goToStep(2)}>
@@ -457,8 +508,13 @@ export default function OrganizadorCadastro() {
               )}
             </AnimatePresence>
           </div>
-          <div className="text-center">
-            <Link to="/cadastro" className="text-sm text-muted-foreground hover:text-primary">
+
+          <div className="text-center pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground mb-2">Quer comprar ingressos?</p>
+            <Link 
+              to="/cadastro" 
+              className="text-sm font-medium text-primary hover:underline"
+            >
               Cadastrar como participante →
             </Link>
           </div>
@@ -467,16 +523,38 @@ export default function OrganizadorCadastro() {
 
       <div className="hidden lg:flex lg:w-1/2 bg-secondary items-center justify-center p-8 xl:p-12">
         <div className="max-w-md text-center text-secondary-foreground">
-          <div className="flex justify-center mb-6 sm:mb-8">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex justify-center mb-6 sm:mb-8"
+          >
             <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center">
               <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
             </div>
-          </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Comece a criar eventos incríveis</h1>
-          <p className="text-sm sm:text-base text-secondary-foreground/70">
+          </motion.div>
+          <motion.h1 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4"
+          >
+            Comece a criar eventos incríveis
+          </motion.h1>
+          <motion.p 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-sm sm:text-base text-secondary-foreground/70"
+          >
             Junte-se a milhares de organizadores que confiam na UPPLIN para vender ingressos.
-          </p>
-          <div className="mt-8 grid grid-cols-3 gap-4 text-center">
+          </motion.p>
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8 grid grid-cols-3 gap-4 text-center"
+          >
             <div>
               <div className="text-2xl font-bold">2M+</div>
               <div className="text-xs text-secondary-foreground/60">Ingressos vendidos</div>
@@ -489,7 +567,7 @@ export default function OrganizadorCadastro() {
               <div className="text-2xl font-bold">99.9%</div>
               <div className="text-xs text-secondary-foreground/60">Uptime</div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

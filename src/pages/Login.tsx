@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Mail, Lock, Loader2 } from "lucide-react";
+import { Calendar, Mail, Lock, Loader2, Ticket } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ValidatedInput } from "@/components/ui/validated-input";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { isValidEmail } from "@/lib/validation";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,6 +15,9 @@ export default function Login() {
   const { signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const emailRules = useMemo(() => [{ test: isValidEmail }], []);
+  const passwordRules = useMemo(() => [{ test: (v: string) => v.length >= 1 }], []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,25 +45,33 @@ export default function Login() {
         <div className="max-w-md text-center text-secondary-foreground">
           <div className="flex justify-center mb-6 sm:mb-8">
             <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center">
-              <Calendar className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
+              <Ticket className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
             </div>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Bem-vindo de volta!</h1>
-          <p className="text-sm sm:text-base text-secondary-foreground/70">Entre para gerenciar seus eventos e ingressos.</p>
+          <p className="text-sm sm:text-base text-secondary-foreground/70">Entre para ver seus ingressos e descobrir novos eventos.</p>
         </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md space-y-6 sm:space-y-8">
-          <div className="text-center lg:text-left">
-            <Link to="/" className="lg:hidden inline-flex items-center gap-2 mb-6 sm:mb-8">
-              <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary flex items-center justify-center">
-                <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
+          {/* Mobile Header */}
+          <div className="lg:hidden flex flex-col items-center gap-4">
+            <Link to="/" className="flex items-center gap-2.5">
+              <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="font-display text-lg sm:text-xl font-bold">UPPLIN</span>
+              <span className="font-display text-xl font-bold text-foreground">UPPLIN</span>
             </Link>
-            <h2 className="font-display text-xl sm:text-2xl font-bold">Entrar na sua conta</h2>
-            <p className="text-sm sm:text-base text-muted-foreground mt-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-foreground text-sm font-medium">
+              <Ticket className="h-4 w-4" />
+              Participante
+            </div>
+          </div>
+
+          <div className="text-center lg:text-left space-y-2">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground">Entrar na sua conta</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Não tem conta?{" "}
               <Link to="/cadastro" className="text-primary hover:underline font-medium">Criar conta</Link>
             </p>
@@ -80,22 +92,46 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="seu@email.com" className="pl-10 h-11 sm:h-12 text-sm sm:text-base" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
+              <ValidatedInput 
+                id="email" 
+                type="email" 
+                placeholder="seu@email.com" 
+                className="h-11 sm:h-12 text-sm sm:text-base" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                required
+                icon={<Mail className="h-4 w-4" />}
+                validationRules={emailRules}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm">Senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type="password" placeholder="••••••••" className="pl-10 h-11 sm:h-12 text-sm sm:text-base" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              </div>
+              <ValidatedInput 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                className="h-11 sm:h-12 text-sm sm:text-base" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                required
+                icon={<Lock className="h-4 w-4" />}
+                validationRules={passwordRules}
+              />
             </div>
             <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
           </form>
+
+          <div className="text-center pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground mb-2">É organizador de eventos?</p>
+            <Link 
+              to="/organizador/login" 
+              className="text-sm font-medium text-primary hover:underline"
+            >
+              Entrar como organizador →
+            </Link>
+          </div>
         </div>
       </div>
     </div>

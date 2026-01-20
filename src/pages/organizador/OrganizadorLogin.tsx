@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Calendar, Mail, Lock, Loader2, Building2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ValidatedInput } from "@/components/ui/validated-input";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import { isValidEmail } from "@/lib/validation";
 
 export default function OrganizadorLogin() {
   const [email, setEmail] = useState("");
@@ -14,6 +16,9 @@ export default function OrganizadorLogin() {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const emailRules = useMemo(() => [{ test: isValidEmail }], []);
+  const passwordRules = useMemo(() => [{ test: (v: string) => v.length >= 1 }], []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,13 +37,51 @@ export default function OrganizadorLogin() {
     <div className="min-h-screen flex flex-col lg:flex-row">
       <div className="hidden lg:flex lg:w-1/2 bg-secondary items-center justify-center p-8 xl:p-12">
         <div className="max-w-md text-center text-secondary-foreground">
-          <div className="flex justify-center mb-6 sm:mb-8">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex justify-center mb-6 sm:mb-8"
+          >
             <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center">
               <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
             </div>
-          </div>
-          <h1 className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Portal do Organizador</h1>
-          <p className="text-sm sm:text-base text-secondary-foreground/70">Acesse sua área exclusiva para gerenciar eventos e vendas.</p>
+          </motion.div>
+          <motion.h1 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4"
+          >
+            Portal do Organizador
+          </motion.h1>
+          <motion.p 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-sm sm:text-base text-secondary-foreground/70"
+          >
+            Acesse sua área exclusiva para gerenciar eventos e vendas.
+          </motion.p>
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8 grid grid-cols-3 gap-4 text-center"
+          >
+            <div>
+              <div className="text-2xl font-bold">2M+</div>
+              <div className="text-xs text-secondary-foreground/60">Ingressos vendidos</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold">50k+</div>
+              <div className="text-xs text-secondary-foreground/60">Eventos</div>
+            </div>
+            <div>
+              <div className="text-2xl font-bold">99.9%</div>
+              <div className="text-xs text-secondary-foreground/60">Uptime</div>
+            </div>
+          </motion.div>
         </div>
       </div>
 
@@ -69,25 +112,43 @@ export default function OrganizadorLogin() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="seu@email.com" className="pl-10 h-11 sm:h-12 text-sm sm:text-base" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
+              <ValidatedInput 
+                id="email" 
+                type="email" 
+                placeholder="seu@email.com" 
+                className="h-11 sm:h-12 text-sm sm:text-base" 
+                value={email} 
+                onChange={(e) => setEmail(e.target.value)} 
+                required
+                icon={<Mail className="h-4 w-4" />}
+                validationRules={emailRules}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm">Senha</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type="password" placeholder="••••••••" className="pl-10 h-11 sm:h-12 text-sm sm:text-base" value={password} onChange={(e) => setPassword(e.target.value)} required />
-              </div>
+              <ValidatedInput 
+                id="password" 
+                type="password" 
+                placeholder="••••••••" 
+                className="h-11 sm:h-12 text-sm sm:text-base" 
+                value={password} 
+                onChange={(e) => setPassword(e.target.value)} 
+                required
+                icon={<Lock className="h-4 w-4" />}
+                validationRules={passwordRules}
+              />
             </div>
             <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
           </form>
 
-          <div className="text-center">
-            <Link to="/login" className="text-sm text-muted-foreground hover:text-primary">
+          <div className="text-center pt-4 border-t border-border">
+            <p className="text-sm text-muted-foreground mb-2">Quer comprar ingressos?</p>
+            <Link 
+              to="/login" 
+              className="text-sm font-medium text-primary hover:underline"
+            >
               Entrar como participante →
             </Link>
           </div>
