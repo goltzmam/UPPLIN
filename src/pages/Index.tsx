@@ -1,111 +1,76 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { EventCard } from "@/components/events/EventCard";
+import { FeedEventCard } from "@/components/events/FeedEventCard";
 import { 
   Search, 
   MapPin, 
-  Calendar, 
-  ChevronRight, 
-  Play,
-  Ticket,
-  BarChart3,
-  Shield,
-  Zap,
-  Users,
+  TrendingUp,
+  Sparkles,
   ArrowRight,
-  Star,
-  ChevronDown
+  Music,
+  PartyPopper,
+  Theater,
+  Trophy,
+  GraduationCap,
+  Utensils,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Premium Event Card with hover effects
-const PremiumEventCard = React.forwardRef<HTMLDivElement, { event: any; index: number }>(
-  ({ event, index }, ref) => {
+// Story-style category item
+function CategoryStory({ icon: Icon, name, color, href }: { 
+  icon: React.ElementType; 
+  name: string; 
+  color: string;
+  href: string;
+}) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-100px" }}
-      transition={{ duration: 0.6, delay: index * 0.1, ease: [0.4, 0, 0.2, 1] }}
-    >
-      <Link 
-        to={`/evento/${event.id}`}
-        className="group block relative overflow-hidden rounded-3xl bg-card"
-      >
-        <div className="aspect-[4/5] relative overflow-hidden">
-          {event.cover_image_url ? (
-            <img
-              src={event.cover_image_url}
-              alt={event.title}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-br from-primary/20 via-secondary/30 to-accent/20" />
-          )}
-          
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
-          
-          {/* Play button on hover */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            whileHover={{ opacity: 1, scale: 1 }}
-            className="absolute inset-0 flex items-center justify-center"
-          >
-            <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 transform group-hover:scale-100 scale-75">
-              <Play className="h-6 w-6 text-white ml-1" />
-            </div>
-          </motion.div>
-          
-          {/* Content */}
-          <div className="absolute bottom-0 left-0 right-0 p-6">
-            <div className="flex items-center gap-2 text-white/70 text-sm mb-3">
-              <Calendar className="h-4 w-4" />
-              <span>{new Date(event.start_at).toLocaleDateString('pt-BR', { 
-                day: 'numeric', 
-                month: 'short' 
-              })}</span>
-              {event.venue_name && (
-                <>
-                  <span>•</span>
-                  <MapPin className="h-4 w-4" />
-                  <span className="truncate">{event.venue_name}</span>
-                </>
-              )}
-            </div>
-            <h3 className="font-display text-xl font-bold text-white leading-tight line-clamp-2 group-hover:text-primary transition-colors duration-300">
-              {event.title}
-            </h3>
-          </div>
+    <Link to={href} className="flex flex-col items-center gap-2 shrink-0">
+      <div className="avatar-ring-gradient p-[2px] rounded-full">
+        <div className={cn(
+          "h-16 w-16 rounded-full flex items-center justify-center bg-background",
+          color
+        )}>
+          <Icon className="h-6 w-6" />
         </div>
-      </Link>
-    </motion.div>
+      </div>
+      <span className="text-xs font-medium text-center max-w-[70px] truncate">{name}</span>
+    </Link>
   );
-});
-PremiumEventCard.displayName = "PremiumEventCard";
+}
+
+// Trending section card
+function TrendingCard({ title, subtitle, image, href }: {
+  title: string;
+  subtitle: string;
+  image: string;
+  href: string;
+}) {
+  return (
+    <Link to={href} className="block relative rounded-2xl overflow-hidden aspect-[2/1] min-w-[280px]">
+      <img src={image} alt={title} className="absolute inset-0 h-full w-full object-cover" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+      <div className="absolute bottom-4 left-4 right-4">
+        <div className="flex items-center gap-2 text-white/70 text-xs mb-1">
+          <TrendingUp className="h-3 w-3" />
+          <span>{subtitle}</span>
+        </div>
+        <h3 className="font-display font-bold text-white">{title}</h3>
+      </div>
+    </Link>
+  );
+}
 
 export default function Index() {
   const [searchValue, setSearchValue] = useState("");
-  const [locationValue, setLocationValue] = useState("");
-  const [heroSearchVisible, setHeroSearchVisible] = useState(true);
   const navigate = useNavigate();
-  const heroRef = useRef<HTMLDivElement>(null);
-  
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"]
-  });
-  
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.1]);
-  const heroY = useTransform(scrollYProgress, [0, 0.5], [0, 100]);
 
   // Fetch events
   const { data: events = [], isLoading } = useQuery({
@@ -113,10 +78,13 @@ export default function Index() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select("*")
+        .select(`
+          *,
+          organizer:organizer_id(display_name, logo_url)
+        `)
         .eq("status", "published")
         .order("start_at", { ascending: true })
-        .limit(12);
+        .limit(20);
       if (error) throw error;
       return data || [];
     },
@@ -124,250 +92,139 @@ export default function Index() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams();
-    if (searchValue) params.set("q", searchValue);
-    if (locationValue) params.set("cidade", locationValue);
-    navigate(`/eventos?${params.toString()}`);
+    if (searchValue.trim()) {
+      navigate(`/eventos?q=${encodeURIComponent(searchValue.trim())}`);
+    }
   };
 
   const categories = [
-    { name: "Shows", emoji: "🎸", color: "from-pink-500 to-rose-500" },
-    { name: "Festas", emoji: "🎉", color: "from-purple-500 to-violet-500" },
-    { name: "Teatro", emoji: "🎭", color: "from-orange-500 to-amber-500" },
-    { name: "Esportes", emoji: "⚽", color: "from-green-500 to-emerald-500" },
-    { name: "Cursos", emoji: "📚", color: "from-blue-500 to-cyan-500" },
-    { name: "Gastronomia", emoji: "🍷", color: "from-red-500 to-pink-500" },
+    { name: "Shows", icon: Music, color: "text-pink-500", href: "/eventos?categoria=shows" },
+    { name: "Festas", icon: PartyPopper, color: "text-purple-500", href: "/eventos?categoria=festas" },
+    { name: "Teatro", icon: Theater, color: "text-orange-500", href: "/eventos?categoria=teatro" },
+    { name: "Esportes", icon: Trophy, color: "text-green-500", href: "/eventos?categoria=esportes" },
+    { name: "Cursos", icon: GraduationCap, color: "text-blue-500", href: "/eventos?categoria=cursos" },
+    { name: "Gastronomia", icon: Utensils, color: "text-red-500", href: "/eventos?categoria=gastronomia" },
   ];
 
-  const stats = [
-    { value: "2M+", label: "Ingressos vendidos" },
-    { value: "50k+", label: "Eventos realizados" },
-    { value: "98%", label: "Satisfação" },
-    { value: "24h", label: "Suporte" },
+  const trending = [
+    { 
+      title: "Festivais de Verão", 
+      subtitle: "Em alta agora", 
+      image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600&q=80",
+      href: "/eventos?categoria=festivais"
+    },
+    { 
+      title: "Shows Internacionais", 
+      subtitle: "Mais buscados", 
+      image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&q=80",
+      href: "/eventos?categoria=shows"
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
-      <Header showSearch onSearchVisible={(visible) => setHeroSearchVisible(!visible)} />
+    <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <Header />
 
-      <main>
-        {/* Hero Section - Fullscreen Cinematic */}
-        <section ref={heroRef} className="relative min-h-[100svh] flex items-center overflow-hidden">
-          {/* Background Video/Image */}
-          <motion.div 
-            style={{ scale: heroScale, y: heroY }}
-            className="absolute inset-0"
-          >
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?w=1920&q=80')] bg-cover bg-center" />
-            <div className="absolute inset-0 bg-gradient-to-b from-secondary/60 via-secondary/40 to-secondary" />
-            <div className="absolute inset-0 bg-gradient-to-r from-secondary/80 via-transparent to-transparent" />
-          </motion.div>
-
-          {/* Content */}
-          <motion.div 
-            style={{ opacity: heroOpacity }}
-            className="container relative z-10 pt-20 px-4"
-          >
-            <div className="max-w-4xl mx-auto text-center">
-              {/* Badge */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white/90 text-xs sm:text-sm mb-6 sm:mb-8"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-                </span>
-                <span className="hidden sm:inline">Mais de 2 milhões de ingressos vendidos</span>
-                <span className="sm:hidden">2M+ ingressos vendidos</span>
-              </motion.div>
-
-              {/* Headline */}
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
-                className="font-display text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold text-white leading-[0.95] tracking-tight mb-4 sm:mb-6"
-              >
-                Experiências
-                <br />
-                <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient">
-                  inesquecíveis
-                </span>
-              </motion.h1>
-
-              {/* Subheadline */}
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="text-base sm:text-xl md:text-2xl text-white/70 max-w-2xl mx-auto mb-8 sm:mb-12 px-4"
-              >
-                Descubra os melhores eventos do Brasil.
-                <span className="hidden sm:inline"><br />Shows, festas, conferências e muito mais.</span>
-              </motion.p>
-
-              {/* Search Bar - Hero Version */}
-              <AnimatePresence>
-                {heroSearchVisible && (
-                  <motion.form
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ delay: 0.6 }}
-                    onSubmit={handleSearch}
-                    className="relative max-w-3xl mx-auto px-2 sm:px-0"
-                  >
-                    <div className="flex flex-col gap-3 p-3 bg-white/10 backdrop-blur-xl rounded-2xl sm:rounded-3xl border border-white/20">
-                      {/* Mobile: Stacked layout */}
-                      <div className="flex flex-col sm:flex-row gap-3">
-                        <div className="flex-1 flex items-center gap-3 px-4 py-3 bg-white/10 rounded-xl sm:rounded-2xl">
-                          <Search className="h-5 w-5 text-white/60 flex-shrink-0" />
-                          <input
-                            type="text"
-                            placeholder="Buscar eventos..."
-                            value={searchValue}
-                            onChange={(e) => setSearchValue(e.target.value)}
-                            className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/50 text-sm sm:text-base min-w-0"
-                          />
-                        </div>
-                        <div className="flex items-center gap-3 px-4 py-3 bg-white/10 rounded-xl sm:rounded-2xl sm:w-48">
-                          <MapPin className="h-5 w-5 text-white/60 flex-shrink-0" />
-                          <input
-                            type="text"
-                            placeholder="Localização"
-                            value={locationValue}
-                            onChange={(e) => setLocationValue(e.target.value)}
-                            className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-white/50 text-sm sm:text-base min-w-0"
-                          />
-                        </div>
-                      </div>
-                      <Button 
-                        type="submit" 
-                        size="lg" 
-                        className="rounded-xl sm:rounded-2xl h-12 sm:h-14 px-8 bg-primary hover:bg-primary/90 text-base sm:text-lg font-semibold w-full sm:w-auto"
-                      >
-                        Buscar
-                      </Button>
-                    </div>
-                  </motion.form>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-
-          {/* Scroll Indicator */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.5 }}
-            className="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/50"
-          >
-            <span className="text-xs sm:text-sm">Role para explorar</span>
-            <motion.div
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-            >
-              <ChevronDown className="h-5 w-5" />
-            </motion.div>
-          </motion.div>
-        </section>
-
-        {/* Categories - Horizontal Scroll */}
-        <section className="py-12 sm:py-20 bg-background">
-          <div className="container px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-10"
-            >
-              <div>
-                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
-                  Explore por categoria
-                </h2>
-                <p className="text-muted-foreground text-sm sm:text-lg">
-                  Encontre exatamente o que você procura
-                </p>
+      <main className="pt-14">
+        {/* Search Bar - Sticky */}
+        <div className="sticky top-14 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 py-3">
+          <div className="container">
+            <form onSubmit={handleSearch} className="flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-3 bg-muted rounded-full px-4 py-2.5">
+                <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Buscar eventos, artistas..."
+                  value={searchValue}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
+                />
               </div>
-            </motion.div>
+              <Button 
+                type="button"
+                variant="outline" 
+                size="icon"
+                className="rounded-full shrink-0"
+                onClick={() => navigate("/eventos")}
+              >
+                <MapPin className="h-5 w-5" />
+              </Button>
+            </form>
+          </div>
+        </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-              {categories.map((cat, index) => (
-                <motion.div
-                  key={cat.name}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Link
-                    to={`/eventos?categoria=${cat.name.toLowerCase()}`}
-                    className="group block relative overflow-hidden rounded-2xl sm:rounded-3xl aspect-square"
-                  >
-                    <div className={cn(
-                      "absolute inset-0 bg-gradient-to-br opacity-90 group-hover:opacity-100 transition-opacity",
-                      cat.color
-                    )} />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-2">
-                      <span className="text-3xl sm:text-5xl mb-2 sm:mb-3 group-hover:scale-125 transition-transform duration-300">
-                        {cat.emoji}
-                      </span>
-                      <span className="font-semibold text-xs sm:text-lg text-center">{cat.name}</span>
-                    </div>
-                  </Link>
-                </motion.div>
+        {/* Categories - Stories Style */}
+        <section className="py-4 border-b border-border/50">
+          <div className="container">
+            <div className="flex gap-4 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4">
+              {categories.map((cat) => (
+                <CategoryStory key={cat.name} {...cat} />
               ))}
             </div>
           </div>
         </section>
 
-        {/* Featured Events */}
-        <section className="py-12 sm:py-20 bg-muted/30">
-          <div className="container px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8 sm:mb-10"
-            >
-              <div>
-                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
-                  Em destaque
-                </h2>
-                <p className="text-muted-foreground text-sm sm:text-lg">
-                  Os eventos mais aguardados do momento
-                </p>
+        {/* Trending Section */}
+        <section className="py-6">
+          <div className="container">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-accent" />
+                <h2 className="font-display text-lg font-bold">Em Alta</h2>
               </div>
-              <Link 
-                to="/eventos" 
-                className="hidden sm:flex items-center gap-2 text-primary font-medium hover:gap-3 transition-all"
-              >
+              <Link to="/eventos" className="text-sm text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors">
                 Ver todos
-                <ArrowRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" />
               </Link>
-            </motion.div>
+            </div>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4">
+              {trending.map((item) => (
+                <TrendingCard key={item.title} {...item} />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Feed Section - TikTok Style */}
+        <section className="py-6">
+          <div className="container">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-lg font-bold">Para Você</h2>
+              <Button variant="ghost" size="sm" className="text-muted-foreground text-sm">
+                Seguindo
+              </Button>
+            </div>
 
             {isLoading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="rounded-2xl sm:rounded-3xl bg-card animate-pulse aspect-[4/5]" />
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="feed-card animate-pulse bg-muted" />
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {events.slice(0, 8).map((event, index) => (
-                  <PremiumEventCard key={event.id} event={event} index={index} />
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {events.map((event: any, index: number) => (
+                  <FeedEventCard
+                    key={event.id}
+                    id={event.id}
+                    title={event.title}
+                    coverImageUrl={event.cover_image_url}
+                    startAt={event.start_at}
+                    venueName={event.venue_name}
+                    addressText={event.address_text}
+                    organizerName={event.organizer?.display_name}
+                    organizerAvatar={event.organizer?.logo_url}
+                    index={index}
+                  />
                 ))}
               </div>
             )}
 
-            <div className="flex justify-center mt-8 sm:mt-10 sm:hidden">
-              <Button asChild variant="outline" size="lg" className="rounded-full w-full max-w-xs">
+            {/* Load more */}
+            <div className="flex justify-center mt-8">
+              <Button variant="outline" size="lg" className="rounded-full" asChild>
                 <Link to="/eventos">
-                  Ver todos os eventos
+                  Ver mais eventos
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
               </Button>
@@ -375,137 +232,29 @@ export default function Index() {
           </div>
         </section>
 
-        {/* Stats Section */}
-        <section className="py-12 sm:py-20 bg-secondary text-secondary-foreground">
-          <div className="container px-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 md:gap-4">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: index * 0.1 }}
-                  className="text-center"
-                >
-                  <div className="font-display text-2xl sm:text-4xl md:text-5xl font-bold mb-1 sm:mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                    {stat.value}
-                  </div>
-                  <div className="text-xs sm:text-sm md:text-base text-secondary-foreground/70">{stat.label}</div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* For Organizers CTA */}
-        <section className="py-16 sm:py-32 relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5" />
-          
-          <div className="container relative px-4">
-            <div className="max-w-4xl mx-auto text-center">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-              >
-                <span className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-medium mb-4 sm:mb-6">
-                  Para Organizadores
-                </span>
-                <h2 className="font-display text-2xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
-                  Crie eventos extraordinários
-                </h2>
-                <p className="text-base sm:text-xl text-muted-foreground mb-6 sm:mb-10 max-w-2xl mx-auto px-4">
-                  A plataforma completa para vender ingressos, gerenciar participantes e criar experiências memoráveis.
-                </p>
-
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 mb-8 sm:mb-12">
-                  {[
-                    { icon: Ticket, label: "Venda Ilimitada" },
-                    { icon: BarChart3, label: "Analytics" },
-                    { icon: Shield, label: "Anti-fraude" },
-                    { icon: Zap, label: "Pagamento 24h" },
-                  ].map((feature, index) => (
-                    <motion.div
-                      key={feature.label}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: index * 0.1 }}
-                      className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-6 rounded-xl sm:rounded-2xl bg-card border border-border"
-                    >
-                      <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg sm:rounded-xl bg-primary/10 flex items-center justify-center">
-                        <feature.icon className="h-5 w-5 sm:h-6 sm:w-6 text-primary" />
-                      </div>
-                      <span className="font-medium text-xs sm:text-base">{feature.label}</span>
-                    </motion.div>
-                  ))}
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center px-4">
-                  <Button asChild size="lg" className="rounded-full text-sm sm:text-lg">
-                    <Link to="/cadastro">
-                      Começar grátis
-                      <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg" className="rounded-full text-sm sm:text-lg">
-                    <Link to="/precos">Ver preços</Link>
-                  </Button>
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* Testimonial */}
-        <section className="py-12 sm:py-20 bg-muted/30">
-          <div className="container px-4">
+        {/* CTA for Organizers */}
+        <section className="py-12 bg-foreground text-background">
+          <div className="container text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="max-w-4xl mx-auto text-center"
+              className="max-w-lg mx-auto"
             >
-              <div className="flex justify-center gap-1 mb-4 sm:mb-6">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="h-5 w-5 sm:h-6 sm:w-6 fill-primary text-primary" />
-                ))}
-              </div>
-              <blockquote className="font-display text-lg sm:text-2xl md:text-3xl font-medium mb-4 sm:mb-6 leading-relaxed px-4">
-                "A Influente revolucionou a forma como organizamos nossos eventos. 
-                Simples, rápida e extremamente confiável."
-              </blockquote>
-              <div className="flex items-center justify-center gap-3 sm:gap-4">
-                <div className="h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-gradient-to-br from-primary to-accent" />
-                <div className="text-left">
-                  <div className="font-semibold text-sm sm:text-base">Maria Silva</div>
-                  <div className="text-xs sm:text-sm text-muted-foreground">Produtora, Festival XYZ</div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Final CTA */}
-        <section className="py-16 sm:py-32 bg-secondary text-secondary-foreground">
-          <div className="container px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="max-w-3xl mx-auto text-center"
-            >
-              <h2 className="font-display text-2xl sm:text-4xl md:text-6xl font-bold mb-4 sm:mb-6">
-                Pronto para começar?
+              <h2 className="font-display text-2xl sm:text-3xl font-bold mb-3">
+                Crie seu evento
               </h2>
-              <p className="text-base sm:text-xl text-secondary-foreground/70 mb-6 sm:mb-10 px-4">
-                Junte-se a milhares de organizadores que confiam na Influente
+              <p className="text-background/70 mb-6">
+                Venda ingressos e alcance milhares de pessoas. Comece grátis.
               </p>
-              <Button asChild size="lg" variant="hero" className="rounded-full text-sm sm:text-lg">
-                <Link to="/cadastro">
-                  Criar conta grátis
-                  <ArrowRight className="h-4 w-4 sm:h-5 sm:w-5 ml-2" />
+              <Button 
+                size="lg" 
+                className="rounded-full bg-background text-foreground hover:bg-background/90"
+                asChild
+              >
+                <Link to="/organizador/cadastro">
+                  Começar agora
+                  <ArrowRight className="h-4 w-4 ml-2" />
                 </Link>
               </Button>
             </motion.div>
@@ -514,6 +263,7 @@ export default function Index() {
       </main>
 
       <Footer />
+      <BottomNav />
     </div>
   );
 }
