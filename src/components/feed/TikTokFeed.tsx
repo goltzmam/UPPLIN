@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X } from "lucide-react";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Volume2, VolumeX } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -13,6 +13,32 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FeedSkeleton } from "./FeedSkeleton";
+
+// Throttle utility for scroll performance
+function throttle<T extends (...args: any[]) => void>(fn: T, wait: number): T {
+  let lastTime = 0;
+  let timeoutId: ReturnType<typeof setTimeout> | null = null;
+  
+  return ((...args: Parameters<T>) => {
+    const now = Date.now();
+    const remaining = wait - (now - lastTime);
+    
+    if (remaining <= 0) {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      lastTime = now;
+      fn(...args);
+    } else if (!timeoutId) {
+      timeoutId = setTimeout(() => {
+        lastTime = Date.now();
+        timeoutId = null;
+        fn(...args);
+      }, remaining);
+    }
+  }) as T;
+}
 
 interface TikTokFeedItem {
   id: string;
@@ -295,18 +321,32 @@ const FeedRow = React.memo(function FeedRow({
   }, [isSaved, toggleSave]);
 
   return (
-    <div style={style} className="snap-start snap-always" onDoubleClick={handleDoubleTap} onClick={() => item.videoUrl && setIsPaused(p => !p)}>
+    <div 
+      style={style} 
+      className="snap-start snap-always" 
+      onDoubleClick={handleDoubleTap} 
+      onClick={() => item.videoUrl && !videoError && setIsPaused(p => !p)}
+    >
       <div className="relative w-full h-full">
-        <div className="absolute inset-0 will-change-transform" style={{ contain: 'strict' }}>
+        {/* GPU-accelerated media container */}
+        <div 
+          className="absolute inset-0" 
+          style={{ 
+            contain: 'strict',
+            transform: 'translateZ(0)',
+            willChange: isActive ? 'auto' : 'transform',
+          }}
+        >
           {item.videoUrl && !videoError ? (
             <>
-              {/* Always show cover as background for faster perceived load */}
+              {/* Cover image as instant background */}
               {item.coverImageUrl && (
                 <img 
                   src={item.coverImageUrl} 
                   alt="" 
                   className="absolute inset-0 h-full w-full object-cover" 
                   loading="eager"
+                  decoding="async"
                   aria-hidden="true"
                 />
               )}
@@ -323,18 +363,25 @@ const FeedRow = React.memo(function FeedRow({
                 onLoadedData={() => { setVideoLoaded(true); setVideoError(false); }}
                 onError={() => { setVideoError(true); setVideoLoaded(false); }}
                 className={cn(
-                  "absolute inset-0 h-full w-full object-cover transition-opacity duration-300",
+                  "absolute inset-0 h-full w-full object-cover",
                   videoLoaded ? "opacity-100" : "opacity-0"
                 )}
                 style={{ 
                   transform: 'translateZ(0)', 
                   backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden'
+                  WebkitBackfaceVisibility: 'hidden',
+                  transition: 'opacity 200ms ease-out',
                 }}
               />
             </>
           ) : item.coverImageUrl ? (
-            <img src={item.coverImageUrl} alt={item.title} className="absolute inset-0 h-full w-full object-cover" loading={isActive || shouldPreload ? "eager" : "lazy"} />
+            <img 
+              src={item.coverImageUrl} 
+              alt={item.title} 
+              className="absolute inset-0 h-full w-full object-cover" 
+              loading={isActive || shouldPreload ? "eager" : "lazy"} 
+              decoding="async"
+            />
           ) : (
             <div className="absolute inset-0 h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
           )}
@@ -427,6 +474,25 @@ const FeedRow = React.memo(function FeedRow({
           </div>
         </div>
 
+        {/* Mute/Unmute button - visible tap target for iOS audio unlock */}
+        {item.videoUrl && !videoError && (
+          <button
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              onToggleMute();
+              triggerFeedback({ haptic: "light" });
+            }}
+            className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] right-3 z-20 h-10 w-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10"
+            aria-label={isMuted ? "Ativar som" : "Desativar som"}
+          >
+            {isMuted ? (
+              <VolumeX className="h-5 w-5 text-white" />
+            ) : (
+              <Volume2 className="h-5 w-5 text-white" />
+            )}
+          </button>
+        )}
+
         <Drawer open={showComments} onOpenChange={setShowComments}>
           <DrawerContent className="max-h-[85vh]">
             <DrawerHeader className="border-b border-border">
@@ -482,8 +548,11 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     } catch {}
   }, [activeIndex, onScrollChange]);
 
-  // Native scroll handler with snap detection
-  const handleScroll = useCallback(() => {
+  // Track previous index to avoid redundant haptics
+  const prevIndexRef = useRef(activeIndex);
+
+  // Optimized scroll handler - throttled for performance
+  const handleScrollRaw = useCallback(() => {
     const container = containerRef.current;
     if (!container || containerHeight === 0) return;
 
@@ -491,8 +560,15 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     const newIndex = Math.round(scrollTop / containerHeight);
     
     if (newIndex !== activeIndex && newIndex >= 0 && newIndex < items.length) {
+      // Only trigger haptic when actually changing to a new index
+      if (newIndex !== prevIndexRef.current) {
+        prevIndexRef.current = newIndex;
+        // Minimal haptic - only on actual snap, not during scroll
+        requestAnimationFrame(() => {
+          triggerFeedback({ haptic: "selection" });
+        });
+      }
       setActiveIndex(newIndex);
-      triggerFeedback({ haptic: "light" });
     }
 
     // Load more when approaching end
@@ -502,6 +578,12 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
     lastScrollTop.current = scrollTop;
   }, [containerHeight, activeIndex, items.length, hasMore, isLoadingMore, onLoadMore]);
+
+  // Throttled version of scroll handler - 60fps max (16ms)
+  const handleScroll = useMemo(
+    () => throttle(handleScrollRaw, 16),
+    [handleScrollRaw]
+  );
 
   // Touch handlers for pull-to-refresh
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -592,7 +674,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
         </div>
       )}
 
-      {/* Native scroll container with CSS snap */}
+      {/* Native scroll container with CSS snap - GPU accelerated */}
       <div
         ref={containerRef}
         onScroll={handleScroll}
@@ -603,6 +685,9 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
         style={{
           scrollSnapType: 'y mandatory',
           WebkitOverflowScrolling: 'touch',
+          transform: 'translateZ(0)',
+          willChange: 'scroll-position',
+          contain: 'layout style paint',
         }}
       >
         {items.map((item, index) => {
