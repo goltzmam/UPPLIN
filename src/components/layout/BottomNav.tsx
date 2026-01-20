@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Heart, User, Plus } from "lucide-react";
+import { Home, Search, Bookmark, User, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
@@ -7,11 +7,11 @@ import { triggerHaptic } from "@/hooks/use-haptic";
 
 interface NavItem {
   icon: React.ElementType;
-  activeIcon?: React.ElementType;
   label: string;
   path: string;
   requiresAuth?: boolean;
   isCreate?: boolean;
+  fillOnActive?: boolean;
 }
 
 export function BottomNav() {
@@ -19,11 +19,11 @@ export function BottomNav() {
   const { user } = useAuth();
 
   const navItems: NavItem[] = [
-    { icon: Home, label: "Início", path: "/" },
-    { icon: Search, label: "Explorar", path: "/eventos" },
+    { icon: Home, label: "Início", path: "/", fillOnActive: true },
+    { icon: Search, label: "Explorar", path: "/eventos", fillOnActive: false },
     { icon: Plus, label: "Criar", path: "/organizador/cadastro", isCreate: true },
-    { icon: Heart, label: "Salvos", path: "/eventos-salvos", requiresAuth: true },
-    { icon: User, label: "Perfil", path: user ? "/perfil" : "/login" },
+    { icon: Bookmark, label: "Salvos", path: "/eventos-salvos", requiresAuth: true, fillOnActive: true },
+    { icon: User, label: "Perfil", path: user ? "/perfil" : "/login", fillOnActive: true },
   ];
 
   // Only hide on checkout, organizer dashboard, and admin pages
@@ -110,7 +110,7 @@ export function BottomNav() {
                     <Icon 
                       className={cn(
                         "h-6 w-6 transition-all duration-200",
-                        isActive && "fill-current"
+                        isActive && item.fillOnActive && "fill-current"
                       )} 
                       strokeWidth={isActive ? 2.5 : 1.5}
                     />
