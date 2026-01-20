@@ -17,8 +17,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "pwa-192x192.png", "pwa-512x512.png"],
       manifest: {
-        name: "INFLUENTE - Descubra Eventos",
-        short_name: "INFLUENTE",
+        name: "UPPLIN - Descubra Eventos",
+        short_name: "UPPLIN",
         description: "Descubra os melhores eventos do Brasil. Shows, festas, conferências e muito mais.",
         theme_color: "#000000",
         background_color: "#000000",

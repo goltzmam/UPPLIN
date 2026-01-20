@@ -80,7 +80,7 @@ const emailTemplates = {
             </p>
           </div>
           <div class="footer">
-            <p>Influente Eventos - A melhor experiência em eventos</p>
+            <p>UPPLIN - A melhor experiência em eventos</p>
             <p>Este é um email automático, por favor não responda.</p>
           </div>
         </div>
@@ -129,7 +129,7 @@ const emailTemplates = {
             </ul>
           </div>
           <div class="footer">
-            <p>Influente Eventos</p>
+            <p>UPPLIN</p>
           </div>
         </div>
       </body>
@@ -164,7 +164,7 @@ const emailTemplates = {
             <p>Se você não solicitou este cancelamento ou tem dúvidas, entre em contato conosco.</p>
           </div>
           <div class="footer">
-            <p>Influente Eventos</p>
+            <p>UPPLIN</p>
           </div>
         </div>
       </body>
@@ -200,7 +200,7 @@ const handler = async (req: Request): Promise<Response> => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "Influente <noreply@resend.dev>",
+        from: "UPPLIN <noreply@resend.dev>",
         to: [to],
         subject,
         html,

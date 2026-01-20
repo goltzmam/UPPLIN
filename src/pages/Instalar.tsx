@@ -111,7 +111,7 @@ export default function Instalar() {
               </div>
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-foreground mb-6">
-                INFLUENTE no seu{" "}
+                UPPLIN no seu{" "}
                 <span className="text-primary">bolso</span>
               </h1>
 

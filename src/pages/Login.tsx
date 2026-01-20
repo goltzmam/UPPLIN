@@ -56,7 +56,7 @@ export default function Login() {
               <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary flex items-center justify-center">
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
               </div>
-              <span className="font-display text-lg sm:text-xl font-bold">Influente</span>
+              <span className="font-display text-lg sm:text-xl font-bold">UPPLIN</span>
             </Link>
             <h2 className="font-display text-xl sm:text-2xl font-bold">Entrar na sua conta</h2>
             <p className="text-sm sm:text-base text-muted-foreground mt-2">

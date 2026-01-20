@@ -57,7 +57,7 @@ export function AdminLayout() {
               <Shield className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
-              <span className="font-display text-lg font-bold">Influente</span>
+              <span className="font-display text-lg font-bold">UPPLIN</span>
               <p className="text-xs text-muted-foreground">Admin Panel</p>
             </div>
           </Link>
