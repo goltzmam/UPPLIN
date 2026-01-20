@@ -379,7 +379,7 @@ const FeedRow = React.memo(function FeedRow({
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 pb-5 z-10">
+        <div className="absolute bottom-0 left-0 right-0 p-4 pb-[calc(var(--app-bottom-offset,72px)+12px)] z-10">
           <div className="flex items-end gap-4">
             <div className="flex-1 min-w-0 pr-4">
               <Link to={`/evento/${item.id}`} onClick={(e) => e.stopPropagation()} className="block">

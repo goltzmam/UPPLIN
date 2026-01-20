@@ -39,11 +39,8 @@ export function BottomNav() {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden pointer-events-none"
     >
-      {/* TikTok-style overlay: dark gradient over video (no solid bar) */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* No blur here (blur can turn into a white/gray bar on light pages). */}
-        <div className="absolute inset-0 bg-gradient-to-t from-video-overlay/90 via-video-overlay/40 to-transparent" />
-      </div>
+      {/* TikTok-style bar: dark translucent so icons are always readable */}
+      <div className="absolute inset-0 pointer-events-none bg-video-overlay/70 border-t border-primary-foreground/10" />
 
       {/* Content - pointer events only on children */}
       <div className="relative px-3 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+10px)] pointer-events-auto">
@@ -61,20 +58,25 @@ export function BottomNav() {
                   key={item.path}
                   to={item.path}
                   onClick={() => triggerHaptic('medium')}
-                  className="relative flex items-center justify-center -mt-5"
+                  className="relative flex items-center justify-center -mt-4"
                 >
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.92 }}
                     className="relative"
                   >
-                    {/* Pill button (TikTok-like) */}
-                    <div className="relative h-11 w-[70px] rounded-2xl overflow-hidden shadow-xl">
-                      <div className="absolute inset-y-0 left-0 w-4 bg-accent" />
-                      <div className="absolute inset-y-0 right-0 w-4 bg-destructive" />
-                      <div className="absolute inset-0 mx-2 rounded-2xl bg-primary-foreground flex items-center justify-center">
-                        <Plus className="h-6 w-6 text-primary" strokeWidth={3} />
-                      </div>
+                    {/* Original circular gradient button */}
+                    <div
+                      aria-hidden="true"
+                      className="absolute inset-0 rounded-full blur-xl opacity-70 shadow-glow"
+                      style={{ backgroundImage: "var(--gradient-social)" }}
+                    />
+
+                    <div
+                      className="relative rounded-full p-4 shadow-xl"
+                      style={{ backgroundImage: "var(--gradient-social)" }}
+                    >
+                      <Plus className="h-6 w-6 text-primary-foreground" strokeWidth={3} />
                     </div>
                   </motion.div>
                 </Link>
@@ -112,6 +114,15 @@ export function BottomNav() {
                 >
                   {item.label}
                 </span>
+
+                {/* Active dot */}
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "mt-1 h-1 w-1 rounded-full transition-opacity",
+                    isActive ? "bg-primary-foreground opacity-100" : "opacity-0"
+                  )}
+                />
               </Link>
             );
           })}
