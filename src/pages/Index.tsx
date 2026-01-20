@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -122,10 +122,11 @@ export default function Index() {
 
   // Pull to refresh handler
   const handleRefresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: ["homepage-events"] });
+    // Reset infinite feed pages
+    await queryClient.removeQueries({ queryKey: ["homepage-events-infinite"] });
     await queryClient.invalidateQueries({ queryKey: ["featured-events"] });
     // Small delay for visual feedback
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }, [queryClient]);
 
   const trending = [
@@ -177,17 +178,17 @@ export default function Index() {
       <PullToRefresh onRefresh={handleRefresh}>
         <main className="pt-[calc(3.5rem+3.5rem)]"> {/* Header (56px) + Search bar (56px) */}
           {/* Featured Stories - Instagram-style with gradient rings */}
-          <section className="border-b border-border/30">
+          <section className="hidden md:block border-b border-border/30">
             <FeaturedStories />
           </section>
 
         {/* Categories - Pill-style chips */}
-        <section className="border-b border-border/30">
+        <section className="hidden md:block border-b border-border/30">
           <CategoriesCarousel />
         </section>
 
         {/* Trending Section */}
-        <section className="py-6">
+        <section className="hidden md:block py-6">
           <div className="container">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
@@ -209,9 +210,9 @@ export default function Index() {
 
         {/* Feed Section - TikTok Style with Tabs */}
         <section>
-          <div className="container">
+          <div className="md:container">
             {/* Tab Navigation */}
-            <div className="flex items-center justify-center gap-6 border-b border-border">
+            <div className="sticky top-[112px] z-30 flex items-center justify-center gap-6 border-b border-border bg-background/80 backdrop-blur-xl px-4 md:px-0">
               <button
                 onClick={() => setActiveTab("foryou")}
                 className={cn(
@@ -236,76 +237,92 @@ export default function Index() {
               </button>
             </div>
 
-            {activeTab === "foryou" ? (
-              <>
-                {/* TikTok-style vertical feed on mobile */}
-                <div className="md:hidden -mx-4">
-                  <TikTokFeed 
-                    items={feedItems} 
-                    isLoading={isLoading} 
-                    onLoadMore={fetchNextPage}
-                    hasMore={!!hasNextPage}
-                    isLoadingMore={isFetchingNextPage}
-                  />
-                </div>
-
-                {/* Grid layout on desktop */}
-                <div className="hidden md:block">
-                  {isLoading ? (
-                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="feed-card animate-pulse bg-muted" />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {feedItems.map((item, index) => (
-                        <motion.div
-                          key={item.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="feed-card group"
-                        >
-                          <Link to={`/evento/${item.id}`} className="block h-full">
-                            <div className="absolute inset-0">
-                              {item.coverImageUrl ? (
-                                <img
-                                  src={item.coverImageUrl}
-                                  alt={item.title}
-                                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                />
-                              ) : (
-                                <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
-                              )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                            </div>
-                            <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-                              <h3 className="font-display text-lg font-bold text-white leading-tight line-clamp-2 mb-1">
-                                {item.title}
-                              </h3>
-                              <p className="text-white/70 text-sm">{item.organizerName}</p>
-                            </div>
-                          </Link>
-                        </motion.div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Load more */}
-                  <div className="flex justify-center mt-8">
-                    <Button variant="outline" size="lg" className="rounded-full" asChild>
-                      <Link to="/eventos">
-                        Ver mais eventos
-                        <ArrowRight className="h-4 w-4 ml-2" />
-                      </Link>
-                    </Button>
+            <AnimatePresence mode="wait" initial={false}>
+              {activeTab === "foryou" ? (
+                <motion.div
+                  key="foryou"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  {/* TikTok-style vertical feed on mobile */}
+                  <div className="md:hidden">
+                    <TikTokFeed
+                      items={feedItems}
+                      isLoading={isLoading}
+                      onLoadMore={fetchNextPage}
+                      hasMore={!!hasNextPage}
+                      isLoadingMore={isFetchingNextPage}
+                    />
                   </div>
-                </div>
-              </>
-            ) : (
-              <FollowingFeed />
-            )}
+
+                  {/* Grid layout on desktop */}
+                  <div className="hidden md:block">
+                    {isLoading ? (
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {[1, 2, 3, 4, 5, 6].map((i) => (
+                          <div key={i} className="feed-card animate-pulse bg-muted" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                        {feedItems.map((item, index) => (
+                          <motion.div
+                            key={item.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            className="feed-card group"
+                          >
+                            <Link to={`/evento/${item.id}`} className="block h-full">
+                              <div className="absolute inset-0">
+                                {item.coverImageUrl ? (
+                                  <img
+                                    src={item.coverImageUrl}
+                                    alt={item.title}
+                                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                  />
+                                ) : (
+                                  <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                              </div>
+                              <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
+                                <h3 className="font-display text-lg font-bold text-white leading-tight line-clamp-2 mb-1">
+                                  {item.title}
+                                </h3>
+                                <p className="text-white/70 text-sm">{item.organizerName}</p>
+                              </div>
+                            </Link>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Load more */}
+                    <div className="flex justify-center mt-8">
+                      <Button variant="outline" size="lg" className="rounded-full" asChild>
+                        <Link to="/eventos">
+                          Ver mais eventos
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="following"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <FollowingFeed />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </section>
 
