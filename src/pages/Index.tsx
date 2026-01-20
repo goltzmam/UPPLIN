@@ -51,10 +51,13 @@ export default function Index() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  // Desktop-only: Fetch events for grid display
-  const { 
-    data, 
-    isLoading, 
+  // Desktop + Mobile: Fetch events for feed/grid display
+  const {
+    data,
+    isLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ["homepage-events-infinite"],
     queryFn: async ({ pageParam = 0 }) => {
@@ -87,18 +90,34 @@ export default function Index() {
   // Flatten all pages into one array (for desktop grid)
   const events = data?.pages.flatMap(page => page.data) || [];
 
-  // Transform events for desktop grid
-  const feedItems = events.map((event: any) => {
+  // Transform events for feed/grid
+  const DEMO_VIDEO_URLS = [
+    // Vertical demo videos (DEV only)
+    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4",
+    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/river.mp4",
+    "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/bee.mp4",
+  ];
+
+  const DEMO_COVER_URLS = [
+    "https://images.unsplash.com/photo-1521337706264-a414f153a5fc?w=1200&q=80",
+    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&q=80",
+    "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&q=80",
+  ];
+
+  const feedItems = events.map((event: any, index: number) => {
     const videoMedia = event.event_media?.find((m: any) => m.type === "video");
     const minPrice = event.ticket_types?.length > 0
       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
       : 0;
 
+    const demoVideo = import.meta.env.DEV ? DEMO_VIDEO_URLS[index % DEMO_VIDEO_URLS.length] : null;
+    const demoCover = import.meta.env.DEV ? DEMO_COVER_URLS[index % DEMO_COVER_URLS.length] : null;
+
     return {
       id: event.id,
       title: event.title,
-      coverImageUrl: event.cover_image_url,
-      videoUrl: videoMedia?.url || null,
+      coverImageUrl: event.cover_image_url || demoCover,
+      videoUrl: videoMedia?.url || demoVideo,
       startAt: event.start_at,
       endAt: event.end_at,
       venueName: event.venue_name,
@@ -153,8 +172,12 @@ export default function Index() {
               <TikTokFeed
                 items={feedItems}
                 isLoading={isLoading}
+                onLoadMore={fetchNextPage}
+                hasMore={!!hasNextPage}
+                isLoadingMore={isFetchingNextPage}
                 scrollPosition={scrollPos}
                 onScrollChange={setScrollPos}
+                onRefresh={handleRefresh}
               />
             </motion.div>
           ) : (

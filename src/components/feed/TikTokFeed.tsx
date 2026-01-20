@@ -32,6 +32,7 @@ interface TikTokFeedProps {
   isLoadingMore?: boolean;
   scrollPosition?: number;
   onScrollChange?: (position: number) => void;
+  onRefresh?: () => Promise<void>;
 }
 
 // Height calculation constant for consistency
@@ -358,18 +359,27 @@ function FeedCard({
   );
 }
 
-export function TikTokFeed({ 
-  items, 
-  isLoading, 
-  onLoadMore, 
-  hasMore, 
+export function TikTokFeed({
+  items,
+  isLoading,
+  onLoadMore,
+  hasMore,
   isLoadingMore,
   scrollPosition = 0,
-  onScrollChange 
+  onScrollChange,
+  onRefresh,
 }: TikTokFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
+  const scrollRafRef = useRef<number | null>(null);
+
   const [isMuted, setIsMuted] = useState(true);
+
+  // Pull-to-refresh (only affects when user is at the very top of the feed)
+  const [pullDistance, setPullDistance] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pullStartYRef = useRef(0);
 
   // Restore scroll position when mounting
   useEffect(() => {
@@ -378,39 +388,92 @@ export function TikTokFeed({
     }
   }, []);
 
-  // Handle scroll to detect active item and load more
   const handleScroll = useCallback(() => {
     if (!containerRef.current) return;
 
-    const container = containerRef.current;
-    const scrollTop = container.scrollTop;
-    const itemHeight = container.clientHeight;
-    const scrollHeight = container.scrollHeight;
-    const newIndex = Math.round(scrollTop / itemHeight);
+    if (scrollRafRef.current) return;
+    scrollRafRef.current = window.requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      if (!containerRef.current) return;
 
-    if (newIndex !== activeIndex && newIndex >= 0 && newIndex < items.length) {
-      // Trigger haptic feedback when changing videos
-      triggerFeedback({ haptic: "light" });
-      setActiveIndex(newIndex);
+      const container = containerRef.current;
+      const scrollTop = container.scrollTop;
+      const itemHeight = container.clientHeight;
+      const scrollHeight = container.scrollHeight;
+      const newIndex = Math.round(scrollTop / itemHeight);
+
+      if (newIndex !== activeIndexRef.current && newIndex >= 0 && newIndex < items.length) {
+        activeIndexRef.current = newIndex;
+        triggerFeedback({ haptic: "light" });
+        setActiveIndex(newIndex);
+      }
+
+      onScrollChange?.(scrollTop);
+
+      const nearBottom = scrollTop + itemHeight * 2 >= scrollHeight - itemHeight;
+      if (nearBottom && hasMore && !isLoadingMore && onLoadMore) {
+        onLoadMore();
+      }
+    });
+  }, [items.length, hasMore, isLoadingMore, onLoadMore, onScrollChange]);
+
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (!onRefresh || isRefreshing) return;
+      const container = containerRef.current;
+      if (!container) return;
+      if (container.scrollTop === 0) {
+        pullStartYRef.current = e.touches[0].clientY;
+      }
+    },
+    [onRefresh, isRefreshing]
+  );
+
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!onRefresh || isRefreshing) return;
+      const container = containerRef.current;
+      if (!container) return;
+      if (container.scrollTop !== 0) return;
+
+      const currentY = e.touches[0].clientY;
+      const diff = currentY - pullStartYRef.current;
+      if (diff <= 0) return;
+
+      // Apply resistance, cap max pull
+      const distance = Math.min(diff * 0.35, 90);
+      setPullDistance(distance);
+
+      // Prevent the iOS rubber-band from fighting with our pull indicator
+      if (distance > 10) e.preventDefault();
+    },
+    [onRefresh, isRefreshing]
+  );
+
+  const handleTouchEnd = useCallback(async () => {
+    if (!onRefresh) {
+      setPullDistance(0);
+      return;
     }
 
-    // Save scroll position
-    onScrollChange?.(scrollTop);
-
-    // Load more when near bottom (2 items before end)
-    const nearBottom = scrollTop + itemHeight * 2 >= scrollHeight - itemHeight;
-    if (nearBottom && hasMore && !isLoadingMore && onLoadMore) {
-      onLoadMore();
+    const threshold = 60;
+    if (pullDistance >= threshold && !isRefreshing) {
+      setIsRefreshing(true);
+      setPullDistance(threshold * 0.6);
+      try {
+        await onRefresh();
+      } finally {
+        setIsRefreshing(false);
+        setPullDistance(0);
+      }
+    } else {
+      setPullDistance(0);
     }
-  }, [activeIndex, items.length, hasMore, isLoadingMore, onLoadMore, onScrollChange]);
+  }, [onRefresh, pullDistance, isRefreshing]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.addEventListener("scroll", handleScroll);
-    return () => container.removeEventListener("scroll", handleScroll);
-  }, [handleScroll]);
+  useEffect(() => () => {
+    if (scrollRafRef.current) window.cancelAnimationFrame(scrollRafRef.current);
+  }, []);
 
   if (isLoading) {
     return (
@@ -489,12 +552,37 @@ export function TikTokFeed({
   return (
     <div
       ref={containerRef}
-      style={{ 
-        height: 'calc(100dvh - var(--app-bottom-offset, 80px))',
-        WebkitOverflowScrolling: 'touch'
+      onScroll={handleScroll}
+      onTouchStartCapture={handleTouchStart}
+      onTouchMoveCapture={handleTouchMove}
+      onTouchEndCapture={handleTouchEnd}
+      style={{
+        height: "calc(100dvh - var(--app-bottom-offset, 80px))",
+        WebkitOverflowScrolling: "touch",
+        touchAction: "pan-y",
       }}
-      className="relative overflow-y-auto snap-y snap-mandatory scrollbar-hide"
+      className="relative overflow-y-auto snap-y snap-mandatory scrollbar-hide overscroll-y-contain"
     >
+      {/* Pull-to-refresh indicator */}
+      {onRefresh && (
+        <div
+          className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20"
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
+          <div
+            className={cn(
+              "mt-2 rounded-full bg-background/80 backdrop-blur px-3 py-1.5 border border-border/50",
+              pullDistance > 0 || isRefreshing ? "opacity-100" : "opacity-0"
+            )}
+            style={{ transform: `translateY(${Math.min(pullDistance, 60)}px)` }}
+          >
+            <span className="text-xs text-foreground/80">
+              {isRefreshing ? "Atualizando..." : pullDistance >= 60 ? "Solte para atualizar" : "Puxe para atualizar"}
+            </span>
+          </div>
+        </div>
+      )}
+
       {items.map((item, index) => (
         <div 
           key={item.id} 
