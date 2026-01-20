@@ -109,8 +109,12 @@ export function NotificationCenter() {
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full relative">
-          <Bell className="h-5 w-5" />
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-10 w-10 rounded-full relative flex items-center justify-center touch-manipulation"
+        >
+          <Bell className="h-5 w-5 sm:h-5 sm:w-5" />
           <AnimatePresence>
             {unreadCount > 0 && (
               <motion.span
@@ -125,7 +129,7 @@ export function NotificationCenter() {
           </AnimatePresence>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80 md:w-96 p-0" align="end" forceMount>
+      <DropdownMenuContent className="w-[calc(100vw-32px)] max-w-[380px] sm:w-96 p-0" align="end" sideOffset={8} forceMount>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-display font-bold">Notificações</h3>
