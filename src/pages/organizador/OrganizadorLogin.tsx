@@ -125,7 +125,15 @@ export default function OrganizadorLogin() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm">Senha</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password" className="text-sm">Senha</Label>
+                <Link 
+                  to="/recuperar-senha?tipo=organizador" 
+                  className="text-xs text-primary hover:underline"
+                >
+                  Esqueceu a senha?
+                </Link>
+              </div>
               <ValidatedInput 
                 id="password" 
                 type="password" 
