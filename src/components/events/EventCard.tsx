@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Calendar, MapPin, Users } from "lucide-react";
+import { Calendar, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,6 +14,9 @@ interface EventCardProps {
   minPrice?: number;
   soldOut?: boolean;
   category?: string | null;
+  organizerId?: string;
+  organizerName?: string | null;
+  organizerUsername?: string | null;
 }
 
 export function EventCard({
@@ -25,6 +28,9 @@ export function EventCard({
   addressText,
   minPrice = 0,
   soldOut = false,
+  organizerId,
+  organizerName,
+  organizerUsername,
 }: EventCardProps) {
   const eventDate = new Date(startAt);
   const formattedDate = format(eventDate, "d 'de' MMM", { locale: ptBR });
@@ -35,6 +41,8 @@ export function EventCard({
     if (cents === 0) return "Gratuito";
     return `A partir de R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
   };
+
+  const displayUsername = organizerUsername || (organizerName ? organizerName.toLowerCase().replace(/\s+/g, '') : null);
 
   return (
     <Link to={`/evento/${id}`} className="event-card group block bg-card rounded-xl sm:rounded-2xl overflow-hidden border border-border hover:border-primary/30 transition-all">
@@ -73,6 +81,17 @@ export function EventCard({
 
       {/* Content */}
       <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
+        {/* Organizer link */}
+        {displayUsername && organizerId && (
+          <Link 
+            to={`/organizador/${organizerId}`}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            @{displayUsername}
+          </Link>
+        )}
+
         <h3 className="font-display font-bold text-sm sm:text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
           {title}
         </h3>

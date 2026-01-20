@@ -43,7 +43,11 @@ export default function Eventos() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select(`*, ticket_types(price_cents)`)
+        .select(`
+          *,
+          ticket_types(price_cents),
+          organizer:organizer_id(id, display_name, slug)
+        `)
         .eq("status", "published")
         .gte("start_at", new Date().toISOString())
         .order("start_at", { ascending: true });
@@ -202,7 +206,7 @@ export default function Eventos() {
                   {filteredEvents.length} evento(s) encontrado(s)
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
-                  {filteredEvents.map((event) => {
+                  {filteredEvents.map((event: any) => {
                     const minPrice = event.ticket_types?.length
                       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
                       : 0;
@@ -217,6 +221,9 @@ export default function Eventos() {
                         addressText={event.address_text}
                         minPrice={minPrice}
                         category={event.category}
+                        organizerId={event.organizer?.id}
+                        organizerName={event.organizer?.display_name}
+                        organizerUsername={event.organizer?.slug}
                       />
                     );
                   })}
