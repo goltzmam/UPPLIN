@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Menu, X, User, LogOut, Ticket, MessageCircle, Settings, Users, Bookmark } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -23,10 +23,21 @@ interface HeaderProps {
 
 export function Header({ minimal = false }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === "/";
+
+  // Track scroll position for header transition
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleSignOut = async () => {
     await signOut();
@@ -39,7 +50,14 @@ export function Header({ minimal = false }: HeaderProps) {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+    <header 
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
+        isScrolled 
+          ? "bg-background/95 backdrop-blur-xl border-b border-border shadow-sm" 
+          : "bg-transparent border-b border-transparent"
+      )}
+    >
       <div className="container">
         <div className="flex items-center justify-between h-14">
           {/* Logo */}
@@ -47,7 +65,10 @@ export function Header({ minimal = false }: HeaderProps) {
             <motion.div
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="font-display text-xl font-bold tracking-tight"
+              className={cn(
+                "font-display text-xl font-bold tracking-tight transition-colors duration-300",
+                isScrolled ? "text-foreground" : "text-foreground"
+              )}
             >
               UPPLIN
             </motion.div>

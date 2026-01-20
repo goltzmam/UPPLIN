@@ -1,12 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeaturedStories } from "@/components/home/FeaturedStories";
 import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
@@ -47,6 +48,7 @@ export default function Index() {
   const [searchValue, setSearchValue] = useState("");
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Fetch events with media
   const { data: events = [], isLoading } = useQuery({
@@ -97,6 +99,14 @@ export default function Index() {
     }
   };
 
+  // Pull to refresh handler
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["homepage-events"] });
+    await queryClient.invalidateQueries({ queryKey: ["featured-events"] });
+    // Small delay for visual feedback
+    await new Promise(resolve => setTimeout(resolve, 500));
+  }, [queryClient]);
+
   const trending = [
     { 
       title: "Festivais de Verão", 
@@ -143,11 +153,12 @@ export default function Index() {
         </div>
       </div>
 
-      <main className="pt-[calc(3.5rem+3.5rem)]"> {/* Header (56px) + Search bar (56px) */}
-        {/* Featured Stories - Instagram-style with gradient rings */}
-        <section className="border-b border-border/30">
-          <FeaturedStories />
-        </section>
+      <PullToRefresh onRefresh={handleRefresh}>
+        <main className="pt-[calc(3.5rem+3.5rem)]"> {/* Header (56px) + Search bar (56px) */}
+          {/* Featured Stories - Instagram-style with gradient rings */}
+          <section className="border-b border-border/30">
+            <FeaturedStories />
+          </section>
 
         {/* Categories - Pill-style chips */}
         <section className="border-b border-border/30">
@@ -299,7 +310,8 @@ export default function Index() {
             </motion.div>
           </div>
         </section>
-      </main>
+        </main>
+      </PullToRefresh>
 
       <Footer />
       <BottomNav />
