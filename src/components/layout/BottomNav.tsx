@@ -110,7 +110,7 @@ export function BottomNav() {
                     <Icon 
                       className={cn(
                         "h-6 w-6 transition-all duration-200",
-                        isActive && "fill-foreground"
+                        isActive && "fill-current"
                       )} 
                       strokeWidth={isActive ? 2.5 : 1.5}
                     />
