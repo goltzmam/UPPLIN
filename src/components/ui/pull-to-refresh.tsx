@@ -19,48 +19,6 @@ export function PullToRefresh({ children, onRefresh, className }: PullToRefreshP
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
-      {/* Pull indicator (doesn't move the content) */}
-      <motion.div
-        className="fixed left-0 right-0 flex items-center justify-center z-50 pointer-events-none"
-        style={{
-          top: 112, // header (56) + search bar (56)
-          height: 60,
-        }}
-        animate={{
-          y: pullDistance,
-          opacity: progress > 0 ? 1 : 0,
-        }}
-        transition={{ type: "spring", damping: 20, stiffness: 300 }}
-      >
-        <motion.div
-          className={cn(
-            "w-10 h-10 rounded-full flex items-center justify-center bg-background border border-border shadow-lg",
-            shouldTrigger && "bg-accent border-accent"
-          )}
-          animate={{
-            scale: shouldTrigger ? 1.1 : 0.8 + progress * 0.2,
-          }}
-        >
-          <motion.div
-            animate={{
-              rotate: isRefreshing ? 360 : progress * 180,
-            }}
-            transition={
-              isRefreshing
-                ? { duration: 1, repeat: Infinity, ease: "linear" }
-                : { type: "spring", damping: 15 }
-            }
-          >
-            <RefreshCw
-              className={cn(
-                "h-5 w-5 transition-colors",
-                shouldTrigger || isRefreshing ? "text-accent-foreground" : "text-muted-foreground"
-              )}
-            />
-          </motion.div>
-        </motion.div>
-      </motion.div>
-
       {children}
     </div>
   );
