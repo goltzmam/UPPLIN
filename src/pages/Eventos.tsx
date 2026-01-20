@@ -3,6 +3,7 @@ import { Search, Calendar, SlidersHorizontal, X } from "lucide-react";
 import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { EventCard } from "@/components/events/EventCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -72,7 +73,7 @@ export default function Eventos() {
   const hasActiveFilters = search || selectedCategory !== "all";
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-20 md:pb-0">
       <Header />
       
       <main className="flex-1">
@@ -232,6 +233,7 @@ export default function Eventos() {
       </main>
 
       <Footer />
+      <BottomNav />
     </div>
   );
 }

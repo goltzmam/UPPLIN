@@ -3,6 +3,7 @@ import { Home, Search, Heart, User, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
+import { triggerHaptic } from "@/hooks/use-haptic";
 
 interface NavItem {
   icon: React.ElementType;
@@ -56,6 +57,7 @@ export function BottomNav() {
                 <Link
                   key={item.path}
                   to={item.path}
+                  onClick={() => triggerHaptic('medium')}
                   className="relative flex items-center justify-center -mt-4"
                 >
                   <motion.div
@@ -79,6 +81,7 @@ export function BottomNav() {
               <Link
                 key={item.path}
                 to={item.requiresAuth && !user ? "/login" : item.path}
+                onClick={() => triggerHaptic('selection')}
                 className="relative flex flex-col items-center justify-center py-1.5 px-4 group"
               >
                 <motion.div
