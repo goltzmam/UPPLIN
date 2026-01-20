@@ -37,11 +37,11 @@ export function BottomNav() {
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
     >
-      {/* Minimalist top separator line */}
-      <div className="absolute inset-x-0 top-0 h-px bg-border/30" />
+      {/* Subtle shadow for elegant separation */}
+      <div className="absolute inset-x-0 -top-4 h-8 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
 
-      {/* White background bar */}
-      <div className="absolute inset-0 bg-white" />
+      {/* White background bar with shadow */}
+      <div className="absolute inset-0 bg-white shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]" />
 
       {/* Content */}
       <div className="relative px-2 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
