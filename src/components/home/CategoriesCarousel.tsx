@@ -70,19 +70,6 @@ export function CategoriesCarousel() {
 
   return (
     <div className="py-4">
-      {/* Section header */}
-      <div className="flex items-center justify-between px-4 mb-3">
-        <div className="flex items-center gap-2">
-          <Compass className="h-5 w-5 text-foreground" />
-          <h2 className="font-display text-base font-semibold">Explorar</h2>
-        </div>
-        <Link 
-          to="/eventos" 
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          Ver todos
-        </Link>
-      </div>
 
       {/* Draggable categories container */}
       <motion.div
