@@ -12,38 +12,19 @@ import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeaturedStories } from "@/components/home/FeaturedStories";
 import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
+import { EventGridCard } from "@/components/home/EventGridCard";
 import { 
   Search, 
   TrendingUp,
   Sparkles,
   ArrowRight,
   ChevronRight,
+  Flame,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
-
-// Trending section card
-function TrendingCard({ title, subtitle, image, href }: {
-  title: string;
-  subtitle: string;
-  image: string;
-  href: string;
-}) {
-  return (
-    <Link to={href} className="block relative rounded-2xl overflow-hidden aspect-[2/1] min-w-[280px]">
-      <img src={image} alt={title} className="absolute inset-0 h-full w-full object-cover" />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-      <div className="absolute bottom-4 left-4 right-4">
-        <div className="flex items-center gap-2 text-white/70 text-xs mb-1">
-          <TrendingUp className="h-3 w-3" />
-          <span>{subtitle}</span>
-        </div>
-        <h3 className="font-display font-bold text-white">{title}</h3>
-      </div>
-    </Link>
-  );
-}
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
@@ -277,21 +258,24 @@ export default function Index() {
   );
 
   // =====================================================================
-  // DESKTOP: Traditional layout with header, search, sections
+  // DESKTOP: Modern layout with polished sections
   // =====================================================================
   const DesktopLayout = () => (
     <div className="hidden md:block min-h-screen bg-background">
       <Header />
 
-      {/* Search Bar - Fixed below header */}
-      <div className="fixed top-14 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 py-3">
-        <div className="container">
-          <form onSubmit={(e) => { e.preventDefault(); navigate("/eventos"); }} className="flex items-center gap-2">
-            <div className="flex-1 flex items-center gap-3 bg-muted rounded-full px-4 py-2.5">
-              <Search className="h-5 w-5 text-muted-foreground shrink-0" />
+      {/* Search Bar - Fixed below header with refined styling */}
+      <div className="fixed top-14 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/50">
+        <div className="container py-3">
+          <form 
+            onSubmit={(e) => { e.preventDefault(); navigate("/eventos"); }} 
+            className="flex items-center gap-3 max-w-2xl mx-auto"
+          >
+            <div className="flex-1 flex items-center gap-3 bg-muted/80 hover:bg-muted rounded-2xl px-5 py-3 transition-colors group">
+              <Search className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
               <input
                 type="text"
-                placeholder="Buscar eventos, artistas..."
+                placeholder="Buscar eventos, artistas, locais..."
                 className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
                 onFocus={() => navigate("/eventos")}
               />
@@ -301,9 +285,9 @@ export default function Index() {
       </div>
 
       <PullToRefresh onRefresh={handleRefresh}>
-        <main className="pt-[calc(3.5rem+3.5rem)]">
-          {/* Featured Stories */}
-          <section className="border-b border-border/30">
+        <main className="pt-[calc(3.5rem+4rem)]">
+          {/* Featured Stories Section */}
+          <section className="border-b border-border/30 bg-gradient-to-b from-muted/30 to-transparent">
             <FeaturedStories />
           </section>
 
@@ -312,65 +296,99 @@ export default function Index() {
             <CategoriesCarousel />
           </section>
 
-          {/* Trending Section */}
-          <section className="py-6">
+          {/* Trending Section - Redesigned */}
+          <section className="py-8 border-b border-border/30">
             <div className="container">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-accent" />
-                  <h2 className="font-display text-lg font-bold">Em Alta</h2>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent to-destructive flex items-center justify-center">
+                    <Flame className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-xl font-bold">Em Alta</h2>
+                    <p className="text-sm text-muted-foreground">Os mais buscados</p>
+                  </div>
                 </div>
-                <Link to="/eventos" className="text-sm text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors">
+                <Link 
+                  to="/eventos" 
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors group"
+                >
                   Ver todos
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
                 </Link>
               </div>
-              <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4">
-                {trending.map((item) => (
-                  <TrendingCard key={item.title} {...item} />
+              
+              {/* Trending cards with better layout */}
+              <div className="grid grid-cols-2 gap-4">
+                {trending.map((item, idx) => (
+                  <Link 
+                    key={item.title} 
+                    to={item.href} 
+                    className="group relative rounded-2xl overflow-hidden aspect-[2.5/1] bg-muted"
+                  >
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+                    <div className="absolute inset-0 p-6 flex flex-col justify-center">
+                      <div className="flex items-center gap-2 text-white/70 text-xs mb-2">
+                        <TrendingUp className="h-3.5 w-3.5" />
+                        <span className="uppercase tracking-wider font-medium">{item.subtitle}</span>
+                      </div>
+                      <h3 className="font-display text-2xl font-bold text-white group-hover:text-white/90 transition-colors">
+                        {item.title}
+                      </h3>
+                    </div>
+                  </Link>
                 ))}
               </div>
             </div>
           </section>
 
-          {/* Feed Section with Tabs */}
-          <section>
+          {/* Main Feed Section with Tabs */}
+          <section className="py-8">
             <div className="container">
-              {/* Tab Navigation with animated underline */}
-              <div className="sticky top-[112px] z-30 flex items-center justify-center gap-6 border-b border-border bg-background/80 backdrop-blur-xl relative">
-                <button
-                  onClick={() => setActiveTab("foryou")}
-                  className={cn(
-                    "pb-3 text-base font-semibold transition-all -mb-px",
-                    activeTab === "foryou" 
-                      ? "text-foreground" 
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  Para Você
-                </button>
-                <button
-                  onClick={() => setActiveTab("following")}
-                  className={cn(
-                    "pb-3 text-base font-semibold transition-all -mb-px",
-                    activeTab === "following" 
-                      ? "text-foreground" 
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  Seguindo
-                </button>
-                
-                {/* Animated underline indicator */}
-                <motion.div
-                  layoutId="tab-underline-desktop"
-                  className="absolute bottom-0 h-0.5 bg-foreground rounded-full"
-                  style={{
-                    left: activeTab === "foryou" ? "calc(50% - 90px)" : "calc(50% + 20px)",
-                    width: activeTab === "foryou" ? "68px" : "62px",
-                  }}
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
+              {/* Section header */}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
+                    <Calendar className="h-5 w-5 text-background" />
+                  </div>
+                  <div>
+                    <h2 className="font-display text-xl font-bold">Eventos</h2>
+                    <p className="text-sm text-muted-foreground">Descubra o que está rolando</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tab Navigation - Refined */}
+              <div className="sticky top-[112px] z-30 -mx-4 px-4 mb-6">
+                <div className="flex items-center gap-2 p-1 bg-muted/80 backdrop-blur-xl rounded-2xl w-fit">
+                  <button
+                    onClick={() => setActiveTab("foryou")}
+                    className={cn(
+                      "px-6 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200",
+                      activeTab === "foryou" 
+                        ? "bg-foreground text-background shadow-lg" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Para Você
+                  </button>
+                  <button
+                    onClick={() => setActiveTab("following")}
+                    className={cn(
+                      "px-6 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200",
+                      activeTab === "following" 
+                        ? "bg-foreground text-background shadow-lg" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Seguindo
+                  </button>
+                </div>
               </div>
 
               <AnimatePresence mode="wait" initial={false}>
@@ -383,49 +401,39 @@ export default function Index() {
                     transition={{ duration: 0.2, ease: "easeOut" }}
                   >
                     {isLoading ? (
-                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 py-6">
-                        {[1, 2, 3, 4, 5, 6].map((i) => (
-                          <div key={i} className="feed-card animate-pulse bg-muted" />
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                          <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
                         ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 py-6">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {feedItems.map((item, index) => (
-                          <motion.div
+                          <EventGridCard
                             key={item.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className="feed-card group"
-                          >
-                            <Link to={`/evento/${item.id}`} className="block h-full">
-                              <div className="absolute inset-0">
-                                {item.coverImageUrl ? (
-                                  <img
-                                    src={item.coverImageUrl}
-                                    alt={item.title}
-                                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                                  />
-                                ) : (
-                                  <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
-                                )}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                              </div>
-                              <div className="absolute bottom-0 left-0 right-0 p-4 z-10">
-                                <h3 className="font-display text-lg font-bold text-white leading-tight line-clamp-2 mb-1">
-                                  {item.title}
-                                </h3>
-                                <p className="text-white/70 text-sm">{item.organizerName}</p>
-                              </div>
-                            </Link>
-                          </motion.div>
+                            id={item.id}
+                            title={item.title}
+                            coverImageUrl={item.coverImageUrl}
+                            startAt={item.startAt}
+                            venueName={item.venueName}
+                            organizerName={item.organizerName}
+                            organizerAvatar={item.organizerAvatar}
+                            organizerSlug={item.organizerSlug}
+                            minPrice={item.minPrice}
+                            index={index}
+                          />
                         ))}
                       </div>
                     )}
 
-                    {/* Load more */}
-                    <div className="flex justify-center mt-8 pb-8">
-                      <Button variant="outline" size="lg" className="rounded-full" asChild>
+                    {/* Load more button */}
+                    <div className="flex justify-center mt-10 pb-8">
+                      <Button 
+                        variant="outline" 
+                        size="lg" 
+                        className="rounded-full px-8 hover:bg-muted" 
+                        asChild
+                      >
                         <Link to="/eventos">
                           Ver mais eventos
                           <ArrowRight className="h-4 w-4 ml-2" />

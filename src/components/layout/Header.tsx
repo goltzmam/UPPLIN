@@ -54,8 +54,8 @@ export function Header({ minimal = false }: HeaderProps) {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
         isScrolled 
-          ? "bg-background/95 backdrop-blur-xl border-b border-border shadow-sm" 
-          : "bg-transparent border-b border-transparent"
+          ? "bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm" 
+          : "bg-background border-b border-border/30"
       )}
     >
       <div className="container">
@@ -63,12 +63,9 @@ export function Header({ minimal = false }: HeaderProps) {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className={cn(
-                "font-display text-xl font-bold tracking-tight transition-colors duration-300",
-                isScrolled ? "text-foreground" : "text-foreground"
-              )}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="font-display text-xl font-bold tracking-tight text-foreground"
             >
               UPPLIN
             </motion.div>
@@ -78,8 +75,8 @@ export function Header({ minimal = false }: HeaderProps) {
             <Link 
               to="/eventos" 
               className={cn(
-                "px-4 py-2 text-sm font-medium rounded-full transition-colors hover:bg-muted",
-                location.pathname === "/eventos" && "bg-muted"
+                "px-4 py-2 text-sm font-medium rounded-xl transition-all hover:bg-muted",
+                location.pathname === "/eventos" && "bg-muted text-foreground"
               )}
             >
               Explorar
@@ -87,8 +84,8 @@ export function Header({ minimal = false }: HeaderProps) {
             <Link 
               to="/explorar-organizadores" 
               className={cn(
-                "px-4 py-2 text-sm font-medium rounded-full transition-colors hover:bg-muted flex items-center gap-1.5",
-                location.pathname === "/explorar-organizadores" && "bg-muted"
+                "px-4 py-2 text-sm font-medium rounded-xl transition-all hover:bg-muted flex items-center gap-1.5",
+                location.pathname === "/explorar-organizadores" && "bg-muted text-foreground"
               )}
             >
               <Users className="h-4 w-4" />
@@ -97,14 +94,14 @@ export function Header({ minimal = false }: HeaderProps) {
             <Link 
               to="/organizadores" 
               className={cn(
-                "px-4 py-2 text-sm font-medium rounded-full transition-colors hover:bg-muted",
-                location.pathname === "/organizadores" && "bg-muted"
+                "px-4 py-2 text-sm font-medium rounded-xl transition-all hover:bg-muted",
+                location.pathname === "/organizadores" && "bg-muted text-foreground"
               )}
             >
               Para Organizadores
             </Link>
 
-            <div className="w-px h-6 bg-border mx-2" />
+            <div className="w-px h-5 bg-border/50 mx-3" />
 
             {user ? (
               <div className="flex items-center gap-2">
