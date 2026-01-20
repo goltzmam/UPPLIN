@@ -232,18 +232,22 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
           onMouseLeave={() => setIsHovered(false)}
           onClick={() => navigate(`/evento/${item.id}`)}
         >
-          {/* Cover Image */}
+          {/* Fallback background gradient when no image */}
+          {!item.coverImageUrl && (
+            <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 via-zinc-700 to-zinc-900" />
+          )}
+          
+          {/* Cover Image - Always visible, only fade when video is playing */}
           {item.coverImageUrl && (
             <img
               src={item.coverImageUrl}
               alt={item.title}
-              className={cn(
-                "absolute inset-0 h-full w-full object-cover transition-all duration-500",
-                isHovered && item.videoUrl && videoLoaded
-                  ? "opacity-0"
-                  : "opacity-100 group-hover:scale-105"
-              )}
+              className="absolute inset-0 h-full w-full object-cover transition-all duration-500 group-hover:scale-105"
               loading="lazy"
+              onError={(e) => {
+                // Hide broken image and show gradient fallback
+                e.currentTarget.style.display = 'none';
+              }}
             />
           )}
 
