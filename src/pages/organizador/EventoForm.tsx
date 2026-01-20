@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageLoading } from "@/components/ui/loading";
 import { MultiMediaUpload } from "@/components/events/MultiMediaUpload";
+import { VideoUpload } from "@/components/events/VideoUpload";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +48,7 @@ export default function EventoForm() {
   const [venueName, setVenueName] = useState("");
   const [addressText, setAddressText] = useState("");
   const [media, setMedia] = useState<MediaItem[]>([]);
+  const [feedVideoUrl, setFeedVideoUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"draft" | "published">("draft");
   const [ticketTypes, setTicketTypes] = useState<TicketTypeForm[]>([]);
   const [saving, setSaving] = useState(false);
@@ -124,13 +126,16 @@ export default function EventoForm() {
         })) || []
       );
       setMedia(
-        event.event_media?.map((m: any) => ({
+        event.event_media?.filter((m: any) => m.type === "image").map((m: any) => ({
           id: m.id,
           url: m.url,
           type: m.type,
           sort_order: m.sort_order,
         })) || []
       );
+      // Get feed video (first video in event_media)
+      const feedVideo = event.event_media?.find((m: any) => m.type === "video");
+      setFeedVideoUrl(feedVideo?.url || null);
     }
   }, [event]);
 
@@ -245,20 +250,37 @@ export default function EventoForm() {
         }
       }
 
-      // Insert new media
+      // Insert new image media
       const newMedia = media.filter(m => m.id.startsWith("new-"));
       if (newMedia.length > 0) {
         await supabase.from("event_media").insert(
           newMedia.map((m, idx) => ({
             event_id: eventIdToUse,
             url: m.url,
-            type: m.type,
+            type: "image" as const,
             sort_order: media.indexOf(m),
           }))
         );
       }
 
-      // Update sort order for existing media
+      // Handle feed video
+      const existingVideo = event?.event_media?.find((m: any) => m.type === "video");
+      
+      if (feedVideoUrl && !existingVideo) {
+        // Add new video
+        await supabase.from("event_media").insert({
+          event_id: eventIdToUse,
+          url: feedVideoUrl,
+          type: "video",
+          sort_order: -1, // Videos come first
+        });
+      } else if (feedVideoUrl && existingVideo && existingVideo.url !== feedVideoUrl) {
+        // Update existing video
+        await supabase.from("event_media").update({ url: feedVideoUrl }).eq("id", existingVideo.id);
+      } else if (!feedVideoUrl && existingVideo) {
+        // Remove video
+        await supabase.from("event_media").delete().eq("id", existingVideo.id);
+      }
       const existingMedia = media.filter(m => !m.id.startsWith("new-"));
       for (const m of existingMedia) {
         await supabase
@@ -300,11 +322,34 @@ export default function EventoForm() {
           </h1>
 
           <div className="space-y-6 sm:space-y-8">
+            {/* Feed Video Upload - NEW */}
+            <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display text-lg font-bold">Vídeo do Feed</h2>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Vídeo curto (até 60s) que aparecerá no feed estilo TikTok
+                  </p>
+                </div>
+                {feedVideoUrl && (
+                  <span className="px-2 py-1 bg-green-500/10 text-green-600 text-xs font-medium rounded-full">
+                    Ativo
+                  </span>
+                )}
+              </div>
+              <VideoUpload
+                eventId={eventId || "novo"}
+                organizerId={organizer?.id || ""}
+                videoUrl={feedVideoUrl}
+                onChange={setFeedVideoUrl}
+              />
+            </div>
+
             {/* Media Upload */}
             <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
-              <h2 className="font-display text-lg font-bold">Fotos e Vídeos</h2>
+              <h2 className="font-display text-lg font-bold">Fotos do Evento</h2>
               <p className="text-sm text-muted-foreground">
-                Adicione imagens e vídeos do seu evento. A primeira imagem será usada como capa.
+                Adicione imagens do seu evento. A primeira imagem será usada como capa.
               </p>
               <MultiMediaUpload
                 eventId={eventId || "novo"}
