@@ -173,7 +173,7 @@ export function OrganizerPreviewTooltip({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs h-8"
+                className="text-xs h-8 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
                 asChild
               >
                 <Link to={`/organizador/${organizerId}`} onClick={(e) => e.stopPropagation()}>
