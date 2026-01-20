@@ -219,6 +219,20 @@
     padding: 2px;
     border-radius: 9999px;
   }
+  .story-ring {
+    display: block;
+    padding: 3px;
+    border-radius: 9999px;
+    background: var(--gradient-social);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .story-ring:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 20px hsla(346, 84%, 60%, 0.4);
+  }
+  .story-ring:active {
+    transform: scale(0.95);
+  }
 
   /* Pill button */
   .pill-btn {
