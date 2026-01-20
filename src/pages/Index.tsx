@@ -190,9 +190,9 @@ export default function Index() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              className="h-full bg-background overflow-y-auto pb-20"
+              className="h-full bg-black overflow-y-auto pb-20"
             >
-              <div className="pt-28">
+              <div className="pt-24">
                 <FollowingFeed />
               </div>
             </motion.div>
