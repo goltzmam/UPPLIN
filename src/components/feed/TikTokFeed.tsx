@@ -425,26 +425,25 @@ function FeedCard({
             
             <motion.button
               whileTap={{ scale: 0.85 }}
-              onClick={(e) => e.stopPropagation()}
-              className="flex flex-col items-center gap-1"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/mensagens?event=${item.id}`);
+              }}
+              className="flex flex-col items-center"
             >
               <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
                 <MessageCircle className="h-5 w-5 text-white" />
               </div>
-              <span className="text-white text-[10px] font-semibold drop-shadow-lg">Chat</span>
             </motion.button>
             
-            <div className="flex flex-col items-center gap-1">
-              <ShareButton
-                eventId={item.id}
-                eventTitle={item.title}
-                eventDate={formattedDate}
-                eventImage={item.coverImageUrl}
-                iconOnly
-                className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white border border-white/10"
-              />
-              <span className="text-white text-[10px] font-semibold drop-shadow-lg">Share</span>
-            </div>
+            <ShareButton
+              eventId={item.id}
+              eventTitle={item.title}
+              eventDate={formattedDate}
+              eventImage={item.coverImageUrl}
+              iconOnly
+              className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white border border-white/10"
+            />
             
             <motion.button
               whileTap={{ scale: 0.85 }}
