@@ -38,6 +38,9 @@ interface TikTokFeedProps {
 // Height calculation constant for consistency
 const FEED_HEIGHT_STYLE = { height: 'calc(100dvh - var(--app-bottom-offset, 80px))' };
 
+// LocalStorage key for mute preference
+const MUTE_STORAGE_KEY = "upplin_feed_muted";
+
 function formatEngagementCount(count: number): string {
   if (count >= 1000000) {
     return `${(count / 1000000).toFixed(1)}M`;
@@ -52,7 +55,6 @@ function formatEngagementCount(count: number): string {
 function isEventLive(startAt: string, endAt?: string | null): boolean {
   const now = new Date();
   const start = new Date(startAt);
-  // If no end date, assume 3 hours duration
   const end = endAt ? new Date(endAt) : addHours(start, 3);
   return isWithinInterval(now, { start, end });
 }
@@ -70,24 +72,133 @@ function LiveBadge() {
   );
 }
 
+// Progress indicator component
+function ProgressIndicator({ current, total }: { current: number; total: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-2"
+    >
+      <span className="text-white/90 text-xs font-bold tabular-nums drop-shadow-lg">
+        {current}/{total}
+      </span>
+    </motion.div>
+  );
+}
+
+// Mini scroll map component
+function ScrollMiniMap({ 
+  current, 
+  total, 
+  maxVisible = 7 
+}: { 
+  current: number; 
+  total: number;
+  maxVisible?: number;
+}) {
+  // Show dots around current position
+  const visibleRange = useMemo(() => {
+    const half = Math.floor(maxVisible / 2);
+    let start = Math.max(0, current - half);
+    let end = Math.min(total - 1, start + maxVisible - 1);
+    
+    // Adjust start if we're near the end
+    if (end - start < maxVisible - 1) {
+      start = Math.max(0, end - maxVisible + 1);
+    }
+    
+    const dots: number[] = [];
+    for (let i = start; i <= end; i++) {
+      dots.push(i);
+    }
+    return { dots, start, end };
+  }, [current, total, maxVisible]);
+
+  return (
+    <div className="flex flex-col items-center gap-1.5">
+      {visibleRange.start > 0 && (
+        <div className="w-1 h-1 rounded-full bg-white/30" />
+      )}
+      {visibleRange.dots.map((idx) => (
+        <motion.div
+          key={idx}
+          animate={{
+            scale: idx === current ? 1 : 0.6,
+            opacity: idx === current ? 1 : 0.4,
+          }}
+          transition={{ duration: 0.2 }}
+          className={cn(
+            "rounded-full transition-all",
+            idx === current 
+              ? "w-1.5 h-3 bg-white" 
+              : "w-1 h-1 bg-white/50"
+          )}
+        />
+      ))}
+      {visibleRange.end < total - 1 && (
+        <div className="w-1 h-1 rounded-full bg-white/30" />
+      )}
+    </div>
+  );
+}
+
+// Premium placeholder while video loads
+function VideoPlaceholder({ coverUrl, title }: { coverUrl: string | null; title: string }) {
+  return (
+    <div className="absolute inset-0 z-[1]">
+      {coverUrl ? (
+        <img
+          src={coverUrl}
+          alt={title}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        <div className="h-full w-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
+      )}
+      {/* Shimmer overlay */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div 
+          className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
+          style={{
+            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)'
+          }}
+        />
+      </div>
+      {/* Center loading */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+      </div>
+    </div>
+  );
+}
+
 function FeedCard({ 
   item, 
   isActive,
+  visibilityRatio,
   isMuted,
-  onToggleMute
+  onToggleMute,
+  shouldPreload,
 }: { 
   item: TikTokFeedItem; 
   isActive: boolean;
+  visibilityRatio: number;
   isMuted: boolean;
   onToggleMute: () => void;
+  shouldPreload?: boolean;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   
   // Check if event is live
   const isLive = useMemo(() => isEventLive(item.startAt, item.endAt), [item.startAt, item.endAt]);
+  
+  // Smart autoplay: only play when 70%+ visible and active
+  const shouldPlay = isActive && visibilityRatio >= 0.7 && !isPaused;
   
   // Use persistent engagement
   const { 
@@ -108,16 +219,16 @@ function FeedCard({
     return `R$ ${(cents / 100).toFixed(0)}`;
   };
 
-  // Handle video playback
+  // Handle video playback based on visibility
   useEffect(() => {
     if (!videoRef.current) return;
 
-    if (isActive && !isPaused) {
+    if (shouldPlay) {
       videoRef.current.play().catch(() => {});
     } else {
       videoRef.current.pause();
     }
-  }, [isActive, isPaused]);
+  }, [shouldPlay]);
 
   // Handle mute
   useEffect(() => {
@@ -125,6 +236,11 @@ function FeedCard({
       videoRef.current.muted = isMuted;
     }
   }, [isMuted]);
+
+  // Track video loaded state
+  const handleVideoLoaded = useCallback(() => {
+    setVideoLoaded(true);
+  }, []);
 
   const handleDoubleTap = () => {
     if (!isLiked) {
@@ -158,14 +274,25 @@ function FeedCard({
       {/* Background Media */}
       <div className="absolute inset-0">
         {item.videoUrl ? (
-          <video
-            ref={videoRef}
-            src={item.videoUrl}
-            loop
-            playsInline
-            muted={isMuted}
-            className="h-full w-full object-cover"
-          />
+          <>
+            {/* Premium placeholder while loading */}
+            {!videoLoaded && (
+              <VideoPlaceholder coverUrl={item.coverImageUrl} title={item.title} />
+            )}
+            <video
+              ref={videoRef}
+              src={item.videoUrl}
+              loop
+              playsInline
+              muted={isMuted}
+              preload={shouldPreload || isActive ? "auto" : "metadata"}
+              onLoadedData={handleVideoLoaded}
+              className={cn(
+                "h-full w-full object-cover transition-opacity duration-300",
+                videoLoaded ? "opacity-100" : "opacity-0"
+              )}
+            />
+          </>
         ) : item.coverImageUrl ? (
           <img
             src={item.coverImageUrl}
@@ -376,11 +503,31 @@ export function TikTokFeed({
 
   // Keep references to each snap item for IntersectionObserver
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [visibilityRatios, setVisibilityRatios] = useState<Map<number, number>>(new Map());
   const visibilityRatiosRef = useRef<Map<number, number>>(new Map());
 
-  const [isMuted, setIsMuted] = useState(true);
+  // Load mute preference from localStorage
+  const [isMuted, setIsMuted] = useState(() => {
+    try {
+      const stored = localStorage.getItem(MUTE_STORAGE_KEY);
+      return stored !== null ? stored === "true" : true;
+    } catch {
+      return true;
+    }
+  });
 
-  // Pull-to-refresh (only affects when user is at the very top of the feed)
+  // Save mute preference to localStorage
+  const handleToggleMute = useCallback(() => {
+    setIsMuted(prev => {
+      const newValue = !prev;
+      try {
+        localStorage.setItem(MUTE_STORAGE_KEY, String(newValue));
+      } catch {}
+      return newValue;
+    });
+  }, []);
+
+  // Pull-to-refresh
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const pullStartYRef = useRef(0);
@@ -414,7 +561,6 @@ export function TikTokFeed({
 
       const container = containerRef.current;
       const scrollTop = container.scrollTop;
-
       const itemHeight = container.clientHeight;
       const scrollHeight = container.scrollHeight;
 
@@ -427,7 +573,7 @@ export function TikTokFeed({
     });
   }, [items.length, hasMore, isLoadingMore, onLoadMore, onScrollChange]);
 
-  // IntersectionObserver-based active card (smooth on iOS, less jank than Math.round on scroll)
+  // IntersectionObserver-based active card with visibility tracking
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
@@ -444,6 +590,9 @@ export function TikTokFeed({
           visibilityRatiosRef.current.set(idx, entry.isIntersecting ? entry.intersectionRatio : 0);
         }
 
+        // Update visibility state for smart autoplay
+        setVisibilityRatios(new Map(visibilityRatiosRef.current));
+
         // Pick the most visible card
         let bestIdx = activeIndexRef.current;
         let bestRatio = visibilityRatiosRef.current.get(bestIdx) ?? 0;
@@ -454,8 +603,8 @@ export function TikTokFeed({
           }
         }
 
-        // Only switch when there's a clear winner
-        if (bestIdx !== activeIndexRef.current && bestRatio >= 0.6) {
+        // Only switch when there's a clear winner (70%+ visible)
+        if (bestIdx !== activeIndexRef.current && bestRatio >= 0.7) {
           activeIndexRef.current = bestIdx;
           triggerFeedback({ haptic: "light" });
           setActiveIndex(bestIdx);
@@ -463,7 +612,7 @@ export function TikTokFeed({
       },
       {
         root: container,
-        threshold: [0, 0.25, 0.5, 0.6, 0.75, 1],
+        threshold: [0, 0.25, 0.5, 0.6, 0.7, 0.75, 0.9, 1],
       }
     );
 
@@ -475,7 +624,7 @@ export function TikTokFeed({
     return () => observer.disconnect();
   }, [items.length]);
 
-  // Native touch listeners for pull-to-refresh (avoid React's non-passive touch handlers blocking scroll)
+  // Native touch listeners for pull-to-refresh
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !onRefresh) return;
@@ -497,7 +646,6 @@ export function TikTokFeed({
       const distance = Math.min(diff * 0.35, 90);
       setPull(distance);
 
-      // Prevent iOS rubber-band ONLY when pulling down
       if (distance > 10) e.preventDefault();
     };
 
@@ -537,9 +685,7 @@ export function TikTokFeed({
   if (isLoading) {
     return (
       <div 
-        style={{ 
-          height: 'calc(100dvh - var(--app-bottom-offset, 80px))'
-        }} 
+        style={{ height: 'calc(100dvh - var(--app-bottom-offset, 80px))' }} 
         className="relative overflow-hidden bg-black"
       >
         {/* Skeleton with shimmer effect */}
@@ -619,6 +765,29 @@ export function TikTokFeed({
       }}
       className="relative overflow-y-auto snap-y snap-mandatory scrollbar-hide overscroll-y-contain"
     >
+      {/* Progress indicator - top right */}
+      <div 
+        className="fixed z-30 pointer-events-none"
+        style={{ 
+          top: "calc(env(safe-area-inset-top, 0px) + 16px)", 
+          right: "16px" 
+        }}
+      >
+        <ProgressIndicator current={activeIndex + 1} total={items.length} />
+      </div>
+
+      {/* Mini scroll map - right side center */}
+      <div 
+        className="fixed z-30 pointer-events-none"
+        style={{ 
+          top: "50%", 
+          right: "8px",
+          transform: "translateY(-50%)"
+        }}
+      >
+        <ScrollMiniMap current={activeIndex} total={items.length} />
+      </div>
+
       {/* Pull-to-refresh indicator */}
       {onRefresh && (
         <div
@@ -655,8 +824,10 @@ export function TikTokFeed({
           <FeedCard
             item={item}
             isActive={index === activeIndex}
+            visibilityRatio={visibilityRatios.get(index) ?? 0}
             isMuted={isMuted}
-            onToggleMute={() => setIsMuted(!isMuted)}
+            onToggleMute={handleToggleMute}
+            shouldPreload={index === activeIndex + 1}
           />
         </div>
       ))}
