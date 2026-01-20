@@ -335,15 +335,15 @@ export default function Index() {
           {/* Feed Section with Tabs */}
           <section>
             <div className="container">
-              {/* Tab Navigation */}
-              <div className="sticky top-[112px] z-30 flex items-center justify-center gap-6 border-b border-border bg-background/80 backdrop-blur-xl">
+              {/* Tab Navigation with animated underline */}
+              <div className="sticky top-[112px] z-30 flex items-center justify-center gap-6 border-b border-border bg-background/80 backdrop-blur-xl relative">
                 <button
                   onClick={() => setActiveTab("foryou")}
                   className={cn(
-                    "pb-3 text-base font-semibold transition-all border-b-2 -mb-px",
+                    "pb-3 text-base font-semibold transition-all -mb-px",
                     activeTab === "foryou" 
-                      ? "border-foreground text-foreground" 
-                      : "border-transparent text-muted-foreground hover:text-foreground"
+                      ? "text-foreground" 
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Para Você
@@ -351,14 +351,25 @@ export default function Index() {
                 <button
                   onClick={() => setActiveTab("following")}
                   className={cn(
-                    "pb-3 text-base font-semibold transition-all border-b-2 -mb-px",
+                    "pb-3 text-base font-semibold transition-all -mb-px",
                     activeTab === "following" 
-                      ? "border-foreground text-foreground" 
-                      : "border-transparent text-muted-foreground hover:text-foreground"
+                      ? "text-foreground" 
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   Seguindo
                 </button>
+                
+                {/* Animated underline indicator */}
+                <motion.div
+                  layoutId="tab-underline-desktop"
+                  className="absolute bottom-0 h-0.5 bg-foreground rounded-full"
+                  style={{
+                    left: activeTab === "foryou" ? "calc(50% - 90px)" : "calc(50% + 20px)",
+                    width: activeTab === "foryou" ? "68px" : "62px",
+                  }}
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                />
               </div>
 
               <AnimatePresence mode="wait" initial={false}>
