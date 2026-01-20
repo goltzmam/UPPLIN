@@ -113,6 +113,7 @@ export default function Index() {
       addressText: event.address_text,
       organizerName: event.organizer?.display_name,
       organizerAvatar: event.organizer?.logo_url,
+      organizerId: event.organizer_id,
       minPrice,
     };
   });

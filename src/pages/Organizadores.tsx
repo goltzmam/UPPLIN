@@ -83,7 +83,7 @@ const steps = [
 
 const testimonials = [
   {
-    quote: "Migrei para a Influente e minhas vendas aumentaram 40%. A experiência do comprador é muito melhor.",
+    quote: "Migrei para a UPPLIN e minhas vendas aumentaram 40%. A experiência do comprador é muito melhor.",
     author: "Carlos Mendes",
     role: "Produtor, Festa XYZ",
     avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80",

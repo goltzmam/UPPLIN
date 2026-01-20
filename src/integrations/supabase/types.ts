@@ -157,6 +157,27 @@ export type Database = {
         }
         Relationships: []
       }
+      event_likes: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       event_media: {
         Row: {
           created_at: string | null

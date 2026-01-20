@@ -1,10 +1,12 @@
 import { useRef, useEffect, useState, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Share2, Bookmark, Volume2, VolumeX, Play, Pause } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Volume2, VolumeX, Play } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useEventEngagement } from "@/hooks/use-event-engagement";
+import { ShareButton } from "@/components/events/ShareButton";
 
 interface TikTokFeedItem {
   id: string;
@@ -16,12 +18,23 @@ interface TikTokFeedItem {
   addressText: string | null;
   organizerName?: string;
   organizerAvatar?: string | null;
+  organizerId?: string | null;
   minPrice?: number;
 }
 
 interface TikTokFeedProps {
   items: TikTokFeedItem[];
   isLoading?: boolean;
+}
+
+function formatEngagementCount(count: number): string {
+  if (count >= 1000000) {
+    return `${(count / 1000000).toFixed(1)}M`;
+  }
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}k`;
+  }
+  return count.toString();
 }
 
 function FeedCard({ 
@@ -36,10 +49,19 @@ function FeedCard({
   onToggleMute: () => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isLiked, setIsLiked] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
+  const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  
+  // Use persistent engagement
+  const { 
+    isLiked, 
+    likeCount, 
+    isSaved, 
+    saveCount, 
+    toggleLike, 
+    toggleSave 
+  } = useEventEngagement(item.id);
 
   const eventDate = new Date(item.startAt);
   const formattedDate = format(eventDate, "d MMM", { locale: ptBR });
@@ -70,7 +92,7 @@ function FeedCard({
 
   const handleDoubleTap = () => {
     if (!isLiked) {
-      setIsLiked(true);
+      toggleLike();
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 600);
     }
@@ -79,6 +101,14 @@ function FeedCard({
   const handleTap = () => {
     if (item.videoUrl) {
       setIsPaused(!isPaused);
+    }
+  };
+
+  const handleOrganizerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (item.organizerId) {
+      navigate(`/organizador/${item.organizerId}`);
     }
   };
 
@@ -110,7 +140,7 @@ function FeedCard({
         )}
         
         {/* Overlay gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
       </div>
 
       {/* Double tap heart animation */}
@@ -122,7 +152,7 @@ function FeedCard({
             exit={{ scale: 1.5, opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
           >
-            <Heart className="h-32 w-32 text-accent fill-accent" />
+            <Heart className="h-24 w-24 text-accent fill-accent" />
           </motion.div>
         )}
       </AnimatePresence>
@@ -136,22 +166,21 @@ function FeedCard({
             exit={{ opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center bg-black/20 z-10"
           >
-            <div className="h-20 w-20 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
-              <Play className="h-10 w-10 text-white ml-1" />
+            <div className="h-16 w-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+              <Play className="h-8 w-8 text-white ml-1" />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Top - Organizer info */}
-      <div className="absolute top-4 left-4 right-16 flex items-center gap-3 z-10">
-        <Link 
-          to={`/evento/${item.id}`}
-          onClick={(e) => e.stopPropagation()}
-          className="flex items-center gap-2"
+      <div className="absolute top-4 left-3 right-20 flex items-center gap-2 z-10">
+        <button
+          onClick={handleOrganizerClick}
+          className="flex items-center gap-2 min-w-0"
         >
-          <div className="avatar-ring-gradient p-[2px] rounded-full">
-            <div className="h-10 w-10 rounded-full bg-muted overflow-hidden">
+          <div className="avatar-ring-gradient p-[2px] rounded-full shrink-0">
+            <div className="h-9 w-9 rounded-full bg-muted overflow-hidden">
               {item.organizerAvatar ? (
                 <img src={item.organizerAvatar} alt={item.organizerName} className="h-full w-full object-cover" />
               ) : (
@@ -161,17 +190,17 @@ function FeedCard({
               )}
             </div>
           </div>
-          <span className="text-white text-sm font-semibold drop-shadow-lg">
-            {item.organizerName || "Organizador"}
+          <span className="text-white text-sm font-semibold drop-shadow-lg truncate">
+            @{item.organizerName?.replace(/\s+/g, "").toLowerCase() || "organizador"}
           </span>
-        </Link>
+        </button>
       </div>
 
       {/* Price badge */}
-      <div className="absolute top-4 right-4 z-10">
-        <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
+      <div className="absolute top-4 right-3 z-10">
+        <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full">
           <span className={cn(
-            "text-sm font-bold",
+            "text-xs font-bold",
             (item.minPrice || 0) === 0 ? "text-green-600" : "text-foreground"
           )}>
             {formatPrice(item.minPrice || 0)}
@@ -180,101 +209,107 @@ function FeedCard({
       </div>
 
       {/* Bottom content */}
-      <div className="absolute bottom-0 left-0 right-16 p-4 z-10">
-        <Link 
-          to={`/evento/${item.id}`}
-          onClick={(e) => e.stopPropagation()}
-          className="block"
-        >
-          <h3 className="font-display text-xl sm:text-2xl font-bold text-white leading-tight line-clamp-2 mb-2">
-            {item.title}
-          </h3>
-          
-          <div className="flex flex-wrap items-center gap-3 text-white/80 text-sm">
-            <div className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              <span>{formattedDate} • {formattedTime}</span>
-            </div>
-            {(item.venueName || item.addressText) && (
-              <div className="flex items-center gap-1.5">
-                <MapPin className="h-4 w-4" />
-                <span className="truncate max-w-[200px]">{item.venueName || item.addressText}</span>
+      <div className="absolute bottom-0 left-0 right-0 p-3 pb-4 z-10">
+        <div className="flex items-end gap-3">
+          {/* Event info - left side */}
+          <div className="flex-1 min-w-0 pr-2">
+            <Link 
+              to={`/evento/${item.id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="block"
+            >
+              <h3 className="font-display text-base font-bold text-white leading-tight line-clamp-2 mb-1.5">
+                {item.title}
+              </h3>
+              
+              <div className="flex flex-col gap-1 text-white/80 text-xs">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5 shrink-0" />
+                  <span>{formattedDate} • {formattedTime}</span>
+                </div>
+                {(item.venueName || item.addressText) && (
+                  <div className="flex items-center gap-1.5">
+                    <MapPin className="h-3.5 w-3.5 shrink-0" />
+                    <span className="truncate">{item.venueName || item.addressText}</span>
+                  </div>
+                )}
               </div>
+            </Link>
+          </div>
+
+          {/* Right side actions - compact vertical */}
+          <div className="flex flex-col items-center gap-3 shrink-0">
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleLike();
+              }}
+              className="flex flex-col items-center gap-0.5"
+            >
+              <div className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                <Heart className={cn("h-5 w-5 text-white", isLiked && "fill-accent text-accent")} />
+              </div>
+              <span className="text-white text-[10px] font-medium">{formatEngagementCount(likeCount)}</span>
+            </motion.button>
+            
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex flex-col items-center gap-0.5"
+            >
+              <div className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                <MessageCircle className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-white text-[10px] font-medium">Chat</span>
+            </motion.button>
+            
+            <div className="flex flex-col items-center gap-0.5">
+              <ShareButton
+                eventId={item.id}
+                eventTitle={item.title}
+                eventDate={formattedDate}
+                eventImage={item.coverImageUrl}
+                iconOnly
+                className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center text-white"
+              />
+              <span className="text-white text-[10px] font-medium">Share</span>
+            </div>
+            
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleSave();
+              }}
+              className="flex flex-col items-center gap-0.5"
+            >
+              <div className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                <Bookmark className={cn("h-5 w-5 text-white", isSaved && "fill-white")} />
+              </div>
+              <span className="text-white text-[10px] font-medium">{formatEngagementCount(saveCount)}</span>
+            </motion.button>
+
+            {item.videoUrl && (
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleMute();
+                }}
+                className="flex flex-col items-center"
+              >
+                <div className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                  {isMuted ? (
+                    <VolumeX className="h-5 w-5 text-white" />
+                  ) : (
+                    <Volume2 className="h-5 w-5 text-white" />
+                  )}
+                </div>
+              </motion.button>
             )}
           </div>
-        </Link>
-      </div>
-
-      {/* Right side actions */}
-      <div className="absolute bottom-24 right-3 flex flex-col items-center gap-5 z-10">
-        <motion.button
-          whileTap={{ scale: 0.8 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsLiked(!isLiked);
-          }}
-          className="flex flex-col items-center gap-1"
-        >
-          <div className="h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-            <Heart className={cn("h-6 w-6 text-white", isLiked && "fill-accent text-accent")} />
-          </div>
-          <span className="text-white text-xs font-medium">1.2k</span>
-        </motion.button>
-        
-        <motion.button
-          whileTap={{ scale: 0.8 }}
-          onClick={(e) => e.stopPropagation()}
-          className="flex flex-col items-center gap-1"
-        >
-          <div className="h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-            <MessageCircle className="h-6 w-6 text-white" />
-          </div>
-          <span className="text-white text-xs font-medium">234</span>
-        </motion.button>
-        
-        <motion.button
-          whileTap={{ scale: 0.8 }}
-          onClick={(e) => e.stopPropagation()}
-          className="flex flex-col items-center gap-1"
-        >
-          <div className="h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-            <Share2 className="h-6 w-6 text-white" />
-          </div>
-          <span className="text-white text-xs font-medium">Share</span>
-        </motion.button>
-        
-        <motion.button
-          whileTap={{ scale: 0.8 }}
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsSaved(!isSaved);
-          }}
-          className="flex flex-col items-center gap-1"
-        >
-          <div className="h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-            <Bookmark className={cn("h-6 w-6 text-white", isSaved && "fill-white")} />
-          </div>
-          <span className="text-white text-xs font-medium">Salvar</span>
-        </motion.button>
-
-        {item.videoUrl && (
-          <motion.button
-            whileTap={{ scale: 0.8 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleMute();
-            }}
-            className="flex flex-col items-center gap-1"
-          >
-            <div className="h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
-              {isMuted ? (
-                <VolumeX className="h-6 w-6 text-white" />
-              ) : (
-                <Volume2 className="h-6 w-6 text-white" />
-              )}
-            </div>
-          </motion.button>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -311,6 +346,19 @@ export function TikTokFeed({ items, isLoading }: TikTokFeedProps) {
     return (
       <div className="h-[calc(100vh-120px)] bg-muted animate-pulse flex items-center justify-center">
         <div className="text-muted-foreground">Carregando...</div>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="h-[calc(100vh-120px)] flex items-center justify-center text-center p-8">
+        <div>
+          <p className="text-muted-foreground mb-2">Nenhum evento encontrado</p>
+          <p className="text-sm text-muted-foreground/70">
+            Explore categorias ou siga organizadores
+          </p>
+        </div>
       </div>
     );
   }

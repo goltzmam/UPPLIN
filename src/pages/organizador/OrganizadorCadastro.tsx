@@ -129,7 +129,7 @@ export default function OrganizadorCadastro() {
               <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-xl bg-primary flex items-center justify-center">
                 <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary-foreground" />
               </div>
-              <span className="font-display text-lg sm:text-xl font-bold">Influente</span>
+              <span className="font-display text-lg sm:text-xl font-bold">UPPLIN</span>
             </Link>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium mb-4">
               <Building2 className="h-4 w-4" />
@@ -267,7 +267,7 @@ export default function OrganizadorCadastro() {
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Comece a criar eventos incríveis</h1>
           <p className="text-sm sm:text-base text-secondary-foreground/70">
-            Junte-se a milhares de organizadores que confiam na Influente para vender ingressos.
+            Junte-se a milhares de organizadores que confiam na UPPLIN para vender ingressos.
           </p>
           <div className="mt-8 grid grid-cols-3 gap-4 text-center">
             <div>
