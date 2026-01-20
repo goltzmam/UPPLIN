@@ -66,7 +66,7 @@ export function FollowingFeed() {
     enabled: !!user?.id,
   });
 
-  // Empty state component with dark theme for mobile
+  // Empty state component with theme support for desktop/mobile
   const EmptyState = ({ 
     title, 
     description, 
@@ -86,9 +86,9 @@ export function FollowingFeed() {
         className="relative mb-6"
       >
         {/* Glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-accent/30 to-pink-500/30 rounded-full blur-2xl scale-150" />
-        <div className="relative h-20 w-20 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/20">
-          <Users className="h-10 w-10 text-white/80" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary/30 to-accent/30 rounded-full blur-2xl scale-150" />
+        <div className="relative h-20 w-20 rounded-full bg-muted/80 md:bg-muted backdrop-blur-sm flex items-center justify-center border border-border/50 md:border-border">
+          <Users className="h-10 w-10 text-muted-foreground" />
         </div>
       </motion.div>
       
@@ -96,7 +96,7 @@ export function FollowingFeed() {
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
-        className="font-display text-xl font-bold text-white mb-2"
+        className="font-display text-xl font-bold text-foreground mb-2"
       >
         {title}
       </motion.h3>
@@ -105,7 +105,7 @@ export function FollowingFeed() {
         initial={{ y: 10, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="text-white/60 text-sm mb-6 max-w-[280px]"
+        className="text-muted-foreground text-sm mb-6 max-w-[280px]"
       >
         {description}
       </motion.p>
@@ -117,12 +117,12 @@ export function FollowingFeed() {
         className="flex flex-col gap-3 w-full max-w-[200px]"
       >
         {showLoginButton && (
-          <Button asChild className="w-full bg-white text-black hover:bg-white/90 font-semibold">
+          <Button asChild className="w-full font-semibold">
             <Link to="/login">Entrar</Link>
           </Button>
         )}
         {showExploreButton && (
-          <Button asChild className="w-full bg-white/10 backdrop-blur-sm border border-white/20 text-white hover:bg-white/20 font-semibold">
+          <Button asChild variant="outline" className="w-full font-semibold">
             <Link to="/explorar-organizadores" className="flex items-center gap-2">
               <Compass className="h-4 w-4" />
               Explorar Organizadores
@@ -139,7 +139,7 @@ export function FollowingFeed() {
           transition={{ delay: 0.5 }}
           className="mt-8 w-full"
         >
-          <div className="flex items-center gap-2 text-white/40 text-xs mb-3 justify-center">
+          <div className="flex items-center gap-2 text-muted-foreground/60 text-xs mb-3 justify-center">
             <Sparkles className="h-3 w-3" />
             <span>Organizadores em destaque</span>
           </div>
@@ -147,7 +147,7 @@ export function FollowingFeed() {
             {[1, 2, 3, 4, 5].map((i) => (
               <div
                 key={i}
-                className="h-12 w-12 rounded-full bg-gradient-to-br from-white/20 to-white/5 border border-white/10"
+                className="h-12 w-12 rounded-full bg-gradient-to-br from-muted to-muted/50 border border-border/50"
               />
             ))}
           </div>
