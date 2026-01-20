@@ -110,7 +110,7 @@ export function ShareButton({
             <Share2 className="h-6 w-6" />
           </button>
         ) : (
-          <Button variant="outline" size="sm" className={className}>
+          <Button variant="outline" size="sm" className={`hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors ${className}`}>
             <Share2 className="h-4 w-4 mr-2" />
             Compartilhar
           </Button>
