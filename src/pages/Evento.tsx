@@ -247,30 +247,34 @@ export default function Evento() {
                   {format(eventDate, "EEEE", { locale: ptBR })}
                 </Badge>
                 
-                {/* Organizer @ link - More prominent on desktop */}
+                {/* Organizer @ link - More prominent on desktop with tooltip */}
                 {organizer && (
                   <div className="mb-4 flex items-center gap-3">
-                    <Link 
-                      to={`/organizador/${organizer.id}`}
-                      className="flex items-center gap-2 group/org"
+                    <OrganizerPreviewTooltip 
+                      organizerId={organizer.id}
+                      organizerName={organizer.display_name}
+                      organizerUsername={organizer.slug}
                     >
-                      <Avatar className="h-8 w-8 md:h-10 md:w-10 ring-2 ring-border group-hover/org:ring-primary transition-all">
-                        <AvatarImage src={organizer.logo_url || undefined} />
-                        <AvatarFallback className="bg-muted text-sm font-medium">
-                          {getInitials(organizer.display_name)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <span className="text-sm md:text-base font-semibold group-hover/org:text-primary transition-colors">
-                          {organizer.display_name}
-                        </span>
-                        {organizer.slug && (
-                          <span className="block text-xs md:text-sm text-muted-foreground group-hover/org:text-primary/70 transition-colors">
-                            @{organizer.slug}
+                      <Link 
+                        to={`/organizador/${organizer.id}`}
+                        className="flex items-center gap-2.5 group/org"
+                      >
+                        <Avatar className="h-9 w-9 md:h-11 md:w-11 ring-2 ring-border/60 group-hover/org:ring-primary transition-all shadow-sm">
+                          <AvatarImage src={organizer.logo_url || undefined} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                            {getInitials(organizer.display_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <span className="text-sm md:text-base font-semibold group-hover/org:text-primary transition-colors">
+                            {organizer.display_name}
                           </span>
-                        )}
-                      </div>
-                    </Link>
+                          <span className="block text-xs md:text-sm text-muted-foreground group-hover/org:text-primary/70 transition-colors">
+                            @{organizer.slug || organizer.display_name?.toLowerCase().replace(/\s+/g, '') || 'organizador'}
+                          </span>
+                        </div>
+                      </Link>
+                    </OrganizerPreviewTooltip>
                     <FollowButton organizerId={organizer.id} size="sm" className="ml-auto" />
                   </div>
                 )}
@@ -365,37 +369,52 @@ export default function Evento() {
                 </div>
               )}
 
-              {/* Organizer Section */}
+              {/* Organizer Section - Enhanced with tooltip */}
               {organizer && (
-                <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-3">
-                  <h2 className="font-display text-lg sm:text-xl font-bold mb-4">Organizador</h2>
+                <div className="bg-card rounded-2xl border border-border p-5 sm:p-7 animate-fade-up stagger-3">
+                  <h2 className="font-display text-lg sm:text-xl font-bold mb-5">Organizador</h2>
                   <div className="flex items-start gap-4">
-                    <Link to={`/organizador/${organizer.id}`}>
-                      <Avatar className="h-16 w-16 ring-2 ring-border">
-                        <AvatarImage src={organizer.logo_url || undefined} />
-                        <AvatarFallback className="text-lg font-bold">
-                          {getInitials(organizer.display_name)}
-                        </AvatarFallback>
-                      </Avatar>
-                    </Link>
-                    <div className="flex-1 min-w-0">
-                      <Link to={`/organizador/${organizer.id}`} className="hover:underline">
-                        <h3 className="font-semibold text-base sm:text-lg">{organizer.display_name}</h3>
+                    <OrganizerPreviewTooltip 
+                      organizerId={organizer.id}
+                      organizerName={organizer.display_name}
+                      organizerUsername={organizer.slug}
+                    >
+                      <Link to={`/organizador/${organizer.id}`} className="group">
+                        <Avatar className="h-18 w-18 sm:h-20 sm:w-20 ring-2 ring-border/60 group-hover:ring-primary transition-all shadow-md">
+                          <AvatarImage src={organizer.logo_url || undefined} />
+                          <AvatarFallback className="text-xl font-bold bg-primary/10 text-primary">
+                            {getInitials(organizer.display_name)}
+                          </AvatarFallback>
+                        </Avatar>
                       </Link>
+                    </OrganizerPreviewTooltip>
+                    <div className="flex-1 min-w-0">
+                      <OrganizerPreviewTooltip 
+                        organizerId={organizer.id}
+                        organizerName={organizer.display_name}
+                        organizerUsername={organizer.slug}
+                      >
+                        <Link to={`/organizador/${organizer.id}`} className="group inline-block">
+                          <h3 className="font-semibold text-base sm:text-lg group-hover:text-primary transition-colors">{organizer.display_name}</h3>
+                          <span className="text-sm text-muted-foreground group-hover:text-primary/70 transition-colors">
+                            @{organizer.slug || organizer.display_name?.toLowerCase().replace(/\s+/g, '') || 'organizador'}
+                          </span>
+                        </Link>
+                      </OrganizerPreviewTooltip>
                       {organizer.description && (
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
                           {organizer.description}
                         </p>
                       )}
-                      <div className="flex items-center gap-3 mt-3">
+                      <div className="flex items-center gap-3 mt-4">
                         {organizer.social_instagram && (
                           <a
                             href={organizer.social_instagram.startsWith("http") ? organizer.social_instagram : `https://instagram.com/${organizer.social_instagram.replace("@", "")}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
+                            className="w-9 h-9 rounded-xl bg-muted/80 hover:bg-primary/10 flex items-center justify-center transition-all"
                           >
-                            <Instagram className="h-4 w-4" />
+                            <Instagram className="h-4 w-4 text-muted-foreground hover:text-primary" />
                           </a>
                         )}
                         {organizer.social_facebook && (
@@ -403,9 +422,9 @@ export default function Evento() {
                             href={organizer.social_facebook.startsWith("http") ? organizer.social_facebook : `https://facebook.com/${organizer.social_facebook}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
+                            className="w-9 h-9 rounded-xl bg-muted/80 hover:bg-primary/10 flex items-center justify-center transition-all"
                           >
-                            <Facebook className="h-4 w-4" />
+                            <Facebook className="h-4 w-4 text-muted-foreground hover:text-primary" />
                           </a>
                         )}
                         {organizer.social_website && (
@@ -413,17 +432,17 @@ export default function Evento() {
                             href={organizer.social_website.startsWith("http") ? organizer.social_website : `https://${organizer.social_website}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-primary transition-colors"
+                            className="w-9 h-9 rounded-xl bg-muted/80 hover:bg-primary/10 flex items-center justify-center transition-all"
                           >
-                            <Globe className="h-4 w-4" />
+                            <Globe className="h-4 w-4 text-muted-foreground hover:text-primary" />
                           </a>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 mt-3">
+                      <div className="flex items-center gap-2 mt-4">
                         <FollowButton organizerId={organizer.id} size="sm" />
                         <Link to={`/organizador/${organizer.id}`}>
-                          <Button variant="outline" size="sm" className="text-xs">
-                            <Building2 className="h-3 w-3 mr-1" />
+                          <Button variant="outline" size="sm" className="text-xs rounded-full">
+                            <Building2 className="h-3 w-3 mr-1.5" />
                             Ver Perfil
                           </Button>
                         </Link>
