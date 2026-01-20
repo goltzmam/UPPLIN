@@ -14,7 +14,6 @@ import { CategoriesCarousel } from "@/components/home/CategoriesCarousel";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { 
   Search, 
-  MapPin, 
   TrendingUp,
   Sparkles,
   ArrowRight,
@@ -47,7 +46,6 @@ function TrendingCard({ title, subtitle, image, href }: {
 }
 
 export default function Index() {
-  const [searchValue, setSearchValue] = useState("");
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
   const [forYouScrollPos, setForYouScrollPos] = useState(0);
   const [followingScrollPos, setFollowingScrollPos] = useState(0);
@@ -115,19 +113,10 @@ export default function Index() {
     };
   });
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchValue.trim()) {
-      navigate(`/eventos?q=${encodeURIComponent(searchValue.trim())}`);
-    }
-  };
-
   // Pull to refresh handler
   const handleRefresh = useCallback(async () => {
-    // Reset infinite feed pages
     await queryClient.removeQueries({ queryKey: ["homepage-events-infinite"] });
     await queryClient.invalidateQueries({ queryKey: ["featured-events"] });
-    // Small delay for visual feedback
     await new Promise((resolve) => setTimeout(resolve, 500));
   }, [queryClient]);
 
@@ -146,139 +135,201 @@ export default function Index() {
     },
   ];
 
-  return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
+  // =====================================================================
+  // MOBILE: Fullscreen TikTok-style feed with overlay header/tabs
+  // =====================================================================
+  const MobileFeed = () => (
+    <div className="fixed inset-0 z-0 md:hidden">
+      {/* Fullscreen Feed - behind everything */}
+      <div className="absolute inset-0">
+        <AnimatePresence mode="wait" initial={false}>
+          {activeTab === "foryou" ? (
+            <motion.div
+              key="foryou-mobile"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="h-full"
+              style={{ "--app-top-offset": "0px", "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))" } as React.CSSProperties}
+            >
+              <TikTokFeed
+                items={feedItems}
+                isLoading={isLoading}
+                onLoadMore={fetchNextPage}
+                hasMore={!!hasNextPage}
+                isLoadingMore={isFetchingNextPage}
+                scrollPosition={forYouScrollPos}
+                onScrollChange={setForYouScrollPos}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="following-mobile"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="h-full bg-background overflow-y-auto pb-20"
+            >
+              <div className="pt-28">
+                <FollowingFeed />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Overlay Header - TikTok style (transparent, over video) */}
+      <div className="absolute top-0 left-0 right-0 z-10 pointer-events-none">
+        {/* Safe area for notch */}
+        <div className="h-[env(safe-area-inset-top,0px)]" />
+        
+        {/* Top bar with logo and search */}
+        <div className="flex items-center justify-between px-4 py-3 pointer-events-auto">
+          <Link to="/" className="font-display text-xl font-bold text-white drop-shadow-lg">
+            UPPLIN
+          </Link>
+          <button 
+            onClick={() => navigate("/eventos")}
+            className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center"
+          >
+            <Search className="h-5 w-5 text-white" />
+          </button>
+        </div>
+
+        {/* Tab Navigation - overlaid on video */}
+        <div className="flex items-center justify-center gap-8 px-4 pointer-events-auto">
+          <button
+            onClick={() => setActiveTab("following")}
+            className={cn(
+              "pb-2 text-base font-semibold transition-all border-b-2",
+              activeTab === "following" 
+                ? "border-white text-white" 
+                : "border-transparent text-white/60"
+            )}
+          >
+            Seguindo
+          </button>
+          <button
+            onClick={() => setActiveTab("foryou")}
+            className={cn(
+              "pb-2 text-base font-semibold transition-all border-b-2",
+              activeTab === "foryou" 
+                ? "border-white text-white" 
+                : "border-transparent text-white/60"
+            )}
+          >
+            Para você
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // =====================================================================
+  // DESKTOP: Traditional layout with header, search, sections
+  // =====================================================================
+  const DesktopLayout = () => (
+    <div className="hidden md:block min-h-screen bg-background">
       <Header />
 
       {/* Search Bar - Fixed below header */}
       <div className="fixed top-14 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border/50 py-3">
         <div className="container">
-          <form onSubmit={handleSearch} className="flex items-center gap-2">
+          <form onSubmit={(e) => { e.preventDefault(); navigate("/eventos"); }} className="flex items-center gap-2">
             <div className="flex-1 flex items-center gap-3 bg-muted rounded-full px-4 py-2.5">
               <Search className="h-5 w-5 text-muted-foreground shrink-0" />
               <input
                 type="text"
                 placeholder="Buscar eventos, artistas..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
                 className="flex-1 bg-transparent border-none outline-none text-sm placeholder:text-muted-foreground"
+                onFocus={() => navigate("/eventos")}
               />
             </div>
-            <Button 
-              type="button"
-              variant="outline" 
-              size="icon"
-              className="rounded-full shrink-0"
-              onClick={() => navigate("/eventos")}
-            >
-              <MapPin className="h-5 w-5" />
-            </Button>
           </form>
         </div>
       </div>
 
       <PullToRefresh onRefresh={handleRefresh}>
-        <main className="pt-[calc(3.5rem+3.5rem)]"> {/* Header (56px) + Search bar (56px) */}
-          {/* Featured Stories - Instagram-style with gradient rings */}
-          <section className="hidden md:block border-b border-border/30">
+        <main className="pt-[calc(3.5rem+3.5rem)]">
+          {/* Featured Stories */}
+          <section className="border-b border-border/30">
             <FeaturedStories />
           </section>
 
-        {/* Categories - Pill-style chips */}
-        <section className="hidden md:block border-b border-border/30">
-          <CategoriesCarousel />
-        </section>
+          {/* Categories */}
+          <section className="border-b border-border/30">
+            <CategoriesCarousel />
+          </section>
 
-        {/* Trending Section */}
-        <section className="hidden md:block py-6">
-          <div className="container">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-accent" />
-                <h2 className="font-display text-lg font-bold">Em Alta</h2>
+          {/* Trending Section */}
+          <section className="py-6">
+            <div className="container">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-accent" />
+                  <h2 className="font-display text-lg font-bold">Em Alta</h2>
+                </div>
+                <Link to="/eventos" className="text-sm text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors">
+                  Ver todos
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
               </div>
-              <Link to="/eventos" className="text-sm text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors">
-                Ver todos
-                <ChevronRight className="h-4 w-4" />
-              </Link>
+              <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4">
+                {trending.map((item) => (
+                  <TrendingCard key={item.title} {...item} />
+                ))}
+              </div>
             </div>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4">
-              {trending.map((item) => (
-                <TrendingCard key={item.title} {...item} />
-              ))}
-            </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Feed Section - TikTok Style with Tabs */}
-        <section>
-          <div className="md:container">
-            {/* Tab Navigation */}
-            <div className="sticky top-[112px] z-30 flex items-center justify-center gap-6 border-b border-border bg-background/80 backdrop-blur-xl px-4 md:px-0">
-              <button
-                onClick={() => setActiveTab("foryou")}
-                className={cn(
-                  "pb-3 text-base font-semibold transition-all border-b-2 -mb-px",
-                  activeTab === "foryou" 
-                    ? "border-foreground text-foreground" 
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Para Você
-              </button>
-              <button
-                onClick={() => setActiveTab("following")}
-                className={cn(
-                  "pb-3 text-base font-semibold transition-all border-b-2 -mb-px",
-                  activeTab === "following" 
-                    ? "border-foreground text-foreground" 
-                    : "border-transparent text-muted-foreground hover:text-foreground"
-                )}
-              >
-                Seguindo
-              </button>
-            </div>
-
-            <AnimatePresence mode="wait" initial={false}>
-              {activeTab === "foryou" ? (
-                <motion.div
-                  key="foryou"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
+          {/* Feed Section with Tabs */}
+          <section>
+            <div className="container">
+              {/* Tab Navigation */}
+              <div className="sticky top-[112px] z-30 flex items-center justify-center gap-6 border-b border-border bg-background/80 backdrop-blur-xl">
+                <button
+                  onClick={() => setActiveTab("foryou")}
+                  className={cn(
+                    "pb-3 text-base font-semibold transition-all border-b-2 -mb-px",
+                    activeTab === "foryou" 
+                      ? "border-foreground text-foreground" 
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  {/* TikTok-style vertical feed on mobile */}
-                  <div
-                    className="md:hidden"
-                    style={
-                      {
-                        "--app-top-offset": "160px", // header + search + tabs
-                        "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <TikTokFeed
-                      items={feedItems}
-                      isLoading={isLoading}
-                      onLoadMore={fetchNextPage}
-                      hasMore={!!hasNextPage}
-                      isLoadingMore={isFetchingNextPage}
-                      scrollPosition={forYouScrollPos}
-                      onScrollChange={setForYouScrollPos}
-                    />
-                  </div>
+                  Para Você
+                </button>
+                <button
+                  onClick={() => setActiveTab("following")}
+                  className={cn(
+                    "pb-3 text-base font-semibold transition-all border-b-2 -mb-px",
+                    activeTab === "following" 
+                      ? "border-foreground text-foreground" 
+                      : "border-transparent text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Seguindo
+                </button>
+              </div>
 
-                  {/* Grid layout on desktop */}
-                  <div className="hidden md:block">
+              <AnimatePresence mode="wait" initial={false}>
+                {activeTab === "foryou" ? (
+                  <motion.div
+                    key="foryou-desktop"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
                     {isLoading ? (
-                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 py-6">
                         {[1, 2, 3, 4, 5, 6].map((i) => (
                           <div key={i} className="feed-card animate-pulse bg-muted" />
                         ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 py-6">
                         {feedItems.map((item, index) => (
                           <motion.div
                             key={item.id}
@@ -313,7 +364,7 @@ export default function Index() {
                     )}
 
                     {/* Load more */}
-                    <div className="flex justify-center mt-8">
+                    <div className="flex justify-center mt-8 pb-8">
                       <Button variant="outline" size="lg" className="rounded-full" asChild>
                         <Link to="/eventos">
                           Ver mais eventos
@@ -321,28 +372,38 @@ export default function Index() {
                         </Link>
                       </Button>
                     </div>
-                  </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="following"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                >
-                  <FollowingFeed />
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </section>
-
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="following-desktop"
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    <FollowingFeed />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </section>
         </main>
       </PullToRefresh>
 
       <Footer />
-      <BottomNav />
     </div>
+  );
+
+  return (
+    <>
+      {/* Mobile: Fullscreen TikTok feed */}
+      <MobileFeed />
+      
+      {/* Desktop: Traditional layout */}
+      <DesktopLayout />
+      
+      {/* Bottom Nav - always visible on mobile */}
+      <BottomNav />
+    </>
   );
 }

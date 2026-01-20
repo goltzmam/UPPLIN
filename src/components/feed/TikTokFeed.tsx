@@ -33,9 +33,9 @@ interface TikTokFeedProps {
   onScrollChange?: (position: number) => void;
 }
 
-// Height calculation uses CSS variables injected by the page layout.
-// Defaults match the homepage: header (56) + search (56) + tabs (48) and bottom nav (~72 + safe area)
-const FEED_HEIGHT = "calc(100dvh - var(--app-top-offset, 160px) - var(--app-bottom-offset, 80px))";
+// Height calculation: full viewport minus bottom nav only (overlay header doesn't take space)
+// Uses 100dvh for mobile-accurate viewport, and subtracts bottom nav with safe area
+const FEED_HEIGHT = "calc(100dvh - var(--app-bottom-offset, 80px))";
 
 function formatEngagementCount(count: number): string {
   if (count >= 1000000) {
@@ -186,8 +186,8 @@ function FeedCard({
         )}
       </AnimatePresence>
 
-      {/* Top - Organizer info */}
-      <div className="absolute top-4 left-3 right-20 flex items-center gap-2 z-10">
+      {/* Top - Organizer info - positioned below overlay header */}
+      <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-20 flex items-center gap-2 z-10">
         <button
           onClick={handleOrganizerClick}
           className="flex items-center gap-2 min-w-0"
@@ -209,8 +209,8 @@ function FeedCard({
         </button>
       </div>
 
-      {/* Price badge */}
-      <div className="absolute top-4 right-3 z-10">
+      {/* Price badge - positioned below overlay header */}
+      <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] right-3 z-10">
         <div className="bg-white/95 backdrop-blur-sm px-2.5 py-1 rounded-full">
           <span className={cn(
             "text-xs font-bold",
