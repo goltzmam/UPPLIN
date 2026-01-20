@@ -83,6 +83,8 @@ export default function Index() {
   const events = data?.pages.flatMap(page => page.data) || [];
 
   // Demo assets - using reliable CDN sources
+  const DEMO_VIDEO_URL = "/videos/demo-carnaval.mp4";
+  
   const DEMO_COVER_URLS = [
     "https://images.unsplash.com/photo-1521337706264-a414f153a5fc?w=1200&q=80",
     "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&q=80",
@@ -98,14 +100,16 @@ export default function Index() {
       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
       : 0;
 
-    // Use actual video from event_media, or null for demo (show cover image instead)
+    // Use actual video from event_media, or demo video for first item in dev
     const demoCover = import.meta.env.DEV ? DEMO_COVER_URLS[index % DEMO_COVER_URLS.length] : null;
+    // Use the demo video for the first event to showcase the feature
+    const demoVideo = import.meta.env.DEV && index === 0 ? DEMO_VIDEO_URL : null;
 
     return {
       id: event.id,
       title: event.title,
       coverImageUrl: event.cover_image_url || demoCover,
-      videoUrl: videoMedia?.url || null, // Only use real videos, no demo videos
+      videoUrl: videoMedia?.url || demoVideo,
       startAt: event.start_at,
       endAt: event.end_at,
       venueName: event.venue_name,
