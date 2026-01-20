@@ -135,18 +135,62 @@ function LikeParticles({ show }: { show: boolean }) {
   );
 }
 
-// Progress indicator component
-function ProgressIndicator({ current, total }: { current: number; total: number }) {
+// Bookmark save particles animation
+function SaveParticles({ show }: { show: boolean }) {
+  const particles = useMemo(() => 
+    Array.from({ length: 8 }).map((_, i) => ({
+      id: i,
+      angle: (i * 45) + Math.random() * 20,
+      distance: 40 + Math.random() * 30,
+      size: 3 + Math.random() * 3,
+      delay: Math.random() * 0.08,
+    })), []
+  );
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex items-center gap-2"
-    >
-      <span className="text-white/90 text-xs font-bold tabular-nums drop-shadow-lg">
-        {current}/{total}
-      </span>
-    </motion.div>
+    <AnimatePresence>
+      {show && (
+        <>
+          {particles.map((particle) => (
+            <motion.div
+              key={particle.id}
+              initial={{ 
+                scale: 0, 
+                x: 0, 
+                y: 0,
+                opacity: 1 
+              }}
+              animate={{ 
+                scale: [0, 1, 0.3],
+                x: Math.cos(particle.angle * Math.PI / 180) * particle.distance,
+                y: Math.sin(particle.angle * Math.PI / 180) * particle.distance,
+                opacity: [1, 1, 0]
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ 
+                duration: 0.5, 
+                delay: particle.delay,
+                ease: "easeOut"
+              }}
+              className="absolute pointer-events-none"
+              style={{
+                width: particle.size,
+                height: particle.size,
+              }}
+            >
+              <Bookmark className="w-full h-full text-white fill-white" />
+            </motion.div>
+          ))}
+          {/* Central pulse */}
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: [0, 1.3, 1], opacity: [0, 0.6, 0] }}
+            transition={{ duration: 0.35 }}
+            className="absolute w-12 h-12 rounded-full bg-white/30 pointer-events-none"
+          />
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -160,13 +204,11 @@ function ScrollMiniMap({
   total: number;
   maxVisible?: number;
 }) {
-  // Show dots around current position
   const visibleRange = useMemo(() => {
     const half = Math.floor(maxVisible / 2);
     let start = Math.max(0, current - half);
     let end = Math.min(total - 1, start + maxVisible - 1);
     
-    // Adjust start if we're near the end
     if (end - start < maxVisible - 1) {
       start = Math.max(0, end - maxVisible + 1);
     }
@@ -219,7 +261,6 @@ function VideoPlaceholder({ coverUrl, title }: { coverUrl: string | null; title:
       ) : (
         <div className="h-full w-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
       )}
-      {/* Shimmer overlay */}
       <div className="absolute inset-0 overflow-hidden">
         <div 
           className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
@@ -228,7 +269,6 @@ function VideoPlaceholder({ coverUrl, title }: { coverUrl: string | null; title:
           }}
         />
       </div>
-      {/* Center loading */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
@@ -255,11 +295,11 @@ function FeedCard({
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [showLikeParticles, setShowLikeParticles] = useState(false);
+  const [showSaveParticles, setShowSaveParticles] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showComments, setShowComments] = useState(false);
   
-  // Fetch comment count for this event
   const { data: commentCount = 0 } = useQuery({
     queryKey: ["event-comment-count", item.id],
     queryFn: async () => {
@@ -271,16 +311,12 @@ function FeedCard({
       if (error) throw error;
       return count || 0;
     },
-    staleTime: 30000, // Cache for 30 seconds
+    staleTime: 30000,
   });
   
-  // Check if event is live
   const isLive = useMemo(() => isEventLive(item.startAt, item.endAt), [item.startAt, item.endAt]);
-  
-  // Smart autoplay: only play when 70%+ visible and active
   const shouldPlay = isActive && visibilityRatio >= 0.7 && !isPaused;
   
-  // Use persistent engagement
   const { 
     isLiked, 
     likeCount, 
@@ -299,10 +335,8 @@ function FeedCard({
     return `R$ ${(cents / 100).toFixed(0)}`;
   };
 
-  // Handle video playback based on visibility
   useEffect(() => {
     if (!videoRef.current) return;
-
     if (shouldPlay) {
       videoRef.current.play().catch(() => {});
     } else {
@@ -310,14 +344,12 @@ function FeedCard({
     }
   }, [shouldPlay]);
 
-  // Handle mute
   useEffect(() => {
     if (videoRef.current) {
       videoRef.current.muted = isMuted;
     }
   }, [isMuted]);
 
-  // Track video loaded state
   const handleVideoLoaded = useCallback(() => {
     setVideoLoaded(true);
   }, []);
@@ -340,6 +372,15 @@ function FeedCard({
       setTimeout(() => setShowLikeParticles(false), 700);
     }
     toggleLike();
+  };
+
+  const handleSaveClick = () => {
+    triggerFeedback({ haptic: "light", sound: "tap" });
+    if (!isSaved) {
+      setShowSaveParticles(true);
+      setTimeout(() => setShowSaveParticles(false), 600);
+    }
+    toggleSave();
   };
 
   const handleTap = () => {
@@ -366,7 +407,6 @@ function FeedCard({
       <div className="absolute inset-0">
         {item.videoUrl ? (
           <>
-            {/* Premium placeholder while loading */}
             {!videoLoaded && (
               <VideoPlaceholder coverUrl={item.coverImageUrl} title={item.title} />
             )}
@@ -394,11 +434,10 @@ function FeedCard({
           <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
         )}
         
-        {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
       </div>
 
-      {/* Double tap heart animation with particles */}
+      {/* Double tap heart animation */}
       <AnimatePresence>
         {showHeart && (
           <motion.div
@@ -431,10 +470,9 @@ function FeedCard({
         )}
       </AnimatePresence>
 
-      {/* Top - Organizer info - positioned below overlay header */}
+      {/* Top - Organizer info */}
       <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-16 z-10">
         <div className="flex items-center gap-2">
-          {/* Organizer */}
           <button
             onClick={handleOrganizerClick}
             className="flex items-center gap-2 min-w-0"
@@ -454,8 +492,6 @@ function FeedCard({
               @{item.organizerName?.replace(/\s+/g, "").toLowerCase() || "organizador"}
             </span>
           </button>
-
-          {/* Live badge */}
           {isLive && <LiveBadge />}
         </div>
       </div>
@@ -463,14 +499,12 @@ function FeedCard({
       {/* Bottom content */}
       <div className="absolute bottom-0 left-0 right-0 p-4 pb-5 z-10">
         <div className="flex items-end gap-4">
-          {/* Event info - left side */}
           <div className="flex-1 min-w-0 pr-4">
             <Link 
               to={`/evento/${item.id}`}
               onClick={(e) => e.stopPropagation()}
               className="block"
             >
-              {/* Price badge inline with title */}
               <div className="flex items-center gap-2 mb-2">
                 <div className={cn(
                   "px-3 py-1 rounded-full text-xs font-bold",
@@ -501,7 +535,7 @@ function FeedCard({
             </Link>
           </div>
 
-          {/* Right side actions - vertical column */}
+          {/* Right side actions */}
           <div className="flex flex-col items-center gap-4 shrink-0">
             <motion.button
               whileTap={{ scale: 0.85 }}
@@ -512,8 +546,12 @@ function FeedCard({
               className="flex flex-col items-center gap-1 relative"
             >
               <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 relative">
-                <Heart className={cn("h-5 w-5 transition-all", isLiked ? "fill-accent text-accent scale-110" : "text-white")} />
-                {/* Mini particles on button click */}
+                <motion.div
+                  animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Heart className={cn("h-5 w-5 transition-all", isLiked ? "fill-accent text-accent" : "text-white")} />
+                </motion.div>
                 <LikeParticles show={showLikeParticles && !showHeart} />
               </div>
               <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(likeCount)}</span>
@@ -546,12 +584,18 @@ function FeedCard({
               whileTap={{ scale: 0.85 }}
               onClick={(e) => {
                 e.stopPropagation();
-                toggleSave();
+                handleSaveClick();
               }}
-              className="flex flex-col items-center gap-1"
+              className="flex flex-col items-center gap-1 relative"
             >
-              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
-                <Bookmark className={cn("h-5 w-5", isSaved ? "fill-white text-white" : "text-white")} />
+              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 relative">
+                <motion.div
+                  animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <Bookmark className={cn("h-5 w-5 transition-all", isSaved ? "fill-white text-white" : "text-white")} />
+                </motion.div>
+                <SaveParticles show={showSaveParticles} />
               </div>
               <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(saveCount)}</span>
             </motion.button>
@@ -616,12 +660,10 @@ export function TikTokFeed({
   const activeIndexRef = useRef(0);
   const scrollRafRef = useRef<number | null>(null);
 
-  // Keep references to each snap item for IntersectionObserver
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [visibilityRatios, setVisibilityRatios] = useState<Map<number, number>>(new Map());
   const visibilityRatiosRef = useRef<Map<number, number>>(new Map());
 
-  // Load mute preference from localStorage
   const [isMuted, setIsMuted] = useState(() => {
     try {
       const stored = localStorage.getItem(MUTE_STORAGE_KEY);
@@ -631,7 +673,6 @@ export function TikTokFeed({
     }
   });
 
-  // Save mute preference to localStorage
   const handleToggleMute = useCallback(() => {
     setIsMuted(prev => {
       const newValue = !prev;
@@ -649,76 +690,57 @@ export function TikTokFeed({
   const isRefreshingRef = useRef(false);
   const pullDistanceRef = useRef(0);
 
-  const setPull = useCallback((v: number) => {
-    pullDistanceRef.current = v;
-    setPullDistance(v);
+  const setPull = useCallback((d: number) => {
+    pullDistanceRef.current = d;
+    setPullDistance(d);
   }, []);
 
   useEffect(() => {
     isRefreshingRef.current = isRefreshing;
   }, [isRefreshing]);
 
-  // Restore scroll position when mounting
-  useEffect(() => {
-    if (containerRef.current && scrollPosition > 0) {
-      containerRef.current.scrollTop = scrollPosition;
-    }
-  }, []);
-
-  // Scroll handler: keep it lightweight (no active video math here)
   const handleScroll = useCallback(() => {
     if (!containerRef.current) return;
+    if (scrollRafRef.current !== null) return;
 
-    if (scrollRafRef.current) return;
     scrollRafRef.current = window.requestAnimationFrame(() => {
-      scrollRafRef.current = null;
-      if (!containerRef.current) return;
-
       const container = containerRef.current;
-      const scrollTop = container.scrollTop;
-      const itemHeight = container.clientHeight;
-      const scrollHeight = container.scrollHeight;
-
-      onScrollChange?.(scrollTop);
-
-      const nearBottom = scrollTop + itemHeight * 2 >= scrollHeight - itemHeight;
-      if (nearBottom && hasMore && !isLoadingMore && onLoadMore) {
-        onLoadMore();
+      if (!container) {
+        scrollRafRef.current = null;
+        return;
       }
-    });
-  }, [items.length, hasMore, isLoadingMore, onLoadMore, onScrollChange]);
+      onScrollChange?.(container.scrollTop);
 
-  // IntersectionObserver-based active card with visibility tracking
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const remaining = scrollHeight - scrollTop - clientHeight;
+      if (remaining < clientHeight && hasMore && !isLoadingMore) {
+        onLoadMore?.();
+      }
+      scrollRafRef.current = null;
+    });
+  }, [onScrollChange, onLoadMore, hasMore, isLoadingMore]);
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    if (typeof IntersectionObserver === "undefined") return;
-
-    visibilityRatiosRef.current = new Map();
 
     const observer = new IntersectionObserver(
       (entries) => {
-        for (const entry of entries) {
-          const idxStr = (entry.target as HTMLElement).dataset.index;
-          const idx = idxStr ? Number(idxStr) : NaN;
-          if (!Number.isFinite(idx)) continue;
-          visibilityRatiosRef.current.set(idx, entry.isIntersecting ? entry.intersectionRatio : 0);
-        }
-
-        // Update visibility state for smart autoplay
+        entries.forEach((entry) => {
+          const idx = parseInt(entry.target.getAttribute("data-index") || "0", 10);
+          visibilityRatiosRef.current.set(idx, entry.intersectionRatio);
+        });
         setVisibilityRatios(new Map(visibilityRatiosRef.current));
 
-        // Pick the most visible card
         let bestIdx = activeIndexRef.current;
-        let bestRatio = visibilityRatiosRef.current.get(bestIdx) ?? 0;
-        for (const [idx, ratio] of visibilityRatiosRef.current.entries()) {
+        let bestRatio = 0;
+        visibilityRatiosRef.current.forEach((ratio, idx) => {
           if (ratio > bestRatio) {
             bestRatio = ratio;
             bestIdx = idx;
           }
-        }
+        });
 
-        // Only switch when there's a clear winner (70%+ visible)
         if (bestIdx !== activeIndexRef.current && bestRatio >= 0.7) {
           activeIndexRef.current = bestIdx;
           triggerFeedback({ haptic: "light" });
@@ -731,7 +753,6 @@ export function TikTokFeed({
       }
     );
 
-    // Observe current items
     itemRefs.current.forEach((el) => {
       if (el) observer.observe(el);
     });
@@ -739,7 +760,6 @@ export function TikTokFeed({
     return () => observer.disconnect();
   }, [items.length]);
 
-  // Native touch listeners for pull-to-refresh
   useEffect(() => {
     const container = containerRef.current;
     if (!container || !onRefresh) return;
@@ -803,10 +823,7 @@ export function TikTokFeed({
         style={{ height: 'calc(100dvh - var(--app-bottom-offset, 80px))' }} 
         className="relative overflow-hidden bg-black"
       >
-        {/* Skeleton with shimmer effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
-        
-        {/* Animated shimmer overlay */}
         <div className="absolute inset-0 overflow-hidden">
           <div 
             className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
@@ -815,15 +832,12 @@ export function TikTokFeed({
             }}
           />
         </div>
-
-        {/* Skeleton content */}
         <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-3">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-zinc-700 animate-pulse" />
             <div className="h-4 w-32 rounded bg-zinc-700 animate-pulse" />
           </div>
         </div>
-
         <div className="absolute bottom-0 left-0 right-0 p-4 pb-6">
           <div className="flex items-end gap-4">
             <div className="flex-1 space-y-2">
@@ -838,8 +852,6 @@ export function TikTokFeed({
             </div>
           </div>
         </div>
-
-        {/* Center loading indicator */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
             <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin" />
@@ -880,8 +892,6 @@ export function TikTokFeed({
       }}
       className="relative overflow-y-auto snap-y snap-mandatory scrollbar-hide overscroll-y-contain"
     >
-
-      {/* Mini scroll map - right side center */}
       <div 
         className="fixed z-30 pointer-events-none"
         style={{ 
@@ -893,7 +903,6 @@ export function TikTokFeed({
         <ScrollMiniMap current={activeIndex} total={items.length} />
       </div>
 
-      {/* Pull-to-refresh indicator */}
       {onRefresh && (
         <div
           className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20"
@@ -937,7 +946,6 @@ export function TikTokFeed({
         </div>
       ))}
       
-      {/* Discrete loading indicator for infinite scroll */}
       {isLoadingMore && (
         <motion.div 
           initial={{ opacity: 0 }}

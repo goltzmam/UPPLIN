@@ -152,21 +152,41 @@ export default function Index() {
     },
   ];
 
+  // Handle swipe gestures for tab switching
+  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number }; velocity: { x: number } }) => {
+    const swipeThreshold = 50;
+    const velocityThreshold = 500;
+    
+    if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
+      // Swiped right -> go to Following
+      setActiveTab("following");
+    } else if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
+      // Swiped left -> go to For You
+      setActiveTab("foryou");
+    }
+  }, []);
+
   // =====================================================================
   // MOBILE: Fullscreen TikTok-style feed with overlay header/tabs
   // =====================================================================
   const MobileFeed = () => (
     <div className="fixed inset-0 z-0 md:hidden">
-      {/* Fullscreen Feed */}
-      <div className="absolute inset-0">
+      {/* Fullscreen Feed with swipe gesture */}
+      <motion.div 
+        className="absolute inset-0"
+        drag="x"
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.2}
+        onDragEnd={handleDragEnd}
+      >
         <AnimatePresence mode="wait" initial={false}>
           {activeTab === "foryou" ? (
             <motion.div
               key="foryou-mobile"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className="h-full"
               style={{ "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))" } as React.CSSProperties}
             >
@@ -186,10 +206,10 @@ export default function Index() {
           ) : (
             <motion.div
               key="following-mobile"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
               className="h-full bg-black overflow-y-auto pb-20"
             >
               <div className="pt-24">
@@ -198,7 +218,7 @@ export default function Index() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
 
       {/* Overlay Header - TikTok style */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
