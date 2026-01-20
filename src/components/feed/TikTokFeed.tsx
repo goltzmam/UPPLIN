@@ -34,8 +34,8 @@ interface TikTokFeedProps {
   onScrollChange?: (position: number) => void;
 }
 
-// Height calculation: full viewport minus bottom nav only
-const FEED_HEIGHT = "calc(100dvh - var(--app-bottom-offset, 80px))";
+// Height calculation constant for consistency
+const FEED_HEIGHT_STYLE = { height: 'calc(100dvh - var(--app-bottom-offset, 80px))' };
 
 function formatEngagementCount(count: number): string {
   if (count >= 1000000) {
@@ -389,6 +389,8 @@ export function TikTokFeed({
     const newIndex = Math.round(scrollTop / itemHeight);
 
     if (newIndex !== activeIndex && newIndex >= 0 && newIndex < items.length) {
+      // Trigger haptic feedback when changing videos
+      triggerFeedback({ haptic: "light" });
       setActiveIndex(newIndex);
     }
 
@@ -413,10 +415,54 @@ export function TikTokFeed({
   if (isLoading) {
     return (
       <div 
-        style={{ height: FEED_HEIGHT }} 
-        className="bg-muted animate-pulse flex items-center justify-center"
+        style={{ 
+          height: 'calc(100dvh - var(--app-bottom-offset, 80px))'
+        }} 
+        className="relative overflow-hidden bg-black"
       >
-        <div className="text-muted-foreground">Carregando...</div>
+        {/* Skeleton with shimmer effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
+        
+        {/* Animated shimmer overlay */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div 
+            className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]"
+            style={{
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%)'
+            }}
+          />
+        </div>
+
+        {/* Skeleton content */}
+        <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-3">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-zinc-700 animate-pulse" />
+            <div className="h-4 w-32 rounded bg-zinc-700 animate-pulse" />
+          </div>
+        </div>
+
+        <div className="absolute bottom-0 left-0 right-0 p-4 pb-6">
+          <div className="flex items-end gap-4">
+            <div className="flex-1 space-y-2">
+              <div className="h-5 w-3/4 rounded bg-zinc-700 animate-pulse" />
+              <div className="h-4 w-1/2 rounded bg-zinc-700 animate-pulse" />
+              <div className="h-3 w-2/3 rounded bg-zinc-700 animate-pulse" />
+            </div>
+            <div className="flex flex-col items-center gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-10 w-10 rounded-full bg-zinc-700 animate-pulse" />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Center loading indicator */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-12 h-12 border-3 border-white/20 border-t-white rounded-full animate-spin" />
+            <span className="text-white/60 text-sm font-medium">Carregando feed...</span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -424,12 +470,15 @@ export function TikTokFeed({
   if (items.length === 0) {
     return (
       <div 
-        style={{ height: FEED_HEIGHT }} 
-        className="flex items-center justify-center text-center p-8"
+        style={FEED_HEIGHT_STYLE} 
+        className="flex items-center justify-center text-center p-8 bg-background"
       >
         <div>
-          <p className="text-muted-foreground mb-2">Nenhum evento encontrado</p>
-          <p className="text-sm text-muted-foreground/70">
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+            <Calendar className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <p className="text-foreground font-medium mb-1">Nenhum evento encontrado</p>
+          <p className="text-sm text-muted-foreground">
             Explore categorias ou siga organizadores
           </p>
         </div>
