@@ -38,10 +38,10 @@ export function BottomNav() {
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
     >
       {/* Minimalist top separator line */}
-      <div className="absolute inset-x-0 top-0 h-px bg-white/20" />
+      <div className="absolute inset-x-0 top-0 h-px bg-border/30" />
 
-      {/* Dark background bar */}
-      <div className="absolute inset-0 bg-black" />
+      {/* White background bar */}
+      <div className="absolute inset-0 bg-white" />
 
       {/* Content */}
       <div className="relative px-2 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
@@ -91,10 +91,10 @@ export function BottomNav() {
                   whileTap={{ scale: 0.85 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <Icon className="h-6 w-6 text-white" strokeWidth={1.5} />
+                  <Icon className="h-6 w-6 text-black" strokeWidth={1.5} />
                 </motion.div>
                 
-                <span className="text-[10px] font-medium mt-1 text-white">
+                <span className="text-[10px] font-medium mt-1 text-black">
                   {item.label}
                 </span>
               </Link>
