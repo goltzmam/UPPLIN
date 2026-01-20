@@ -35,8 +35,8 @@
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    /* Accent: Vibrant Pink/Red for social engagement */
-    --accent: 346 84% 60%;
+    /* Accent: Vibrant Orange for social engagement */
+    --accent: 24 95% 53%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -56,8 +56,8 @@
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 20%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(346 84% 60%) 0%, hsl(330 80% 55%) 100%);
-    --gradient-social: linear-gradient(45deg, hsl(346 84% 60%), hsl(280 80% 60%), hsl(200 80% 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(24 95% 53%) 0%, hsl(32 90% 50%) 100%);
+    --gradient-social: linear-gradient(45deg, hsl(24 95% 53%), hsl(32 90% 50%), hsl(15 85% 55%));
 
     /* Video overlays (used on fullscreen feed UI) */
     --video-overlay: 0 0% 0%;
@@ -67,7 +67,7 @@
     --shadow-md: 0 4px 12px -2px hsla(0, 0%, 0%, 0.08);
     --shadow-lg: 0 12px 24px -4px hsla(0, 0%, 0%, 0.12);
     --shadow-xl: 0 24px 48px -8px hsla(0, 0%, 0%, 0.15);
-    --shadow-glow: 0 0 30px hsla(346, 84%, 60%, 0.25);
+    --shadow-glow: 0 0 30px hsla(24, 95%, 53%, 0.25);
 
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
@@ -106,7 +106,7 @@
     --muted-foreground: 0 0% 55%;
 
     /* Accent */
-    --accent: 346 84% 60%;
+    --accent: 24 95% 53%;
     --accent-foreground: 0 0% 100%;
 
     /* Destructive */
@@ -122,7 +122,7 @@
     --input: 0 0% 15%;
     --ring: 0 0% 98%;
 
-    --shadow-glow: 0 0 30px hsla(346, 84%, 60%, 0.3);
+    --shadow-glow: 0 0 30px hsla(24, 95%, 53%, 0.3);
 
     /* Sidebar */
     --sidebar-background: 0 0% 5%;
@@ -211,8 +211,7 @@
 
   /* Story-style avatar ring */
   .avatar-ring {
-    @apply ring-2 ring-offset-2 ring-offset-background;
-    ring-color: hsl(346 84% 60%);
+    @apply ring-2 ring-offset-2 ring-offset-background ring-accent;
   }
   .avatar-ring-gradient {
     background: var(--gradient-social);
@@ -228,7 +227,7 @@
   }
   .story-ring:hover {
     transform: scale(1.05);
-    box-shadow: 0 0 20px hsla(346, 84%, 60%, 0.4);
+    box-shadow: 0 0 20px hsla(24, 95%, 53%, 0.4);
   }
   .story-ring:active {
     transform: scale(0.95);
@@ -400,10 +399,10 @@
   /* Glow pulse */
   @keyframes glow-pulse {
     0%, 100% { 
-      box-shadow: 0 0 5px hsla(346, 84%, 60%, 0.4);
+      box-shadow: 0 0 5px hsla(24, 95%, 53%, 0.4);
     }
     50% { 
-      box-shadow: 0 0 20px hsla(346, 84%, 60%, 0.6);
+      box-shadow: 0 0 20px hsla(24, 95%, 53%, 0.6);
     }
   }
   .animate-glow-pulse {
