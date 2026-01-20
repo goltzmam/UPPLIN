@@ -10,6 +10,8 @@ import { ShareButton } from "@/components/events/ShareButton";
 import { triggerFeedback } from "@/lib/feedback";
 import { EventComments } from "@/components/events/EventComments";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TikTokFeedItem {
   id: string;
@@ -71,6 +73,65 @@ function LiveBadge() {
       </span>
       <span className="text-white text-xs font-bold uppercase tracking-wide">AO VIVO</span>
     </div>
+  );
+}
+
+// Premium like particles animation
+function LikeParticles({ show }: { show: boolean }) {
+  const particles = useMemo(() => 
+    Array.from({ length: 12 }).map((_, i) => ({
+      id: i,
+      angle: (i * 30) + Math.random() * 15,
+      distance: 60 + Math.random() * 40,
+      size: 4 + Math.random() * 4,
+      delay: Math.random() * 0.1,
+    })), []
+  );
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <>
+          {particles.map((particle) => (
+            <motion.div
+              key={particle.id}
+              initial={{ 
+                scale: 0, 
+                x: 0, 
+                y: 0,
+                opacity: 1 
+              }}
+              animate={{ 
+                scale: [0, 1, 0.5],
+                x: Math.cos(particle.angle * Math.PI / 180) * particle.distance,
+                y: Math.sin(particle.angle * Math.PI / 180) * particle.distance,
+                opacity: [1, 1, 0]
+              }}
+              exit={{ opacity: 0 }}
+              transition={{ 
+                duration: 0.6, 
+                delay: particle.delay,
+                ease: "easeOut"
+              }}
+              className="absolute pointer-events-none"
+              style={{
+                width: particle.size,
+                height: particle.size,
+              }}
+            >
+              <Heart className="w-full h-full text-accent fill-accent" />
+            </motion.div>
+          ))}
+          {/* Central burst */}
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: [0, 1.5, 1], opacity: [0, 1, 0] }}
+            transition={{ duration: 0.4 }}
+            className="absolute w-16 h-16 rounded-full bg-accent/20 pointer-events-none"
+          />
+        </>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -193,9 +254,25 @@ function FeedCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
+  const [showLikeParticles, setShowLikeParticles] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  
+  // Fetch comment count for this event
+  const { data: commentCount = 0 } = useQuery({
+    queryKey: ["event-comment-count", item.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("event_comments")
+        .select("*", { count: "exact", head: true })
+        .eq("event_id", item.id);
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    staleTime: 30000, // Cache for 30 seconds
+  });
   
   // Check if event is live
   const isLive = useMemo(() => isEventLive(item.startAt, item.endAt), [item.startAt, item.endAt]);
@@ -250,8 +327,19 @@ function FeedCard({
       triggerFeedback({ haptic: "selection", sound: "tap" });
       toggleLike();
       setShowHeart(true);
+      setShowLikeParticles(true);
       setTimeout(() => setShowHeart(false), 600);
+      setTimeout(() => setShowLikeParticles(false), 700);
     }
+  };
+  
+  const handleLikeClick = () => {
+    triggerFeedback({ haptic: "light", sound: "tap" });
+    if (!isLiked) {
+      setShowLikeParticles(true);
+      setTimeout(() => setShowLikeParticles(false), 700);
+    }
+    toggleLike();
   };
 
   const handleTap = () => {
@@ -310,7 +398,7 @@ function FeedCard({
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
       </div>
 
-      {/* Double tap heart animation */}
+      {/* Double tap heart animation with particles */}
       <AnimatePresence>
         {showHeart && (
           <motion.div
@@ -319,7 +407,10 @@ function FeedCard({
             exit={{ scale: 1.5, opacity: 0 }}
             className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
           >
-            <Heart className="h-24 w-24 text-accent fill-accent" />
+            <div className="relative flex items-center justify-center">
+              <Heart className="h-24 w-24 text-accent fill-accent" />
+              <LikeParticles show={showLikeParticles} />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -416,12 +507,14 @@ function FeedCard({
               whileTap={{ scale: 0.85 }}
               onClick={(e) => {
                 e.stopPropagation();
-                toggleLike();
+                handleLikeClick();
               }}
-              className="flex flex-col items-center gap-1"
+              className="flex flex-col items-center gap-1 relative"
             >
-              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
-                <Heart className={cn("h-5 w-5", isLiked ? "fill-accent text-accent" : "text-white")} />
+              <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 relative">
+                <Heart className={cn("h-5 w-5 transition-all", isLiked ? "fill-accent text-accent scale-110" : "text-white")} />
+                {/* Mini particles on button click */}
+                <LikeParticles show={showLikeParticles && !showHeart} />
               </div>
               <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(likeCount)}</span>
             </motion.button>
@@ -432,11 +525,12 @@ function FeedCard({
                 e.stopPropagation();
                 setShowComments(true);
               }}
-              className="flex flex-col items-center"
+              className="flex flex-col items-center gap-1"
             >
               <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
                 <MessageCircle className="h-5 w-5 text-white" />
               </div>
+              <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(commentCount)}</span>
             </motion.button>
             
             <ShareButton
