@@ -410,9 +410,6 @@ const FeedRow = React.memo(function FeedRow({
                 <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(commentCount)}</span>
               </motion.button>
 
-              <ShareButton eventId={item.id} eventTitle={item.title} eventDate={formattedDate} eventImage={item.coverImageUrl} iconOnly
-                className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white border border-white/10" />
-
               <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleSaveClick(); }} className="flex flex-col items-center gap-1 relative">
                 <div className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 relative">
                   <motion.div animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
@@ -422,6 +419,9 @@ const FeedRow = React.memo(function FeedRow({
                 </div>
                 <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(saveCount)}</span>
               </motion.button>
+
+              <ShareButton eventId={item.id} eventTitle={item.title} eventDate={formattedDate} eventImage={item.coverImageUrl} iconOnly
+                className="h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white border border-white/10" />
 
             </div>
           </div>
