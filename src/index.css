@@ -421,16 +421,25 @@
 
   /* Ultra smooth iOS-style scrolling */
   .scroll-smooth-ios {
-    scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: contain;
+    scroll-snap-type: y mandatory;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
   
   /* Performance optimizations for mobile scroll */
-  @supports (-webkit-touch-callout: none) {
-    .scroll-smooth-ios {
-      scroll-snap-type: y mandatory;
-    }
+  .will-change-transform {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
   
   /* Touch manipulation improvements */
