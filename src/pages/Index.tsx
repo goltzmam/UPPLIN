@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +47,8 @@ function TrendingCard({ title, subtitle, image, href }: {
 
 export default function Index() {
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
-  const [scrollPos, setScrollPos] = useState(0);
+  // Keep scroll position without re-rendering on every scroll tick (critical for mobile perf)
+  const scrollPosRef = useRef(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -175,8 +176,10 @@ export default function Index() {
                 onLoadMore={fetchNextPage}
                 hasMore={!!hasNextPage}
                 isLoadingMore={isFetchingNextPage}
-                scrollPosition={scrollPos}
-                onScrollChange={setScrollPos}
+                scrollPosition={scrollPosRef.current}
+                onScrollChange={(pos) => {
+                  scrollPosRef.current = pos;
+                }}
                 onRefresh={handleRefresh}
               />
             </motion.div>
