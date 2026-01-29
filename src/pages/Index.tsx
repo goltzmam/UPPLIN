@@ -130,9 +130,14 @@ export default function Index() {
           to="/" 
           className={cn(
             "font-display text-base font-bold tracking-tight shrink-0 transition-colors",
-            activeTab === "following" ? "gradient-text" : "gradient-text drop-shadow-md",
             isDesktop && "hidden" // Hide on desktop since sidebar has logo
           )}
+          style={{ 
+            background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text"
+          }}
         >
           UPPLIN
         </Link>

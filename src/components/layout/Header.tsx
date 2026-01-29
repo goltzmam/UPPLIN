@@ -65,7 +65,13 @@ export function Header({ minimal = false }: HeaderProps) {
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="font-display text-xl font-bold tracking-tight gradient-text"
+              className="font-display text-xl font-bold tracking-tight"
+              style={{ 
+                background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
             >
               UPPLIN
             </motion.div>
