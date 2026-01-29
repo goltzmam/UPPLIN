@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Volume2, VolumeX, Plus, Ticket } from "lucide-react";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Volume2, VolumeX, Plus, Ticket, Gift } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -494,40 +494,54 @@ const FeedRow = React.memo(function FeedRow({
           {/* Buy ticket button - prominent CTA with visual differentiation */}
           {(() => {
             const isFree = (item.minPrice || 0) === 0;
+            const IconComponent = isFree ? Gift : Ticket;
             return (
-              <motion.div
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-                animate={{ 
-                  boxShadow: isFree 
-                    ? ["0 0 0 0 hsl(var(--success) / 0.3)", "0 0 0 4px hsl(var(--success) / 0)"]
-                    : ["0 0 0 0 hsl(var(--primary) / 0.3)", "0 0 0 4px hsl(var(--primary) / 0)"]
-                }}
-                transition={{
-                  boxShadow: { duration: 2, repeat: Infinity, ease: "easeOut" }
-                }}
-                className="inline-block rounded-full"
-              >
-                <Link 
-                  to={`/evento/${item.id}`} 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    triggerFeedback({ haptic: "medium", sound: "tap" });
+              <div className="flex items-center gap-2">
+                {/* GRÁTIS Badge - only for free events */}
+                {isFree && (
+                  <motion.div
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="px-3 py-1.5 rounded-full bg-success/20 border border-success/40 backdrop-blur-sm"
+                  >
+                    <span className="text-success text-xs font-bold tracking-wide">GRÁTIS</span>
+                  </motion.div>
+                )}
+                
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  animate={{ 
+                    boxShadow: isFree 
+                      ? ["0 0 0 0 hsl(var(--success) / 0.3)", "0 0 0 4px hsl(var(--success) / 0)"]
+                      : ["0 0 0 0 hsl(var(--primary) / 0.3)", "0 0 0 4px hsl(var(--primary) / 0)"]
                   }}
-                  className={cn(
-                    "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg transition-colors",
-                    isFree 
-                      ? "bg-success text-success-foreground" 
-                      : "bg-primary text-primary-foreground"
-                  )}
+                  transition={{
+                    boxShadow: { duration: 2, repeat: Infinity, ease: "easeOut" }
+                  }}
+                  className="inline-block rounded-full"
                 >
-                  <Ticket className="h-4 w-4" />
-                  <span>{isFree ? "Grátis" : "Comprar"}</span>
-                  {!isFree && (
-                    <span className="opacity-80">• {formatPrice(item.minPrice || 0)}</span>
-                  )}
-                </Link>
-              </motion.div>
+                  <Link 
+                    to={`/evento/${item.id}`} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      triggerFeedback({ haptic: "medium", sound: "tap" });
+                    }}
+                    className={cn(
+                      "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg transition-colors",
+                      isFree 
+                        ? "bg-success text-success-foreground" 
+                        : "bg-primary text-primary-foreground"
+                    )}
+                  >
+                    <IconComponent className="h-4 w-4" />
+                    <span>{isFree ? "Participar" : "Comprar"}</span>
+                    {!isFree && (
+                      <span className="opacity-80">• {formatPrice(item.minPrice || 0)}</span>
+                    )}
+                  </Link>
+                </motion.div>
+              </div>
             );
           })()}
         </div>
