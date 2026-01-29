@@ -464,7 +464,7 @@ const FeedRow = React.memo(function FeedRow({
         </div>
 
         {/* Bottom event info - minimalist */}
-        <div className="absolute bottom-0 left-0 right-16 p-3 pb-[calc(var(--app-bottom-offset,72px)+8px)] z-10">
+        <div className="absolute bottom-0 left-0 right-16 p-3 pb-[calc(var(--app-bottom-offset,72px)+20px)] z-10">
           {/* Organizer */}
           <span className="text-white/70 text-xs font-medium block mb-0.5">
             {item.organizerName || "Organizador"}
@@ -487,7 +487,7 @@ const FeedRow = React.memo(function FeedRow({
             {isLive && <LiveBadge />}
           </div>
 
-          {/* Buy ticket button - prominent CTA with visual differentiation */}
+          {/* Buy ticket button - prominent CTA with brand gradient */}
           {(() => {
             const isFree = (item.minPrice || 0) === 0;
             const IconComponent = isFree ? Gift : Ticket;
@@ -509,8 +509,8 @@ const FeedRow = React.memo(function FeedRow({
                   whileTap={{ scale: 0.97 }}
                   animate={{ 
                     boxShadow: isFree 
-                      ? ["0 0 0 0 hsl(var(--success) / 0.3)", "0 0 0 4px hsl(var(--success) / 0)"]
-                      : ["0 0 0 0 hsl(var(--primary) / 0.3)", "0 0 0 4px hsl(var(--primary) / 0)"]
+                      ? ["0 0 0 0 rgba(34, 197, 94, 0.3)", "0 0 0 4px rgba(34, 197, 94, 0)"]
+                      : ["0 0 0 0 rgba(255, 45, 45, 0.4)", "0 0 0 6px rgba(255, 45, 45, 0)"]
                   }}
                   transition={{
                     boxShadow: { duration: 2, repeat: Infinity, ease: "easeOut" }
@@ -525,15 +525,17 @@ const FeedRow = React.memo(function FeedRow({
                     }}
                     className={cn(
                       "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg transition-colors",
-                      isFree 
-                        ? "bg-success text-success-foreground" 
-                        : "bg-white text-foreground"
+                      isFree && "bg-success text-success-foreground"
                     )}
+                    style={!isFree ? {
+                      background: "linear-gradient(135deg, #FF6A00 0%, #FF2D2D 50%, #FF007A 100%)",
+                      color: "white",
+                    } : undefined}
                   >
                     <IconComponent className="h-4 w-4" />
                     <span>{isFree ? "Participar" : "Comprar"}</span>
                     {!isFree && (
-                      <span className="opacity-80">• {formatPrice(item.minPrice || 0)}</span>
+                      <span className="opacity-90">• {formatPrice(item.minPrice || 0)}</span>
                     )}
                   </Link>
                 </motion.div>
