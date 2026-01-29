@@ -1,18 +1,12 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Search, Bookmark, User, Plus, Users } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Home, Search, Bookmark, User, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 import { triggerHaptic } from "@/hooks/use-haptic";
 import { cn } from "@/lib/utils";
 
-interface BottomNavProps {
-  activeTab?: "foryou" | "following";
-  onTabChange?: (tab: "foryou" | "following") => void;
-}
-
-export function BottomNav({ activeTab = "foryou", onTabChange }: BottomNavProps) {
+export function BottomNav() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { user } = useAuth();
 
   // Only hide on checkout, organizer dashboard, and admin pages
@@ -20,8 +14,6 @@ export function BottomNav({ activeTab = "foryou", onTabChange }: BottomNavProps)
   const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
   
   if (shouldHide) return null;
-
-  const isHomePage = location.pathname === "/";
 
   return (
     <motion.nav 
@@ -37,51 +29,7 @@ export function BottomNav({ activeTab = "foryou", onTabChange }: BottomNavProps)
       <div className="absolute inset-0 bg-white shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]" />
 
       {/* Content */}
-      <div className="relative px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+6px)]">
-        {/* Feed Tabs - Only show on homepage */}
-        {isHomePage && (
-          <div className="flex items-center justify-center gap-6 mb-2 pt-1">
-            <button
-              onClick={() => {
-                triggerHaptic('selection');
-                onTabChange?.("foryou");
-              }}
-              className={cn(
-                "relative py-1 text-xs font-semibold transition-all",
-                activeTab === "foryou" ? "text-black" : "text-black/40"
-              )}
-            >
-              Para você
-              {activeTab === "foryou" && (
-                <motion.div
-                  layoutId="tab-underline-nav"
-                  className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-primary rounded-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
-            </button>
-            <button
-              onClick={() => {
-                triggerHaptic('selection');
-                onTabChange?.("following");
-              }}
-              className={cn(
-                "relative py-1 text-xs font-semibold transition-all",
-                activeTab === "following" ? "text-black" : "text-black/40"
-              )}
-            >
-              Seguindo
-              {activeTab === "following" && (
-                <motion.div
-                  layoutId="tab-underline-nav"
-                  className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-primary rounded-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
-            </button>
-          </div>
-        )}
-
+      <div className="relative px-2 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
         {/* Navigation Icons */}
         <div className="flex items-center justify-around">
           {/* Home */}

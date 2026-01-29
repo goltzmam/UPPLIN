@@ -231,8 +231,7 @@ export default function Index() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Overlay Header - Minimal */}
-      {/* Top Header - Minimal */}
+      {/* Top Header with Tabs */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         <div className="h-[env(safe-area-inset-top,0px)]" />
         
@@ -250,6 +249,42 @@ export default function Index() {
             <MapPin className="h-3.5 w-3.5" />
             <span>Fortaleza</span>
             <ChevronDown className="h-3 w-3 text-white/50" />
+          </button>
+        </div>
+
+        {/* Feed Tabs - Para você / Seguindo */}
+        <div className="flex items-center justify-center gap-6 pb-2 pointer-events-auto">
+          <button
+            onClick={() => setActiveTab("foryou")}
+            className={cn(
+              "relative py-1 text-sm font-semibold transition-all",
+              activeTab === "foryou" ? "text-white" : "text-white/50"
+            )}
+          >
+            Para você
+            {activeTab === "foryou" && (
+              <motion.div
+                layoutId="mobile-tab-underline"
+                className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-primary rounded-full"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab("following")}
+            className={cn(
+              "relative py-1 text-sm font-semibold transition-all",
+              activeTab === "following" ? "text-white" : "text-white/50"
+            )}
+          >
+            Seguindo
+            {activeTab === "following" && (
+              <motion.div
+                layoutId="mobile-tab-underline"
+                className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-primary rounded-full"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
           </button>
         </div>
       </div>
@@ -376,7 +411,7 @@ export default function Index() {
     <>
       <MobileFeed />
       <DesktopLayout />
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav />
     </>
   );
 }
