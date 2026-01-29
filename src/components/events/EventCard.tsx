@@ -101,7 +101,7 @@ export function EventCard({
         )}
 
         <Link to={`/evento/${id}`} className="block">
-          <h3 className="font-display font-bold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 text-white group-hover:text-primary transition-colors">
+          <h3 className="font-display font-bold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 text-white group-hover:text-primary/90 transition-colors duration-200">
             {title}
           </h3>
         </Link>

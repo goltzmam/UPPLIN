@@ -70,14 +70,14 @@ export function OrganizerPreviewTooltip({
           <Link
             to={`/organizador/${organizerId}`}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center text-xs text-muted-foreground hover:text-primary transition-colors"
+            className="inline-flex items-center text-xs text-white/50 hover:text-primary transition-colors"
           >
             @{displayUsername}
           </Link>
         )}
       </HoverCardTrigger>
       <HoverCardContent 
-        className="w-72 p-0 overflow-hidden border-border/50 shadow-xl"
+        className="w-72 p-0 overflow-hidden border-white/20 shadow-xl bg-black/95 backdrop-blur-xl z-50"
         side="top"
         align="start"
         sideOffset={8}
@@ -102,16 +102,16 @@ export function OrganizerPreviewTooltip({
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.05, type: "spring", stiffness: 300 }}
               >
-                <Avatar className="h-12 w-12 border-2 border-border">
+                <Avatar className="h-12 w-12 border-2 border-white/20">
                   <AvatarImage src={organizer?.logo_url || undefined} alt={organizer?.display_name} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                  <AvatarFallback className="bg-primary/20 text-primary font-bold">
                     {(organizer?.display_name || organizerName || "O")[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
               </motion.div>
               <div className="flex-1 min-w-0">
                 <motion.h4 
-                  className="font-semibold text-sm truncate"
+                  className="font-semibold text-sm truncate text-white"
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.08 }}
@@ -119,7 +119,7 @@ export function OrganizerPreviewTooltip({
                   {organizer?.display_name || organizerName}
                 </motion.h4>
                 <motion.p 
-                  className="text-xs text-muted-foreground"
+                  className="text-xs text-white/60"
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 }}
@@ -132,7 +132,7 @@ export function OrganizerPreviewTooltip({
             {/* Description */}
             {organizer?.description && (
               <motion.p 
-                className="text-xs text-muted-foreground line-clamp-2"
+                className="text-xs text-white/60 line-clamp-2"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.12 }}
@@ -143,19 +143,19 @@ export function OrganizerPreviewTooltip({
 
             {/* Stats */}
             <motion.div 
-              className="flex items-center gap-4 text-xs text-muted-foreground"
+              className="flex items-center gap-4 text-xs text-white/50"
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.14 }}
             >
               <div className="flex items-center gap-1">
                 <Users className="h-3.5 w-3.5" />
-                <span className="font-medium text-foreground">{organizer?.followersCount || 0}</span>
+                <span className="font-medium text-white">{organizer?.followersCount || 0}</span>
                 <span>seguidores</span>
               </div>
               <div className="flex items-center gap-1">
                 <Calendar className="h-3.5 w-3.5" />
-                <span className="font-medium text-foreground">{organizer?.eventsCount || 0}</span>
+                <span className="font-medium text-white">{organizer?.eventsCount || 0}</span>
                 <span>eventos</span>
               </div>
             </motion.div>
@@ -173,7 +173,7 @@ export function OrganizerPreviewTooltip({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs h-8 hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors"
+                className="text-xs h-8 border-white/20 text-white hover:bg-primary hover:text-white hover:border-primary transition-colors"
                 asChild
               >
                 <Link to={`/organizador/${organizerId}`} onClick={(e) => e.stopPropagation()}>
