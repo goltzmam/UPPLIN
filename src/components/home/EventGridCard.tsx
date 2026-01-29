@@ -49,7 +49,7 @@ export function EventGridCard({
     >
       <Link to={`/evento/${id}`} className="block">
         {/* Card Container with dark theme */}
-        <div className="relative aspect-[3/4] rounded-2xl lg:rounded-3xl overflow-hidden bg-white/5 border border-white/10 hover:border-primary/30 shadow-md hover:shadow-2xl hover:shadow-primary/20 transition-all duration-500">
+        <div className="relative aspect-[3/4] rounded-2xl lg:rounded-3xl overflow-hidden bg-white/5 border border-white/10 hover:border-accent/30 shadow-md hover:shadow-2xl hover:shadow-accent/20 transition-all duration-500">
           {/* Image with parallax effect on hover */}
           <motion.div 
             className="absolute inset-0"
@@ -78,7 +78,7 @@ export function EventGridCard({
 
           {/* Glow effect on hover */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-accent/20 via-transparent to-transparent" />
           </div>
 
           {/* Top badges */}
@@ -135,7 +135,7 @@ export function EventGridCard({
             </motion.div>
 
             {/* Title */}
-            <h3 className="font-display text-base lg:text-lg xl:text-xl font-bold text-white leading-tight line-clamp-2 mb-2 group-hover:text-primary/90 transition-colors">
+            <h3 className="font-display text-base lg:text-lg xl:text-xl font-bold text-white leading-tight line-clamp-2 mb-2 group-hover:text-accent transition-colors">
               {title}
             </h3>
 
@@ -149,9 +149,9 @@ export function EventGridCard({
 
             {/* Organizer with @ handle */}
             {organizerName && (
-              <div className="flex items-center justify-between pt-3 border-t border-white/10 group-hover:border-primary/20 transition-colors">
+              <div className="flex items-center justify-between pt-3 border-t border-white/10 group-hover:border-accent/20 transition-colors">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Avatar className="h-7 w-7 ring-2 ring-white/20 group-hover:ring-primary/40 transition-all">
+                  <Avatar className="h-7 w-7 ring-2 ring-white/20 group-hover:ring-accent/40 transition-all">
                     <AvatarImage src={organizerAvatar || undefined} />
                     <AvatarFallback className="bg-white/10 text-white text-[10px] font-medium">
                       {organizerName[0]}
@@ -175,7 +175,7 @@ export function EventGridCard({
                   initial={{ scale: 0.8 }}
                   whileHover={{ scale: 1 }}
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-accent/20 hover:bg-accent/40 flex items-center justify-center transition-colors">
                     <ExternalLink className="h-3.5 w-3.5 text-white" />
                   </div>
                 </motion.div>
@@ -184,7 +184,7 @@ export function EventGridCard({
           </div>
 
           {/* Interactive border glow on hover */}
-          <div className="absolute inset-0 rounded-2xl lg:rounded-3xl ring-1 ring-white/0 group-hover:ring-primary/30 transition-all duration-500 pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl lg:rounded-3xl ring-1 ring-white/0 group-hover:ring-accent/30 transition-all duration-500 pointer-events-none" />
         </div>
       </Link>
     </motion.div>
