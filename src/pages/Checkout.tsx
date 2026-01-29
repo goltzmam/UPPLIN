@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { triggerFeedback } from "@/lib/feedback";
@@ -191,6 +192,15 @@ export default function Checkout() {
 
       <main className="flex-1 py-6 sm:py-8 pt-20 sm:pt-24">
         <div className="container max-w-4xl px-4">
+          {/* Breadcrumb */}
+          <Breadcrumb 
+            items={[
+              { label: "Eventos", href: "/eventos" },
+              { label: order.events?.title || "Evento", href: `/evento/${order.event_id}` },
+              { label: "Checkout" }
+            ]} 
+            className="mb-4"
+          />
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Checkout</h1>
 
           {isExpired ? (

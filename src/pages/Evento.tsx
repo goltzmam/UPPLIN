@@ -15,6 +15,7 @@ import { EventComments } from "@/components/events/EventComments";
 import { EventReviews } from "@/components/events/EventReviews";
 import { OrganizerPreviewTooltip } from "@/components/events/OrganizerPreviewTooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { triggerFeedback } from "@/lib/feedback";
@@ -234,6 +235,15 @@ export default function Evento() {
       <Header />
 
       <main className="flex-1 pt-16 lg:pt-20">
+        {/* Breadcrumb */}
+        <div className="container py-3 hidden lg:block">
+          <Breadcrumb 
+            items={[
+              { label: "Eventos", href: "/eventos" },
+              { label: event.title }
+            ]} 
+          />
+        </div>
         {/* Mobile & Tablet Layout - Normal full-width media */}
         <div className="xl:hidden">
           {/* Normal aspect ratio media for mobile */}
