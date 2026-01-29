@@ -17,13 +17,13 @@ export function EmptyState({ icon, title, description, action, className, varian
   return (
     <div className={cn("flex flex-col items-center justify-center text-center py-12 px-4", className)}>
       <div className={cn(
-        "flex h-16 w-16 items-center justify-center rounded-2xl mb-4 border",
+        "flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-2xl mb-4 border",
         // Always use semantic tokens so contrast works in light/dark themes
         isDark
           ? "bg-background/40 border-border/50 backdrop-blur-sm"
           : "bg-muted border-border"
       )}>
-        {icon}
+        <span className="gradient-text">{icon}</span>
       </div>
       <h3 className={cn(
         "font-display text-lg font-semibold mb-1",

@@ -58,7 +58,7 @@ export function FollowButton({
           "relative overflow-hidden rounded-full px-6 py-3 font-semibold text-sm transition-all duration-300",
           isFollowing
             ? "bg-muted text-foreground border border-border hover:bg-destructive/10 hover:border-destructive hover:text-destructive"
-            : "bg-gradient-to-r from-accent via-pink-500 to-accent text-white shadow-lg shadow-accent/25 hover:shadow-accent/40",
+            : "btn-gradient text-white shadow-lg hover:shadow-glow",
           isLoading && "opacity-70 pointer-events-none",
           className
         )}
@@ -137,7 +137,7 @@ export function FollowButton({
         className={cn(
           "gap-1.5 transition-all relative overflow-hidden",
           isFollowing && "hover:bg-destructive hover:text-destructive-foreground",
-          !isFollowing && variant === "outline" && "hover:bg-primary hover:text-primary-foreground hover:border-primary"
+          !isFollowing && variant === "outline" && "hover:btn-gradient hover:text-white hover:border-transparent"
         )}
       >
         {isLoading ? (

@@ -41,21 +41,21 @@ export function ProfileTabs({
         <TabsList className="grid w-full grid-cols-3 bg-muted/50 border border-border rounded-xl p-1">
           <TabsTrigger 
             value="eventos" 
-            className="flex items-center gap-2 rounded-lg font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
           >
             <Grid3X3 className="h-4 w-4" />
             <span className="hidden sm:inline">Eventos</span>
           </TabsTrigger>
           <TabsTrigger 
             value="salvos" 
-            className="flex items-center gap-2 rounded-lg font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
           >
             <Heart className="h-4 w-4" />
             <span className="hidden sm:inline">Salvos</span>
           </TabsTrigger>
           <TabsTrigger 
             value="config" 
-            className="flex items-center gap-2 rounded-lg font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+            className="flex items-center gap-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
           >
             <Settings className="h-4 w-4" />
             <span className="hidden sm:inline">Config</span>
