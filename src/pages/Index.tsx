@@ -232,58 +232,23 @@ export default function Index() {
       </motion.div>
 
       {/* Overlay Header - Minimal */}
+      {/* Top Header - Minimal */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         <div className="h-[env(safe-area-inset-top,0px)]" />
         
-        <div className="flex items-center justify-between px-3 py-3 pointer-events-auto">
-          {/* Logo left */}
-          <Link to="/" className="font-display text-base font-bold text-white drop-shadow-md tracking-tight shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 pointer-events-auto">
+          {/* Logo */}
+          <Link to="/" className="font-display text-lg font-bold text-white drop-shadow-md tracking-tight">
             UPPLIN
           </Link>
-          
-          {/* Centered tabs */}
-          <div className="flex items-center gap-4 mx-4">
-            <button
-              onClick={() => setActiveTab("following")}
-              className={cn(
-                "relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap",
-                activeTab === "following" ? "text-white" : "text-white/50"
-              )}
-            >
-              Seguindo
-              {activeTab === "following" && (
-                <motion.div
-                  layoutId="tab-underline-mobile"
-                  className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
-            </button>
-            <button
-              onClick={() => setActiveTab("foryou")}
-              className={cn(
-                "relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap",
-                activeTab === "foryou" ? "text-white" : "text-white/50"
-              )}
-            >
-              Para você
-              {activeTab === "foryou" && (
-                <motion.div
-                  layoutId="tab-underline-mobile"
-                  className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
-            </button>
-          </div>
 
-          {/* City selector right */}
+          {/* City selector */}
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-1 text-white/80 text-xs font-medium shrink-0"
+            className="flex items-center gap-1.5 text-white/80 text-xs font-medium"
           >
-            <MapPin className="h-3 w-3" />
-            <span className="hidden xs:inline">Fortaleza</span>
+            <MapPin className="h-3.5 w-3.5" />
+            <span>Fortaleza</span>
             <ChevronDown className="h-3 w-3 text-white/50" />
           </button>
         </div>
@@ -411,7 +376,7 @@ export default function Index() {
     <>
       <MobileFeed />
       <DesktopLayout />
-      <BottomNav />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </>
   );
 }
