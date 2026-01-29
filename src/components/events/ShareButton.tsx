@@ -16,6 +16,7 @@ interface ShareButtonProps {
   eventImage?: string | null;
   className?: string;
   iconOnly?: boolean;
+  strokeWidth?: number;
 }
 
 export function ShareButton({
@@ -25,6 +26,7 @@ export function ShareButton({
   eventImage,
   className,
   iconOnly = false,
+  strokeWidth = 2,
 }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
@@ -97,7 +99,7 @@ export function ShareButton({
         className={className}
         aria-label="Compartilhar evento"
       >
-        <Share2 className="h-6 w-6" />
+        <Share2 className="h-6 w-6" strokeWidth={strokeWidth} />
       </button>
     );
   }
@@ -107,7 +109,7 @@ export function ShareButton({
       <DropdownMenuTrigger asChild>
         {iconOnly ? (
           <button className={className} aria-label="Compartilhar evento">
-            <Share2 className="h-6 w-6" />
+            <Share2 className="h-6 w-6" strokeWidth={strokeWidth} />
           </button>
         ) : (
           <Button variant="outline" size="sm" className={`hover:border-primary hover:text-primary transition-colors [&_svg]:hover:text-primary ${className}`}>
