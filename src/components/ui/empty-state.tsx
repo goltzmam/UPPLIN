@@ -11,29 +11,30 @@ interface EmptyStateProps {
   variant?: "default" | "dark";
 }
 
-export function EmptyState({ icon, title, description, action, className, variant = "dark" }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action, className, variant = "default" }: EmptyStateProps) {
   const isDark = variant === "dark";
   
   return (
     <div className={cn("flex flex-col items-center justify-center text-center py-12 px-4", className)}>
       <div className={cn(
         "flex h-16 w-16 items-center justify-center rounded-2xl mb-4 border",
-        isDark 
-          ? "bg-white/10 border-white/20" 
+        // Always use semantic tokens so contrast works in light/dark themes
+        isDark
+          ? "bg-background/40 border-border/50 backdrop-blur-sm"
           : "bg-muted border-border"
       )}>
         {icon}
       </div>
       <h3 className={cn(
         "font-display text-lg font-semibold mb-1",
-        isDark ? "text-white" : "text-foreground"
+        "text-foreground"
       )}>
         {title}
       </h3>
       {description && (
         <p className={cn(
           "text-sm max-w-sm mb-4",
-          isDark ? "text-white/60" : "text-muted-foreground"
+          "text-muted-foreground"
         )}>
           {description}
         </p>

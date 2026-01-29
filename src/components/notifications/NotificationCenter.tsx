@@ -121,7 +121,7 @@ export function NotificationCenter() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
-                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-accent text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1"
+                className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-accent text-accent-foreground text-[10px] font-bold rounded-full flex items-center justify-center px-1"
               >
                 {unreadCount > 99 ? "99+" : unreadCount}
               </motion.span>
@@ -129,7 +129,7 @@ export function NotificationCenter() {
           </AnimatePresence>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-[calc(100vw-32px)] max-w-[380px] sm:w-96 p-0" align="end" sideOffset={8} forceMount>
+      <DropdownMenuContent className="w-[calc(100dvw-32px)] max-w-[380px] sm:w-96 p-0" align="end" sideOffset={8} forceMount>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-display font-bold">Notificações</h3>

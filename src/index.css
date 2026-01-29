@@ -144,6 +144,22 @@
     @apply border-border;
   }
 
+  html, body {
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  #root {
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+  }
+
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
@@ -338,6 +354,14 @@
   }
   .safe-area-inset-top {
     padding-top: env(safe-area-inset-top, 0);
+  }
+
+  /* Aliases used by some components */
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
   /* Gradient animations */
