@@ -46,7 +46,7 @@ export function EventCard({
   const displayUsername = organizerUsername || (organizerName ? organizerName.toLowerCase().replace(/\s+/g, '') : null);
 
   return (
-    <div className="group block bg-card rounded-2xl lg:rounded-3xl overflow-hidden border border-border/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300">
+    <div className="group block bg-white/5 rounded-2xl lg:rounded-3xl overflow-hidden border border-white/10 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300">
       {/* Cover Image - Clickable */}
       <Link to={`/evento/${id}`} className="block">
         <div className="relative aspect-[4/3] overflow-hidden">
@@ -58,7 +58,7 @@ export function EventCard({
             />
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-              <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
+              <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-white/30" />
             </div>
           )}
           
@@ -67,9 +67,9 @@ export function EventCard({
           
           {/* Date badge */}
           <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
-            <div className="bg-background/95 backdrop-blur-md rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 text-center shadow-lg">
-              <div className="text-lg sm:text-xl font-bold leading-tight">{format(eventDate, "d")}</div>
-              <div className="text-[10px] sm:text-xs uppercase text-muted-foreground font-medium">{format(eventDate, "MMM", { locale: ptBR })}</div>
+            <div className="bg-black/80 backdrop-blur-md rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 text-center shadow-lg border border-white/10">
+              <div className="text-lg sm:text-xl font-bold leading-tight text-white">{format(eventDate, "d")}</div>
+              <div className="text-[10px] sm:text-xs uppercase text-white/70 font-medium">{format(eventDate, "MMM", { locale: ptBR })}</div>
             </div>
           </div>
 
@@ -82,7 +82,7 @@ export function EventCard({
 
           {/* Price tag on image */}
           <div className="absolute bottom-3 right-3 sm:bottom-4 sm:right-4">
-            <div className={`px-3 py-1.5 rounded-xl backdrop-blur-md text-xs sm:text-sm font-bold ${minPrice === 0 ? "bg-success/90 text-white" : "bg-background/95 text-foreground"}`}>
+            <div className={`px-3 py-1.5 rounded-xl backdrop-blur-md text-xs sm:text-sm font-bold border ${minPrice === 0 ? "bg-success/90 text-white border-success/50" : "bg-black/80 text-white border-white/10"}`}>
               {minPrice === 0 ? "Grátis" : `R$ ${(minPrice / 100).toFixed(0)}`}
             </div>
           </div>
@@ -101,12 +101,12 @@ export function EventCard({
         )}
 
         <Link to={`/evento/${id}`} className="block">
-          <h3 className="font-display font-bold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 group-hover:text-primary transition-colors">
+          <h3 className="font-display font-bold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 text-white group-hover:text-primary transition-colors">
             {title}
           </h3>
         </Link>
 
-        <div className="space-y-2 text-sm text-muted-foreground">
+        <div className="space-y-2 text-sm text-white/60">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 shrink-0 text-primary/60" />
             <span className="capitalize truncate">{formattedDay}, {formattedDate} • {formattedTime}</span>
