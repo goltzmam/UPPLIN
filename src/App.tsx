@@ -6,7 +6,6 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { AnimatePresence, motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { OrganizerRoute } from "@/components/auth/OrganizerRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
@@ -20,18 +19,25 @@ import Checkout from "./pages/Checkout";
 import Instalar from "./pages/Instalar";
 import RecuperarSenha from "./pages/RecuperarSenha";
 import RedefinirSenha from "./pages/RedefinirSenha";
-import OrganizerDashboard from "./pages/organizador/Dashboard";
-import EventoForm from "./pages/organizador/EventoForm";
-import CheckIn from "./pages/organizador/CheckIn";
+// Organizer imports
 import OrganizadorLogin from "./pages/organizador/OrganizadorLogin";
 import OrganizadorCadastro from "./pages/organizador/OrganizadorCadastro";
 import OnboardingOrganizador from "./pages/organizador/OnboardingOrganizador";
 import OrganizadorPublico from "./pages/organizador/Organizador";
-import Cupons from "./pages/organizador/Cupons";
+import { OrganizerLayout } from "./components/organizador/OrganizerLayout";
+import OrganizerDashboardContent from "./pages/organizador/OrganizerDashboardContent";
+import EventosListContent from "./pages/organizador/EventosListContent";
+import EventoForm from "./pages/organizador/EventoForm";
+import CuponsContent from "./pages/organizador/CuponsContent";
+import CheckInContent from "./pages/organizador/CheckInContent";
+import ConfiguracoesContent from "./pages/organizador/ConfiguracoesContent";
+import RelatoriosContent from "./pages/organizador/RelatoriosContent";
+// Admin imports
 import AdminLogin from "./pages/admin/AdminLogin";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminChats from "./pages/admin/AdminChats";
+// Other imports
 import Precos from "./pages/Precos";
 import Organizadores from "./pages/Organizadores";
 import ExplorarOrganizadores from "./pages/ExplorarOrganizadores";
@@ -82,11 +88,16 @@ function AnimatedRoutes() {
           <Route path="/organizador/cadastro" element={<OrganizadorCadastro />} />
           <Route path="/organizador/onboarding" element={<ProtectedRoute redirectTo="/organizador/login"><OnboardingOrganizador /></ProtectedRoute>} />
 
-          {/* Protected Organizer Routes */}
-          <Route path="/organizador" element={<OrganizerRoute><OrganizerDashboard /></OrganizerRoute>} />
-          <Route path="/organizador/evento/:eventId" element={<OrganizerRoute><EventoForm /></OrganizerRoute>} />
-          <Route path="/organizador/cupons" element={<OrganizerRoute><Cupons /></OrganizerRoute>} />
-          <Route path="/organizador/check-in" element={<OrganizerRoute><CheckIn /></OrganizerRoute>} />
+          {/* Protected Organizer Routes - with Layout */}
+          <Route path="/organizador" element={<OrganizerLayout />}>
+            <Route index element={<OrganizerDashboardContent />} />
+            <Route path="eventos" element={<EventosListContent />} />
+            <Route path="evento/:eventId" element={<EventoForm />} />
+            <Route path="cupons" element={<CuponsContent />} />
+            <Route path="check-in" element={<CheckInContent />} />
+            <Route path="configuracoes" element={<ConfiguracoesContent />} />
+            <Route path="relatorios" element={<RelatoriosContent />} />
+          </Route>
 
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
