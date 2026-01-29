@@ -157,13 +157,15 @@
     @apply bg-card/80 backdrop-blur-xl border border-border/50;
   }
 
-  /* UPPLIN Neon gradient button */
-  .btn-neon {
+  /* UPPLIN Neon gradient button - PRIMARY CTA */
+  .btn-neon,
+  .btn-gradient {
     background: var(--gradient-upplin);
     box-shadow: var(--shadow-neon);
     @apply text-white font-semibold transition-all duration-300;
   }
-  .btn-neon:hover {
+  .btn-neon:hover,
+  .btn-gradient:hover {
     box-shadow: 0 0 30px rgba(255, 106, 0, 0.6), 0 0 60px rgba(255, 0, 122, 0.4);
     transform: scale(1.02);
   }
@@ -175,16 +177,35 @@
                 var(--gradient-upplin) border-box;
   }
 
-  /* Neon text */
-  .neon-text {
+  /* Gradient text - UPPLIN brand */
+  .neon-text,
+  .gradient-text,
+  .text-gradient {
     background: var(--gradient-upplin);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
-  .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: var(--gradient-social);
+
+  /* Gradient icon wrapper */
+  .icon-gradient {
+    background: var(--gradient-upplin);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Gradient border ring for avatars/badges */
+  .ring-gradient {
+    position: relative;
+  }
+  .ring-gradient::before {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 9999px;
+    background: var(--gradient-upplin);
+    z-index: -1;
   }
 
   /* Hover lift effect */
