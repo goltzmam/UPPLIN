@@ -236,7 +236,7 @@ export default function Evento() {
       <main className="flex-1 pt-16 lg:pt-20">
         {/* Mobile Layout */}
         <div className="lg:hidden">
-          <div className="relative aspect-[3/4] max-h-[60vh] bg-muted">
+          <div className="relative bg-black" style={{ aspectRatio: "9/16", maxHeight: "75vh" }}>
             <VerticalMediaCarousel media={allMedia} title={event.title} />
           </div>
           
@@ -247,24 +247,27 @@ export default function Evento() {
 
         {/* Desktop: 3-column layout */}
         <div className="hidden lg:block py-8">
-          <div className="max-w-[1400px] mx-auto px-6">
-            <div className="grid grid-cols-12 gap-6 items-start">
-              {/* Left: Vertical Media (3 cols) */}
-              <div className="col-span-3">
+          <div className="max-w-[1600px] mx-auto px-6">
+            <div className="grid grid-cols-12 gap-8 items-start">
+              {/* Left: Vertical Media - Feed Style (4 cols) */}
+              <div className="col-span-4 xl:col-span-3">
                 <div className="sticky top-24">
-                  <div className="rounded-2xl overflow-hidden bg-muted" style={{ aspectRatio: "3/4" }}>
+                  <div 
+                    className="rounded-3xl overflow-hidden bg-black shadow-2xl"
+                    style={{ aspectRatio: "9/16", maxHeight: "calc(100vh - 120px)" }}
+                  >
                     <VerticalMediaCarousel media={allMedia} title={event.title} />
                   </div>
                   {allMedia.length > 1 && (
-                    <p className="text-[11px] text-muted-foreground text-center mt-2 leading-tight">
-                      Se não inserir mais de uma imagem, a mídia fica em destaque no anúncio.
+                    <p className="text-[11px] text-muted-foreground text-center mt-3 leading-tight">
+                      Deslize para ver todas as mídias do evento
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Center: Event Info (6 cols) */}
-              <div className="col-span-6 space-y-5">
+              {/* Center: Event Info (5 cols) */}
+              <div className="col-span-5 xl:col-span-6 space-y-5">
                 {/* Header Card */}
                 <div className="bg-card rounded-2xl border border-border p-6 space-y-5">
                   {/* Organizer row */}
@@ -444,7 +447,7 @@ export default function Evento() {
 
               {/* Right: Tickets (3 cols) */}
               <div className="col-span-3">
-                <div className="sticky top-24">
+                <div className="sticky top-24 space-y-4">
                   <TicketSelectionCard />
                 </div>
               </div>
