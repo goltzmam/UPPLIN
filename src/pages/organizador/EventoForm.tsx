@@ -160,8 +160,19 @@ export default function EventoForm() {
   };
 
   const handleSave = async () => {
+    // Validate required fields
     if (!title.trim() || !startAt) {
-      toast({ title: "Preencha os campos obrigatórios", variant: "destructive" });
+      toast({ title: "Preencha os campos obrigatórios", description: "Título e data de início são obrigatórios.", variant: "destructive" });
+      return;
+    }
+
+    // Validate cover image is required
+    if (media.length === 0) {
+      toast({ 
+        title: "Imagem de destaque obrigatória", 
+        description: "Adicione pelo menos uma imagem para o seu evento.", 
+        variant: "destructive" 
+      });
       return;
     }
 
@@ -345,18 +356,35 @@ export default function EventoForm() {
               />
             </div>
 
-            {/* Media Upload */}
+            {/* Media Upload - REQUIRED */}
             <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
-              <h2 className="font-display text-lg font-bold">Fotos do Evento</h2>
-              <p className="text-sm text-muted-foreground">
-                Adicione imagens do seu evento. A primeira imagem será usada como capa.
-              </p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="font-display text-lg font-bold">
+                    Imagem de Destaque *
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Obrigatório. A primeira imagem será usada como capa do evento.
+                  </p>
+                </div>
+                {media.length > 0 && (
+                  <span className="px-2 py-1 bg-green-500/10 text-green-600 text-xs font-medium rounded-full">
+                    {media.length} {media.length === 1 ? "mídia" : "mídias"}
+                  </span>
+                )}
+              </div>
               <MultiMediaUpload
                 eventId={eventId || "novo"}
                 organizerId={organizer?.id || ""}
                 media={media}
                 onChange={setMedia}
               />
+              {media.length === 0 && (
+                <p className="text-xs text-amber-600 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                  Adicione pelo menos uma imagem para publicar o evento
+                </p>
+              )}
             </div>
 
             {/* Basic Info */}
