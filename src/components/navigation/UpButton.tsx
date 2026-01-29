@@ -20,14 +20,16 @@ export function UpButton({ onClick }: UpButtonProps) {
     >
       {/* Subtle glow effect */}
       <motion.div
-        className="absolute inset-0 rounded-full opacity-40"
+        className="absolute rounded-full"
         style={{
           background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
-          filter: "blur(8px)",
+          filter: "blur(6px)",
+          width: "24px",
+          height: "24px",
         }}
         animate={{
-          scale: [1, 1.15, 1],
-          opacity: [0.3, 0.5, 0.3],
+          scale: [1, 1.2, 1],
+          opacity: [0.4, 0.6, 0.4],
         }}
         transition={{
           duration: 2,
@@ -36,27 +38,19 @@ export function UpButton({ onClick }: UpButtonProps) {
         }}
       />
 
-      {/* Main button - same size as other nav icons */}
+      {/* Main button - same size as other nav icons (h-6 w-6 icon inside h-10 w-10 container) */}
       <div
-        className="relative h-10 w-10 rounded-full flex items-center justify-center shadow-lg overflow-hidden"
+        className="relative h-6 w-6 rounded-full flex items-center justify-center overflow-hidden"
         style={{
           background: "linear-gradient(135deg, #FF6A00 0%, #FF2D2D 50%, #FF007A 100%)",
-          boxShadow: "0 0 15px rgba(255, 45, 45, 0.4)",
+          boxShadow: "0 0 10px rgba(255, 45, 45, 0.5)",
         }}
       >
-        {/* Inner shine effect */}
-        <div 
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: "linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 50%)",
-          }}
-        />
-
         {/* Arrow icon */}
         <ArrowUp 
-          className="relative z-10 text-white" 
+          className="text-white" 
           strokeWidth={2.5} 
-          size={20}
+          size={14}
         />
       </div>
       
