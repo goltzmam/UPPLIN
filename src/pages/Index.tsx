@@ -231,46 +231,53 @@ export default function Index() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Overlay Header */}
+      {/* Overlay Header - Minimal TikTok style */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         <div className="h-[env(safe-area-inset-top,0px)]" />
         
         <div className="flex items-center justify-between px-4 py-3 pointer-events-auto">
-          <Link to="/" className="font-display text-xl font-bold text-white drop-shadow-lg">
+          {/* Logo left */}
+          <Link to="/" className="font-display text-lg font-bold text-white drop-shadow-lg w-16">
             UPPLIN
           </Link>
           
-          <div className="relative flex items-center gap-6">
+          {/* Centered tabs */}
+          <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-1">
             <button
               onClick={() => setActiveTab("following")}
               className={cn(
-                "relative text-sm font-semibold transition-all pb-1",
-                activeTab === "following" ? "text-white" : "text-white/60"
+                "relative px-3 py-1.5 text-[15px] font-medium transition-all",
+                activeTab === "following" ? "text-white" : "text-white/50"
               )}
             >
               Seguindo
+              {activeTab === "following" && (
+                <motion.div
+                  layoutId="tab-underline-mobile"
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-white rounded-full"
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                />
+              )}
             </button>
             <button
               onClick={() => setActiveTab("foryou")}
               className={cn(
-                "relative text-sm font-semibold transition-all pb-1",
-                activeTab === "foryou" ? "text-white" : "text-white/60"
+                "relative px-3 py-1.5 text-[15px] font-medium transition-all",
+                activeTab === "foryou" ? "text-white" : "text-white/50"
               )}
             >
               Para você
+              {activeTab === "foryou" && (
+                <motion.div
+                  layoutId="tab-underline-mobile"
+                  className="absolute bottom-0 left-1/2 -translate-x-1/2 w-10 h-0.5 bg-white rounded-full"
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                />
+              )}
             </button>
-            
-            <motion.div
-              layoutId="tab-underline-mobile"
-              className="absolute bottom-0 h-0.5 bg-white rounded-full"
-              style={{
-                left: activeTab === "following" ? "0px" : "calc(50% + 12px)",
-                width: activeTab === "following" ? "54px" : "62px",
-              }}
-              transition={{ type: "spring", stiffness: 500, damping: 35 }}
-            />
           </div>
 
+          {/* Search right */}
           <button
             onClick={() => setIsSearchOpen(true)}
             className="h-9 w-9 rounded-full bg-black/30 backdrop-blur-md flex items-center justify-center border border-white/10"
