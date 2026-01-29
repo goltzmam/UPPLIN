@@ -467,45 +467,38 @@ const FeedRow = React.memo(function FeedRow({
           />
         </div>
 
-        {/* Bottom event info */}
-        <div className="absolute bottom-0 left-0 right-16 p-4 pb-[calc(var(--app-bottom-offset,72px)+12px)] z-10">
+        {/* Bottom event info - minimalist */}
+        <div className="absolute bottom-0 left-0 right-16 p-3 pb-[calc(var(--app-bottom-offset,72px)+8px)] z-10">
           <Link to={`/evento/${item.id}`} onClick={(e) => e.stopPropagation()} className="block">
-            {/* Price badge + Live badge */}
-            <div className="flex items-center gap-2 mb-3">
+            {/* Price + Live badge */}
+            <div className="flex items-center gap-2 mb-2">
               <div className={cn(
-                "px-3 py-1 rounded-full text-xs font-bold shadow-lg",
-                (item.minPrice || 0) === 0 ? "bg-green-500 text-white" : "bg-white text-black"
+                "px-2.5 py-0.5 rounded-full text-[11px] font-semibold",
+                (item.minPrice || 0) === 0 ? "bg-green-500/90 text-white" : "bg-white/90 text-black"
               )}>
                 {formatPrice(item.minPrice || 0)}
               </div>
               {isLive && <LiveBadge />}
             </div>
             
-            {/* Organizer name */}
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-white/90 text-sm font-medium drop-shadow-lg">
-                {item.organizerName || "Organizador"}
-              </span>
-              <span className="text-white/60 text-sm">•</span>
-              <span className="text-white/60 text-sm">Patrocinado</span>
-            </div>
+            {/* Organizer */}
+            <span className="text-white/70 text-xs font-medium block mb-0.5">
+              {item.organizerName || "Organizador"}
+            </span>
             
-            {/* Event title */}
-            <h3 className="font-display text-xl font-bold text-white leading-tight line-clamp-2 mb-2 drop-shadow-lg">
+            {/* Title */}
+            <h3 className="text-base font-semibold text-white leading-snug line-clamp-2 mb-1.5">
               {item.title}
             </h3>
             
-            {/* Date and location inline */}
-            <div className="flex items-center gap-3 text-white/85 text-sm">
-              <div className="flex items-center gap-1.5">
-                <Calendar className="h-4 w-4 shrink-0" />
-                <span>{formattedDate} • {formattedTime}</span>
-              </div>
+            {/* Date & location - single line */}
+            <div className="flex items-center gap-2 text-white/60 text-xs">
+              <span>{formattedDate} • {formattedTime}</span>
               {(item.venueName || item.addressText) && (
-                <div className="flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 shrink-0" />
-                  <span className="truncate max-w-[140px]">{item.venueName || item.addressText}</span>
-                </div>
+                <>
+                  <span>·</span>
+                  <span className="truncate max-w-[120px]">{item.venueName || item.addressText}</span>
+                </>
               )}
             </div>
           </Link>
