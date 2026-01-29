@@ -566,14 +566,28 @@ const FeedRow = React.memo(function FeedRow({
         )}
 
         <Drawer open={showComments} onOpenChange={setShowComments}>
-          <DrawerContent className="max-h-[85vh]">
-            <DrawerHeader className="border-b border-border">
+          <DrawerContent className="max-h-[85vh] flex flex-col">
+            <DrawerHeader className="border-b border-border px-4 py-3 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <DrawerTitle className="text-lg font-semibold">Comentários</DrawerTitle>
-                <button onClick={() => setShowComments(false)} className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"><X className="h-4 w-4" /></button>
+                <DrawerTitle className="text-base font-semibold">
+                  Comentários
+                  {commentCount > 0 && (
+                    <span className="text-muted-foreground font-normal ml-1.5">
+                      {formatEngagementCount(commentCount)}
+                    </span>
+                  )}
+                </DrawerTitle>
+                <button 
+                  onClick={() => setShowComments(false)} 
+                  className="h-8 w-8 rounded-full bg-muted/80 hover:bg-muted flex items-center justify-center transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
             </DrawerHeader>
-            <div className="flex-1 overflow-y-auto p-4"><EventComments eventId={item.id} /></div>
+            <div className="flex-1 overflow-hidden p-4">
+              <EventComments eventId={item.id} />
+            </div>
           </DrawerContent>
         </Drawer>
       </div>
