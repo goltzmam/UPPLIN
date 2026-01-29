@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { User, Mail, CreditCard, Loader2, AlertCircle, Bell, LogOut, Ticket, Bookmark, Search, Building2, ChevronRight, Camera, ImageIcon } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle, Bell, LogOut, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -159,11 +159,11 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
 
   const cpfLocked = !!profile.cpf && profile.cpf_locked;
 
+  // Only show participant-relevant links (no organizer access)
   const quickLinks = [
     { icon: Ticket, label: "Meus Ingressos", path: "/meus-ingressos", description: "Ver todos os ingressos" },
     { icon: Bookmark, label: "Eventos Salvos", path: "/eventos-salvos", description: "Eventos que você salvou" },
     { icon: Search, label: "Explorar Eventos", path: "/eventos", description: "Descobrir novos eventos" },
-    { icon: Building2, label: "Para Organizadores", path: "/organizadores", description: "Criar e gerenciar eventos", highlight: true },
   ];
 
   const getInitials = (name: string | null) => {
@@ -251,10 +251,10 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
             <Link
               key={link.path}
               to={link.path}
-              className={`flex items-center gap-4 px-4 sm:px-6 py-4 hover:bg-muted/50 transition-colors ${link.highlight ? "bg-muted/30" : ""}`}
+              className="flex items-center gap-4 px-4 sm:px-6 py-4 hover:bg-muted/50 transition-colors"
             >
-              <div className={`h-10 w-10 rounded-full flex items-center justify-center ${link.highlight ? "bg-primary/10" : "bg-muted"}`}>
-                <link.icon className={`h-5 w-5 ${link.highlight ? "text-primary" : "text-muted-foreground"}`} />
+              <div className="h-10 w-10 rounded-full flex items-center justify-center bg-muted">
+                <link.icon className="h-5 w-5 text-muted-foreground" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">{link.label}</p>

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Ticket, MessageCircle, Settings, Users, Bookmark, Building2, ChevronRight } from "lucide-react";
+import { Menu, X, User, LogOut, Ticket, Bookmark, Users } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,15 +91,6 @@ export function Header({ minimal = false }: HeaderProps) {
               <Users className="h-4 w-4" />
               Organizadores
             </Link>
-            <Link 
-              to="/organizadores" 
-              className={cn(
-                "px-4 py-2 text-sm font-medium rounded-xl transition-all hover:bg-muted",
-                location.pathname === "/organizadores" && "bg-muted text-foreground"
-              )}
-            >
-              Para Organizadores
-            </Link>
 
             <div className="w-px h-5 bg-border/50 mx-3" />
 
@@ -146,14 +137,6 @@ export function Header({ minimal = false }: HeaderProps) {
                         className="rounded-lg py-2.5 cursor-pointer"
                       >
                         <span className="font-medium">Explorar Eventos</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => navigate("/organizadores")}
-                        className="rounded-lg py-2.5 cursor-pointer bg-muted"
-                      >
-                        <Building2 className="mr-2 h-4 w-4" />
-                        <span className="font-medium">Para Organizadores</span>
-                        <ChevronRight className="ml-auto h-4 w-4 text-muted-foreground" />
                       </DropdownMenuItem>
                     </div>
 
@@ -254,11 +237,11 @@ export function Header({ minimal = false }: HeaderProps) {
                 Explorar Eventos
               </Link>
               <Link
-                to="/organizadores"
+                to="/explorar-organizadores"
                 className="px-4 py-3 text-base font-medium hover:bg-muted rounded-xl transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Para Organizadores
+                Ver Organizadores
               </Link>
               <div className="h-px bg-border my-2" />
               <div className="flex flex-col gap-2 p-2">

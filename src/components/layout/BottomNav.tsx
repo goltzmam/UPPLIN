@@ -1,9 +1,9 @@
+import { forwardRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, MapPin, Bookmark, User, Plus } from "lucide-react";
+import { Home, MapPin, Bookmark, User, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 import { triggerHaptic } from "@/hooks/use-haptic";
-import { useState } from "react";
 import { FeedSearch } from "@/components/feed/FeedSearch";
 
 interface NavItem {
@@ -11,20 +11,20 @@ interface NavItem {
   label: string;
   path: string;
   requiresAuth?: boolean;
-  isCreate?: boolean;
   isCity?: boolean;
 }
 
-export function BottomNav() {
+export const BottomNav = forwardRef<HTMLElement, object>(function BottomNav(_, ref) {
   const location = useLocation();
   const { user } = useAuth();
   const [cityName] = useState("Por perto");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
+  // Participants see: Home, City, Search, Saved, Profile (no "Criar" button)
   const navItems: NavItem[] = [
     { icon: Home, label: "Início", path: "/" },
     { icon: MapPin, label: cityName, path: "#", isCity: true },
-    { icon: Plus, label: "Criar", path: "/organizador/cadastro", isCreate: true },
+    { icon: Search, label: "Buscar", path: "/eventos" },
     { icon: Bookmark, label: "Salvos", path: "/eventos-salvos", requiresAuth: true },
     { icon: User, label: "Perfil", path: user ? "/perfil" : "/login" },
   ];
@@ -36,54 +36,24 @@ export function BottomNav() {
   if (shouldHide) return null;
 
   return (
-    <motion.nav 
+    <motion.nav
+      ref={ref as React.Ref<HTMLElement>}
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden"
     >
       {/* Subtle shadow for elegant separation */}
-      <div className="absolute inset-x-0 -top-4 h-8 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 -top-4 h-8 bg-gradient-to-t from-foreground/5 to-transparent pointer-events-none" />
 
-      {/* White background bar with shadow */}
-      <div className="absolute inset-0 bg-white shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)]" />
+      {/* Background bar with shadow */}
+      <div className="absolute inset-0 bg-background shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)] border-t border-border" />
 
       {/* Content */}
       <div className="relative px-2 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
         <div className="flex items-center justify-around">
           {navItems.map((item) => {
             const Icon = item.icon;
-
-            if (item.isCreate) {
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  onClick={() => triggerHaptic('medium')}
-                  className="relative flex items-center justify-center -mt-5"
-                >
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.92 }}
-                    className="relative"
-                  >
-                    {/* Glow effect */}
-                    <div 
-                      className="absolute inset-0 rounded-full blur-xl opacity-60"
-                      style={{ background: "linear-gradient(135deg, hsl(346 84% 60%), hsl(25 95% 55%))" }}
-                    />
-                    
-                    {/* Button */}
-                    <div 
-                      className="relative rounded-full p-3.5 shadow-xl"
-                      style={{ background: "linear-gradient(135deg, hsl(346 84% 60%), hsl(25 95% 55%))" }}
-                    >
-                      <Plus className="h-6 w-6 text-white" strokeWidth={2.5} />
-                    </div>
-                  </motion.div>
-                </Link>
-              );
-            }
 
             if (item.isCity) {
               return (
@@ -99,10 +69,10 @@ export function BottomNav() {
                     whileTap={{ scale: 0.85 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
-                    <Icon className="h-6 w-6 text-black" strokeWidth={1.5} />
+                    <Icon className="h-6 w-6 text-foreground" strokeWidth={1.5} />
                   </motion.div>
                   
-                  <span className="text-[10px] font-medium mt-1 text-black">
+                  <span className="text-[10px] font-medium mt-1 text-foreground">
                     {item.label}
                   </span>
                 </button>
@@ -120,10 +90,10 @@ export function BottomNav() {
                   whileTap={{ scale: 0.85 }}
                   transition={{ type: "spring", stiffness: 400, damping: 17 }}
                 >
-                  <Icon className="h-6 w-6 text-black" strokeWidth={1.5} />
+                  <Icon className="h-6 w-6 text-foreground" strokeWidth={1.5} />
                 </motion.div>
                 
-                <span className="text-[10px] font-medium mt-1 text-black">
+                <span className="text-[10px] font-medium mt-1 text-foreground">
                   {item.label}
                 </span>
               </Link>
@@ -136,4 +106,6 @@ export function BottomNav() {
       <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </motion.nav>
   );
-}
+});
+
+BottomNav.displayName = "BottomNav";
