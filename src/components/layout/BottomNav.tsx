@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, MapPin, Bookmark, User, Plus, ChevronDown } from "lucide-react";
+import { Home, MapPin, Bookmark, User, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 import { triggerHaptic } from "@/hooks/use-haptic";
@@ -17,7 +17,7 @@ interface NavItem {
 export function BottomNav() {
   const location = useLocation();
   const { user } = useAuth();
-  const [cityName] = useState("Fortaleza");
+  const [cityName] = useState("Por perto");
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Início", path: "/" },
@@ -93,10 +93,8 @@ export function BottomNav() {
                   <motion.div
                     whileTap={{ scale: 0.85 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    className="flex items-center gap-0.5"
                   >
                     <Icon className="h-6 w-6 text-black" strokeWidth={1.5} />
-                    <ChevronDown className="h-3 w-3 text-black/50" />
                   </motion.div>
                   
                   <span className="text-[10px] font-medium mt-1 text-black">
