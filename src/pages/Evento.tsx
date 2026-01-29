@@ -234,23 +234,33 @@ export default function Evento() {
       <Header />
 
       <main className="flex-1 pt-16 lg:pt-20">
-        {/* Mobile Layout */}
-        <div className="lg:hidden">
-          <div className="relative bg-black" style={{ aspectRatio: "9/16", maxHeight: "75vh" }}>
-            <VerticalMediaCarousel media={allMedia} title={event.title} />
-          </div>
+        {/* Mobile & Tablet Layout - Normal full-width media */}
+        <div className="xl:hidden">
+          {/* Normal aspect ratio media for mobile */}
+          {allMedia.length > 0 ? (
+            <div className="relative w-full">
+              <MobileMediaCarousel media={allMedia} title={event.title} />
+            </div>
+          ) : (
+            <div className="w-full aspect-[4/3] bg-muted flex items-center justify-center">
+              <div className="text-center text-muted-foreground">
+                <ImageIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">Sem mídia</p>
+              </div>
+            </div>
+          )}
           
           <div className="px-4 py-6 space-y-6">
             <MobileEventContent />
           </div>
         </div>
 
-        {/* Desktop: 3-column layout */}
-        <div className="hidden lg:block py-8">
+        {/* Desktop: 3-column layout - Only on XL screens */}
+        <div className="hidden xl:block py-8">
           <div className="max-w-[1600px] mx-auto px-6">
-            <div className="grid grid-cols-12 gap-8 items-start">
-              {/* Left: Vertical Media - Feed Style (4 cols) */}
-              <div className="col-span-4 xl:col-span-3">
+            <div className="grid grid-cols-12 gap-6 items-start">
+              {/* Left: Vertical Media - Feed Style (3 cols) */}
+              <div className="col-span-3">
                 <div className="sticky top-24">
                   <div 
                     className="rounded-3xl overflow-hidden bg-black shadow-2xl"
@@ -260,14 +270,14 @@ export default function Evento() {
                   </div>
                   {allMedia.length > 1 && (
                     <p className="text-[11px] text-muted-foreground text-center mt-3 leading-tight">
-                      Deslize para ver todas as mídias do evento
+                      Deslize para ver todas as mídias
                     </p>
                   )}
                 </div>
               </div>
 
-              {/* Center: Event Info (5 cols) */}
-              <div className="col-span-5 xl:col-span-6 space-y-5">
+              {/* Center: Event Info (6 cols) */}
+              <div className="col-span-6 space-y-5">
                 {/* Header Card */}
                 <div className="bg-card rounded-2xl border border-border p-6 space-y-5">
                   {/* Organizer row */}
@@ -460,6 +470,101 @@ export default function Evento() {
     </div>
   );
 
+  // Mobile Media Carousel - Normal aspect ratio (4:3 or video native)
+  function MobileMediaCarousel({ media, title }: { media: MediaItem[]; title: string }) {
+    const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isPlaying, setIsPlaying] = useState<{ [key: string]: boolean }>({});
+
+    const toggleVideoPlay = (id: string) => {
+      const video = document.getElementById(`mobile-video-${id}`) as HTMLVideoElement;
+      if (video) {
+        if (video.paused) {
+          video.play();
+          setIsPlaying((prev) => ({ ...prev, [id]: true }));
+        } else {
+          video.pause();
+          setIsPlaying((prev) => ({ ...prev, [id]: false }));
+        }
+      }
+    };
+
+    if (media.length === 1) {
+      const item = media[0];
+      return (
+        <div className="w-full aspect-[4/3] bg-black">
+          {item.type === "video" ? (
+            <video src={item.url} className="w-full h-full object-cover" controls playsInline />
+          ) : (
+            <img src={item.url} alt={title} className="w-full h-full object-cover" />
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative w-full aspect-[4/3] bg-black">
+        <div className="overflow-hidden w-full h-full" ref={emblaRef}>
+          <div className="flex h-full">
+            {media.map((item, index) => (
+              <div key={item.id} className="flex-[0_0_100%] min-w-0 h-full relative">
+                {item.type === "video" ? (
+                  <div className="relative w-full h-full">
+                    <video
+                      id={`mobile-video-${item.id}`}
+                      src={item.url}
+                      className="w-full h-full object-cover"
+                      loop
+                      muted
+                      playsInline
+                    />
+                    <button
+                      onClick={() => toggleVideoPlay(item.id)}
+                      className="absolute inset-0 flex items-center justify-center bg-black/20"
+                    >
+                      <div className="h-14 w-14 rounded-full bg-white/90 flex items-center justify-center">
+                        {isPlaying[item.id] ? (
+                          <Pause className="h-6 w-6 text-foreground" />
+                        ) : (
+                          <Play className="h-6 w-6 text-foreground ml-0.5" />
+                        )}
+                      </div>
+                    </button>
+                  </div>
+                ) : (
+                  <img src={item.url} alt={`${title} - ${index + 1}`} className="w-full h-full object-cover" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Pagination dots */}
+        <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {media.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                emblaApi?.scrollTo(index);
+                setCurrentIndex(index);
+              }}
+              className={cn(
+                "h-2 rounded-full transition-all",
+                currentIndex === index ? "w-5 bg-white" : "w-2 bg-white/50"
+              )}
+            />
+          ))}
+        </div>
+
+        {/* Counter badge */}
+        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-xs font-medium">
+          {currentIndex + 1}/{media.length}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop Vertical Media Carousel - 9:16 aspect ratio
   function VerticalMediaCarousel({ media, title }: { media: MediaItem[]; title: string }) {
     const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
     const [currentIndex, setCurrentIndex] = useState(0);
