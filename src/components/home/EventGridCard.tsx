@@ -48,8 +48,8 @@ export function EventGridCard({
       className="group relative"
     >
       <Link to={`/evento/${id}`} className="block">
-        {/* Card Container with sophisticated hover */}
-        <div className="relative aspect-[3/4] rounded-2xl lg:rounded-3xl overflow-hidden bg-muted shadow-md hover:shadow-2xl transition-all duration-500">
+        {/* Card Container with dark theme */}
+        <div className="relative aspect-[3/4] rounded-2xl lg:rounded-3xl overflow-hidden bg-white/5 border border-white/10 hover:border-primary/30 shadow-md hover:shadow-2xl hover:shadow-primary/20 transition-all duration-500">
           {/* Image with parallax effect on hover */}
           <motion.div 
             className="absolute inset-0"
@@ -64,26 +64,28 @@ export function EventGridCard({
                 loading="lazy"
               />
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-muted to-muted-foreground/20" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-white/5" />
             )}
           </motion.div>
 
           {/* Gradient overlay - intensifies on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-black/10 group-hover:from-black/100 group-hover:via-black/50 transition-all duration-500" />
 
-          {/* Shine effect on hover */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
+          {/* Shine/shimmer effect on hover */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out" />
+          </div>
+
+          {/* Glow effect on hover */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/20 via-transparent to-transparent" />
           </div>
 
           {/* Top badges */}
           <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-10">
-            {/* Date Badge with hover reveal */}
-            <motion.div 
-              className="overflow-hidden"
-              initial={false}
-            >
-              <div className="px-3 py-1.5 rounded-xl bg-black/60 backdrop-blur-md border border-white/10 group-hover:bg-black/80 transition-colors">
+            {/* Date Badge */}
+            <motion.div className="overflow-hidden">
+              <div className="px-3 py-1.5 rounded-xl bg-black/70 backdrop-blur-md border border-white/10 group-hover:bg-black/90 group-hover:border-primary/30 transition-colors">
                 <span className="text-xs font-bold text-white uppercase tracking-wide">
                   {formattedDate}
                 </span>
@@ -103,8 +105,8 @@ export function EventGridCard({
             <div className={cn(
               "px-3 py-1.5 rounded-xl backdrop-blur-md border transition-all duration-300",
               minPrice === 0 
-                ? "bg-success/30 border-success/40 text-success group-hover:bg-success/50" 
-                : "bg-black/60 border-white/10 text-white group-hover:bg-black/80"
+                ? "bg-success/30 border-success/40 text-success group-hover:bg-success/50 group-hover:border-success/60" 
+                : "bg-black/70 border-white/10 text-white group-hover:bg-black/90 group-hover:border-primary/30"
             )}>
               <span className="text-xs font-bold">
                 {formattedPrice}
@@ -133,13 +135,13 @@ export function EventGridCard({
             </motion.div>
 
             {/* Title */}
-            <h3 className="font-display text-base lg:text-lg xl:text-xl font-bold text-white leading-tight line-clamp-2 mb-2 group-hover:text-white transition-colors">
+            <h3 className="font-display text-base lg:text-lg xl:text-xl font-bold text-white leading-tight line-clamp-2 mb-2 group-hover:text-primary/90 transition-colors">
               {title}
             </h3>
 
             {/* Venue - visible by default */}
             {venueName && (
-              <div className="flex items-center gap-1.5 text-white/70 text-sm mb-3 group-hover:text-white/90 transition-colors">
+              <div className="flex items-center gap-1.5 text-white/60 text-sm mb-3 group-hover:text-white/80 transition-colors">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">{venueName}</span>
               </div>
@@ -147,11 +149,11 @@ export function EventGridCard({
 
             {/* Organizer with @ handle */}
             {organizerName && (
-              <div className="flex items-center justify-between pt-3 border-t border-white/10 group-hover:border-white/20 transition-colors">
+              <div className="flex items-center justify-between pt-3 border-t border-white/10 group-hover:border-primary/20 transition-colors">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Avatar className="h-7 w-7 ring-2 ring-white/20 group-hover:ring-white/40 transition-all">
+                  <Avatar className="h-7 w-7 ring-2 ring-white/20 group-hover:ring-primary/40 transition-all">
                     <AvatarImage src={organizerAvatar || undefined} />
-                    <AvatarFallback className="bg-white/20 text-white text-[10px] font-medium">
+                    <AvatarFallback className="bg-white/10 text-white text-[10px] font-medium">
                       {organizerName[0]}
                     </AvatarFallback>
                   </Avatar>
@@ -173,7 +175,7 @@ export function EventGridCard({
                   initial={{ scale: 0.8 }}
                   whileHover={{ scale: 1 }}
                 >
-                  <div className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-primary/20 hover:bg-primary/40 flex items-center justify-center transition-colors">
                     <ExternalLink className="h-3.5 w-3.5 text-white" />
                   </div>
                 </motion.div>
@@ -182,7 +184,7 @@ export function EventGridCard({
           </div>
 
           {/* Interactive border glow on hover */}
-          <div className="absolute inset-0 rounded-2xl lg:rounded-3xl ring-1 ring-white/0 group-hover:ring-white/20 transition-all duration-500 pointer-events-none" />
+          <div className="absolute inset-0 rounded-2xl lg:rounded-3xl ring-1 ring-white/0 group-hover:ring-primary/30 transition-all duration-500 pointer-events-none" />
         </div>
       </Link>
     </motion.div>
