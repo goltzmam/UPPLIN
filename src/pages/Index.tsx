@@ -189,7 +189,7 @@ export default function Index() {
   // MOBILE: Fullscreen TikTok-style feed
   // =====================================================================
   const MobileFeed = () => (
-    <div className="fixed inset-0 z-0 md:hidden">
+    <div className="fixed inset-0 z-0 lg:hidden">
       <motion.div 
         className="absolute inset-0" 
         drag="x" 
@@ -245,7 +245,7 @@ export default function Index() {
   // DESKTOP/TABLET: TikTok-style layout with minimal sidebar
   // =====================================================================
   const DesktopLayout = () => (
-    <div className="hidden md:flex h-screen w-full bg-black">
+    <div className="hidden lg:flex h-screen w-full bg-background">
       {/* Left Sidebar - Minimal TikTok style */}
       <TikTokDesktopSidebar />
 
