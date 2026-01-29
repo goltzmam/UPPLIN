@@ -195,10 +195,11 @@ export default function MeusIngressos() {
                 upcomingTickets.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)
               ) : (
                 <EmptyState
-                  icon={<Ticket className="h-8 w-8 text-muted-foreground" />}
+                  icon={<Ticket className="h-8 w-8 text-primary" />}
                   title="Nenhum ingresso próximo"
                   description="Você ainda não tem ingressos para eventos futuros."
-                  action={<Button onClick={() => navigate("/eventos")}>Explorar Eventos</Button>}
+                  variant="default"
+                  action={<Button onClick={() => navigate("/eventos")} className="bg-primary hover:bg-primary/90 text-white">Explorar Eventos</Button>}
                 />
               )}
             </TabsContent>
@@ -208,9 +209,10 @@ export default function MeusIngressos() {
                 pastTickets.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)
               ) : (
                 <EmptyState
-                  icon={<Ticket className="h-8 w-8 text-muted-foreground" />}
+                  icon={<Ticket className="h-8 w-8 text-primary" />}
                   title="Nenhum histórico"
                   description="Seus ingressos anteriores aparecerão aqui."
+                  variant="default"
                 />
               )}
             </TabsContent>

@@ -61,11 +61,12 @@ export function ProfileTabs({
             <EventGrid events={attendedEvents.map(t => t.events).filter(Boolean)} />
           ) : (
             <EmptyState
-              icon={<Ticket className="h-8 w-8 text-white/50" />}
+              icon={<Ticket className="h-8 w-8 text-primary" />}
               title="Nenhum evento ainda"
               description="Seus eventos aparecerão aqui"
+              variant="dark"
               action={
-                <Button asChild>
+                <Button asChild className="bg-primary hover:bg-primary/90 text-white">
                   <Link to="/eventos">Explorar Eventos</Link>
                 </Button>
               }
@@ -82,11 +83,12 @@ export function ProfileTabs({
             <EventGrid events={savedEvents.map(s => s.events).filter(Boolean)} />
           ) : (
             <EmptyState
-              icon={<Heart className="h-8 w-8 text-white/50" />}
+              icon={<Heart className="h-8 w-8 text-primary" />}
               title="Nenhum evento salvo"
               description="Salve eventos para acompanhá-los"
+              variant="dark"
               action={
-                <Button asChild>
+                <Button asChild className="bg-primary hover:bg-primary/90 text-white">
                   <Link to="/eventos">Explorar Eventos</Link>
                 </Button>
               }
