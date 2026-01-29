@@ -75,31 +75,31 @@ export default function Eventos() {
   const hasActiveFilters = search || selectedCategory !== "all";
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-black text-white">
       {/* Desktop Sidebar */}
       <TikTokDesktopSidebar />
 
       {/* Main Content */}
       <main className="flex-1 pb-20 md:pb-0">
         {/* Search Header */}
-        <section className="bg-gradient-to-b from-muted/50 to-background border-b border-border py-6 sm:py-8 pt-8 sm:pt-10">
+        <section className="bg-gradient-to-b from-white/5 to-transparent border-b border-white/10 py-6 sm:py-8 pt-8 sm:pt-10">
           <div className="max-w-4xl mx-auto px-4">
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Explorar Eventos</h1>
-            <p className="text-muted-foreground text-sm mb-5">Encontre experiências incríveis perto de você</p>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-white">Explorar Eventos</h1>
+            <p className="text-white/60 text-sm mb-5">Encontre experiências incríveis perto de você</p>
             
             <div className="flex gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
                 <Input
                   placeholder="Buscar eventos, artistas, locais..."
-                  className="pl-11 h-11 text-sm rounded-xl bg-background border-border/50 focus:border-foreground"
+                  className="pl-11 h-11 text-sm rounded-xl bg-white/10 border-white/20 focus:border-white text-white placeholder:text-white/50"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
               <Sheet open={showFilters} onOpenChange={setShowFilters}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 relative rounded-xl border-border/50">
+                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 relative rounded-xl border-white/20 bg-white/10 hover:bg-white/20 text-white">
                     <SlidersHorizontal className="h-4 w-4" />
                     {hasActiveFilters && (
                       <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-background" />
@@ -153,8 +153,8 @@ export default function Eventos() {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                     selectedCategory === cat.id
-                      ? "bg-foreground text-background shadow-lg"
-                      : "bg-card border border-border hover:bg-muted"
+                      ? "bg-white text-black shadow-lg"
+                      : "bg-white/10 border border-white/20 hover:bg-white/20 text-white"
                   }`}
                 >
                   <span className="mr-1">{cat.icon}</span>
@@ -166,7 +166,7 @@ export default function Eventos() {
             {/* Active Filters */}
             {hasActiveFilters && (
               <div className="flex items-center gap-2 mt-3">
-                <span className="text-xs text-muted-foreground">Filtros:</span>
+                <span className="text-xs text-white/50">Filtros:</span>
                 {search && (
                   <Badge variant="secondary" className="gap-1 text-xs">
                     Busca: {search}
@@ -194,18 +194,18 @@ export default function Eventos() {
             {isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
+                  <div key={i} className="aspect-[3/4] rounded-2xl bg-white/10 animate-pulse" />
                 ))}
               </div>
             ) : error ? (
               <EmptyState
-                icon={<Calendar className="h-8 w-8 text-muted-foreground" />}
+                icon={<Calendar className="h-8 w-8 text-white/50" />}
                 title="Erro ao carregar eventos"
                 description="Não foi possível carregar os eventos. Tente novamente."
               />
             ) : filteredEvents && filteredEvents.length > 0 ? (
               <>
-                <p className="text-xs text-muted-foreground mb-4">
+                <p className="text-xs text-white/50 mb-4">
                   {filteredEvents.length} evento(s) encontrado(s)
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -234,11 +234,11 @@ export default function Eventos() {
               </>
             ) : (
               <EmptyState
-                icon={<Calendar className="h-8 w-8 text-muted-foreground" />}
+                icon={<Calendar className="h-8 w-8 text-white/50" />}
                 title="Nenhum evento encontrado"
                 description={hasActiveFilters ? "Tente outros filtros ou busca" : "Novos eventos em breve!"}
                 action={hasActiveFilters ? (
-                  <Button variant="outline" onClick={clearFilters}>Limpar filtros</Button>
+                  <Button variant="outline" onClick={clearFilters} className="border-white/20 hover:bg-white/10">Limpar filtros</Button>
                 ) : undefined}
               />
             )}

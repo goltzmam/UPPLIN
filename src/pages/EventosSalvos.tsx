@@ -45,13 +45,13 @@ export default function EventosSalvos() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex bg-background">
+      <div className="min-h-screen flex bg-black text-white">
         <TikTokDesktopSidebar />
         <main className="flex-1 pb-20 md:pb-0">
           <div className="max-w-2xl mx-auto py-16 px-4 text-center">
-            <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <h1 className="text-2xl font-bold mb-2">Eventos Salvos</h1>
-            <p className="text-muted-foreground mb-6">
+            <Bookmark className="h-12 w-12 mx-auto mb-4 text-white/50" />
+            <h1 className="text-2xl font-bold mb-2 text-white">Eventos Salvos</h1>
+            <p className="text-white/60 mb-6">
               Faça login para ver seus eventos salvos
             </p>
             <Button onClick={() => navigate("/login")} className="rounded-full">
@@ -65,7 +65,7 @@ export default function EventosSalvos() {
   }
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-black text-white">
       <TikTokDesktopSidebar />
       
       <main className="flex-1 pb-20 md:pb-0">
@@ -76,13 +76,13 @@ export default function EventosSalvos() {
               variant="ghost"
               size="icon"
               onClick={() => navigate(-1)}
-              className="rounded-full"
+              className="rounded-full text-white hover:bg-white/10"
             >
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold">Eventos Salvos</h1>
-              <p className="text-muted-foreground text-sm">
+              <h1 className="text-2xl font-bold text-white">Eventos Salvos</h1>
+              <p className="text-white/60 text-sm">
                 {savedEvents.length} evento{savedEvents.length !== 1 ? "s" : ""} salvo{savedEvents.length !== 1 ? "s" : ""}
               </p>
             </div>
@@ -92,14 +92,14 @@ export default function EventosSalvos() {
           {isLoading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
+                <div key={i} className="aspect-[3/4] rounded-2xl bg-white/10 animate-pulse" />
               ))}
             </div>
           ) : savedEvents.length === 0 ? (
             <div className="text-center py-16">
-              <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-xl font-semibold mb-2">Nenhum evento salvo</h2>
-              <p className="text-muted-foreground mb-6">
+              <Bookmark className="h-12 w-12 mx-auto mb-4 text-white/50" />
+              <h2 className="text-xl font-semibold mb-2 text-white">Nenhum evento salvo</h2>
+              <p className="text-white/60 mb-6">
                 Explore eventos e salve seus favoritos para acessar depois
               </p>
               <Button asChild className="rounded-full">
@@ -123,7 +123,7 @@ export default function EventosSalvos() {
                       to={`/evento/${event.id}`}
                       className="block group"
                     >
-                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted">
+                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-white/10">
                         {event.cover_image_url ? (
                           <img
                             src={event.cover_image_url}
@@ -131,7 +131,7 @@ export default function EventosSalvos() {
                             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                           />
                         ) : (
-                          <div className="h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
+                          <div className="h-full w-full bg-gradient-to-br from-white/10 to-white/5" />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                         

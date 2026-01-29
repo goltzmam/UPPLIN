@@ -107,7 +107,7 @@ export default function Perfil() {
   });
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-screen flex items-center justify-center bg-black">
       <PageLoading />
     </div>
   );
@@ -115,7 +115,7 @@ export default function Perfil() {
   if (!user || !profile) return null;
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-black text-white">
       {/* Desktop Sidebar */}
       <TikTokDesktopSidebar />
 
