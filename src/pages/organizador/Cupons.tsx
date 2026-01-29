@@ -237,12 +237,12 @@ export default function Cupons() {
 
                   <div className="space-y-2">
                     <Label>Evento (opcional)</Label>
-                    <Select value={selectedEventId} onValueChange={setSelectedEventId}>
+                    <Select value={selectedEventId || "all"} onValueChange={(v) => setSelectedEventId(v === "all" ? "" : v)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Todos os eventos" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Todos os eventos</SelectItem>
+                        <SelectItem value="all">Todos os eventos</SelectItem>
                         {events?.map((event) => (
                           <SelectItem key={event.id} value={event.id}>{event.title}</SelectItem>
                         ))}
