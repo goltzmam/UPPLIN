@@ -1,4 +1,4 @@
-import { forwardRef, useState } from "react";
+import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, MapPin, Bookmark, User, Search } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -14,7 +14,7 @@ interface NavItem {
   isCity?: boolean;
 }
 
-export const BottomNav = forwardRef<HTMLElement, object>(function BottomNav(_, ref) {
+export function BottomNav() {
   const location = useLocation();
   const { user } = useAuth();
   const [cityName] = useState("Por perto");
@@ -37,7 +37,6 @@ export const BottomNav = forwardRef<HTMLElement, object>(function BottomNav(_, r
 
   return (
     <motion.nav
-      ref={ref as React.Ref<HTMLElement>}
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -106,6 +105,4 @@ export const BottomNav = forwardRef<HTMLElement, object>(function BottomNav(_, r
       <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </motion.nav>
   );
-});
-
-BottomNav.displayName = "BottomNav";
+}
