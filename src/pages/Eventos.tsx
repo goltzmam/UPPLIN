@@ -1,14 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 import { Search, Calendar, SlidersHorizontal, X } from "lucide-react";
 import { useState } from "react";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { EventCard } from "@/components/events/EventCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CardSkeleton } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   Sheet,
@@ -77,31 +75,34 @@ export default function Eventos() {
   const hasActiveFilters = search || selectedCategory !== "all";
 
   return (
-    <div className="min-h-screen flex flex-col pb-20 md:pb-0 bg-background">
-      <Header />
-      
-      <main className="flex-1">
-        {/* Search Header - Enhanced */}
-        <section className="bg-gradient-to-b from-muted/50 to-background border-b border-border py-8 sm:py-10 pt-24 sm:pt-28 lg:pt-32">
-          <div className="container px-4">
-            <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold mb-2">Explorar Eventos</h1>
-            <p className="text-muted-foreground mb-6 lg:mb-8">Encontre experiências incríveis perto de você</p>
-            <div className="flex gap-3 sm:gap-4">
-              <div className="relative flex-1 max-w-2xl">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+    <div className="min-h-screen flex bg-background">
+      {/* Desktop Sidebar */}
+      <TikTokDesktopSidebar />
+
+      {/* Main Content */}
+      <main className="flex-1 pb-20 md:pb-0">
+        {/* Search Header */}
+        <section className="bg-gradient-to-b from-muted/50 to-background border-b border-border py-6 sm:py-8 pt-8 sm:pt-10">
+          <div className="max-w-4xl mx-auto px-4">
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">Explorar Eventos</h1>
+            <p className="text-muted-foreground text-sm mb-5">Encontre experiências incríveis perto de você</p>
+            
+            <div className="flex gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar eventos, artistas, locais..."
-                  className="pl-12 h-12 sm:h-14 text-base rounded-2xl bg-background border-border/50 focus:border-foreground"
+                  className="pl-11 h-11 text-sm rounded-xl bg-background border-border/50 focus:border-foreground"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
               <Sheet open={showFilters} onOpenChange={setShowFilters}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-12 w-12 sm:h-14 sm:w-14 shrink-0 relative rounded-2xl border-border/50">
-                    <SlidersHorizontal className="h-5 w-5" />
+                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 relative rounded-xl border-border/50">
+                    <SlidersHorizontal className="h-4 w-4" />
                     {hasActiveFilters && (
-                      <span className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-primary rounded-full border-2 border-background" />
+                      <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-background" />
                     )}
                   </Button>
                 </SheetTrigger>
@@ -144,19 +145,19 @@ export default function Eventos() {
               </Sheet>
             </div>
 
-            {/* Category Pills - Enhanced */}
-            <div className="flex gap-2 sm:gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
+            {/* Category Pills */}
+            <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-5 py-2.5 sm:py-3 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-200 ${
+                  className={`px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
                     selectedCategory === cat.id
                       ? "bg-foreground text-background shadow-lg"
-                      : "bg-card border border-border hover:bg-muted hover:border-muted-foreground/30"
+                      : "bg-card border border-border hover:bg-muted"
                   }`}
                 >
-                  <span className="mr-1.5">{cat.icon}</span>
+                  <span className="mr-1">{cat.icon}</span>
                   {cat.label}
                 </button>
               ))}
@@ -164,10 +165,10 @@ export default function Eventos() {
 
             {/* Active Filters */}
             {hasActiveFilters && (
-              <div className="flex items-center gap-2 mt-4">
-                <span className="text-sm text-muted-foreground">Filtros:</span>
+              <div className="flex items-center gap-2 mt-3">
+                <span className="text-xs text-muted-foreground">Filtros:</span>
                 {search && (
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 text-xs">
                     Busca: {search}
                     <button onClick={() => setSearch("")}>
                       <X className="h-3 w-3" />
@@ -175,7 +176,7 @@ export default function Eventos() {
                   </Badge>
                 )}
                 {selectedCategory !== "all" && (
-                  <Badge variant="secondary" className="gap-1">
+                  <Badge variant="secondary" className="gap-1 text-xs">
                     {CATEGORIES.find(c => c.id === selectedCategory)?.label}
                     <button onClick={() => setSelectedCategory("all")}>
                       <X className="h-3 w-3" />
@@ -187,13 +188,13 @@ export default function Eventos() {
           </div>
         </section>
 
-        {/* Events Grid - Enhanced */}
-        <section className="py-8 sm:py-10 lg:py-12">
-          <div className="container px-4">
+        {/* Events Grid */}
+        <section className="py-6 sm:py-8">
+          <div className="max-w-6xl mx-auto px-4">
             {isLoading ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 sm:gap-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="aspect-[4/5] rounded-3xl bg-muted animate-pulse" />
+                  <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
                 ))}
               </div>
             ) : error ? (
@@ -204,10 +205,10 @@ export default function Eventos() {
               />
             ) : filteredEvents && filteredEvents.length > 0 ? (
               <>
-                <p className="text-sm text-muted-foreground mb-6">
+                <p className="text-xs text-muted-foreground mb-4">
                   {filteredEvents.length} evento(s) encontrado(s)
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-5 sm:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {filteredEvents.map((event: any) => {
                     const minPrice = event.ticket_types?.length
                       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
@@ -245,7 +246,6 @@ export default function Eventos() {
         </section>
       </main>
 
-      <Footer />
       <BottomNav />
     </div>
   );

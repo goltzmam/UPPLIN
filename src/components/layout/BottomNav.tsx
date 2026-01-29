@@ -40,7 +40,7 @@ export function BottomNav() {
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden"
     >
       {/* Subtle shadow for elegant separation */}
       <div className="absolute inset-x-0 -top-4 h-8 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
