@@ -202,7 +202,7 @@ export default function Index() {
         }} transition={{
           duration: 0.2,
           ease: "easeOut"
-        }} className="h-full bg-black overflow-y-auto pb-20">
+        }} className="h-full bg-background overflow-y-auto pb-20">
               <div className="pt-24">
                 <FollowingFeed />
               </div>
