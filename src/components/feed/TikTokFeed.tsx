@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Volume2, VolumeX, Plus } from "lucide-react";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Volume2, VolumeX, Plus, Ticket } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -469,38 +469,41 @@ const FeedRow = React.memo(function FeedRow({
 
         {/* Bottom event info - minimalist */}
         <div className="absolute bottom-0 left-0 right-16 p-3 pb-[calc(var(--app-bottom-offset,72px)+8px)] z-10">
-          <Link to={`/evento/${item.id}`} onClick={(e) => e.stopPropagation()} className="block">
-            {/* Price + Live badge */}
-            <div className="flex items-center gap-2 mb-2">
-              <div className={cn(
-                "px-2.5 py-0.5 rounded-full text-[11px] font-semibold",
-                (item.minPrice || 0) === 0 ? "bg-green-500/90 text-white" : "bg-white/90 text-black"
-              )}>
-                {formatPrice(item.minPrice || 0)}
-              </div>
-              {isLive && <LiveBadge />}
-            </div>
-            
-            {/* Organizer */}
-            <span className="text-white/70 text-xs font-medium block mb-0.5">
-              {item.organizerName || "Organizador"}
-            </span>
-            
-            {/* Title */}
-            <h3 className="text-base font-semibold text-white leading-snug line-clamp-2 mb-1.5">
-              {item.title}
-            </h3>
-            
-            {/* Date & location - single line */}
-            <div className="flex items-center gap-2 text-white/60 text-xs">
-              <span>{formattedDate} • {formattedTime}</span>
-              {(item.venueName || item.addressText) && (
-                <>
-                  <span>·</span>
-                  <span className="truncate max-w-[120px]">{item.venueName || item.addressText}</span>
-                </>
-              )}
-            </div>
+          {/* Organizer */}
+          <span className="text-white/70 text-xs font-medium block mb-0.5">
+            {item.organizerName || "Organizador"}
+          </span>
+          
+          {/* Title */}
+          <h3 className="text-base font-semibold text-white leading-snug line-clamp-2 mb-1.5">
+            {item.title}
+          </h3>
+          
+          {/* Date & location - single line */}
+          <div className="flex items-center gap-2 text-white/60 text-xs mb-3">
+            <span>{formattedDate} • {formattedTime}</span>
+            {(item.venueName || item.addressText) && (
+              <>
+                <span>·</span>
+                <span className="truncate max-w-[120px]">{item.venueName || item.addressText}</span>
+              </>
+            )}
+            {isLive && <LiveBadge />}
+          </div>
+
+          {/* Buy ticket button */}
+          <Link 
+            to={`/evento/${item.id}`} 
+            onClick={(e) => e.stopPropagation()}
+            className={cn(
+              "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all active:scale-95",
+              (item.minPrice || 0) === 0 
+                ? "bg-green-500 text-white" 
+                : "bg-white text-black"
+            )}
+          >
+            <Ticket className="h-3.5 w-3.5" />
+            {formatPrice(item.minPrice || 0)}
           </Link>
         </div>
 
