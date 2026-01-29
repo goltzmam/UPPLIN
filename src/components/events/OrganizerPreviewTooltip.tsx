@@ -70,7 +70,7 @@ export function OrganizerPreviewTooltip({
           <Link
             to={`/organizador/${organizerId}`}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center text-xs text-white/50 hover:text-primary transition-colors"
+            className="inline-flex items-center text-xs text-white/50 hover:text-accent transition-colors"
           >
             @{displayUsername}
           </Link>
@@ -104,7 +104,7 @@ export function OrganizerPreviewTooltip({
               >
                 <Avatar className="h-12 w-12 border-2 border-white/20">
                   <AvatarImage src={organizer?.logo_url || undefined} alt={organizer?.display_name} />
-                  <AvatarFallback className="bg-primary/20 text-primary font-bold">
+                  <AvatarFallback className="bg-accent/20 text-accent font-bold">
                     {(organizer?.display_name || organizerName || "O")[0].toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
@@ -173,7 +173,7 @@ export function OrganizerPreviewTooltip({
               <Button
                 variant="outline"
                 size="sm"
-                className="text-xs h-8 border-white/20 text-white hover:bg-primary hover:text-white hover:border-primary transition-colors"
+                className="text-xs h-8 border-white/20 text-white hover:bg-accent hover:text-white hover:border-accent transition-colors"
                 asChild
               >
                 <Link to={`/organizador/${organizerId}`} onClick={(e) => e.stopPropagation()}>
