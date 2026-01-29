@@ -338,7 +338,7 @@ export default function Cupons() {
               </div>
             ) : (
               <EmptyState
-                icon={<Tag className="h-8 w-8 text-primary" />}
+                icon={<Tag className="h-8 w-8 text-accent" />}
                 title="Nenhum cupom"
                 description="Crie cupons de desconto para seus eventos."
                 variant="default"

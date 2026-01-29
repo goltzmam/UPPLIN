@@ -142,14 +142,14 @@ export default function Onboarding() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring" }}
-                className="h-16 w-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center mx-auto mb-4"
+                className="h-16 w-16 rounded-2xl bg-accent-foreground/20 backdrop-blur flex items-center justify-center mx-auto mb-4"
               >
-                <CreditCard className="h-8 w-8 text-white" />
+                <CreditCard className="h-8 w-8 text-accent-foreground" />
               </motion.div>
-              <h1 className="font-display text-2xl font-bold text-white mb-2">
+              <h1 className="font-display text-2xl font-bold text-accent-foreground mb-2">
                 Complete seu cadastro
               </h1>
-              <p className="text-white/80 text-sm">
+              <p className="text-accent-foreground/80 text-sm">
                 Para sua segurança, precisamos do seu CPF
               </p>
             </div>

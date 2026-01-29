@@ -222,7 +222,7 @@ export default function ExplorarOrganizadores() {
                     >
                       <Avatar className="h-16 w-16 ring-2 ring-border group-hover:ring-primary/50 transition-all">
                         <AvatarImage src={organizer.logo_url || undefined} />
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-lg font-bold">
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-accent-foreground text-lg font-bold">
                           {getInitials(organizer.display_name)}
                         </AvatarFallback>
                       </Avatar>

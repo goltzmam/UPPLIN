@@ -206,11 +206,11 @@ export default function Evento() {
         <Header />
         <main className="flex-1 container py-12">
           <EmptyState
-            icon={<Calendar className="h-8 w-8 text-primary" />}
+            icon={<Calendar className="h-8 w-8 text-accent" />}
             title="Evento não encontrado"
             description="Este evento não existe ou não está disponível."
             variant="default"
-            action={<Button onClick={() => navigate("/eventos")} className="bg-primary hover:bg-primary/90 text-white">Ver outros eventos</Button>}
+            action={<Button onClick={() => navigate("/eventos")} className="bg-primary hover:bg-primary/90 text-primary-foreground">Ver outros eventos</Button>}
           />
         </main>
         <Footer />

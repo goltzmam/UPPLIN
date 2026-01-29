@@ -190,10 +190,10 @@ export default function Eventos() {
               </div>
             ) : error ? (
               <EmptyState
-                icon={<Calendar className="h-8 w-8 text-primary" />}
+                icon={<Calendar className="h-8 w-8 text-accent" />}
                 title="Erro ao carregar eventos"
                 description="Não foi possível carregar os eventos. Tente novamente."
-                variant="dark"
+                variant="default"
               />
             ) : filteredEvents && filteredEvents.length > 0 ? (
               <>
@@ -226,12 +226,12 @@ export default function Eventos() {
               </>
             ) : (
               <EmptyState
-                icon={<Calendar className="h-8 w-8 text-primary" />}
+                icon={<Calendar className="h-8 w-8 text-accent" />}
                 title="Nenhum evento encontrado"
                 description={hasActiveFilters ? "Tente outros filtros ou busca" : "Novos eventos em breve!"}
-                variant="dark"
+                variant="default"
                 action={hasActiveFilters ? (
-                  <Button onClick={clearFilters} className="bg-primary hover:bg-primary/90 text-white">Limpar filtros</Button>
+                  <Button onClick={clearFilters} className="bg-primary hover:bg-primary/90 text-primary-foreground">Limpar filtros</Button>
                 ) : undefined}
               />
             )}
