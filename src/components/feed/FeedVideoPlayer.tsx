@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Play, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { Play, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -7,8 +7,6 @@ interface FeedVideoPlayerProps {
   videoUrl: string;
   coverUrl: string | null;
   isActive: boolean;
-  isMuted: boolean;
-  onToggleMute: () => void;
   className?: string;
 }
 
@@ -18,7 +16,6 @@ const MAX_CACHE_SIZE = 10;
 
 function addToCache(url: string) {
   if (videoCache.size >= MAX_CACHE_SIZE) {
-    // Remove oldest entry
     const firstKey = videoCache.keys().next().value;
     if (firstKey) videoCache.delete(firstKey);
   }
@@ -33,8 +30,6 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
   videoUrl,
   coverUrl,
   isActive,
-  isMuted,
-  onToggleMute,
   className,
 }: FeedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -47,23 +42,18 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
 
   const shouldPlay = isActive && !isPaused && !videoError;
 
-  // Optimized iOS autoplay with retry logic
+  // Optimized iOS autoplay with sound
   useEffect(() => {
     const video = videoRef.current;
     if (!video || videoError) return;
-
-    // Always keep muted for iOS autoplay compliance
-    video.muted = isMuted;
     
     if (shouldPlay) {
       const attemptId = ++playAttemptRef.current;
       
-      // iOS requires a small delay after becoming visible
       const playWithRetry = async () => {
         if (playAttemptRef.current !== attemptId) return;
         
         try {
-          // Ensure video is ready
           if (video.readyState < 2) {
             video.load();
             await new Promise(resolve => {
@@ -72,36 +62,20 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
                 resolve(undefined);
               };
               video.addEventListener('canplay', onCanPlay);
-              // Timeout fallback
               setTimeout(resolve, 1000);
             });
           }
           
           if (playAttemptRef.current !== attemptId) return;
           
-          // Force muted for autoplay (iOS requirement)
-          video.muted = true;
           video.playbackRate = 1.0;
-          
           await video.play();
-          
-          // After successful play, sync mute state
-          if (!isMuted) {
-            // Small delay before unmuting (iOS workaround)
-            setTimeout(() => {
-              if (videoRef.current && playAttemptRef.current === attemptId) {
-                videoRef.current.muted = isMuted;
-              }
-            }, 100);
-          }
         } catch (err: any) {
           if (err.name === 'AbortError') return;
           console.warn('Video autoplay failed:', err.name);
-          // Don't set error - keep showing cover
         }
       };
       
-      // Immediate attempt for cached videos, delayed for fresh loads
       const delay = isInCache(videoUrl) ? 0 : 50;
       setTimeout(playWithRetry, delay);
     } else {
@@ -111,14 +85,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     return () => {
       playAttemptRef.current++;
     };
-  }, [shouldPlay, videoError, isMuted, videoUrl]);
-
-  // Sync mute state when toggled
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.muted = isMuted;
-    }
-  }, [isMuted]);
+  }, [shouldPlay, videoError, videoUrl]);
 
   // Buffering detection
   useEffect(() => {
@@ -164,17 +131,11 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     addToCache(videoUrl);
   }, [videoUrl]);
 
-  // If video fails, show cover image as fallback
   if (videoError) {
     return (
       <div className={cn("absolute inset-0", className)}>
         {coverUrl ? (
-          <img
-            src={coverUrl}
-            alt=""
-            className="h-full w-full object-cover"
-            loading="eager"
-          />
+          <img src={coverUrl} alt="" className="h-full w-full object-cover" loading="eager" />
         ) : (
           <div className="h-full w-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
         )}
@@ -184,7 +145,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
 
   return (
     <div className={cn("absolute inset-0", className)} onClick={handleClick}>
-      {/* Cover image as instant background - always show initially */}
+      {/* Cover image as instant background */}
       {coverUrl && (
         <img
           src={coverUrl}
@@ -198,23 +159,20 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         />
       )}
 
-      {/* Minimal loading indicator - only when no cover */}
+      {/* Minimal loading indicator */}
       {!videoLoaded && !coverUrl && (
         <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
           <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
         </div>
       )}
 
-      {/* Video element - optimized for iOS */}
+      {/* Video element - optimized for iOS with sound */}
       <video
         ref={videoRef}
         src={isActive ? videoUrl : undefined}
         loop
         playsInline
         webkit-playsinline="true"
-        x-webkit-airplay="deny"
-        disableRemotePlayback
-        muted={isMuted}
         preload={isActive ? "auto" : "metadata"}
         onLoadedData={handleVideoLoaded}
         onCanPlayThrough={handleVideoLoaded}
@@ -224,17 +182,16 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
           videoLoaded ? "opacity-100" : "opacity-0"
         )}
         style={{
-          transform: 'translateZ(0)',
+          transform: 'translate3d(0,0,0)',
+          WebkitTransform: 'translate3d(0,0,0)',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
           transition: 'opacity 0.5s ease-out',
-          // iOS optimizations
-          WebkitTransform: 'translate3d(0,0,0)',
           objectFit: 'cover',
         }}
       />
 
-      {/* Smooth buffering indicator overlay */}
+      {/* Buffering indicator */}
       <AnimatePresence>
         {isBuffering && videoLoaded && (
           <motion.div
@@ -249,7 +206,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         )}
       </AnimatePresence>
 
-      {/* Pause/Play overlay with smooth animation */}
+      {/* Pause overlay */}
       <AnimatePresence mode="wait">
         {isPaused && (
           <motion.div
@@ -271,7 +228,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         )}
       </AnimatePresence>
 
-      {/* Tap feedback - brief pause icon flash */}
+      {/* Tap feedback */}
       <AnimatePresence>
         {showPauseIcon && !isPaused && (
           <motion.div
@@ -287,41 +244,6 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Mute button - larger touch target for mobile */}
-      <motion.button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleMute();
-        }}
-        className="absolute top-4 right-4 z-20 h-11 w-11 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10 active:scale-95 transition-transform"
-        whileTap={{ scale: 0.9 }}
-        aria-label={isMuted ? "Ativar som" : "Desativar som"}
-      >
-        <AnimatePresence mode="wait">
-          {isMuted ? (
-            <motion.div
-              key="muted"
-              initial={{ scale: 0, rotate: -90 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: 90 }}
-              transition={{ duration: 0.15 }}
-            >
-              <VolumeX className="h-5 w-5 text-white" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="unmuted"
-              initial={{ scale: 0, rotate: 90 }}
-              animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0, rotate: -90 }}
-              transition={{ duration: 0.15 }}
-            >
-              <Volume2 className="h-5 w-5 text-white" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.button>
     </div>
   );
 });
