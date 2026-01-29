@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { MessageCircle, ArrowLeft, Plus, Users, Building2, Shield, Search } from "lucide-react";
+import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -149,6 +150,12 @@ export default function Mensagens() {
 
       <main className="flex-1 pt-20 sm:pt-24">
         <div className="container px-4 py-6">
+          {/* Breadcrumb */}
+          <Breadcrumb 
+            items={[{ label: "Mensagens" }]} 
+            className="mb-4"
+          />
+          
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>

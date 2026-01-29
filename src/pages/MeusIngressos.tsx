@@ -13,6 +13,7 @@ import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TicketQRCode } from "@/components/tickets/TicketQRCode";
+import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -176,6 +177,11 @@ export default function MeusIngressos() {
 
       <main className="flex-1 py-8 pt-24">
         <div className="container px-4">
+          {/* Breadcrumb */}
+          <Breadcrumb 
+            items={[{ label: "Meus Ingressos" }]} 
+            className="mb-4"
+          />
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Meus Ingressos</h1>
 
           <Tabs defaultValue="upcoming" className="space-y-6">
