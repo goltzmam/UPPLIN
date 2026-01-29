@@ -690,10 +690,6 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   return (
     <div className="relative" style={{ height: containerHeight }}>
-      {/* Scroll mini map */}
-      <div className="fixed z-30 pointer-events-none" style={{ top: "50%", right: "8px", transform: "translateY(-50%)" }}>
-        <ScrollMiniMap current={activeIndex} total={items.length} />
-      </div>
 
       {/* Pull to refresh indicator */}
       {onRefresh && (
