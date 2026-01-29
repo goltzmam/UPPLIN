@@ -338,9 +338,10 @@ export default function Cupons() {
               </div>
             ) : (
               <EmptyState
-                icon={<Tag className="h-8 w-8 text-muted-foreground" />}
+                icon={<Tag className="h-8 w-8 text-primary" />}
                 title="Nenhum cupom"
                 description="Crie cupons de desconto para seus eventos."
+                variant="default"
                 className="py-12"
               />
             )}

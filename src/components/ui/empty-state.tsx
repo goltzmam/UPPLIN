@@ -7,17 +7,36 @@ interface EmptyStateProps {
   description?: string;
   action?: ReactNode;
   className?: string;
+  /** Use dark variant for dark backgrounds like feed pages */
+  variant?: "default" | "dark";
 }
 
-export function EmptyState({ icon, title, description, action, className }: EmptyStateProps) {
+export function EmptyState({ icon, title, description, action, className, variant = "dark" }: EmptyStateProps) {
+  const isDark = variant === "dark";
+  
   return (
     <div className={cn("flex flex-col items-center justify-center text-center py-12 px-4", className)}>
-      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
+      <div className={cn(
+        "flex h-16 w-16 items-center justify-center rounded-2xl mb-4 border",
+        isDark 
+          ? "bg-white/10 border-white/20" 
+          : "bg-muted border-border"
+      )}>
         {icon}
       </div>
-      <h3 className="font-display text-lg font-semibold mb-1">{title}</h3>
+      <h3 className={cn(
+        "font-display text-lg font-semibold mb-1",
+        isDark ? "text-white" : "text-foreground"
+      )}>
+        {title}
+      </h3>
       {description && (
-        <p className="text-muted-foreground text-sm max-w-sm mb-4">{description}</p>
+        <p className={cn(
+          "text-sm max-w-sm mb-4",
+          isDark ? "text-white/60" : "text-muted-foreground"
+        )}>
+          {description}
+        </p>
       )}
       {action}
     </div>

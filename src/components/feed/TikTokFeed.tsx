@@ -685,11 +685,13 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   if (items.length === 0) {
     return (
-      <div style={{ height: containerHeight }} className="flex items-center justify-center text-center p-8 bg-background">
+      <div style={{ height: containerHeight }} className="flex items-center justify-center text-center p-8 bg-black">
         <div>
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center"><Calendar className="h-8 w-8 text-muted-foreground" /></div>
-          <p className="text-foreground font-medium mb-1">Nenhum evento encontrado</p>
-          <p className="text-sm text-muted-foreground">Explore categorias ou siga organizadores</p>
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
+            <Calendar className="h-8 w-8 text-primary" />
+          </div>
+          <p className="text-white font-semibold mb-1">Nenhum evento encontrado</p>
+          <p className="text-sm text-white/60">Explore categorias ou siga organizadores</p>
         </div>
       </div>
     );
