@@ -231,60 +231,60 @@ export default function Index() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Top Header with Tabs */}
+      {/* Overlay Header - Minimal */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         <div className="h-[env(safe-area-inset-top,0px)]" />
         
-        <div className="flex items-center justify-between px-4 py-3 pointer-events-auto">
-          {/* Logo */}
-          <Link to="/" className="font-display text-lg font-bold text-white drop-shadow-md tracking-tight">
+        <div className="flex items-center justify-between px-3 py-3 pointer-events-auto">
+          {/* Logo left */}
+          <Link to="/" className="font-display text-base font-bold text-white drop-shadow-md tracking-tight shrink-0">
             UPPLIN
           </Link>
+          
+          {/* Centered tabs */}
+          <div className="flex items-center gap-4 mx-4">
+            <button
+              onClick={() => setActiveTab("following")}
+              className={cn(
+                "relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap",
+                activeTab === "following" ? "text-white" : "text-white/50"
+              )}
+            >
+              Seguindo
+              {activeTab === "following" && (
+                <motion.div
+                  layoutId="tab-underline-mobile"
+                  className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full"
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                />
+              )}
+            </button>
+            <button
+              onClick={() => setActiveTab("foryou")}
+              className={cn(
+                "relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap",
+                activeTab === "foryou" ? "text-white" : "text-white/50"
+              )}
+            >
+              Para você
+              {activeTab === "foryou" && (
+                <motion.div
+                  layoutId="tab-underline-mobile"
+                  className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full"
+                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                />
+              )}
+            </button>
+          </div>
 
-          {/* City selector */}
+          {/* City selector right */}
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-1.5 text-white/80 text-xs font-medium"
+            className="flex items-center gap-1 text-white/80 text-xs font-medium shrink-0"
           >
-            <MapPin className="h-3.5 w-3.5" />
-            <span>Fortaleza</span>
+            <MapPin className="h-3 w-3" />
+            <span className="hidden xs:inline">Fortaleza</span>
             <ChevronDown className="h-3 w-3 text-white/50" />
-          </button>
-        </div>
-
-        {/* Feed Tabs - Para você / Seguindo */}
-        <div className="flex items-center justify-center gap-6 pb-2 pointer-events-auto">
-          <button
-            onClick={() => setActiveTab("foryou")}
-            className={cn(
-              "relative py-1 text-sm font-semibold transition-all",
-              activeTab === "foryou" ? "text-white" : "text-white/50"
-            )}
-          >
-            Para você
-            {activeTab === "foryou" && (
-              <motion.div
-                layoutId="mobile-tab-underline"
-                className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-primary rounded-full"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
-              />
-            )}
-          </button>
-          <button
-            onClick={() => setActiveTab("following")}
-            className={cn(
-              "relative py-1 text-sm font-semibold transition-all",
-              activeTab === "following" ? "text-white" : "text-white/50"
-            )}
-          >
-            Seguindo
-            {activeTab === "following" && (
-              <motion.div
-                layoutId="mobile-tab-underline"
-                className="absolute -bottom-0.5 left-0 right-0 h-[2px] bg-primary rounded-full"
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
-              />
-            )}
           </button>
         </div>
       </div>
