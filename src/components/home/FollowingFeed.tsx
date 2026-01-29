@@ -66,7 +66,7 @@ export function FollowingFeed() {
     enabled: !!user?.id,
   });
 
-  // Empty state component with theme support for desktop/mobile
+  // Empty state component with premium design
   const EmptyState = ({ 
     title, 
     description, 
@@ -78,79 +78,127 @@ export function FollowingFeed() {
     showLoginButton?: boolean;
     showExploreButton?: boolean;
   }) => (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-6 text-center">
+    <div className="flex flex-col items-center justify-center min-h-[65vh] px-6 text-center">
+      {/* Animated icon with gradient ring */}
       <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
+        initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.1 }}
-        className="relative mb-6"
+        transition={{ type: "spring", stiffness: 200, damping: 20 }}
+        className="relative mb-8"
       >
-        {/* Glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/30 to-accent/30 rounded-full blur-2xl scale-150" />
-        <div className="relative h-20 w-20 rounded-full bg-muted/80 md:bg-muted backdrop-blur-sm flex items-center justify-center border border-border/50 md:border-border">
-          <Users className="h-10 w-10 text-muted-foreground" />
+        {/* Outer glow ring */}
+        <motion.div 
+          className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 blur-xl"
+          animate={{ 
+            scale: [1, 1.1, 1],
+            opacity: [0.5, 0.8, 0.5]
+          }}
+          transition={{ 
+            duration: 3, 
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        />
+        
+        {/* Icon container with gradient border */}
+        <div className="relative h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/10 p-[2px]">
+          <div className="h-full w-full rounded-full bg-background flex items-center justify-center">
+            <motion.div
+              animate={{ y: [0, -3, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Users className="h-10 w-10 text-primary" />
+            </motion.div>
+          </div>
         </div>
       </motion.div>
       
+      {/* Title with gradient text */}
       <motion.h3 
-        initial={{ y: 10, opacity: 0 }}
+        initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="font-display text-xl font-bold text-foreground mb-2"
+        transition={{ delay: 0.15 }}
+        className="font-display text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-3"
       >
         {title}
       </motion.h3>
       
+      {/* Description */}
       <motion.p 
-        initial={{ y: 10, opacity: 0 }}
+        initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="text-muted-foreground text-sm mb-6 max-w-[280px]"
+        transition={{ delay: 0.25 }}
+        className="text-muted-foreground text-sm mb-8 max-w-[260px] leading-relaxed"
       >
         {description}
       </motion.p>
       
+      {/* Action buttons */}
       <motion.div
-        initial={{ y: 10, opacity: 0 }}
+        initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="flex flex-col gap-3 w-full max-w-[200px]"
+        transition={{ delay: 0.35 }}
+        className="flex flex-col gap-3 w-full max-w-[240px]"
       >
         {showLoginButton && (
-          <Button asChild className="w-full font-semibold">
-            <Link to="/login">Entrar</Link>
+          <Button asChild size="lg" className="w-full font-semibold rounded-full h-12 text-base">
+            <Link to="/login">Entrar na conta</Link>
           </Button>
         )}
         {showExploreButton && (
-          <Button asChild variant="outline" className="w-full font-semibold">
+          <Button 
+            asChild 
+            size="lg"
+            className="w-full font-semibold rounded-full h-12 text-base bg-primary hover:bg-primary/90"
+          >
             <Link to="/explorar-organizadores" className="flex items-center gap-2">
-              <Compass className="h-4 w-4" />
-              Explorar Organizadores
+              <Compass className="h-5 w-5" />
+              Descobrir Organizadores
             </Link>
           </Button>
         )}
       </motion.div>
 
-      {/* Suggested organizers preview */}
+      {/* Featured organizers preview - only show when explore button is visible */}
       {showExploreButton && (
         <motion.div
-          initial={{ y: 20, opacity: 0 }}
+          initial={{ y: 25, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 w-full"
+          className="mt-10 w-full max-w-xs"
         >
-          <div className="flex items-center gap-2 text-muted-foreground/60 text-xs mb-3 justify-center">
-            <Sparkles className="h-3 w-3" />
-            <span>Organizadores em destaque</span>
+          <div className="flex items-center gap-2 text-muted-foreground/50 text-xs mb-4 justify-center">
+            <Sparkles className="h-3.5 w-3.5 text-primary/60" />
+            <span className="uppercase tracking-wider font-medium">Organizadores populares</span>
           </div>
-          <div className="flex justify-center gap-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <div
+          
+          {/* Stacked avatars with overlap effect */}
+          <div className="flex justify-center -space-x-3">
+            {[
+              "from-orange-400 to-rose-500",
+              "from-violet-400 to-purple-600",
+              "from-cyan-400 to-blue-500",
+              "from-emerald-400 to-green-500",
+              "from-amber-400 to-orange-500",
+            ].map((gradient, i) => (
+              <motion.div
                 key={i}
-                className="h-12 w-12 rounded-full bg-gradient-to-br from-muted to-muted/50 border border-border/50"
+                initial={{ scale: 0, x: -20 }}
+                animate={{ scale: 1, x: 0 }}
+                transition={{ delay: 0.6 + i * 0.08, type: "spring", stiffness: 300 }}
+                className={`h-12 w-12 rounded-full bg-gradient-to-br ${gradient} border-2 border-background shadow-lg`}
               />
             ))}
           </div>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="text-xs text-muted-foreground/40 mt-4"
+          >
+            +50 organizadores para seguir
+          </motion.p>
         </motion.div>
       )}
     </div>
