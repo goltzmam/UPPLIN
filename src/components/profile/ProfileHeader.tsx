@@ -133,7 +133,10 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
             <div className="avatar-ring-gradient p-[3px] rounded-full">
               <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background">
                 <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "User"} />
-                <AvatarFallback className="text-2xl sm:text-3xl font-bold bg-gradient-to-br from-accent to-pink-500 text-white">
+                <AvatarFallback
+                  className="text-2xl sm:text-3xl font-bold text-accent-foreground"
+                  style={{ backgroundImage: "var(--gradient-social)" }}
+                >
                   {getInitials(profile.full_name)}
                 </AvatarFallback>
               </Avatar>
