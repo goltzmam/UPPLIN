@@ -12,14 +12,11 @@ import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { FeedSearch } from "@/components/feed/FeedSearch";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { DesktopFeedCard } from "@/components/feed/DesktopFeedCard";
-import { Search, MapPin, ChevronDown } from "lucide-react";
+import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
-
 const PAGE_SIZE = 12;
-
 const MUTE_STORAGE_KEY = "upplin_desktop_muted";
-
 export default function Index() {
   const [activeTab, setActiveTab] = useState<"foryou" | "following">("foryou");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -32,104 +29,90 @@ export default function Index() {
   const scrollPosRef = useRef(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-
+  const {
+    user
+  } = useAuth();
   const feedContainerRef = useRef<HTMLElement>(null);
-
   const toggleGlobalMute = useCallback(() => {
-    setGlobalMuted((prev) => {
+    setGlobalMuted(prev => {
       const next = !prev;
       localStorage.setItem(MUTE_STORAGE_KEY, String(next));
       return next;
     });
   }, []);
-
   const {
     data,
     isLoading,
     fetchNextPage,
     hasNextPage,
-    isFetchingNextPage,
+    isFetchingNextPage
   } = useInfiniteQuery({
     queryKey: ["homepage-events-infinite"],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({
+      pageParam = 0
+    }) => {
       const from = pageParam * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
-      
-      const { data, error, count } = await supabase
-        .from("events")
-        .select(`
+      const {
+        data,
+        error,
+        count
+      } = await supabase.from("events").select(`
           *,
           organizer:organizer_id(id, display_name, logo_url, slug),
           event_media(id, url, type, sort_order),
           ticket_types(price_cents)
-        `, { count: "exact" })
-        .eq("status", "published")
-        .order("start_at", { ascending: true })
-        .range(from, to);
-      
+        `, {
+        count: "exact"
+      }).eq("status", "published").order("start_at", {
+        ascending: true
+      }).range(from, to);
       if (error) throw error;
-      return { 
-        data: data || [], 
+      return {
+        data: data || [],
         nextPage: (data?.length || 0) === PAGE_SIZE ? pageParam + 1 : undefined,
         totalCount: count || 0
       };
     },
-    getNextPageParam: (lastPage) => lastPage.nextPage,
-    initialPageParam: 0,
+    getNextPageParam: lastPage => lastPage.nextPage,
+    initialPageParam: 0
   });
 
   // Infinite scroll observer
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: "400px" }
-    );
-
+    const observer = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+        fetchNextPage();
+      }
+    }, {
+      rootMargin: "400px"
+    });
     const sentinel = document.getElementById("feed-sentinel");
     if (sentinel) {
       observer.observe(sentinel);
     }
-
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
   const events = data?.pages.flatMap(page => page.data) || [];
 
   // Demo cover images (fallback when no cover is provided)
-  const DEMO_COVER_URLS = [
-    "https://images.unsplash.com/photo-1521337706264-a414f153a5fc?w=1200&q=80",
-    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&q=80",
-    "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&q=80",
-    "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=1200&q=80",
-    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&q=80",
-    "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&q=80",
-  ];
+  const DEMO_COVER_URLS = ["https://images.unsplash.com/photo-1521337706264-a414f153a5fc?w=1200&q=80", "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&q=80", "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&q=80", "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=1200&q=80", "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&q=80", "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&q=80"];
 
   // Demo video URL from public CDN for first event display
   const DEMO_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
-
   const feedItems = events.map((event: any, index: number) => {
     // Find video from event_media
     const videoMedia = event.event_media?.find((m: any) => m.type === "video");
-    
+
     // Calculate minimum price from ticket types
-    const minPrice = event.ticket_types?.length > 0
-      ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
-      : 0;
+    const minPrice = event.ticket_types?.length > 0 ? Math.min(...event.ticket_types.map((t: any) => t.price_cents)) : 0;
 
     // Use actual cover or fallback to demo cover
     const coverImageUrl = event.cover_image_url || DEMO_COVER_URLS[index % DEMO_COVER_URLS.length];
-    
+
     // Use actual video from event_media, or demo video for first item to showcase the feature
     const videoUrl = videoMedia?.url || (index === 0 ? DEMO_VIDEO_URL : null);
-
     return {
       id: event.id,
       title: event.title,
@@ -143,34 +126,36 @@ export default function Index() {
       organizerSlug: event.organizer?.slug,
       organizerAvatar: event.organizer?.logo_url,
       organizerId: event.organizer_id,
-      minPrice,
+      minPrice
     };
   });
-
   const handleRefresh = useCallback(async () => {
-    await queryClient.removeQueries({ queryKey: ["homepage-events-infinite"] });
-    await new Promise((resolve) => setTimeout(resolve, 400));
+    await queryClient.removeQueries({
+      queryKey: ["homepage-events-infinite"]
+    });
+    await new Promise(resolve => setTimeout(resolve, 400));
   }, [queryClient]);
-
-  const trending = [
-    { 
-      title: "Festivais de Verão", 
-      subtitle: "Em alta agora", 
-      image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600&q=80",
-      href: "/eventos?categoria=festivais"
-    },
-    { 
-      title: "Shows Internacionais", 
-      subtitle: "Mais buscados", 
-      image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&q=80",
-      href: "/eventos?categoria=shows"
-    },
-  ];
-
-  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: { offset: { x: number }; velocity: { x: number } }) => {
+  const trending = [{
+    title: "Festivais de Verão",
+    subtitle: "Em alta agora",
+    image: "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=600&q=80",
+    href: "/eventos?categoria=festivais"
+  }, {
+    title: "Shows Internacionais",
+    subtitle: "Mais buscados",
+    image: "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&q=80",
+    href: "/eventos?categoria=shows"
+  }];
+  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: {
+    offset: {
+      x: number;
+    };
+    velocity: {
+      x: number;
+    };
+  }) => {
     const swipeThreshold = 50;
     const velocityThreshold = 500;
-    
     if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
       setActiveTab("following");
     } else if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
@@ -181,53 +166,47 @@ export default function Index() {
   // =====================================================================
   // MOBILE: Fullscreen TikTok-style feed
   // =====================================================================
-  const MobileFeed = () => (
-    <div className="fixed inset-0 z-0 md:hidden">
-      <motion.div 
-        className="absolute inset-0"
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.2}
-        onDragEnd={handleDragEnd}
-      >
+  const MobileFeed = () => <div className="fixed inset-0 z-0 md:hidden">
+      <motion.div className="absolute inset-0" drag="x" dragConstraints={{
+      left: 0,
+      right: 0
+    }} dragElastic={0.2} onDragEnd={handleDragEnd}>
         <AnimatePresence mode="wait" initial={false}>
-          {activeTab === "foryou" ? (
-            <motion.div
-              key="foryou-mobile"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="h-full"
-              style={{ "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))" } as React.CSSProperties}
-            >
-              <TikTokFeed
-                items={feedItems}
-                isLoading={isLoading}
-                onLoadMore={fetchNextPage}
-                hasMore={!!hasNextPage}
-                isLoadingMore={isFetchingNextPage}
-                scrollPosition={scrollPosRef.current}
-                onScrollChange={(pos) => {
-                  scrollPosRef.current = pos;
-                }}
-                onRefresh={handleRefresh}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="following-mobile"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-              className="h-full bg-black overflow-y-auto pb-20"
-            >
+          {activeTab === "foryou" ? <motion.div key="foryou-mobile" initial={{
+          opacity: 0,
+          x: 20
+        }} animate={{
+          opacity: 1,
+          x: 0
+        }} exit={{
+          opacity: 0,
+          x: -20
+        }} transition={{
+          duration: 0.2,
+          ease: "easeOut"
+        }} className="h-full" style={{
+          "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))"
+        } as React.CSSProperties}>
+              <TikTokFeed items={feedItems} isLoading={isLoading} onLoadMore={fetchNextPage} hasMore={!!hasNextPage} isLoadingMore={isFetchingNextPage} scrollPosition={scrollPosRef.current} onScrollChange={pos => {
+            scrollPosRef.current = pos;
+          }} onRefresh={handleRefresh} />
+            </motion.div> : <motion.div key="following-mobile" initial={{
+          opacity: 0,
+          x: -20
+        }} animate={{
+          opacity: 1,
+          x: 0
+        }} exit={{
+          opacity: 0,
+          x: 20
+        }} transition={{
+          duration: 0.2,
+          ease: "easeOut"
+        }} className="h-full bg-black overflow-y-auto pb-20">
               <div className="pt-24">
                 <FollowingFeed />
               </div>
-            </motion.div>
-          )}
+            </motion.div>}
         </AnimatePresence>
       </motion.div>
 
@@ -243,61 +222,40 @@ export default function Index() {
           
           {/* Centered tabs */}
           <div className="flex items-center gap-4 mx-4">
-            <button
-              onClick={() => setActiveTab("following")}
-              className={cn(
-                "relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap",
-                activeTab === "following" ? "text-white" : "text-white/50"
-              )}
-            >
+            <button onClick={() => setActiveTab("following")} className={cn("relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap", activeTab === "following" ? "text-white" : "text-white/50")}>
               Seguindo
-              {activeTab === "following" && (
-                <motion.div
-                  layoutId="tab-underline-mobile"
-                  className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
+              {activeTab === "following" && <motion.div layoutId="tab-underline-mobile" className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full" transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 35
+            }} />}
             </button>
-            <button
-              onClick={() => setActiveTab("foryou")}
-              className={cn(
-                "relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap",
-                activeTab === "foryou" ? "text-white" : "text-white/50"
-              )}
-            >
+            <button onClick={() => setActiveTab("foryou")} className={cn("relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap", activeTab === "foryou" ? "text-white" : "text-white/50")}>
               Para você
-              {activeTab === "foryou" && (
-                <motion.div
-                  layoutId="tab-underline-mobile"
-                  className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full"
-                  transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                />
-              )}
+              {activeTab === "foryou" && <motion.div layoutId="tab-underline-mobile" className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full" transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 35
+            }} />}
             </button>
           </div>
 
           {/* City selector right */}
-          <button
-            onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-1 text-white/80 text-xs font-medium shrink-0"
-          >
-            <MapPin className="h-3 w-3" />
+          <button onClick={() => setIsSearchOpen(true)} className="flex items-center gap-1 text-white/80 text-xs font-medium shrink-0">
+            
             <span className="hidden xs:inline">Fortaleza</span>
-            <ChevronDown className="h-3 w-3 text-white/50" />
+            
           </button>
         </div>
       </div>
 
       <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-    </div>
-  );
+    </div>;
 
   // =====================================================================
   // DESKTOP/TABLET: Instagram-style layout with sidebars
   // =====================================================================
-  const DesktopLayout = () => (
-    <div className="hidden md:flex min-h-screen bg-background w-full">
+  const DesktopLayout = () => <div className="hidden md:flex min-h-screen bg-background w-full">
       {/* Left Sidebar - Navigation (hidden on md, visible on lg+) */}
       <DesktopSidebar />
 
@@ -307,35 +265,22 @@ export default function Index() {
         <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-md border-b border-border/50">
           <div className="flex items-center justify-center h-14">
             <div className="relative flex items-center gap-1">
-              <button
-                onClick={() => setActiveTab("foryou")}
-                className={cn(
-                  "relative px-6 py-3 text-sm font-semibold transition-colors",
-                  activeTab === "foryou" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70"
-                )}
-              >
+              <button onClick={() => setActiveTab("foryou")} className={cn("relative px-6 py-3 text-sm font-semibold transition-colors", activeTab === "foryou" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70")}>
                 Para você
               </button>
-              <button
-                onClick={() => setActiveTab("following")}
-                className={cn(
-                  "relative px-6 py-3 text-sm font-semibold transition-colors",
-                  activeTab === "following" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70"
-                )}
-              >
+              <button onClick={() => setActiveTab("following")} className={cn("relative px-6 py-3 text-sm font-semibold transition-colors", activeTab === "following" ? "text-foreground" : "text-muted-foreground hover:text-foreground/70")}>
                 Seguindo
               </button>
               
               {/* Animated underline */}
-              <motion.div
-                layoutId="desktop-tab-underline"
-                className="absolute bottom-0 h-[2px] bg-foreground rounded-full"
-                style={{
-                  left: activeTab === "foryou" ? "8px" : "calc(50% + 8px)",
-                  width: activeTab === "foryou" ? "72px" : "64px",
-                }}
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
-              />
+              <motion.div layoutId="desktop-tab-underline" className="absolute bottom-0 h-[2px] bg-foreground rounded-full" style={{
+              left: activeTab === "foryou" ? "8px" : "calc(50% + 8px)",
+              width: activeTab === "foryou" ? "72px" : "64px"
+            }} transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 35
+            }} />
             </div>
           </div>
         </div>
@@ -343,60 +288,41 @@ export default function Index() {
         <PullToRefresh onRefresh={handleRefresh}>
           <div className="pb-20">
             <AnimatePresence mode="wait" initial={false}>
-              {activeTab === "foryou" ? (
-                <motion.div
-                  key="foryou-desktop"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                >
-                  {isLoading ? (
-                    <div className="space-y-4 p-4">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="aspect-square rounded-sm bg-muted animate-pulse" />
-                      ))}
-                    </div>
-                  ) : (
-                    <>
-                      {feedItems.map((item, index) => (
-                        <DesktopFeedCard 
-                          key={item.id} 
-                          item={item} 
-                          index={index}
-                          globalMuted={globalMuted}
-                          onToggleGlobalMute={toggleGlobalMute}
-                        />
-                      ))}
+              {activeTab === "foryou" ? <motion.div key="foryou-desktop" initial={{
+              opacity: 0
+            }} animate={{
+              opacity: 1
+            }} exit={{
+              opacity: 0
+            }} transition={{
+              duration: 0.15
+            }}>
+                  {isLoading ? <div className="space-y-4 p-4">
+                      {[...Array(3)].map((_, i) => <div key={i} className="aspect-square rounded-sm bg-muted animate-pulse" />)}
+                    </div> : <>
+                      {feedItems.map((item, index) => <DesktopFeedCard key={item.id} item={item} index={index} globalMuted={globalMuted} onToggleGlobalMute={toggleGlobalMute} />)}
                       
                       <div id="feed-sentinel" className="h-1" />
                       
-                      {isFetchingNextPage && (
-                        <div className="flex justify-center py-8">
+                      {isFetchingNextPage && <div className="flex justify-center py-8">
                           <div className="h-5 w-5 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
-                        </div>
-                      )}
+                        </div>}
                       
-                      {!hasNextPage && feedItems.length > 0 && (
-                        <div className="flex justify-center py-8 text-muted-foreground text-sm">
+                      {!hasNextPage && feedItems.length > 0 && <div className="flex justify-center py-8 text-muted-foreground text-sm">
                           Você viu todos os eventos 🎉
-                        </div>
-                      )}
-                    </>
-                  )}
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="following-desktop"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.15 }}
-                  className="min-h-[50vh] p-4"
-                >
+                        </div>}
+                    </>}
+                </motion.div> : <motion.div key="following-desktop" initial={{
+              opacity: 0
+            }} animate={{
+              opacity: 1
+            }} exit={{
+              opacity: 0
+            }} transition={{
+              duration: 0.15
+            }} className="min-h-[50vh] p-4">
                   <FollowingFeed />
-                </motion.div>
-              )}
+                </motion.div>}
             </AnimatePresence>
           </div>
         </PullToRefresh>
@@ -404,14 +330,10 @@ export default function Index() {
 
       {/* Right Sidebar - Categories, Trending, Suggestions */}
       <RightSidebar />
-    </div>
-  );
-
-  return (
-    <>
+    </div>;
+  return <>
       <MobileFeed />
       <DesktopLayout />
       <BottomNav />
-    </>
-  );
+    </>;
 }
