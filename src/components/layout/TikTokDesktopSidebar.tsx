@@ -32,9 +32,9 @@ const NavItem = ({ to, icon, label, isActive, isCreate }: NavItemProps) => {
         >
           <div 
             className="h-10 w-10 rounded-xl flex items-center justify-center shadow-lg"
-            style={{ background: "linear-gradient(135deg, hsl(346 84% 60%), hsl(25 95% 55%))" }}
+            style={{ backgroundImage: "var(--gradient-social)" }}
           >
-            <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
+            <Plus className="h-5 w-5 text-accent-foreground" strokeWidth={2.5} />
           </div>
         </motion.div>
       </Link>
@@ -51,19 +51,19 @@ const NavItem = ({ to, icon, label, isActive, isCreate }: NavItemProps) => {
         whileTap={{ scale: 0.9 }}
         className={cn(
           "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
-          isActive ? "bg-white/10" : "hover:bg-white/5"
+          isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/60"
         )}
       >
         <span className={cn(
           "transition-colors",
-          isActive ? "text-white" : "text-white/60 group-hover:text-white/80"
+          isActive ? "text-sidebar-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80"
         )}>
           {icon}
         </span>
       </motion.div>
       <span className={cn(
         "text-[10px] font-medium transition-colors",
-        isActive ? "text-white" : "text-white/50 group-hover:text-white/70"
+        isActive ? "text-sidebar-foreground" : "text-sidebar-foreground/50 group-hover:text-sidebar-foreground/70"
       )}>
         {label}
       </span>
@@ -87,10 +87,10 @@ export function TikTokDesktopSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col items-center h-screen w-[72px] py-4 shrink-0 z-40 bg-black border-r border-white/10">
+    <aside className="hidden lg:flex flex-col items-center h-screen w-[72px] py-4 shrink-0 z-40 bg-sidebar border-r border-sidebar-border">
       {/* Logo */}
       <Link to="/" className="mb-6">
-        <span className="font-display text-xl font-bold text-white">U</span>
+        <span className="font-display text-xl font-bold text-sidebar-foreground">U</span>
       </Link>
 
       {/* Navigation */}
@@ -130,16 +130,16 @@ export function TikTokDesktopSidebar() {
       </nav>
 
       {/* Bottom actions */}
-      <div className="flex flex-col items-center gap-2 pt-4 border-t border-white/10">
+      <div className="flex flex-col items-center gap-2 pt-4 border-t border-sidebar-border">
         {user && (
           <button
             onClick={handleLogout}
             className="flex flex-col items-center gap-1 py-2 group"
           >
-            <div className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-white/5 transition-colors">
-              <LogOut className="h-5 w-5 text-white/50 group-hover:text-white/70" strokeWidth={1.5} />
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-sidebar-accent/60 transition-colors">
+              <LogOut className="h-5 w-5 text-sidebar-foreground/50 group-hover:text-sidebar-foreground/70" strokeWidth={1.5} />
             </div>
-            <span className="text-[10px] font-medium text-white/40">Sair</span>
+            <span className="text-[10px] font-medium text-sidebar-foreground/40">Sair</span>
           </button>
         )}
       </div>

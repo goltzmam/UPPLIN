@@ -41,7 +41,7 @@ export function BottomNav() {
       initial={{ y: 100 }}
       animate={{ y: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed bottom-0 left-0 right-0 z-50 md:hidden print:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden print:hidden"
     >
       {/* Subtle shadow for elegant separation */}
       <div className="absolute inset-x-0 -top-4 h-8 bg-gradient-to-t from-foreground/5 to-transparent pointer-events-none" />
@@ -94,11 +94,9 @@ export function BottomNav() {
                     whileHover={{ scale: 1.05 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                     className="h-12 w-12 rounded-full flex items-center justify-center shadow-lg -mt-4"
-                    style={{ 
-                      background: "linear-gradient(135deg, hsl(346 84% 60%), hsl(25 95% 55%))" 
-                    }}
+                    style={{ backgroundImage: "var(--gradient-social)" }}
                   >
-                    <Icon className="h-6 w-6 text-white" strokeWidth={2.5} />
+                    <Icon className="h-6 w-6 text-accent-foreground" strokeWidth={2.5} />
                   </motion.div>
                 </Link>
               );
