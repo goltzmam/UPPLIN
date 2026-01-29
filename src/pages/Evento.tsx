@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Share2, Heart, Minus, Plus, Ticket, Instagram, Facebook, Globe, Building2 } from "lucide-react";
-import { useState } from "react";
+import { Calendar, MapPin, Clock, Share2, Heart, Minus, Plus, Ticket, Instagram, Facebook, Globe, Building2, Play, Pause, ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Header } from "@/components/layout/Header";
@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EventMediaCarousel } from "@/components/events/EventMediaCarousel";
 import { FollowButton } from "@/components/events/FollowButton";
 import { EventComments } from "@/components/events/EventComments";
 import { EventReviews } from "@/components/events/EventReviews";
@@ -20,9 +19,18 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { triggerFeedback } from "@/lib/feedback";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import useEmblaCarousel from "embla-carousel-react";
 
 interface TicketSelection {
   [ticketTypeId: string]: number;
+}
+
+interface MediaItem {
+  id: string;
+  url: string;
+  type: "image" | "video";
+  sort_order: number;
 }
 
 export default function Evento() {
@@ -221,256 +229,54 @@ export default function Evento() {
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
+  // Combine cover image with media for the vertical carousel
+  const allMedia: MediaItem[] = [
+    ...(event.cover_image_url ? [{ id: "cover", url: event.cover_image_url, type: "image" as const, sort_order: -1 }] : []),
+    ...(event.event_media || []).sort((a: MediaItem, b: MediaItem) => a.sort_order - b.sort_order)
+  ];
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
 
-      <main className="flex-1">
-        {/* Cover / Media Carousel - Larger on desktop */}
-        <div className="relative h-[40vh] md:h-[50vh] lg:h-[55vh] min-h-[300px] md:min-h-[400px] bg-secondary">
-          <EventMediaCarousel
-            media={event.event_media || []}
-            coverImage={event.cover_image_url}
-            title={event.title}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent pointer-events-none" />
+      <main className="flex-1 pt-16 lg:pt-20">
+        {/* Mobile: Stack layout */}
+        <div className="lg:hidden">
+          {/* Mobile Cover */}
+          <div className="relative aspect-[4/3] bg-muted">
+            <VerticalMediaCarousel media={allMedia} title={event.title} />
+          </div>
+          
+          {/* Mobile Content */}
+          <div className="px-4 py-6 space-y-6">
+            <MobileEventContent />
+          </div>
         </div>
 
-        <div className="container relative -mt-20 md:-mt-28 lg:-mt-32 z-10 pb-8 md:pb-12 lg:pb-16 px-4">
-          <div className="grid lg:grid-cols-3 gap-6 lg:gap-8">
-            {/* Event Info */}
-            <div className="lg:col-span-2 space-y-4 md:space-y-6">
-              {/* Main Card */}
-              <div className="bg-card rounded-2xl md:rounded-3xl border border-border p-5 md:p-8 shadow-xl animate-fade-up">
-                {/* Day badge */}
-                <Badge className="mb-3 text-sm px-4 py-1">
-                  {format(eventDate, "EEEE", { locale: ptBR })}
-                </Badge>
-                
-                {/* Organizer @ link - More prominent on desktop with tooltip */}
-                {organizer && (
-                  <div className="mb-4 flex items-center gap-3">
-                    <OrganizerPreviewTooltip 
-                      organizerId={organizer.id}
-                      organizerName={organizer.display_name}
-                      organizerUsername={organizer.slug}
-                    >
-                      <Link 
-                        to={`/organizador/${organizer.id}`}
-                        className="flex items-center gap-2.5 group/org"
-                      >
-                        <Avatar className="h-9 w-9 md:h-11 md:w-11 ring-2 ring-border/60 group-hover/org:ring-primary transition-all shadow-sm">
-                          <AvatarImage src={organizer.logo_url || undefined} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-                            {getInitials(organizer.display_name)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <span className="text-sm md:text-base font-semibold group-hover/org:text-primary transition-colors">
-                            {organizer.display_name}
-                          </span>
-                          <span className="block text-xs md:text-sm text-muted-foreground group-hover/org:text-primary/70 transition-colors">
-                            @{organizer.slug || organizer.display_name?.toLowerCase().replace(/\s+/g, '') || 'organizador'}
-                          </span>
-                        </div>
-                      </Link>
-                    </OrganizerPreviewTooltip>
-                    <FollowButton organizerId={organizer.id} size="sm" className="ml-auto" />
+        {/* Desktop: Two column layout */}
+        <div className="hidden lg:block">
+          <div className="container max-w-7xl mx-auto px-4 py-8">
+            <div className="grid grid-cols-12 gap-8">
+              {/* Left Column - Vertical Media (4 cols) */}
+              <div className="col-span-4">
+                <div className="sticky top-24">
+                  <div className="rounded-3xl overflow-hidden bg-muted" style={{ aspectRatio: "9/16" }}>
+                    <VerticalMediaCarousel media={allMedia} title={event.title} />
                   </div>
-                )}
-                
-                {/* Title */}
-                <h1 className="font-display text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 md:mb-6 leading-tight">
-                  {event.title}
-                </h1>
-
-                {/* Event details grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-6">
-                  <div className="flex items-center gap-3 p-3 md:p-4 rounded-xl bg-muted/50">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <Calendar className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Data</p>
-                      <p className="font-semibold text-sm md:text-base">
-                        {format(eventDate, "d 'de' MMMM", { locale: ptBR })}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 md:p-4 rounded-xl bg-muted/50">
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <Clock className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Horário</p>
-                      <p className="font-semibold text-sm md:text-base">{format(eventDate, "HH:mm")}</p>
-                    </div>
-                  </div>
-                  {event.venue_name && (
-                    <div className="flex items-center gap-3 p-3 md:p-4 rounded-xl bg-muted/50">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        <MapPin className="h-5 w-5 md:h-6 md:w-6 text-primary" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs text-muted-foreground">Local</p>
-                        <p className="font-semibold text-sm md:text-base truncate">{event.venue_name}</p>
-                      </div>
-                    </div>
+                  
+                  {/* Gallery hint */}
+                  {allMedia.length > 1 && (
+                    <p className="text-xs text-muted-foreground text-center mt-3">
+                      Se não inserir mais de uma imagem a exibição de vídeo/foto fica em tamanho de destaque no anúncio.
+                    </p>
                   )}
                 </div>
-
-                {/* Action buttons */}
-                <div className="flex flex-wrap gap-2 md:gap-3">
-                  <Button
-                    variant="outline"
-                    size="default"
-                    className="rounded-full"
-                    onClick={() => {
-                      triggerFeedback({ haptic: "selection", sound: "tap" });
-                      handleShare();
-                    }}
-                  >
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Compartilhar
-                  </Button>
-                  <Button 
-                    variant={isSaved ? "default" : "outline"} 
-                    size="default"
-                    className="rounded-full" 
-                    onClick={() => {
-                      triggerFeedback({ haptic: "selection", sound: "tap" });
-                      handleSave();
-                    }}
-                    disabled={savingEvent}
-                  >
-                    <Heart className={`h-4 w-4 mr-2 ${isSaved ? "fill-current" : ""}`} />
-                    {isSaved ? "Salvo" : "Salvar"}
-                  </Button>
-                </div>
               </div>
 
-              {/* Description */}
-              <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-1">
-                <h2 className="font-display text-lg sm:text-xl font-bold mb-3 sm:mb-4">Sobre o evento</h2>
-                <p className="text-sm sm:text-base text-muted-foreground whitespace-pre-wrap">{event.description || "Sem descrição disponível."}</p>
+              {/* Right Column - Content + Checkout (8 cols) */}
+              <div className="col-span-8 space-y-6">
+                <DesktopEventContent />
               </div>
-
-              {/* Location */}
-              {event.address_text && (
-                <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-2">
-                  <h2 className="font-display text-lg sm:text-xl font-bold mb-3 sm:mb-4">Local</h2>
-                  <div className="flex items-start gap-3">
-                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0 mt-0.5" />
-                    <div>
-                      {event.venue_name && <p className="font-semibold text-sm sm:text-base">{event.venue_name}</p>}
-                      <p className="text-sm sm:text-base text-muted-foreground">{event.address_text}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Organizer Section - Enhanced with tooltip */}
-              {organizer && (
-                <div className="bg-card rounded-2xl border border-border p-5 sm:p-7 animate-fade-up stagger-3">
-                  <h2 className="font-display text-lg sm:text-xl font-bold mb-5">Organizador</h2>
-                  <div className="flex items-start gap-4">
-                    <OrganizerPreviewTooltip 
-                      organizerId={organizer.id}
-                      organizerName={organizer.display_name}
-                      organizerUsername={organizer.slug}
-                    >
-                      <Link to={`/organizador/${organizer.id}`} className="group">
-                        <Avatar className="h-18 w-18 sm:h-20 sm:w-20 ring-2 ring-border/60 group-hover:ring-primary transition-all shadow-md">
-                          <AvatarImage src={organizer.logo_url || undefined} />
-                          <AvatarFallback className="text-xl font-bold bg-primary/10 text-primary">
-                            {getInitials(organizer.display_name)}
-                          </AvatarFallback>
-                        </Avatar>
-                      </Link>
-                    </OrganizerPreviewTooltip>
-                    <div className="flex-1 min-w-0">
-                      <OrganizerPreviewTooltip 
-                        organizerId={organizer.id}
-                        organizerName={organizer.display_name}
-                        organizerUsername={organizer.slug}
-                      >
-                        <Link to={`/organizador/${organizer.id}`} className="group inline-block">
-                          <h3 className="font-semibold text-base sm:text-lg group-hover:text-primary transition-colors">{organizer.display_name}</h3>
-                          <span className="text-sm text-muted-foreground group-hover:text-primary/70 transition-colors">
-                            @{organizer.slug || organizer.display_name?.toLowerCase().replace(/\s+/g, '') || 'organizador'}
-                          </span>
-                        </Link>
-                      </OrganizerPreviewTooltip>
-                      {organizer.description && (
-                        <p className="text-sm text-muted-foreground mt-2 line-clamp-2">
-                          {organizer.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-3 mt-4">
-                        {organizer.social_instagram && (
-                          <a
-                            href={organizer.social_instagram.startsWith("http") ? organizer.social_instagram : `https://instagram.com/${organizer.social_instagram.replace("@", "")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-9 h-9 rounded-xl bg-muted/80 hover:bg-primary/10 flex items-center justify-center transition-all"
-                          >
-                            <Instagram className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                          </a>
-                        )}
-                        {organizer.social_facebook && (
-                          <a
-                            href={organizer.social_facebook.startsWith("http") ? organizer.social_facebook : `https://facebook.com/${organizer.social_facebook}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-9 h-9 rounded-xl bg-muted/80 hover:bg-primary/10 flex items-center justify-center transition-all"
-                          >
-                            <Facebook className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                          </a>
-                        )}
-                        {organizer.social_website && (
-                          <a
-                            href={organizer.social_website.startsWith("http") ? organizer.social_website : `https://${organizer.social_website}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-9 h-9 rounded-xl bg-muted/80 hover:bg-primary/10 flex items-center justify-center transition-all"
-                          >
-                            <Globe className="h-4 w-4 text-muted-foreground hover:text-primary" />
-                          </a>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-4">
-                        <FollowButton organizerId={organizer.id} size="sm" />
-                        <Link to={`/organizador/${organizer.id}`}>
-                          <Button variant="outline" size="sm" className="text-xs rounded-full">
-                            <Building2 className="h-3 w-3 mr-1.5" />
-                            Ver Perfil
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Reviews Section */}
-              <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-4">
-                <EventReviews eventId={event.id} />
-              </div>
-
-              {/* Comments Section */}
-              <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-5">
-                <EventComments eventId={event.id} />
-              </div>
-
-              {/* Ticket Selection - Mobile Only */}
-              <div className="lg:hidden">
-                <TicketSelectionCard />
-              </div>
-            </div>
-
-            {/* Ticket Selection - Desktop */}
-            <div className="hidden lg:block space-y-4">
-              <TicketSelectionCard />
             </div>
           </div>
         </div>
@@ -480,54 +286,477 @@ export default function Evento() {
     </div>
   );
 
+  // Vertical Media Carousel Component
+  function VerticalMediaCarousel({ media, title }: { media: MediaItem[]; title: string }) {
+    const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isPlaying, setIsPlaying] = useState<{ [key: string]: boolean }>({});
+
+    const scrollPrev = useCallback(() => {
+      if (emblaApi) {
+        emblaApi.scrollPrev();
+        setCurrentIndex((prev) => (prev - 1 + media.length) % media.length);
+      }
+    }, [emblaApi, media.length]);
+
+    const scrollNext = useCallback(() => {
+      if (emblaApi) {
+        emblaApi.scrollNext();
+        setCurrentIndex((prev) => (prev + 1) % media.length);
+      }
+    }, [emblaApi, media.length]);
+
+    const toggleVideoPlay = (id: string) => {
+      const video = document.getElementById(`video-${id}`) as HTMLVideoElement;
+      if (video) {
+        if (video.paused) {
+          video.play();
+          setIsPlaying((prev) => ({ ...prev, [id]: true }));
+        } else {
+          video.pause();
+          setIsPlaying((prev) => ({ ...prev, [id]: false }));
+        }
+      }
+    };
+
+    if (media.length === 0) {
+      return (
+        <div className="w-full h-full flex flex-col items-center justify-center bg-muted text-muted-foreground p-8">
+          <div className="w-20 h-20 rounded-2xl border-2 border-dashed border-muted-foreground/30 flex items-center justify-center mb-4">
+            <ImageIcon className="h-8 w-8 text-muted-foreground/50" />
+          </div>
+          <p className="text-sm font-medium mb-1">FOTO</p>
+          <p className="text-sm">OU</p>
+          <p className="text-sm font-medium mb-1">VÍDEO</p>
+          <p className="text-sm">DE</p>
+          <p className="text-sm font-medium">DESTAQUE</p>
+        </div>
+      );
+    }
+
+    if (media.length === 1) {
+      const item = media[0];
+      return (
+        <div className="w-full h-full">
+          {item.type === "video" ? (
+            <div className="relative w-full h-full">
+              <video
+                src={item.url}
+                className="w-full h-full object-cover"
+                controls
+                playsInline
+              />
+            </div>
+          ) : (
+            <img src={item.url} alt={title} className="w-full h-full object-cover" />
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative w-full h-full group">
+        <div className="overflow-hidden w-full h-full" ref={emblaRef}>
+          <div className="flex h-full">
+            {media.map((item, index) => (
+              <div key={item.id} className="flex-[0_0_100%] min-w-0 h-full relative">
+                {item.type === "video" ? (
+                  <div className="relative w-full h-full">
+                    <video
+                      id={`video-${item.id}`}
+                      src={item.url}
+                      className="w-full h-full object-cover"
+                      loop
+                      muted
+                      playsInline
+                      onEnded={() => setIsPlaying((prev) => ({ ...prev, [item.id]: false }))}
+                    />
+                    <button
+                      onClick={() => toggleVideoPlay(item.id)}
+                      className="absolute inset-0 flex items-center justify-center bg-black/20 hover:bg-black/30 transition-colors"
+                    >
+                      <div className="h-14 w-14 rounded-full bg-white/90 flex items-center justify-center">
+                        {isPlaying[item.id] ? (
+                          <Pause className="h-6 w-6 text-foreground" />
+                        ) : (
+                          <Play className="h-6 w-6 text-foreground ml-1" />
+                        )}
+                      </div>
+                    </button>
+                  </div>
+                ) : (
+                  <img 
+                    src={item.url} 
+                    alt={`${title} - ${index + 1}`} 
+                    className="w-full h-full object-cover" 
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Navigation Arrows */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute left-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/50 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={scrollPrev}
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="absolute right-3 top-1/2 -translate-y-1/2 h-9 w-9 rounded-full bg-black/50 text-white hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={scrollNext}
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+
+        {/* Dots Indicator */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
+          {media.map((_, index) => (
+            <button
+              key={index}
+              onClick={() => {
+                emblaApi?.scrollTo(index);
+                setCurrentIndex(index);
+              }}
+              className={cn(
+                "h-1.5 rounded-full transition-all",
+                currentIndex === index 
+                  ? "w-5 bg-white" 
+                  : "w-1.5 bg-white/50 hover:bg-white/70"
+              )}
+            />
+          ))}
+        </div>
+
+        {/* Counter */}
+        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/50 text-white text-xs font-medium">
+          {currentIndex + 1} / {media.length}
+        </div>
+      </div>
+    );
+  }
+
+  // Mobile Event Content
+  function MobileEventContent() {
+    return (
+      <>
+        {/* Organizer */}
+        {organizer && (
+          <div className="flex items-center gap-3">
+            <OrganizerPreviewTooltip 
+              organizerId={organizer.id}
+              organizerName={organizer.display_name}
+              organizerUsername={organizer.slug}
+            >
+              <Link to={`/organizador/${organizer.id}`} className="flex items-center gap-2.5">
+                <Avatar className="h-10 w-10 ring-2 ring-border">
+                  <AvatarImage src={organizer.logo_url || undefined} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                    {getInitials(organizer.display_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <span className="text-sm font-semibold">{organizer.display_name}</span>
+                  <span className="block text-xs text-muted-foreground">
+                    @{organizer.slug || 'organizador'}
+                  </span>
+                </div>
+              </Link>
+            </OrganizerPreviewTooltip>
+            <FollowButton organizerId={organizer.id} size="sm" className="ml-auto" />
+          </div>
+        )}
+
+        {/* Title */}
+        <h1 className="font-display text-2xl font-bold leading-tight">{event.title}</h1>
+
+        {/* Date & Location */}
+        <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>{format(eventDate, "d 'de' MMMM", { locale: ptBR })}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            <span>{format(eventDate, "HH:mm")}</span>
+          </div>
+          {event.venue_name && (
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <span>{event.venue_name}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" className="rounded-full" onClick={handleShare}>
+            <Share2 className="h-4 w-4 mr-2" />
+            Compartilhar
+          </Button>
+          <Button 
+            variant={isSaved ? "default" : "outline"} 
+            size="sm"
+            className="rounded-full" 
+            onClick={handleSave}
+            disabled={savingEvent}
+          >
+            <Heart className={`h-4 w-4 mr-2 ${isSaved ? "fill-current" : ""}`} />
+            Salvar
+          </Button>
+        </div>
+
+        {/* Description */}
+        <div className="space-y-2">
+          <h2 className="font-display text-lg font-bold">Sobre o evento</h2>
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+            {event.description || "Sem descrição disponível."}
+          </p>
+        </div>
+
+        {/* Tickets */}
+        <TicketSelectionCard />
+
+        {/* Reviews */}
+        <div className="bg-card rounded-2xl border border-border p-4">
+          <EventReviews eventId={event.id} />
+        </div>
+
+        {/* Comments */}
+        <div className="bg-card rounded-2xl border border-border p-4">
+          <EventComments eventId={event.id} />
+        </div>
+      </>
+    );
+  }
+
+  // Desktop Event Content
+  function DesktopEventContent() {
+    return (
+      <>
+        {/* Main Info Card */}
+        <div className="bg-card rounded-2xl border border-border p-6 space-y-5">
+          {/* Organizer */}
+          {organizer && (
+            <div className="flex items-center gap-3">
+              <OrganizerPreviewTooltip 
+                organizerId={organizer.id}
+                organizerName={organizer.display_name}
+                organizerUsername={organizer.slug}
+              >
+                <Link to={`/organizador/${organizer.id}`} className="flex items-center gap-3 group">
+                  <Avatar className="h-11 w-11 ring-2 ring-border group-hover:ring-primary transition-all">
+                    <AvatarImage src={organizer.logo_url || undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                      {getInitials(organizer.display_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <span className="font-semibold group-hover:text-primary transition-colors">
+                      {organizer.display_name}
+                    </span>
+                    <span className="block text-sm text-muted-foreground group-hover:text-primary/70 transition-colors">
+                      @{organizer.slug || 'organizador'}
+                    </span>
+                  </div>
+                </Link>
+              </OrganizerPreviewTooltip>
+              <FollowButton organizerId={organizer.id} size="sm" className="ml-auto" />
+            </div>
+          )}
+
+          {/* Title */}
+          <h1 className="font-display text-3xl font-bold leading-tight">{event.title}</h1>
+
+          {/* Date & Location Grid */}
+          <div className="grid grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Data</p>
+                <p className="font-medium text-sm">{format(eventDate, "d 'de' MMMM", { locale: ptBR })}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Clock className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Horário</p>
+                <p className="font-medium text-sm">{format(eventDate, "HH:mm")}</p>
+              </div>
+            </div>
+            {event.venue_name && (
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/50">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <MapPin className="h-5 w-5 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-muted-foreground">Local</p>
+                  <p className="font-medium text-sm truncate">{event.venue_name}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button variant="outline" className="rounded-full" onClick={handleShare}>
+              <Share2 className="h-4 w-4 mr-2" />
+              Compartilhar
+            </Button>
+            <Button 
+              variant={isSaved ? "default" : "outline"} 
+              className="rounded-full" 
+              onClick={handleSave}
+              disabled={savingEvent}
+            >
+              <Heart className={`h-4 w-4 mr-2 ${isSaved ? "fill-current" : ""}`} />
+              {isSaved ? "Salvo" : "Salvar"}
+            </Button>
+          </div>
+        </div>
+
+        {/* Description */}
+        <div className="bg-card rounded-2xl border border-border p-6">
+          <h2 className="font-display text-lg font-bold mb-3">Sobre o evento</h2>
+          <p className="text-muted-foreground whitespace-pre-wrap">
+            {event.description || "Sem descrição disponível."}
+          </p>
+        </div>
+
+        {/* Two column: Organizer + Tickets */}
+        <div className="grid grid-cols-2 gap-6">
+          {/* Organizer Details */}
+          {organizer && (
+            <div className="bg-card rounded-2xl border border-border p-6">
+              <h2 className="font-display text-lg font-bold mb-4">Organizador</h2>
+              <div className="flex items-start gap-4">
+                <Link to={`/organizador/${organizer.id}`}>
+                  <Avatar className="h-16 w-16 ring-2 ring-border hover:ring-primary transition-all">
+                    <AvatarImage src={organizer.logo_url || undefined} />
+                    <AvatarFallback className="text-lg font-bold bg-primary/10 text-primary">
+                      {getInitials(organizer.display_name)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Link>
+                <div className="flex-1 min-w-0">
+                  <Link to={`/organizador/${organizer.id}`} className="hover:text-primary transition-colors">
+                    <h3 className="font-semibold">{organizer.display_name}</h3>
+                    <span className="text-sm text-muted-foreground">@{organizer.slug || 'organizador'}</span>
+                  </Link>
+                  {organizer.description && (
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{organizer.description}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-3">
+                    {organizer.social_instagram && (
+                      <a
+                        href={organizer.social_instagram.startsWith("http") ? organizer.social_instagram : `https://instagram.com/${organizer.social_instagram.replace("@", "")}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 rounded-lg bg-muted hover:bg-primary/10 flex items-center justify-center transition-all"
+                      >
+                        <Instagram className="h-4 w-4 text-muted-foreground" />
+                      </a>
+                    )}
+                    {organizer.social_facebook && (
+                      <a
+                        href={organizer.social_facebook.startsWith("http") ? organizer.social_facebook : `https://facebook.com/${organizer.social_facebook}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 rounded-lg bg-muted hover:bg-primary/10 flex items-center justify-center transition-all"
+                      >
+                        <Facebook className="h-4 w-4 text-muted-foreground" />
+                      </a>
+                    )}
+                    {organizer.social_website && (
+                      <a
+                        href={organizer.social_website.startsWith("http") ? organizer.social_website : `https://${organizer.social_website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-8 h-8 rounded-lg bg-muted hover:bg-primary/10 flex items-center justify-center transition-all"
+                      >
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Tickets */}
+          <TicketSelectionCard />
+        </div>
+
+        {/* Reviews */}
+        <div className="bg-card rounded-2xl border border-border p-6">
+          <EventReviews eventId={event.id} />
+        </div>
+
+        {/* Comments */}
+        <div className="bg-card rounded-2xl border border-border p-6">
+          <EventComments eventId={event.id} />
+        </div>
+      </>
+    );
+  }
+
   function TicketSelectionCard() {
     return (
-      <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 shadow-lg lg:sticky lg:top-24 animate-fade-up stagger-1">
-        <h2 className="font-display text-lg sm:text-xl font-bold mb-4">Ingressos</h2>
+      <div className="bg-card rounded-2xl border border-border p-5 shadow-sm">
+        <h2 className="font-display text-lg font-bold mb-4">Ingressos</h2>
 
         {event.ticket_types && event.ticket_types.length > 0 ? (
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-3">
             {event.ticket_types.map((tt: any) => {
               const available = tt.quantity_total - tt.quantity_sold;
               const soldOut = available <= 0;
               const qty = selection[tt.id] || 0;
 
               return (
-                <div key={tt.id} className={`p-3 sm:p-4 rounded-xl border ${soldOut ? "opacity-50 bg-muted" : "border-border"}`}>
+                <div key={tt.id} className={`p-3 rounded-xl border ${soldOut ? "opacity-50 bg-muted" : "border-border"}`}>
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm sm:text-base truncate">{tt.name}</h3>
-                      <p className="text-xs sm:text-sm text-muted-foreground">{available} disponíveis</p>
+                      <h3 className="font-semibold text-sm truncate">{tt.name}</h3>
+                      <p className="text-xs text-muted-foreground">{available} disponíveis</p>
                     </div>
-                    <span className="font-bold text-base sm:text-lg ml-2">{formatPrice(tt.price_cents)}</span>
+                    <span className="font-bold text-base ml-2">{formatPrice(tt.price_cents)}</span>
                   </div>
 
                   {!soldOut && (
-                    <div className="flex items-center justify-end gap-2 sm:gap-3 mt-3">
+                    <div className="flex items-center justify-end gap-2 mt-2">
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-7 w-7 sm:h-8 sm:w-8"
+                        className="h-7 w-7"
                         onClick={() => {
                           triggerFeedback({ haptic: "selection", sound: "tap" });
                           updateSelection(tt.id, -1);
                         }}
                         disabled={qty === 0}
                       >
-                        <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <Minus className="h-3 w-3" />
                       </Button>
-                      <span className="w-6 sm:w-8 text-center font-semibold text-sm sm:text-base">{qty}</span>
+                      <span className="w-6 text-center font-semibold text-sm">{qty}</span>
                       <Button
                         variant="outline"
                         size="icon"
-                        className="h-7 w-7 sm:h-8 sm:w-8"
+                        className="h-7 w-7"
                         onClick={() => {
                           triggerFeedback({ haptic: "selection", sound: "tap" });
                           updateSelection(tt.id, 1);
                         }}
                         disabled={qty >= Math.min(10, available)}
                       >
-                        <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
+                        <Plus className="h-3 w-3" />
                       </Button>
                     </div>
                   )}
@@ -538,9 +767,9 @@ export default function Evento() {
 
             {totalItems > 0 && (
               <div className="border-t border-border pt-4 mt-4">
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex justify-between items-center mb-3">
                   <span className="text-sm text-muted-foreground">{totalItems} ingresso(s)</span>
-                  <span className="font-display text-xl sm:text-2xl font-bold">{formatPrice(totalCents)}</span>
+                  <span className="font-display text-xl font-bold">{formatPrice(totalCents)}</span>
                 </div>
                  <Button
                    className="w-full"
@@ -551,7 +780,7 @@ export default function Evento() {
                    }}
                    disabled={checkingOut}
                  >
-                   <Ticket className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                   <Ticket className="h-4 w-4 mr-2" />
                    {checkingOut ? "Processando..." : "Comprar Ingressos"}
                  </Button>
               </div>
