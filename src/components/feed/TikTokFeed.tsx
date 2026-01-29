@@ -433,17 +433,27 @@ const FeedRow = React.memo(function FeedRow({
           <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleLikeClick(); }} className="flex flex-col items-center gap-0.5 relative">
             <div className="relative">
               <motion.div animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
-                <Heart className={cn("h-7 w-7 drop-shadow-lg transition-all", isLiked ? "fill-accent text-accent" : "text-white fill-white/20")} />
+                <Heart className={cn("h-6 w-6 transition-all", isLiked ? "fill-accent text-accent" : "text-white/90")} strokeWidth={1.5} />
               </motion.div>
               <LikeParticles show={showLikeParticles && !showHeart} />
             </div>
-            <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(likeCount)}</span>
+            <span className="text-white/80 text-[10px] font-medium">{formatEngagementCount(likeCount)}</span>
           </motion.button>
 
           {/* Comments button */}
           <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center gap-0.5">
-            <MessageCircle className="h-7 w-7 text-white drop-shadow-lg" />
-            <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(commentCount)}</span>
+            <MessageCircle className="h-6 w-6 text-white/90" strokeWidth={1.5} />
+            <span className="text-white/80 text-[10px] font-medium">{formatEngagementCount(commentCount)}</span>
+          </motion.button>
+
+          {/* Bookmark button */}
+          <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleSaveClick(); }} className="flex flex-col items-center gap-0.5 relative">
+            <div className="relative">
+              <motion.div animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
+                <Bookmark className={cn("h-6 w-6 transition-all", isSaved ? "fill-white text-white" : "text-white/90")} strokeWidth={1.5} />
+              </motion.div>
+              <SaveParticles show={showSaveParticles} />
+            </div>
           </motion.button>
 
           {/* Share button */}
@@ -453,19 +463,8 @@ const FeedRow = React.memo(function FeedRow({
             eventDate={formattedDate} 
             eventImage={item.coverImageUrl} 
             iconOnly
-            className="flex flex-col items-center gap-0.5 text-white [&_svg]:h-7 [&_svg]:w-7"
+            className="flex flex-col items-center gap-0.5 text-white/90 [&_svg]:h-6 [&_svg]:w-6"
           />
-
-          {/* Bookmark button */}
-          <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleSaveClick(); }} className="flex flex-col items-center gap-0.5 relative">
-            <div className="relative">
-              <motion.div animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
-                <Bookmark className={cn("h-7 w-7 drop-shadow-lg transition-all", isSaved ? "fill-white text-white" : "text-white")} />
-              </motion.div>
-              <SaveParticles show={showSaveParticles} />
-            </div>
-            <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(saveCount)}</span>
-          </motion.button>
         </div>
 
         {/* Bottom event info */}
