@@ -88,17 +88,17 @@ export function TikTokDesktopSidebar() {
 
   return (
     <aside className="hidden lg:flex flex-col items-center h-screen w-[72px] py-4 shrink-0 z-40 bg-sidebar border-r border-sidebar-border">
-      {/* Logo with gradient */}
-      <Link to="/" className="mb-6">
+      {/* Logo - just "U" on desktop */}
+      <Link to="/" className="mb-8">
         <span 
-          className="font-display text-xl font-bold"
+          className="font-display text-3xl font-bold"
           style={{ 
             background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text"
           }}
-        >UPPLIN</span>
+        >U</span>
       </Link>
 
       {/* Navigation */}
