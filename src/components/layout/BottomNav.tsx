@@ -84,7 +84,7 @@ export function BottomNav() {
                 );
               }
 
-              // Central UP button with neon gradient
+              // Central UP button with neon gradient - same height as others
               if (item.isUpButton) {
                 return (
                   <div key="up-button" className="relative flex flex-col items-center justify-center py-1 px-4">

@@ -125,12 +125,12 @@ export default function Index() {
         "flex items-center justify-between px-3 py-3 pointer-events-auto transition-colors duration-300",
         activeTab === "following" && "bg-background"
       )}>
-        {/* Logo left */}
+        {/* Logo left - with gradient */}
         <Link 
           to="/" 
           className={cn(
             "font-display text-base font-bold tracking-tight shrink-0 transition-colors",
-            activeTab === "following" ? "text-foreground" : "text-white drop-shadow-md",
+            activeTab === "following" ? "gradient-text" : "gradient-text drop-shadow-md",
             isDesktop && "hidden" // Hide on desktop since sidebar has logo
           )}
         >
