@@ -491,20 +491,41 @@ const FeedRow = React.memo(function FeedRow({
             {isLive && <LiveBadge />}
           </div>
 
-          {/* Buy ticket button */}
-          <Link 
-            to={`/evento/${item.id}`} 
-            onClick={(e) => e.stopPropagation()}
-            className={cn(
-              "inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold transition-all active:scale-95",
-              (item.minPrice || 0) === 0 
-                ? "bg-green-500 text-white" 
-                : "bg-white text-black"
-            )}
+          {/* Buy ticket button - prominent CTA */}
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            animate={{ 
+              boxShadow: [
+                "0 0 0 0 rgba(255,255,255,0.4)",
+                "0 0 0 8px rgba(255,255,255,0)",
+              ]
+            }}
+            transition={{
+              boxShadow: { duration: 1.5, repeat: Infinity, ease: "easeOut" }
+            }}
+            className="inline-block rounded-full"
           >
-            <Ticket className="h-3.5 w-3.5" />
-            {formatPrice(item.minPrice || 0)}
-          </Link>
+            <Link 
+              to={`/evento/${item.id}`} 
+              onClick={(e) => {
+                e.stopPropagation();
+                triggerFeedback({ haptic: "medium", sound: "tap" });
+              }}
+              className={cn(
+                "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg",
+                (item.minPrice || 0) === 0 
+                  ? "bg-gradient-to-r from-green-500 to-emerald-400 text-white" 
+                  : "bg-gradient-to-r from-white to-gray-100 text-black"
+              )}
+            >
+              <Ticket className="h-4 w-4" />
+              <span>{(item.minPrice || 0) === 0 ? "Grátis" : "Comprar"}</span>
+              {(item.minPrice || 0) > 0 && (
+                <span className="opacity-70">• {formatPrice(item.minPrice || 0)}</span>
+              )}
+            </Link>
+          </motion.div>
         </div>
 
         {/* Mute/Unmute button - visible tap target for iOS audio unlock */}
