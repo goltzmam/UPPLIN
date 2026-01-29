@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper } from "lucide-react";
+import { Calendar, Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
@@ -230,6 +230,15 @@ export default function OrganizadorCadastro() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Back Button - Fixed Position */}
+      <Link 
+        to="/" 
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-foreground hover:bg-muted transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        <span className="text-sm font-medium">Voltar</span>
+      </Link>
+
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md space-y-6 sm:space-y-8">
           {/* Mobile Header */}

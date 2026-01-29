@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Mail, Lock, Loader2, Ticket } from "lucide-react";
+import { Calendar, Mail, Lock, Loader2, Ticket, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ValidatedInput } from "@/components/ui/validated-input";
@@ -41,6 +41,15 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Back Button - Fixed Position */}
+      <Link 
+        to="/" 
+        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-foreground hover:bg-muted transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        <span className="text-sm font-medium">Voltar</span>
+      </Link>
+
       <div className="hidden lg:flex lg:w-1/2 bg-secondary items-center justify-center p-8 xl:p-12">
         <div className="max-w-md text-center text-secondary-foreground">
           <div className="flex justify-center mb-6 sm:mb-8">
