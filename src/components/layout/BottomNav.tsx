@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Bookmark, User, Plus } from "lucide-react";
+import { Home, MapPin, Bookmark, User, Plus, ChevronDown } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 import { triggerHaptic } from "@/hooks/use-haptic";
+import { useState } from "react";
 
 interface NavItem {
   icon: React.ElementType;
@@ -10,15 +11,17 @@ interface NavItem {
   path: string;
   requiresAuth?: boolean;
   isCreate?: boolean;
+  isCity?: boolean;
 }
 
 export function BottomNav() {
   const location = useLocation();
   const { user } = useAuth();
+  const [cityName] = useState("Fortaleza");
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Início", path: "/" },
-    { icon: Search, label: "Por você", path: "/eventos" },
+    { icon: MapPin, label: cityName, path: "#", isCity: true },
     { icon: Plus, label: "Criar", path: "/organizador/cadastro", isCreate: true },
     { icon: Bookmark, label: "Salvos", path: "/eventos-salvos", requiresAuth: true },
     { icon: User, label: "Perfil", path: user ? "/perfil" : "/login" },
@@ -77,6 +80,29 @@ export function BottomNav() {
                     </div>
                   </motion.div>
                 </Link>
+              );
+            }
+
+            if (item.isCity) {
+              return (
+                <button
+                  key="city-selector"
+                  onClick={() => triggerHaptic('selection')}
+                  className="relative flex flex-col items-center justify-center py-1 px-4"
+                >
+                  <motion.div
+                    whileTap={{ scale: 0.85 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                    className="flex items-center gap-0.5"
+                  >
+                    <Icon className="h-6 w-6 text-black" strokeWidth={1.5} />
+                    <ChevronDown className="h-3 w-3 text-black/50" />
+                  </motion.div>
+                  
+                  <span className="text-[10px] font-medium mt-1 text-black">
+                    {item.label}
+                  </span>
+                </button>
               );
             }
 
