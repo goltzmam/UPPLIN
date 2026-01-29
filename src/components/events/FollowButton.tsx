@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { useFollow } from "@/hooks/use-follow";
 import { UserPlus, UserCheck, Loader2, Bell, BellOff } from "lucide-react";
@@ -14,14 +14,14 @@ interface FollowButtonProps {
   onFollowerCountChange?: (count: number) => void;
 }
 
-export function FollowButton({
+export const FollowButton = forwardRef<HTMLDivElement, FollowButtonProps>(function FollowButton({
   organizerId,
   variant = "outline",
   size = "sm",
   showCount = false,
   className,
   onFollowerCountChange,
-}: FollowButtonProps) {
+}, ref) {
   const { isFollowing, isLoading, followerCount, toggleFollow } = useFollow(organizerId);
   const [showConfetti, setShowConfetti] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -126,7 +126,7 @@ export function FollowButton({
   }
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
+    <div ref={ref} className={cn("flex items-center gap-2", className)}>
       <Button
         variant={isFollowing ? "secondary" : variant === "default" ? "default" : "outline"}
         size={size}
@@ -161,7 +161,9 @@ export function FollowButton({
       )}
     </div>
   );
-}
+});
+
+FollowButton.displayName = "FollowButton";
 
 // Animated follower counter component
 export function AnimatedFollowerCount({ count, className }: { count: number; className?: string }) {
