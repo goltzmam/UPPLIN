@@ -122,7 +122,7 @@ const LikeParticles = React.memo(function LikeParticles({ show }: { show: boolea
           className="absolute pointer-events-none"
           style={{ width: particle.size, height: particle.size }}
         >
-          <Heart className="w-full h-full text-accent fill-accent" />
+          <Heart className="w-full h-full" style={{ color: '#FF2D2D', fill: '#FF2D2D' }} />
         </motion.div>
       ))}
     </AnimatePresence>
@@ -376,9 +376,9 @@ const FeedRow = React.memo(function FeedRow({
 
         <AnimatePresence>
           {showHeart && (
-            <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1.2, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }}
+              <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1.2, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }}
               className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-              <div className="relative"><Heart className="h-24 w-24 text-accent fill-accent" /><LikeParticles show={showLikeParticles} /></div>
+              <div className="relative"><Heart className="h-24 w-24" style={{ color: '#FF2D2D', fill: '#FF2D2D' }} /><LikeParticles show={showLikeParticles} /></div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -405,21 +405,31 @@ const FeedRow = React.memo(function FeedRow({
               {item.organizerAvatar ? (
                 <img src={item.organizerAvatar} alt={item.organizerName} className="h-full w-full object-cover" />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                <div 
+                  className="h-full w-full flex items-center justify-center text-white text-xs font-bold"
+                  style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)" }}
+                >
                   {item.organizerName?.[0] || "O"}
                 </div>
               )}
             </div>
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-accent flex items-center justify-center">
+            <div 
+              className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full flex items-center justify-center"
+              style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)" }}
+            >
               <Plus className="h-2.5 w-2.5 text-white" strokeWidth={3} />
             </div>
           </button>
 
-          {/* Like button */}
+          {/* Like button with gradient on liked state */}
           <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleLikeClick(); }} className="flex flex-col items-center gap-0.5 relative">
             <div className="relative">
               <motion.div animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
-                <Heart className={cn("h-6 w-6 transition-all", isLiked ? "fill-accent text-accent" : "text-white/90")} strokeWidth={1.5} />
+                <Heart 
+                  className={cn("h-6 w-6 transition-all", isLiked ? "" : "text-white/90")} 
+                  strokeWidth={1.5}
+                  style={isLiked ? { color: '#FF2D2D', fill: '#FF2D2D' } : undefined}
+                />
               </motion.div>
               <LikeParticles show={showLikeParticles && !showHeart} />
             </div>

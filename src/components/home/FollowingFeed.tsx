@@ -86,9 +86,10 @@ export function FollowingFeed() {
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
         className="relative mb-6"
       >
-        {/* Glow effect */}
+        {/* Glow effect - gradient */}
         <motion.div 
-          className="absolute -inset-3 rounded-full bg-primary/30 blur-2xl"
+          className="absolute -inset-3 rounded-full blur-2xl"
+          style={{ background: "linear-gradient(135deg, rgba(255, 106, 0, 0.3), rgba(255, 45, 45, 0.3), rgba(255, 0, 122, 0.3))" }}
           animate={{ 
             scale: [1, 1.2, 1],
             opacity: [0.4, 0.6, 0.4]
@@ -100,13 +101,19 @@ export function FollowingFeed() {
           }}
         />
         
-        {/* Icon container */}
-        <div className="relative h-20 w-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+        {/* Icon container with gradient border */}
+        <div 
+          className="relative h-20 w-20 rounded-full flex items-center justify-center"
+          style={{ 
+            background: "linear-gradient(135deg, rgba(255, 106, 0, 0.1), rgba(255, 0, 122, 0.1))",
+            border: "1px solid rgba(255, 45, 45, 0.2)"
+          }}
+        >
           <motion.div
             animate={{ y: [0, -2, 0] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
-            <Users className="h-9 w-9 text-primary" />
+            <Users className="h-9 w-9" style={{ color: '#FF2D2D' }} />
           </motion.div>
         </div>
       </motion.div>
@@ -139,7 +146,7 @@ export function FollowingFeed() {
         className="flex flex-col gap-3 w-full max-w-[260px]"
       >
         {showLoginButton && (
-          <Button asChild size="lg" className="w-full font-semibold rounded-full h-12 text-base shadow-lg shadow-primary/25">
+          <Button asChild size="lg" className="w-full font-semibold rounded-full h-12 text-base shadow-lg">
             <Link to="/login">Entrar na conta</Link>
           </Button>
         )}
@@ -147,7 +154,7 @@ export function FollowingFeed() {
           <Button 
             asChild 
             size="lg"
-            className="w-full font-semibold rounded-full h-12 text-base shadow-lg shadow-primary/25"
+            className="w-full font-semibold rounded-full h-12 text-base shadow-lg"
           >
             <Link to="/explorar-organizadores" className="flex items-center gap-2">
               <Compass className="h-5 w-5" />

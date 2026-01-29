@@ -77,10 +77,10 @@ export function FeedEventCard({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         </div>
 
-        {/* Double tap heart animation */}
+        {/* Double tap heart animation - gradient */}
         {showHeart && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
-            <Heart className="h-24 w-24 text-accent fill-accent heart-animation" />
+            <Heart className="h-24 w-24 heart-animation" style={{ color: '#FF2D2D', fill: '#FF2D2D' }} />
           </div>
         )}
 
@@ -99,7 +99,10 @@ export function FeedEventCard({
                 {organizerAvatar ? (
                   <img src={organizerAvatar} alt={organizerName} className="h-full w-full object-cover" />
                 ) : (
-                  <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                  <div 
+                    className="h-full w-full flex items-center justify-center text-white text-xs font-bold"
+                    style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)" }}
+                  >
                     {organizerName[0]}
                   </div>
                 )}
@@ -152,7 +155,10 @@ export function FeedEventCard({
                 }}
                 className="social-btn h-10 w-10 bg-black/30 backdrop-blur-sm text-white"
               >
-                <Heart className={cn("h-6 w-6", isLiked && "fill-accent text-accent")} />
+                <Heart 
+                  className={cn("h-6 w-6", isLiked ? "" : "text-white")} 
+                  style={isLiked ? { color: '#FF2D2D', fill: '#FF2D2D' } : undefined}
+                />
               </motion.button>
               
               <motion.button

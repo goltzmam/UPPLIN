@@ -60,12 +60,12 @@ export function Header({ minimal = false }: HeaderProps) {
     >
       <div className="container">
         <div className="flex items-center justify-between h-14">
-          {/* Logo with neon effect */}
+          {/* Logo with gradient text */}
           <Link to="/" className="flex items-center gap-2 group">
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="font-display text-xl font-bold tracking-tight neon-text"
+              className="font-display text-xl font-bold tracking-tight gradient-text"
             >
               UPPLIN
             </motion.div>

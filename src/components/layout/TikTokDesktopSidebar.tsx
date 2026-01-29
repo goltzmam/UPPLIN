@@ -32,9 +32,9 @@ const NavItem = ({ to, icon, label, isActive, isCreate }: NavItemProps) => {
         >
           <div 
             className="h-10 w-10 rounded-xl flex items-center justify-center shadow-lg"
-            style={{ backgroundImage: "var(--gradient-social)" }}
+            style={{ background: "linear-gradient(135deg, #FF6A00 0%, #FF2D2D 50%, #FF007A 100%)" }}
           >
-            <Plus className="h-5 w-5 text-accent-foreground" strokeWidth={2.5} />
+            <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
           </div>
         </motion.div>
       </Link>
@@ -88,9 +88,9 @@ export function TikTokDesktopSidebar() {
 
   return (
     <aside className="hidden lg:flex flex-col items-center h-screen w-[72px] py-4 shrink-0 z-40 bg-sidebar border-r border-sidebar-border">
-      {/* Logo */}
+      {/* Logo with gradient */}
       <Link to="/" className="mb-6">
-        <span className="font-display text-xl font-bold text-sidebar-foreground">U</span>
+        <span className="font-display text-xl font-bold gradient-text">U</span>
       </Link>
 
       {/* Navigation */}
