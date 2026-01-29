@@ -106,11 +106,11 @@ export default function OrganizerDashboard() {
         <main className="flex-1 py-12">
           <div className="container max-w-lg">
             <EmptyState
-              icon={<Users className="h-8 w-8 text-primary" />}
+              icon={<Users className="h-8 w-8 text-accent" />}
               title="Torne-se um Organizador"
               description="Crie sua conta de organizador para começar a criar e gerenciar eventos."
               variant="default"
-              action={<Button onClick={() => setShowCreateOrg(true)} className="bg-primary hover:bg-primary/90 text-white">Criar Conta de Organizador</Button>}
+              action={<Button onClick={() => setShowCreateOrg(true)} className="bg-primary hover:bg-primary/90 text-primary-foreground">Criar Conta de Organizador</Button>}
               className="py-20"
             />
 
@@ -328,12 +328,12 @@ export default function OrganizerDashboard() {
               </div>
             ) : (
               <EmptyState
-                icon={<Calendar className="h-8 w-8 text-primary" />}
+                icon={<Calendar className="h-8 w-8 text-accent" />}
                 title="Nenhum evento ainda"
                 description="Crie seu primeiro evento para começar a vender ingressos."
                 variant="default"
                 action={
-                  <Button asChild className="bg-primary hover:bg-primary/90 text-white">
+                  <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
                     <Link to="/organizador/evento/novo">
                       <Plus className="h-4 w-4 mr-2" />
                       Criar Evento

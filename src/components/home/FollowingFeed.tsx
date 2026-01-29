@@ -206,7 +206,7 @@ export function FollowingFeed() {
     return (
       <div className="space-y-4 px-4 pt-4">
         {[...Array(2)].map((_, i) => (
-          <div key={i} className="aspect-[4/5] bg-white/10 animate-pulse rounded-2xl" />
+          <div key={i} className="aspect-[4/5] bg-muted animate-pulse rounded-2xl" />
         ))}
       </div>
     );

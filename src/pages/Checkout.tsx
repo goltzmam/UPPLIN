@@ -172,11 +172,11 @@ export default function Checkout() {
         <Header />
         <main className="flex-1 container py-12">
           <EmptyState
-            icon={<CreditCard className="h-8 w-8 text-primary" />}
+            icon={<CreditCard className="h-8 w-8 text-accent" />}
             title="Pedido não encontrado"
             description="Este pedido não existe ou expirou."
             variant="default"
-            action={<Button onClick={() => navigate("/eventos")} className="bg-primary hover:bg-primary/90 text-white">Ver Eventos</Button>}
+            action={<Button onClick={() => navigate("/eventos")} className="bg-primary hover:bg-primary/90 text-primary-foreground">Ver Eventos</Button>}
           />
         </main>
         <Footer />
@@ -206,11 +206,11 @@ export default function Checkout() {
 
           {isExpired ? (
             <EmptyState
-              icon={<Clock className="h-8 w-8 text-primary" />}
+              icon={<Clock className="h-8 w-8 text-accent" />}
               title="Pedido expirado"
               description="Este pedido expirou. Por favor, faça uma nova reserva."
               variant="default"
-              action={<Button onClick={() => navigate("/eventos")} className="bg-primary hover:bg-primary/90 text-white">Ver Eventos</Button>}
+              action={<Button onClick={() => navigate("/eventos")} className="bg-primary hover:bg-primary/90 text-primary-foreground">Ver Eventos</Button>}
             />
           ) : (
             <div className="grid md:grid-cols-3 gap-6 sm:gap-8">

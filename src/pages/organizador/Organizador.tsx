@@ -171,9 +171,10 @@ export default function OrganizadorPublico() {
         <Header />
         <main className="flex-1 container py-12">
           <EmptyState
-            icon={<Building2 className="h-8 w-8 text-muted-foreground" />}
+            icon={<Building2 className="h-8 w-8 text-accent" />}
             title="Organizador não encontrado"
             description="Este organizador não existe ou não está disponível."
+            variant="default"
             action={<Button asChild><Link to="/eventos">Ver eventos</Link></Button>}
           />
         </main>
@@ -492,9 +493,10 @@ export default function OrganizadorPublico() {
                   </div>
                 ) : (
                   <EmptyState
-                    icon={<CalendarDays className="h-8 w-8 text-muted-foreground" />}
+                    icon={<CalendarDays className="h-8 w-8 text-accent" />}
                     title="Nenhum evento"
                     description="Este organizador ainda não publicou eventos."
+                    variant="default"
                   />
                 )}
               </motion.div>
@@ -566,9 +568,10 @@ export default function OrganizadorPublico() {
                   </>
                 ) : (
                   <EmptyState
-                    icon={<ImageIcon className="h-8 w-8 text-muted-foreground" />}
+                    icon={<ImageIcon className="h-8 w-8 text-accent" />}
                     title="Nenhuma foto"
                     description="Ainda não há fotos de eventos."
+                    variant="default"
                   />
                 )}
               </motion.div>
