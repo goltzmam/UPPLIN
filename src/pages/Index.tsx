@@ -210,27 +210,45 @@ export default function Index() {
         </AnimatePresence>
       </motion.div>
 
-      {/* Overlay Header - Minimal */}
+      {/* Overlay Header - Adapts to active tab */}
       <div className="absolute top-0 left-0 right-0 z-30 pointer-events-none">
         <div className="h-[env(safe-area-inset-top,0px)]" />
         
-        <div className="flex items-center justify-between px-3 py-3 pointer-events-auto">
+        <div className={cn(
+          "flex items-center justify-between px-3 py-3 pointer-events-auto transition-colors duration-300",
+          activeTab === "following" && "bg-background"
+        )}>
           {/* Logo left */}
-          <Link to="/" className="font-display text-base font-bold text-white drop-shadow-md tracking-tight shrink-0">
+          <Link to="/" className={cn(
+            "font-display text-base font-bold tracking-tight shrink-0 transition-colors",
+            activeTab === "following" ? "text-foreground" : "text-white drop-shadow-md"
+          )}>
             UPPLIN
           </Link>
           
           {/* Centered tabs */}
           <div className="flex items-center gap-4 mx-4">
-            <button onClick={() => setActiveTab("following")} className={cn("relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap", activeTab === "following" ? "text-white" : "text-white/50")}>
+            <button onClick={() => setActiveTab("following")} className={cn(
+              "relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap",
+              activeTab === "following" 
+                ? "text-foreground" 
+                : "text-white/50"
+            )}>
               Seguindo
-              {activeTab === "following" && <motion.div layoutId="tab-underline-mobile" className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full" transition={{
+              {activeTab === "following" && <motion.div layoutId="tab-underline-mobile" className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-foreground rounded-full" transition={{
               type: "spring",
               stiffness: 500,
               damping: 35
             }} />}
             </button>
-            <button onClick={() => setActiveTab("foryou")} className={cn("relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap", activeTab === "foryou" ? "text-white" : "text-white/50")}>
+            <button onClick={() => setActiveTab("foryou")} className={cn(
+              "relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap",
+              activeTab === "foryou" 
+                ? "text-white" 
+                : activeTab === "following" 
+                  ? "text-muted-foreground" 
+                  : "text-white/50"
+            )}>
               Para você
               {activeTab === "foryou" && <motion.div layoutId="tab-underline-mobile" className="absolute -bottom-0.5 left-0 right-0 h-[1.5px] bg-white rounded-full" transition={{
               type: "spring",
@@ -240,11 +258,12 @@ export default function Index() {
             </button>
           </div>
 
-          {/* City selector right */}
-          <button onClick={() => setIsSearchOpen(true)} className="flex items-center gap-1 text-white/80 text-xs font-medium shrink-0">
-            
-            <span className="hidden xs:inline">Fortaleza</span>
-            
+          {/* Search button right */}
+          <button onClick={() => setIsSearchOpen(true)} className={cn(
+            "flex items-center gap-1 text-xs font-medium shrink-0 transition-colors",
+            activeTab === "following" ? "text-muted-foreground" : "text-white/80"
+          )}>
+            <Search className="h-4 w-4" />
           </button>
         </div>
       </div>
