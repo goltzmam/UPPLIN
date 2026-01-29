@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Volume2, VolumeX, Plus, Ticket, Gift } from "lucide-react";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Plus, Ticket, Gift } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,7 +67,6 @@ interface TikTokFeedProps {
   onRefresh?: () => Promise<void>;
 }
 
-const MUTE_STORAGE_KEY = "upplin_feed_muted";
 const SCROLL_POSITION_KEY = "upplin_feed_scroll_position";
 
 function formatEngagementCount(count: number): string {
@@ -212,27 +211,16 @@ const VideoPlaceholder = React.memo(function VideoPlaceholder({ coverUrl, title 
   );
 });
 
-interface RowData {
-  items: TikTokFeedItem[];
-  activeIndex: number;
-  isMuted: boolean;
-  onToggleMute: () => void;
-}
-
 const FeedRow = React.memo(function FeedRow({ 
   index, 
   style, 
   items, 
-  activeIndex, 
-  isMuted, 
-  onToggleMute 
+  activeIndex,
 }: { 
   index: number; 
   style: React.CSSProperties;
   items: TikTokFeedItem[];
   activeIndex: number;
-  isMuted: boolean;
-  onToggleMute: () => void;
 }) {
   const item = items[index];
   const isActive = index === activeIndex;
@@ -267,51 +255,32 @@ const FeedRow = React.memo(function FeedRow({
   const formattedTime = format(eventDate, "HH:mm");
   const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
-  // Optimized video autoplay - iOS compatible with smooth transitions
+  // Optimized video autoplay - iOS compatible with smooth transitions and sound
   useEffect(() => {
     const video = videoRef.current;
     if (!video || videoError || !item.videoUrl) return;
-    
-    // Always keep muted state synced
-    video.muted = isMuted;
     
     if (shouldPlay) {
       // Use requestAnimationFrame for smoother start
       requestAnimationFrame(() => {
         if (!videoRef.current) return;
         
-        // Force muted for autoplay (iOS requirement)
-        videoRef.current.muted = true;
+        videoRef.current.playbackRate = 1.0;
         
         const playPromise = videoRef.current.play();
         if (playPromise !== undefined) {
-          playPromise
-            .then(() => {
-              // After successful play, restore mute preference
-              if (videoRef.current && !isMuted) {
-                setTimeout(() => {
-                  if (videoRef.current) videoRef.current.muted = isMuted;
-                }, 50);
-              }
-            })
-            .catch((err) => { 
-              if (err.name !== 'AbortError') {
-                console.warn('Video autoplay failed:', err.name);
-              }
-            });
+          playPromise.catch((err) => { 
+            if (err.name !== 'AbortError') {
+              console.warn('Video autoplay failed:', err.name);
+            }
+          });
         }
       });
     } else {
       // Pause smoothly
       video.pause();
     }
-  }, [shouldPlay, videoError, isMuted, item.videoUrl]);
-
-  useEffect(() => { 
-    if (videoRef.current) {
-      videoRef.current.muted = isMuted; 
-    }
-  }, [isMuted]);
+  }, [shouldPlay, videoError, item.videoUrl]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
@@ -373,9 +342,6 @@ const FeedRow = React.memo(function FeedRow({
                 loop 
                 playsInline
                 webkit-playsinline="true"
-                x-webkit-airplay="deny"
-                disableRemotePlayback
-                muted={isMuted}
                 preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
                 onLoadedData={() => { setVideoLoaded(true); setVideoError(false); }}
                 onCanPlayThrough={() => { setVideoLoaded(true); }}
@@ -566,25 +532,6 @@ const FeedRow = React.memo(function FeedRow({
           })()}
         </div>
 
-        {/* Mute/Unmute button - visible tap target for iOS audio unlock */}
-        {item.videoUrl && !videoError && (
-          <button
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              onToggleMute();
-              triggerFeedback({ haptic: "light" });
-            }}
-            className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] right-3 z-20 h-10 w-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10"
-            aria-label={isMuted ? "Ativar som" : "Desativar som"}
-          >
-            {isMuted ? (
-              <VolumeX className="h-5 w-5 text-white" />
-            ) : (
-              <Volume2 className="h-5 w-5 text-white" />
-            )}
-          </button>
-        )}
-
         <Drawer open={showComments} onOpenChange={setShowComments}>
           <DrawerContent className="max-h-[85vh] flex flex-col">
             <DrawerHeader className="border-b border-border px-4 py-3 flex-shrink-0">
@@ -626,14 +573,6 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   });
   const lastScrollTop = useRef(0);
   const isScrolling = useRef(false);
-
-  const [isMuted, setIsMuted] = useState(() => {
-    try { return localStorage.getItem(MUTE_STORAGE_KEY) === "true" || localStorage.getItem(MUTE_STORAGE_KEY) === null; } catch { return true; }
-  });
-
-  const handleToggleMute = useCallback(() => {
-    setIsMuted(prev => { const v = !prev; try { localStorage.setItem(MUTE_STORAGE_KEY, String(v)); } catch {} return v; });
-  }, []);
 
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -807,8 +746,6 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
                   style={{ height: '100%' }}
                   items={items}
                   activeIndex={activeIndex}
-                  isMuted={isMuted}
-                  onToggleMute={handleToggleMute}
                 />
               ) : (
                 <div className="h-full bg-black" />
