@@ -491,36 +491,45 @@ const FeedRow = React.memo(function FeedRow({
             {isLive && <LiveBadge />}
           </div>
 
-          {/* Buy ticket button - prominent CTA */}
-          <motion.div
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            animate={{ 
-              boxShadow: [
-                "0 0 0 0 hsl(var(--primary) / 0.3)",
-                "0 0 0 4px hsl(var(--primary) / 0)",
-              ]
-            }}
-            transition={{
-              boxShadow: { duration: 2, repeat: Infinity, ease: "easeOut" }
-            }}
-            className="inline-block rounded-full"
-          >
-            <Link 
-              to={`/evento/${item.id}`} 
-              onClick={(e) => {
-                e.stopPropagation();
-                triggerFeedback({ haptic: "medium", sound: "tap" });
-              }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold bg-primary text-primary-foreground shadow-lg"
-            >
-              <Ticket className="h-4 w-4" />
-              <span>{(item.minPrice || 0) === 0 ? "Grátis" : "Comprar"}</span>
-              {(item.minPrice || 0) > 0 && (
-                <span className="opacity-80">• {formatPrice(item.minPrice || 0)}</span>
-              )}
-            </Link>
-          </motion.div>
+          {/* Buy ticket button - prominent CTA with visual differentiation */}
+          {(() => {
+            const isFree = (item.minPrice || 0) === 0;
+            return (
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+                animate={{ 
+                  boxShadow: isFree 
+                    ? ["0 0 0 0 hsl(var(--success) / 0.3)", "0 0 0 4px hsl(var(--success) / 0)"]
+                    : ["0 0 0 0 hsl(var(--primary) / 0.3)", "0 0 0 4px hsl(var(--primary) / 0)"]
+                }}
+                transition={{
+                  boxShadow: { duration: 2, repeat: Infinity, ease: "easeOut" }
+                }}
+                className="inline-block rounded-full"
+              >
+                <Link 
+                  to={`/evento/${item.id}`} 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    triggerFeedback({ haptic: "medium", sound: "tap" });
+                  }}
+                  className={cn(
+                    "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg transition-colors",
+                    isFree 
+                      ? "bg-success text-success-foreground" 
+                      : "bg-primary text-primary-foreground"
+                  )}
+                >
+                  <Ticket className="h-4 w-4" />
+                  <span>{isFree ? "Grátis" : "Comprar"}</span>
+                  {!isFree && (
+                    <span className="opacity-80">• {formatPrice(item.minPrice || 0)}</span>
+                  )}
+                </Link>
+              </motion.div>
+            );
+          })()}
         </div>
 
         {/* Mute/Unmute button - visible tap target for iOS audio unlock */}
