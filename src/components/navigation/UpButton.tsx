@@ -18,41 +18,49 @@ export function UpButton({ onClick }: UpButtonProps) {
       whileHover={{ scale: 1.05 }}
       transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
-      {/* Subtle glow effect */}
+      {/* Subtle pulse glow effect */}
       <motion.div
         className="absolute rounded-full"
         style={{
           background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
-          filter: "blur(6px)",
-          width: "24px",
-          height: "24px",
+          filter: "blur(8px)",
+          width: "32px",
+          height: "32px",
         }}
         animate={{
-          scale: [1, 1.2, 1],
-          opacity: [0.4, 0.6, 0.4],
+          scale: [1, 1.15, 1],
+          opacity: [0.3, 0.5, 0.3],
+        }}
+        transition={{
+          duration: 2.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+
+      {/* Main button - slightly larger than other icons */}
+      <motion.div
+        className="relative h-8 w-8 rounded-full flex items-center justify-center overflow-hidden"
+        style={{
+          background: "linear-gradient(135deg, #FF6A00 0%, #FF2D2D 50%, #FF007A 100%)",
+          boxShadow: "0 0 12px rgba(255, 45, 45, 0.5)",
+        }}
+        animate={{
+          scale: [1, 1.05, 1],
         }}
         transition={{
           duration: 2,
           repeat: Infinity,
           ease: "easeInOut",
         }}
-      />
-
-      {/* Main button - same size as other nav icons (h-6 w-6 icon inside h-10 w-10 container) */}
-      <div
-        className="relative h-6 w-6 rounded-full flex items-center justify-center overflow-hidden"
-        style={{
-          background: "linear-gradient(135deg, #FF6A00 0%, #FF2D2D 50%, #FF007A 100%)",
-          boxShadow: "0 0 10px rgba(255, 45, 45, 0.5)",
-        }}
       >
         {/* Arrow icon */}
         <ArrowUp 
           className="text-white" 
           strokeWidth={2.5} 
-          size={14}
+          size={16}
         />
-      </div>
+      </motion.div>
       
       {/* Label like other nav items */}
       <span className="text-[10px] font-medium mt-1 text-white/70">
