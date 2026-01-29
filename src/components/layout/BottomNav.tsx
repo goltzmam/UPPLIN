@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Bookmark, User, Plus } from "lucide-react";
+import { Home, Search, Bookmark, User, Plus } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 import { triggerHaptic } from "@/hooks/use-haptic";
@@ -18,6 +18,7 @@ export function BottomNav() {
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Início", path: "/" },
+    { icon: Search, label: "Por você", path: "/eventos" },
     { icon: Plus, label: "Criar", path: "/organizador/cadastro", isCreate: true },
     { icon: Bookmark, label: "Salvos", path: "/eventos-salvos", requiresAuth: true },
     { icon: User, label: "Perfil", path: user ? "/perfil" : "/login" },
