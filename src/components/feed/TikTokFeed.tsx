@@ -408,42 +408,42 @@ const FeedRow = React.memo(function FeedRow({
           )}
         </AnimatePresence>
 
-        {/* Right side action bar - TikTok style */}
-        <div className="absolute right-3 z-10 flex flex-col items-center gap-5" style={{ bottom: 'calc(var(--app-bottom-offset, 72px) + 100px)' }}>
+        {/* Right side action bar - TikTok style - positioned near navbar */}
+        <div className="absolute right-3 z-10 flex flex-col items-center gap-4" style={{ bottom: 'calc(var(--app-bottom-offset, 72px) + 16px)' }}>
           {/* Organizer avatar with follow indicator */}
           <button 
             onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (item.organizerId) navigate(`/organizador/${item.organizerId}`); }}
             className="relative"
           >
-            <div className="h-12 w-12 rounded-full border-2 border-white overflow-hidden">
+            <div className="h-11 w-11 rounded-full border-2 border-white overflow-hidden">
               {item.organizerAvatar ? (
                 <img src={item.organizerAvatar} alt={item.organizerName} className="h-full w-full object-cover" />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-sm font-bold">
+                <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-xs font-bold">
                   {item.organizerName?.[0] || "O"}
                 </div>
               )}
             </div>
-            <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full bg-accent flex items-center justify-center">
-              <Plus className="h-3 w-3 text-white" strokeWidth={3} />
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-4 w-4 rounded-full bg-accent flex items-center justify-center">
+              <Plus className="h-2.5 w-2.5 text-white" strokeWidth={3} />
             </div>
           </button>
 
           {/* Like button */}
-          <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleLikeClick(); }} className="flex flex-col items-center gap-1 relative">
+          <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleLikeClick(); }} className="flex flex-col items-center gap-0.5 relative">
             <div className="relative">
               <motion.div animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
-                <Heart className={cn("h-8 w-8 drop-shadow-lg transition-all", isLiked ? "fill-accent text-accent" : "text-white fill-white/20")} />
+                <Heart className={cn("h-7 w-7 drop-shadow-lg transition-all", isLiked ? "fill-accent text-accent" : "text-white fill-white/20")} />
               </motion.div>
               <LikeParticles show={showLikeParticles && !showHeart} />
             </div>
-            <span className="text-white text-xs font-semibold drop-shadow-lg">{formatEngagementCount(likeCount)}</span>
+            <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(likeCount)}</span>
           </motion.button>
 
           {/* Comments button */}
-          <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center gap-1">
-            <MessageCircle className="h-8 w-8 text-white drop-shadow-lg" />
-            <span className="text-white text-xs font-semibold drop-shadow-lg">{formatEngagementCount(commentCount)}</span>
+          <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); setShowComments(true); }} className="flex flex-col items-center gap-0.5">
+            <MessageCircle className="h-7 w-7 text-white drop-shadow-lg" />
+            <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(commentCount)}</span>
           </motion.button>
 
           {/* Share button */}
@@ -453,18 +453,18 @@ const FeedRow = React.memo(function FeedRow({
             eventDate={formattedDate} 
             eventImage={item.coverImageUrl} 
             iconOnly
-            className="flex flex-col items-center gap-1 text-white"
+            className="flex flex-col items-center gap-0.5 text-white [&_svg]:h-7 [&_svg]:w-7"
           />
 
           {/* Bookmark button */}
-          <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleSaveClick(); }} className="flex flex-col items-center gap-1 relative">
+          <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleSaveClick(); }} className="flex flex-col items-center gap-0.5 relative">
             <div className="relative">
               <motion.div animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
-                <Bookmark className={cn("h-8 w-8 drop-shadow-lg transition-all", isSaved ? "fill-white text-white" : "text-white")} />
+                <Bookmark className={cn("h-7 w-7 drop-shadow-lg transition-all", isSaved ? "fill-white text-white" : "text-white")} />
               </motion.div>
               <SaveParticles show={showSaveParticles} />
             </div>
-            <span className="text-white text-xs font-semibold drop-shadow-lg">{formatEngagementCount(saveCount)}</span>
+            <span className="text-white text-[10px] font-semibold drop-shadow-lg">{formatEngagementCount(saveCount)}</span>
           </motion.button>
         </div>
 
