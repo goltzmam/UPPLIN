@@ -1,9 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Bookmark, Calendar, MapPin, ArrowLeft } from "lucide-react";
@@ -46,10 +45,10 @@ export default function EventosSalvos() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-background pb-20 md:pb-0">
-        <Header />
-        <main className="pt-14">
-          <div className="container py-16 text-center">
+      <div className="min-h-screen flex bg-background">
+        <TikTokDesktopSidebar />
+        <main className="flex-1 pb-20 md:pb-0">
+          <div className="max-w-2xl mx-auto py-16 px-4 text-center">
             <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h1 className="text-2xl font-bold mb-2">Eventos Salvos</h1>
             <p className="text-muted-foreground mb-6">
@@ -60,18 +59,17 @@ export default function EventosSalvos() {
             </Button>
           </div>
         </main>
-        <Footer />
         <BottomNav />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20 md:pb-0">
-      <Header />
+    <div className="min-h-screen flex bg-background">
+      <TikTokDesktopSidebar />
       
-      <main className="pt-14">
-        <div className="container py-6">
+      <main className="flex-1 pb-20 md:pb-0">
+        <div className="max-w-4xl mx-auto py-6 px-4">
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
             <Button
@@ -92,9 +90,9 @@ export default function EventosSalvos() {
 
           {/* Events grid */}
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="aspect-[4/3] rounded-2xl bg-muted animate-pulse" />
+                <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
               ))}
             </div>
           ) : savedEvents.length === 0 ? (
@@ -109,7 +107,7 @@ export default function EventosSalvos() {
               </Button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {savedEvents.map((saved: any, index: number) => {
                 const event = saved.event;
                 if (!event) return null;
@@ -125,7 +123,7 @@ export default function EventosSalvos() {
                       to={`/evento/${event.id}`}
                       className="block group"
                     >
-                      <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
+                      <div className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-muted">
                         {event.cover_image_url ? (
                           <img
                             src={event.cover_image_url}
@@ -138,27 +136,27 @@ export default function EventosSalvos() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                         
                         {/* Saved badge */}
-                        <div className="absolute top-3 right-3 bg-primary text-primary-foreground p-2 rounded-full">
+                        <div className="absolute top-3 right-3 bg-white text-black p-2 rounded-full">
                           <Bookmark className="h-4 w-4 fill-current" />
                         </div>
 
                         {/* Content */}
                         <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <h3 className="font-bold text-white text-lg leading-tight line-clamp-2 mb-2">
+                          <h3 className="font-bold text-white text-sm leading-tight line-clamp-2 mb-2">
                             {event.title}
                           </h3>
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-white/80 text-sm">
-                              <Calendar className="h-4 w-4 shrink-0" />
+                            <div className="flex items-center gap-1.5 text-white/80 text-xs">
+                              <Calendar className="h-3.5 w-3.5 shrink-0" />
                               <span>
-                                {format(new Date(event.start_at), "d 'de' MMM 'às' HH:mm", {
+                                {format(new Date(event.start_at), "d MMM • HH:mm", {
                                   locale: ptBR,
                                 })}
                               </span>
                             </div>
                             {event.venue_name && (
-                              <div className="flex items-center gap-2 text-white/70 text-sm">
-                                <MapPin className="h-4 w-4 shrink-0" />
+                              <div className="flex items-center gap-1.5 text-white/70 text-xs">
+                                <MapPin className="h-3.5 w-3.5 shrink-0" />
                                 <span className="truncate">{event.venue_name}</span>
                               </div>
                             )}
@@ -174,7 +172,6 @@ export default function EventosSalvos() {
         </div>
       </main>
 
-      <Footer />
       <BottomNav />
     </div>
   );

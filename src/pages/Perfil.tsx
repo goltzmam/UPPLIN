@@ -1,14 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { PageLoading } from "@/components/ui/loading";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileTabs } from "@/components/profile/ProfileTabs";
+import { cn } from "@/lib/utils";
 
 export default function Perfil() {
   const { user, profile, loading, updateProfile, refreshProfile } = useAuth();
@@ -67,7 +67,6 @@ export default function Perfil() {
 
       if (error) throw error;
       
-      // Deduplicate by event_id
       const uniqueEvents = data?.reduce((acc: any[], ticket: any) => {
         if (ticket.events && !acc.find(t => t.events?.id === ticket.events?.id)) {
           acc.push(ticket);
@@ -107,42 +106,50 @@ export default function Perfil() {
     enabled: !!user,
   });
 
-  if (loading) return <><Header /><PageLoading /><Footer /></>;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <PageLoading />
+    </div>
+  );
+  
   if (!user || !profile) return null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background pb-20 md:pb-0">
-      <Header />
+    <div className="min-h-screen flex bg-background">
+      {/* Desktop Sidebar */}
+      <TikTokDesktopSidebar />
 
-      <main className="flex-1 pt-14">
-        <ProfileHeader
-          profile={profile}
-          stats={{
-            events: stats?.ticketsCount || 0,
-            saved: stats?.savedCount || 0,
-          }}
-          onProfileUpdate={async (updates) => {
-            await updateProfile(updates);
-            await refreshProfile();
-          }}
-        />
+      {/* Main Content */}
+      <main className="flex-1 pb-20 md:pb-0">
+        <div className="max-w-2xl mx-auto">
+          <ProfileHeader
+            profile={profile}
+            stats={{
+              events: stats?.ticketsCount || 0,
+              saved: stats?.savedCount || 0,
+            }}
+            onProfileUpdate={async (updates) => {
+              await updateProfile(updates);
+              await refreshProfile();
+            }}
+          />
 
-        <ProfileTabs
-          defaultTab={defaultTab}
-          attendedEvents={attendedEvents}
-          savedEvents={savedEvents}
-          attendedLoading={attendedLoading}
-          savedLoading={savedLoading}
-          profile={profile}
-          onProfileUpdate={async (updates) => {
-            const { error } = await updateProfile(updates);
-            if (!error) await refreshProfile();
-            return { error };
-          }}
-        />
+          <ProfileTabs
+            defaultTab={defaultTab}
+            attendedEvents={attendedEvents}
+            savedEvents={savedEvents}
+            attendedLoading={attendedLoading}
+            savedLoading={savedLoading}
+            profile={profile}
+            onProfileUpdate={async (updates) => {
+              const { error } = await updateProfile(updates);
+              if (!error) await refreshProfile();
+              return { error };
+            }}
+          />
+        </div>
       </main>
 
-      <Footer />
       <BottomNav />
     </div>
   );
