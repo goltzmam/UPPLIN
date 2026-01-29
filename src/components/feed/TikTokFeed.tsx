@@ -531,7 +531,7 @@ const FeedRow = React.memo(function FeedRow({
                       "inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold shadow-lg transition-colors",
                       isFree 
                         ? "bg-success text-success-foreground" 
-                        : "bg-primary text-primary-foreground"
+                        : "bg-white text-foreground"
                     )}
                   >
                     <IconComponent className="h-4 w-4" />
