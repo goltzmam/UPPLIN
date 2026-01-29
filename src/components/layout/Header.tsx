@@ -54,18 +54,18 @@ export function Header({ minimal = false }: HeaderProps) {
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
         isScrolled 
-          ? "bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-sm" 
-          : "bg-background border-b border-border/30"
+          ? "bg-black/95 backdrop-blur-xl border-b border-border/50 shadow-lg" 
+          : "bg-black border-b border-border/30"
       )}
     >
       <div className="container">
         <div className="flex items-center justify-between h-14">
-          {/* Logo */}
+          {/* Logo with neon effect */}
           <Link to="/" className="flex items-center gap-2 group">
             <motion.div
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="font-display text-xl font-bold tracking-tight text-foreground"
+              className="font-display text-xl font-bold tracking-tight neon-text"
             >
               UPPLIN
             </motion.div>
