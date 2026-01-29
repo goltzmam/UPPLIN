@@ -47,14 +47,14 @@ export function BottomNav() {
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden print:hidden"
       >
-        {/* Subtle shadow for elegant separation */}
-        <div className="absolute inset-x-0 -top-4 h-8 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
+        {/* Minimal gradient fade for seamless blend */}
+        <div className="absolute inset-x-0 -top-6 h-10 bg-gradient-to-t from-black/60 via-black/20 to-transparent pointer-events-none" />
 
-        {/* Background bar - dark premium */}
-        <div className="absolute inset-0 bg-black/95 backdrop-blur-xl border-t border-border/50" />
+        {/* Clean minimal background */}
+        <div className="absolute inset-0 bg-black/90 backdrop-blur-md" />
 
         {/* Content */}
-        <div className="relative px-2 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
+        <div className="relative px-2 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+10px)]">
           <div className="flex items-center justify-around">
             {navItems.map((item) => {
               const Icon = item.icon;
