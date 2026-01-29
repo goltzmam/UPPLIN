@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Search, Calendar, SlidersHorizontal, X } from "lucide-react";
-import { useState } from "react";
+import { Search, Calendar, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { EventCard } from "@/components/events/EventCard";
@@ -17,6 +17,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
+import { CategoryPillsSlider } from "@/components/events/CategoryPillsSlider";
 
 const CATEGORIES = [
   { id: "all", label: "Todos", icon: "🎉" },
@@ -145,23 +147,12 @@ export default function Eventos() {
               </Sheet>
             </div>
 
-            {/* Category Pills */}
-            <div className="flex gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
-                    selectedCategory === cat.id
-                      ? "bg-white text-black shadow-lg"
-                      : "bg-white/10 border border-white/20 hover:bg-white/20 text-white"
-                  }`}
-                >
-                  <span className="mr-1">{cat.icon}</span>
-                  {cat.label}
-                </button>
-              ))}
-            </div>
+            {/* Category Pills - Draggable Scroll */}
+            <CategoryPillsSlider
+              categories={CATEGORIES}
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+            />
 
             {/* Active Filters */}
             {hasActiveFilters && (
