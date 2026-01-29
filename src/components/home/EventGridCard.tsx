@@ -49,7 +49,7 @@ export function EventGridCard({
     >
       <Link to={`/evento/${id}`} className="block">
         {/* Card Container with dark theme */}
-        <div className="relative aspect-[3/4] rounded-2xl lg:rounded-3xl overflow-hidden bg-white/5 border border-white/10 hover:border-accent/30 shadow-md hover:shadow-2xl hover:shadow-accent/20 transition-all duration-500">
+        <div className="relative aspect-[3/4] rounded-2xl lg:rounded-3xl overflow-hidden bg-card border border-border hover:border-accent/30 shadow-md hover:shadow-2xl hover:shadow-accent/20 transition-all duration-500">
           {/* Image with parallax effect on hover */}
           <motion.div 
             className="absolute inset-0"
@@ -64,7 +64,7 @@ export function EventGridCard({
                 loading="lazy"
               />
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-white/5" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-muted/50" />
             )}
           </motion.div>
 
@@ -135,13 +135,13 @@ export function EventGridCard({
             </motion.div>
 
             {/* Title */}
-            <h3 className="font-display text-base lg:text-lg xl:text-xl font-bold text-white leading-tight line-clamp-2 mb-2 group-hover:text-accent transition-colors">
+            <h3 className="font-display text-base lg:text-lg xl:text-xl font-bold text-card-foreground leading-tight line-clamp-2 mb-2 group-hover:text-accent transition-colors">
               {title}
             </h3>
 
             {/* Venue - visible by default */}
             {venueName && (
-              <div className="flex items-center gap-1.5 text-white/60 text-sm mb-3 group-hover:text-white/80 transition-colors">
+              <div className="flex items-center gap-1.5 text-muted-foreground text-sm mb-3 group-hover:text-card-foreground/80 transition-colors">
                 <MapPin className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">{venueName}</span>
               </div>
@@ -149,20 +149,20 @@ export function EventGridCard({
 
             {/* Organizer with @ handle */}
             {organizerName && (
-              <div className="flex items-center justify-between pt-3 border-t border-white/10 group-hover:border-accent/20 transition-colors">
+              <div className="flex items-center justify-between pt-3 border-t border-border group-hover:border-accent/20 transition-colors">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Avatar className="h-7 w-7 ring-2 ring-white/20 group-hover:ring-accent/40 transition-all">
+                  <Avatar className="h-7 w-7 ring-2 ring-border group-hover:ring-accent/40 transition-all">
                     <AvatarImage src={organizerAvatar || undefined} />
-                    <AvatarFallback className="bg-white/10 text-white text-[10px] font-medium">
+                    <AvatarFallback className="bg-muted text-muted-foreground text-[10px] font-medium">
                       {organizerName[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <span className="text-xs text-white font-medium truncate block">
+                    <span className="text-xs text-card-foreground font-medium truncate block">
                       {organizerName}
                     </span>
                     {organizerSlug && (
-                      <span className="text-[10px] text-white/50 truncate block">
+                      <span className="text-[10px] text-muted-foreground truncate block">
                         @{organizerSlug}
                       </span>
                     )}
@@ -176,7 +176,7 @@ export function EventGridCard({
                   whileHover={{ scale: 1 }}
                 >
                   <div className="w-8 h-8 rounded-full bg-accent/20 hover:bg-accent/40 flex items-center justify-center transition-colors">
-                    <ExternalLink className="h-3.5 w-3.5 text-white" />
+                    <ExternalLink className="h-3.5 w-3.5 text-card-foreground" />
                   </div>
                 </motion.div>
               </div>

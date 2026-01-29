@@ -77,31 +77,31 @@ export default function Eventos() {
   const hasActiveFilters = search || selectedCategory !== "all";
 
   return (
-    <div className="min-h-screen flex bg-black text-white">
+    <div className="min-h-screen flex bg-background text-foreground">
       {/* Desktop Sidebar */}
       <TikTokDesktopSidebar />
 
       {/* Main Content */}
       <main className="flex-1 pb-20 md:pb-0">
         {/* Search Header */}
-        <section className="bg-gradient-to-b from-white/5 to-transparent border-b border-white/10 py-6 sm:py-8 pt-8 sm:pt-10">
+        <section className="bg-gradient-to-b from-muted/60 to-transparent border-b border-border py-6 sm:py-8 pt-8 sm:pt-10">
           <div className="max-w-4xl mx-auto px-4">
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-white">Explorar Eventos</h1>
-            <p className="text-white/60 text-sm mb-5">Encontre experiências incríveis perto de você</p>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-foreground">Explorar Eventos</h1>
+            <p className="text-muted-foreground text-sm mb-5">Encontre experiências incríveis perto de você</p>
             
             <div className="flex gap-3">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar eventos, artistas, locais..."
-                  className="pl-11 h-11 text-sm rounded-xl bg-white/10 border-white/20 focus:border-white text-white placeholder:text-white/50"
+                  className="pl-11 h-11 text-sm rounded-xl bg-muted/60 border-border focus:border-foreground text-foreground placeholder:text-muted-foreground"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
               <Sheet open={showFilters} onOpenChange={setShowFilters}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 relative rounded-xl border-white/20 bg-white/10 hover:bg-white/20 text-white">
+                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 relative rounded-xl border-border bg-muted/60 hover:bg-muted text-foreground">
                     <SlidersHorizontal className="h-4 w-4" />
                     {hasActiveFilters && (
                       <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-background" />
@@ -157,7 +157,7 @@ export default function Eventos() {
             {/* Active Filters */}
             {hasActiveFilters && (
               <div className="flex items-center gap-2 mt-3">
-                <span className="text-xs text-white/50">Filtros:</span>
+                <span className="text-xs text-muted-foreground">Filtros:</span>
                 {search && (
                   <Badge variant="secondary" className="gap-1 text-xs">
                     Busca: {search}
@@ -185,7 +185,7 @@ export default function Eventos() {
             {isLoading ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="aspect-[3/4] rounded-2xl bg-white/10 animate-pulse" />
+                  <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
                 ))}
               </div>
             ) : error ? (
@@ -197,7 +197,7 @@ export default function Eventos() {
               />
             ) : filteredEvents && filteredEvents.length > 0 ? (
               <>
-                <p className="text-xs text-white/50 mb-4">
+                <p className="text-xs text-muted-foreground mb-4">
                   {filteredEvents.length} evento(s) encontrado(s)
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">

@@ -360,7 +360,7 @@ export function DesktopTikTokFeed({
 
   if (isLoading) {
     return (
-      <div className="h-full w-full flex items-center justify-center bg-black">
+      <div className="h-full w-full flex items-center justify-center bg-background">
         <FeedSkeleton />
       </div>
     );
@@ -369,7 +369,7 @@ export function DesktopTikTokFeed({
   return (
     <div
       ref={containerRef}
-      className="h-full w-full overflow-y-scroll snap-y snap-mandatory bg-black"
+      className="h-full w-full overflow-y-scroll snap-y snap-mandatory bg-background"
       style={{ scrollSnapType: "y mandatory" }}
     >
       {items.map((item, index) => (

@@ -46,7 +46,7 @@ export function EventCard({
   const displayUsername = organizerUsername || (organizerName ? organizerName.toLowerCase().replace(/\s+/g, '') : null);
 
   return (
-    <div className="group block bg-white/5 rounded-2xl lg:rounded-3xl overflow-hidden border border-white/10 hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10 transition-all duration-300">
+    <div className="group block bg-card rounded-2xl lg:rounded-3xl overflow-hidden border border-border hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10 transition-all duration-300">
       {/* Cover Image - Clickable */}
       <Link to={`/evento/${id}`} className="block">
         <div className="relative aspect-[4/3] overflow-hidden">
@@ -58,7 +58,7 @@ export function EventCard({
             />
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-accent/20 to-secondary/20 flex items-center justify-center">
-              <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-white/30" />
+              <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
             </div>
           )}
           
@@ -101,12 +101,12 @@ export function EventCard({
         )}
 
         <Link to={`/evento/${id}`} className="block">
-          <h3 className="font-display font-bold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 text-white group-hover:text-accent transition-colors duration-200">
+          <h3 className="font-display font-bold text-base sm:text-lg lg:text-xl leading-tight line-clamp-2 text-card-foreground group-hover:text-accent transition-colors duration-200">
             {title}
           </h3>
         </Link>
 
-        <div className="space-y-2 text-sm text-white/60">
+        <div className="space-y-2 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 shrink-0 text-accent/80" />
             <span className="capitalize truncate">{formattedDay}, {formattedDate} • {formattedTime}</span>
