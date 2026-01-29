@@ -267,29 +267,45 @@ const FeedRow = React.memo(function FeedRow({
   const formattedTime = format(eventDate, "HH:mm");
   const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
-  // Video autoplay control - iOS requires muted + playsinline for autoplay
+  // Optimized video autoplay - iOS compatible with smooth transitions
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || videoError) return;
+    if (!video || videoError || !item.videoUrl) return;
     
-    // Ensure video is muted before attempting autoplay (iOS requirement)
+    // Always keep muted state synced
     video.muted = isMuted;
     
     if (shouldPlay) {
-      // Small delay to ensure video element is ready
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => { 
-          if (err.name !== 'AbortError') {
-            console.warn('Video autoplay failed:', err.name);
-            // Don't set error - just show the cover image
-          }
-        });
-      }
+      // Use requestAnimationFrame for smoother start
+      requestAnimationFrame(() => {
+        if (!videoRef.current) return;
+        
+        // Force muted for autoplay (iOS requirement)
+        videoRef.current.muted = true;
+        
+        const playPromise = videoRef.current.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => {
+              // After successful play, restore mute preference
+              if (videoRef.current && !isMuted) {
+                setTimeout(() => {
+                  if (videoRef.current) videoRef.current.muted = isMuted;
+                }, 50);
+              }
+            })
+            .catch((err) => { 
+              if (err.name !== 'AbortError') {
+                console.warn('Video autoplay failed:', err.name);
+              }
+            });
+        }
+      });
     } else {
+      // Pause smoothly
       video.pause();
     }
-  }, [shouldPlay, videoError, isMuted]);
+  }, [shouldPlay, videoError, isMuted, item.videoUrl]);
 
   useEffect(() => { 
     if (videoRef.current) {
@@ -358,19 +374,23 @@ const FeedRow = React.memo(function FeedRow({
                 playsInline
                 webkit-playsinline="true"
                 x-webkit-airplay="deny"
+                disableRemotePlayback
                 muted={isMuted}
                 preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
                 onLoadedData={() => { setVideoLoaded(true); setVideoError(false); }}
+                onCanPlayThrough={() => { setVideoLoaded(true); }}
                 onError={() => { setVideoError(true); setVideoLoaded(false); }}
                 className={cn(
                   "absolute inset-0 h-full w-full object-cover",
                   videoLoaded ? "opacity-100" : "opacity-0"
                 )}
                 style={{ 
-                  transform: 'translateZ(0)', 
+                  transform: 'translate3d(0,0,0)',
+                  WebkitTransform: 'translate3d(0,0,0)',
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
-                  transition: 'opacity 200ms ease-out',
+                  transition: 'opacity 0.4s ease-out',
+                  objectFit: 'cover',
                 }}
               />
             </>
