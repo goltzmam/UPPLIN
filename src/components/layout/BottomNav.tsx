@@ -18,7 +18,7 @@ export function BottomNav() {
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Início", path: "/" },
-    { icon: Search, label: "Explorar", path: "/eventos" },
+    { icon: Search, label: "Por você", path: "/eventos" },
     { icon: Plus, label: "Criar", path: "/organizador/cadastro", isCreate: true },
     { icon: Bookmark, label: "Salvos", path: "/eventos-salvos", requiresAuth: true },
     { icon: User, label: "Perfil", path: user ? "/perfil" : "/login" },
