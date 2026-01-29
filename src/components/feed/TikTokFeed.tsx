@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Volume2, VolumeX, Plus, Ticket, Gift } from "lucide-react";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Volume2, VolumeX, Plus, Ticket, Gift, Copy } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -454,6 +455,40 @@ const FeedRow = React.memo(function FeedRow({
               </motion.div>
               <SaveParticles show={showSaveParticles} />
             </div>
+          </motion.button>
+
+          {/* Maps button - opens Google Maps with event location */}
+          {(item.addressText || item.venueName) && (
+            <motion.button 
+              whileTap={{ scale: 0.85 }} 
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                const address = encodeURIComponent(item.addressText || item.venueName || "");
+                window.open(`https://maps.google.com/?q=${address}`, "_blank");
+                triggerFeedback({ haptic: "light" });
+              }} 
+              className="flex flex-col items-center gap-0.5"
+            >
+              <MapPin className="h-6 w-6 text-white/90" strokeWidth={1.5} />
+            </motion.button>
+          )}
+
+          {/* Copy link button */}
+          <motion.button 
+            whileTap={{ scale: 0.85 }} 
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              const url = `${window.location.origin}/evento/${item.id}`;
+              navigator.clipboard.writeText(url).then(() => {
+                toast({ title: "Link copiado!", description: "O link do evento foi copiado para a área de transferência." });
+                triggerFeedback({ haptic: "success", sound: "success" });
+              }).catch(() => {
+                toast({ title: "Erro ao copiar", description: "Não foi possível copiar o link.", variant: "destructive" });
+              });
+            }} 
+            className="flex flex-col items-center gap-0.5"
+          >
+            <Copy className="h-6 w-6 text-white/90" strokeWidth={1.5} />
           </motion.button>
 
           {/* Share button */}
