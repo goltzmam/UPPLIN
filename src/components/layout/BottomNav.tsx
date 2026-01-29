@@ -4,6 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { motion } from "framer-motion";
 import { triggerHaptic } from "@/hooks/use-haptic";
 import { useState } from "react";
+import { FeedSearch } from "@/components/feed/FeedSearch";
 
 interface NavItem {
   icon: React.ElementType;
@@ -18,6 +19,7 @@ export function BottomNav() {
   const location = useLocation();
   const { user } = useAuth();
   const [cityName] = useState("Por perto");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const navItems: NavItem[] = [
     { icon: Home, label: "Início", path: "/" },
@@ -87,7 +89,10 @@ export function BottomNav() {
               return (
                 <button
                   key="city-selector"
-                  onClick={() => triggerHaptic('selection')}
+                  onClick={() => {
+                    triggerHaptic('selection');
+                    setIsSearchOpen(true);
+                  }}
                   className="relative flex flex-col items-center justify-center py-1 px-4"
                 >
                   <motion.div
@@ -126,6 +131,9 @@ export function BottomNav() {
           })}
         </div>
       </div>
+
+      {/* Search Overlay */}
+      <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </motion.nav>
   );
 }
