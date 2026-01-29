@@ -409,7 +409,7 @@ const FeedRow = React.memo(function FeedRow({
         </AnimatePresence>
 
         {/* Right side action bar - TikTok style - positioned near navbar */}
-        <div className="absolute right-3 z-10 flex flex-col items-center gap-4" style={{ bottom: 'calc(var(--app-bottom-offset, 72px) + 16px)' }}>
+        <div className="absolute right-3 z-10 flex flex-col items-center gap-4" style={{ bottom: 'calc(var(--app-bottom-offset, 72px) + 40px)' }}>
           {/* Organizer avatar with follow indicator */}
           <button 
             onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (item.organizerId) navigate(`/organizador/${item.organizerId}`); }}
