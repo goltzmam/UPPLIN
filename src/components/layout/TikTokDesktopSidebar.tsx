@@ -87,7 +87,7 @@ export function TikTokDesktopSidebar() {
   };
 
   return (
-    <aside className="hidden md:flex flex-col items-center h-screen w-[72px] py-4 shrink-0 z-40 bg-black/20 backdrop-blur-md border-r border-white/5">
+    <aside className="hidden md:flex flex-col items-center h-screen w-[72px] py-4 shrink-0 z-40 bg-black border-r border-white/10">
       {/* Logo */}
       <Link to="/" className="mb-6">
         <span className="font-display text-xl font-bold text-white">U</span>

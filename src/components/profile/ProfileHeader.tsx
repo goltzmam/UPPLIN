@@ -97,7 +97,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
       className="relative"
     >
       {/* Cover Photo */}
-      <div className="relative h-32 sm:h-48 bg-gradient-to-br from-muted to-muted-foreground/20 overflow-hidden">
+      <div className="relative h-32 sm:h-48 bg-gradient-to-br from-white/10 to-white/5 overflow-hidden">
         {(profile as any).cover_photo_url && (
           <img
             src={(profile as any).cover_photo_url}
@@ -105,7 +105,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
             className="absolute inset-0 w-full h-full object-cover"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         
         {/* Cover upload button */}
         <label className="absolute top-3 right-3 cursor-pointer">
@@ -131,7 +131,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
           {/* Avatar */}
           <div className="relative">
             <div className="avatar-ring-gradient p-[3px] rounded-full">
-              <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background">
+              <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-black">
                 <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "User"} />
                 <AvatarFallback className="text-2xl sm:text-3xl font-bold bg-gradient-to-br from-accent to-pink-500 text-white">
                   {getInitials(profile.full_name)}
@@ -149,7 +149,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
                 disabled={uploadingAvatar}
               />
               <div className={cn(
-                "h-8 w-8 rounded-full bg-foreground text-background flex items-center justify-center transition-transform hover:scale-110",
+                "h-8 w-8 rounded-full bg-white text-black flex items-center justify-center transition-transform hover:scale-110",
                 uploadingAvatar && "animate-pulse"
               )}>
                 <Camera className="h-4 w-4" />
@@ -159,21 +159,21 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
 
           {/* Name and Stats */}
           <div className="flex-1 text-center sm:text-left pb-2">
-            <h1 className="font-display text-xl sm:text-2xl font-bold">
+            <h1 className="font-display text-xl sm:text-2xl font-bold text-white">
               {profile.full_name || "Usuário"}
             </h1>
-            <p className="text-sm text-muted-foreground">{profile.email}</p>
+            <p className="text-sm text-white/60">{profile.email}</p>
           </div>
 
           {/* Stats */}
           <div className="flex gap-6 sm:gap-8 pb-4">
             <div className="text-center">
-              <div className="font-display text-xl font-bold">{stats.events}</div>
-              <div className="text-xs text-muted-foreground">Eventos</div>
+              <div className="font-display text-xl font-bold text-white">{stats.events}</div>
+              <div className="text-xs text-white/60">Eventos</div>
             </div>
             <div className="text-center">
-              <div className="font-display text-xl font-bold">{stats.saved}</div>
-              <div className="text-xs text-muted-foreground">Salvos</div>
+              <div className="font-display text-xl font-bold text-white">{stats.saved}</div>
+              <div className="text-xs text-white/60">Salvos</div>
             </div>
           </div>
         </div>
