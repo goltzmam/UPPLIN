@@ -66,7 +66,7 @@ export function FollowingFeed() {
     enabled: !!user?.id,
   });
 
-  // Empty state component with premium design
+  // Empty state component with high-conversion design
   const EmptyState = ({ 
     title, 
     description, 
@@ -79,19 +79,19 @@ export function FollowingFeed() {
     showExploreButton?: boolean;
   }) => (
     <div className="flex flex-col items-center justify-center min-h-[65vh] px-6 text-center">
-      {/* Animated icon with gradient ring */}
+      {/* Animated icon */}
       <motion.div
         initial={{ scale: 0.5, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="relative mb-8"
+        className="relative mb-6"
       >
-        {/* Outer glow ring */}
+        {/* Glow effect */}
         <motion.div 
-          className="absolute -inset-4 rounded-full bg-gradient-to-r from-primary/20 via-accent/10 to-primary/20 blur-xl"
+          className="absolute -inset-3 rounded-full bg-primary/30 blur-2xl"
           animate={{ 
-            scale: [1, 1.1, 1],
-            opacity: [0.5, 0.8, 0.5]
+            scale: [1, 1.2, 1],
+            opacity: [0.4, 0.6, 0.4]
           }}
           transition={{ 
             duration: 3, 
@@ -100,48 +100,46 @@ export function FollowingFeed() {
           }}
         />
         
-        {/* Icon container with gradient border */}
-        <div className="relative h-24 w-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/10 p-[2px]">
-          <div className="h-full w-full rounded-full bg-background flex items-center justify-center">
-            <motion.div
-              animate={{ y: [0, -3, 0] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Users className="h-10 w-10 text-primary" />
-            </motion.div>
-          </div>
+        {/* Icon container */}
+        <div className="relative h-20 w-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <motion.div
+            animate={{ y: [0, -2, 0] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <Users className="h-9 w-9 text-primary" />
+          </motion.div>
         </div>
       </motion.div>
       
-      {/* Title with gradient text */}
+      {/* Title - high contrast */}
       <motion.h3 
         initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="font-display text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent mb-3"
+        className="font-display text-xl font-bold text-foreground mb-2"
       >
         {title}
       </motion.h3>
       
-      {/* Description */}
+      {/* Description - readable contrast */}
       <motion.p 
         initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.25 }}
-        className="text-muted-foreground text-sm mb-8 max-w-[260px] leading-relaxed"
+        className="text-muted-foreground text-sm mb-8 max-w-[280px] leading-relaxed"
       >
         {description}
       </motion.p>
       
-      {/* Action buttons */}
+      {/* CTA Buttons - high conversion */}
       <motion.div
         initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.35 }}
-        className="flex flex-col gap-3 w-full max-w-[240px]"
+        className="flex flex-col gap-3 w-full max-w-[260px]"
       >
         {showLoginButton && (
-          <Button asChild size="lg" className="w-full font-semibold rounded-full h-12 text-base">
+          <Button asChild size="lg" className="w-full font-semibold rounded-full h-12 text-base shadow-lg shadow-primary/25">
             <Link to="/login">Entrar na conta</Link>
           </Button>
         )}
@@ -149,7 +147,7 @@ export function FollowingFeed() {
           <Button 
             asChild 
             size="lg"
-            className="w-full font-semibold rounded-full h-12 text-base bg-primary hover:bg-primary/90"
+            className="w-full font-semibold rounded-full h-12 text-base shadow-lg shadow-primary/25"
           >
             <Link to="/explorar-organizadores" className="flex items-center gap-2">
               <Compass className="h-5 w-5" />
@@ -159,7 +157,7 @@ export function FollowingFeed() {
         )}
       </motion.div>
 
-      {/* Featured organizers preview - only show when explore button is visible */}
+      {/* Social proof section */}
       {showExploreButton && (
         <motion.div
           initial={{ y: 25, opacity: 0 }}
@@ -167,26 +165,15 @@ export function FollowingFeed() {
           transition={{ delay: 0.5 }}
           className="mt-10 w-full max-w-xs"
         >
-          <div className="flex items-center gap-2 text-muted-foreground/50 text-xs mb-4 justify-center">
-            <Sparkles className="h-3.5 w-3.5 text-primary/60" />
-            <span className="uppercase tracking-wider font-medium">Organizadores populares</span>
-          </div>
-          
-          {/* Stacked avatars with overlap effect */}
-          <div className="flex justify-center -space-x-3">
-            {[
-              "from-orange-400 to-rose-500",
-              "from-violet-400 to-purple-600",
-              "from-cyan-400 to-blue-500",
-              "from-emerald-400 to-green-500",
-              "from-amber-400 to-orange-500",
-            ].map((gradient, i) => (
+          {/* Stacked avatars */}
+          <div className="flex justify-center -space-x-2 mb-3">
+            {[1, 2, 3, 4, 5].map((i) => (
               <motion.div
                 key={i}
-                initial={{ scale: 0, x: -20 }}
+                initial={{ scale: 0, x: -10 }}
                 animate={{ scale: 1, x: 0 }}
-                transition={{ delay: 0.6 + i * 0.08, type: "spring", stiffness: 300 }}
-                className={`h-12 w-12 rounded-full bg-gradient-to-br ${gradient} border-2 border-background shadow-lg`}
+                transition={{ delay: 0.55 + i * 0.06, type: "spring", stiffness: 300 }}
+                className="h-10 w-10 rounded-full bg-muted border-2 border-background"
               />
             ))}
           </div>
@@ -194,10 +181,10 @@ export function FollowingFeed() {
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="text-xs text-muted-foreground/40 mt-4"
+            transition={{ delay: 0.9 }}
+            className="text-xs text-muted-foreground"
           >
-            +50 organizadores para seguir
+            <span className="text-foreground font-medium">+50 organizadores</span> esperando você
           </motion.p>
         </motion.div>
       )}
