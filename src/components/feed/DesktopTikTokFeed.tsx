@@ -93,7 +93,7 @@ const LikeParticles = React.memo(function LikeParticles({ show }: { show: boolea
           className="absolute pointer-events-none"
           style={{ width: particle.size, height: particle.size }}
         >
-          <Heart className="w-full h-full text-accent fill-accent" />
+          <Heart className="w-full h-full" style={{ color: '#FF2D2D', fill: '#FF2D2D' }} />
         </motion.div>
       ))}
     </AnimatePresence>
@@ -197,7 +197,7 @@ const FeedCard = React.memo(function FeedCard({
               className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
             >
               <div className="relative">
-                <Heart className="h-24 w-24 text-accent fill-accent" />
+                <Heart className="h-24 w-24" style={{ color: '#FF2D2D', fill: '#FF2D2D' }} />
                 <LikeParticles show={showLikeParticles} />
               </div>
             </motion.div>
@@ -222,12 +222,12 @@ const FeedCard = React.memo(function FeedCard({
               {item.organizerAvatar ? (
                 <img src={item.organizerAvatar} alt={item.organizerName} className="h-full w-full object-cover" />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white text-sm font-bold">
+                <div className="h-full w-full flex items-center justify-center text-white text-sm font-bold" style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)" }}>
                   {item.organizerName?.[0] || "O"}
                 </div>
               )}
             </div>
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full bg-accent flex items-center justify-center">
+            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)" }}>
               <Plus className="h-3 w-3 text-white" strokeWidth={3} />
             </div>
           </button>
@@ -236,7 +236,7 @@ const FeedCard = React.memo(function FeedCard({
           <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleLikeClick(); }} className="flex flex-col items-center gap-1 relative">
             <div className="relative">
               <motion.div animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
-                <Heart className={cn("h-7 w-7 transition-all", isLiked ? "fill-accent text-accent" : "text-white")} strokeWidth={1.5} />
+                <Heart className={cn("h-7 w-7 transition-all", isLiked ? "" : "text-white")} strokeWidth={1.5} style={isLiked ? { color: '#FF2D2D', fill: '#FF2D2D' } : undefined} />
               </motion.div>
               <LikeParticles show={showLikeParticles && !showHeart} />
             </div>
