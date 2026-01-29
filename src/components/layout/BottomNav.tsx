@@ -48,10 +48,10 @@ export function BottomNav() {
         className="fixed bottom-0 left-0 right-0 z-50 lg:hidden print:hidden"
       >
         {/* Subtle shadow for elegant separation */}
-        <div className="absolute inset-x-0 -top-4 h-8 bg-gradient-to-t from-foreground/5 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 -top-4 h-8 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
 
-        {/* Background bar with shadow */}
-        <div className="absolute inset-0 bg-background shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.1)] border-t border-border" />
+        {/* Background bar - dark premium */}
+        <div className="absolute inset-0 bg-black/95 backdrop-blur-xl border-t border-border/50" />
 
         {/* Content */}
         <div className="relative px-2 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+8px)]">
@@ -70,17 +70,17 @@ export function BottomNav() {
                     }}
                     className="relative flex flex-col items-center justify-center py-1 px-4"
                   >
-                    <motion.div
-                      whileTap={{ scale: 0.85 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 17 }}
-                    >
-                      <Icon className="h-6 w-6 text-foreground" strokeWidth={1.5} />
-                    </motion.div>
-                    
-                    <span className="text-[10px] font-medium mt-1 text-foreground">
-                      {item.label}
-                    </span>
-                  </button>
+                  <motion.div
+                    whileTap={{ scale: 0.85 }}
+                    transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                  >
+                    <Icon className="h-6 w-6 text-white/70" strokeWidth={1.5} />
+                  </motion.div>
+                  
+                  <span className="text-[10px] font-medium mt-1 text-white/70">
+                    {item.label}
+                  </span>
+                </button>
                 );
               }
 
@@ -93,7 +93,6 @@ export function BottomNav() {
                 );
               }
 
-              // Regular nav items
               return (
                 <Link
                   key={item.path}
@@ -105,10 +104,10 @@ export function BottomNav() {
                     whileTap={{ scale: 0.85 }}
                     transition={{ type: "spring", stiffness: 400, damping: 17 }}
                   >
-                    <Icon className="h-6 w-6 text-foreground" strokeWidth={1.5} />
+                    <Icon className="h-6 w-6 text-white/70" strokeWidth={1.5} />
                   </motion.div>
                   
-                  <span className="text-[10px] font-medium mt-1 text-foreground">
+                  <span className="text-[10px] font-medium mt-1 text-white/70">
                     {item.label}
                   </span>
                 </Link>

@@ -13,6 +13,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { FollowButton } from "@/components/events/FollowButton";
 import { EventComments } from "@/components/events/EventComments";
 import { EventReviews } from "@/components/events/EventReviews";
+import { WhoIsGoingSection } from "@/components/events/WhoIsGoingSection";
 import { OrganizerPreviewTooltip } from "@/components/events/OrganizerPreviewTooltip";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
@@ -454,6 +455,9 @@ export default function Evento() {
                     </div>
                   </div>
                 )}
+
+                {/* Who's Going */}
+                <WhoIsGoingSection eventId={event.id} />
 
                 {/* Reviews */}
                 <div className="bg-card rounded-2xl border border-border p-6">
