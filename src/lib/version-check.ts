@@ -4,20 +4,50 @@
  */
 
 const VERSION_KEY = "upplin_build_version";
+const LAST_CLEANUP_KEY = "upplin_last_cleanup";
+
+/**
+ * Detects if we're in a preview/development environment
+ */
+function isPreviewEnvironment(): boolean {
+  if (typeof window === "undefined") return false;
+  const hostname = window.location.hostname;
+  return (
+    hostname.includes("id-preview--") ||
+    hostname.includes("lovableproject.com") ||
+    hostname.includes("localhost") ||
+    hostname.includes("127.0.0.1")
+  );
+}
 
 /**
  * Checks if the current build matches the server version.
  * If not, clears all caches and reloads to get the latest version.
  */
 export async function ensureLatestVersion(): Promise<void> {
-  // Skip version check in development
+  // Skip version check in development (Vite HMR handles this)
   if (import.meta.env.DEV) {
-    console.log("[Version] Skipping version check in development");
+    console.log("[Version] Dev mode - skipping version check");
     return;
   }
 
+  // In preview environment, do periodic cleanup every 30 seconds
+  if (isPreviewEnvironment()) {
+    const lastCleanup = parseInt(localStorage.getItem(LAST_CLEANUP_KEY) || "0", 10);
+    const now = Date.now();
+    
+    // Force cleanup every 30 seconds in preview
+    if (now - lastCleanup > 30000) {
+      console.log("[Version] Preview cleanup triggered");
+      localStorage.setItem(LAST_CLEANUP_KEY, now.toString());
+      await clearAllCaches();
+      await unregisterAllSW();
+    }
+    return;
+  }
+
+  // Published environment: check version.json
   try {
-    // Fetch version.json with cache busting
     const response = await fetch(`/version.json?t=${Date.now()}`, {
       cache: "no-store",
       headers: {
