@@ -210,8 +210,7 @@ export default function Index() {
               animate={{ opacity: 1, x: 0 }} 
               exit={{ opacity: 0, x: -20 }} 
               transition={{ duration: 0.2, ease: "easeOut" }} 
-              className="h-full" 
-              style={{ "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))" } as React.CSSProperties}
+              className="h-full"
             >
               <TikTokFeed 
                 items={feedItems} 

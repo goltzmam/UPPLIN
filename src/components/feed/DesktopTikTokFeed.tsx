@@ -293,11 +293,14 @@ const FeedCard = React.memo(function FeedCard({
             )}
           </div>
 
-          {/* Buy button */}
+          {/* Buy button - brand gradient */}
           <Link
             to={`/evento/${item.id}`}
             onClick={(e) => e.stopPropagation()}
-            className="mt-3 inline-flex items-center gap-2 bg-white text-black font-semibold px-5 py-2.5 rounded-full text-sm hover:bg-white/90 transition-colors"
+            className="mt-3 inline-flex items-center gap-2 font-semibold px-5 py-2.5 rounded-full text-sm text-white shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
+            style={{
+              background: "linear-gradient(135deg, #FF6A00 0%, #FF2D2D 50%, #FF007A 100%)",
+            }}
           >
             <Ticket className="h-4 w-4" />
             Comprar • {formatPrice(item.minPrice || 0)}

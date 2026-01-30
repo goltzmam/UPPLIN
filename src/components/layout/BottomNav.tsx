@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Home, MapPin, Bookmark, User } from "lucide-react";
 import { useAuth } from "@/lib/auth";
@@ -23,6 +23,7 @@ export function BottomNav() {
   const [cityName] = useState("Por perto");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUpMenuOpen, setIsUpMenuOpen] = useState(false);
+  const navRef = useRef<HTMLDivElement>(null);
 
   // Navigation items with central UP button
   const navItems: NavItem[] = [
@@ -36,12 +37,47 @@ export function BottomNav() {
   // Only hide on checkout, organizer dashboard, and admin pages
   const hiddenPaths = ["/checkout", "/organizador/dashboard", "/admin"];
   const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
+
+  // Measure actual height and set global CSS variable
+  useEffect(() => {
+    const updateOffset = () => {
+      if (shouldHide) {
+        document.documentElement.style.setProperty('--app-bottom-offset', '0px');
+        return;
+      }
+      
+      if (navRef.current) {
+        const height = navRef.current.offsetHeight;
+        document.documentElement.style.setProperty('--app-bottom-offset', `${height}px`);
+      }
+    };
+
+    // Initial measurement
+    updateOffset();
+
+    // Use ResizeObserver for dynamic updates
+    const resizeObserver = new ResizeObserver(updateOffset);
+    if (navRef.current) {
+      resizeObserver.observe(navRef.current);
+    }
+
+    // Also listen to window resize for orientation changes
+    window.addEventListener('resize', updateOffset);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateOffset);
+      // Reset offset when component unmounts
+      document.documentElement.style.setProperty('--app-bottom-offset', '0px');
+    };
+  }, [shouldHide]);
   
   if (shouldHide) return null;
 
   return (
     <>
       <motion.nav
+        ref={navRef}
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
