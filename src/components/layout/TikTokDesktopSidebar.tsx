@@ -156,8 +156,8 @@ export function TikTokDesktopSidebar() {
           >UP</span>
         </Link>
 
-        {/* Main Navigation - Scrollable if needed */}
-        <nav className="flex-1 flex flex-col items-center gap-0.5 overflow-y-auto overflow-x-hidden min-h-0">
+        {/* Main Navigation */}
+        <nav className="flex-1 flex flex-col items-center gap-0.5">
           {/* Início */}
           <NavItem
             to="/"
