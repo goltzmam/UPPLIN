@@ -98,7 +98,7 @@ export function TikTokDesktopSidebar() {
             WebkitTextFillColor: "transparent",
             backgroundClip: "text"
           }}
-        >U</span>
+        >UP</span>
       </Link>
 
       {/* Navigation */}
