@@ -116,8 +116,7 @@ export default function Index() {
   // Shared Header Component for both mobile and desktop
   const FeedHeader = ({ isDesktop = false }: { isDesktop?: boolean }) => (
     <div className={cn(
-      "absolute top-0 left-0 right-0 z-30 pointer-events-none",
-      isDesktop && "left-[72px]"
+      "absolute top-0 left-0 right-0 z-30 pointer-events-none"
     )}>
       <div className="h-[env(safe-area-inset-top,0px)]" />
       
@@ -249,12 +248,12 @@ export default function Index() {
   // DESKTOP/TABLET: TikTok-style layout with minimal sidebar
   // =====================================================================
   const DesktopLayout = () => (
-    <div className="hidden lg:flex h-screen w-full bg-background">
-      {/* Left Sidebar - Minimal TikTok style */}
+    <div className="hidden lg:block h-screen w-full bg-background">
+      {/* Left Sidebar - Fixed TikTok style */}
       <TikTokDesktopSidebar />
 
-      {/* Main Content - Full screen TikTok feed */}
-      <main className="flex-1 relative">
+      {/* Main Content - Offset for fixed sidebar */}
+      <main className="h-full ml-[72px] relative">
         <AnimatePresence mode="wait" initial={false}>
           {activeTab === "foryou" ? (
             <motion.div 
