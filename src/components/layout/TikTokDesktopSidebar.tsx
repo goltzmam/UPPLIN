@@ -210,20 +210,12 @@ export function TikTokDesktopSidebar() {
               <span className="text-[10px] font-medium text-sidebar-foreground/40">Sair</span>
             </button>
           ) : (
-            <>
               <NavItem
                 to="/login"
                 icon={<LogIn className="h-5 w-5" strokeWidth={1.5} />}
                 label="Entrar"
                 isActive={isActive("/login")}
               />
-              <NavItem
-                to="/cadastro"
-                icon={<UserPlus className="h-5 w-5" strokeWidth={1.5} />}
-                label="Cadastro"
-                isActive={isActive("/cadastro")}
-              />
-            </>
           )}
         </div>
       </aside>
