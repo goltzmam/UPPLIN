@@ -59,6 +59,8 @@ export default function Evento() {
       return data;
     },
     enabled: !!id,
+    staleTime: 1000 * 60 * 5, // 5 minutes - keep fresh for faster navigation
+    gcTime: 1000 * 60 * 30, // 30 minutes cache
   });
 
   const { data: isSaved } = useQuery({
@@ -75,6 +77,7 @@ export default function Evento() {
       return !!data;
     },
     enabled: !!id && !!user,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 
   const updateSelection = (ticketTypeId: string, delta: number) => {

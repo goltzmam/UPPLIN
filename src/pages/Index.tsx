@@ -193,9 +193,9 @@ export default function Index() {
   // MOBILE: Fullscreen TikTok-style feed
   // =====================================================================
   const MobileFeed = () => (
-    <div className="fixed inset-0 z-0 lg:hidden">
+    <div className="fixed inset-0 z-0 lg:hidden w-full h-full overflow-hidden">
       <motion.div 
-        className="absolute inset-0" 
+        className="absolute inset-0 w-full h-full" 
         drag="x" 
         dragConstraints={{ left: 0, right: 0 }} 
         dragElastic={0.2} 
@@ -208,8 +208,8 @@ export default function Index() {
               initial={{ opacity: 0, x: 20 }} 
               animate={{ opacity: 1, x: 0 }} 
               exit={{ opacity: 0, x: -20 }} 
-              transition={{ duration: 0.2, ease: "easeOut" }} 
-              className="h-full"
+              transition={{ duration: 0.15, ease: "easeOut" }} 
+              className="h-full w-full"
             >
               <TikTokFeed 
                 items={feedItems} 
@@ -228,8 +228,8 @@ export default function Index() {
               initial={{ opacity: 0, x: -20 }} 
               animate={{ opacity: 1, x: 0 }} 
               exit={{ opacity: 0, x: 20 }} 
-              transition={{ duration: 0.2, ease: "easeOut" }} 
-              className="h-full bg-background overflow-y-auto pb-20"
+              transition={{ duration: 0.15, ease: "easeOut" }} 
+              className="h-full w-full bg-background overflow-y-auto pb-20"
             >
               <div className="pt-24">
                 <FollowingFeed />

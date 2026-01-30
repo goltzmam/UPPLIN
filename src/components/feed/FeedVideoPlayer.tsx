@@ -199,14 +199,14 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
   }
 
   return (
-    <div className={cn("absolute inset-0", className)} onClick={handleClick}>
-      {/* Cover image as instant background */}
+    <div className={cn("absolute inset-0 w-full h-full", className)} onClick={handleClick}>
+      {/* Cover image as instant background - full screen */}
       {coverUrl && (
         <img
           src={coverUrl}
           alt=""
           className={cn(
-            "absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ease-out",
+            "absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ease-out",
             videoLoaded && !isBuffering ? "opacity-0" : "opacity-100"
           )}
           loading="eager"
@@ -216,8 +216,8 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
 
       {/* Minimal loading indicator */}
       {!videoLoaded && !coverUrl && (
-        <div className="absolute inset-0 flex items-center justify-center bg-zinc-900">
-          <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <div className="absolute inset-0 flex items-center justify-center bg-black">
+          <div className="w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin" />
         </div>
       )}
 
@@ -234,7 +234,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         onCanPlayThrough={handleVideoLoaded}
         onError={handleVideoError}
         className={cn(
-          "absolute inset-0 h-full w-full object-cover",
+          "absolute inset-0 w-full h-full object-cover",
           videoLoaded ? "opacity-100" : "opacity-0"
         )}
         style={{
@@ -242,8 +242,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
           WebkitTransform: 'translate3d(0,0,0)',
           backfaceVisibility: 'hidden',
           WebkitBackfaceVisibility: 'hidden',
-          transition: 'opacity 0.5s ease-out',
-          objectFit: 'cover',
+          transition: 'opacity 0.3s ease-out',
         }}
       />
 
