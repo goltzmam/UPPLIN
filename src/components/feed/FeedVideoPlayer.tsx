@@ -42,38 +42,58 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
 
   const shouldPlay = isActive && !isPaused && !videoError;
 
-  // Robust iOS autoplay with guaranteed pause on inactive
+  // Hard stop function to completely kill video playback and audio
+  const hardStop = useCallback((video: HTMLVideoElement) => {
+    try {
+      video.pause();
+      video.muted = true;
+      video.volume = 0;
+      video.currentTime = 0;
+      // Force teardown of decoders/audio pipeline
+      video.removeAttribute("src");
+      video.load();
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  // Effect to manage play/pause state based on isActive and isPaused
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    // Always hard-stop when leaving active state to avoid any audio leaking.
+    // CRITICAL: Always hard-stop when not active to prevent audio leaks
     if (!isActive) {
       playAttemptRef.current++;
-      try {
-        video.pause();
-        video.muted = true;
-        video.volume = 0;
-        video.currentTime = 0;
-        // Force teardown of decoders/audio pipeline
-        video.removeAttribute("src");
-        video.load();
-      } catch {
-        // ignore
-      }
+      hardStop(video);
       return;
     }
     
+    // Video is active but user paused - stop playback but keep loaded
+    if (isPaused) {
+      playAttemptRef.current++;
+      video.pause();
+      video.muted = true;
+      video.volume = 0;
+      return;
+    }
+    
+    // Video should play
     if (shouldPlay && !videoError) {
       const attemptId = ++playAttemptRef.current;
+      
+      // Restore src if it was removed
+      if (!video.src || video.src === '') {
+        video.src = videoUrl;
+      }
       
       const playWithRetry = async () => {
         if (playAttemptRef.current !== attemptId) return;
         
         try {
-            // Only the active video is allowed to have audio.
-            video.muted = false;
-            video.volume = 1;
+          // Only the active video is allowed to have audio
+          video.muted = false;
+          video.volume = 1;
 
           if (video.readyState < 2) {
             video.load();
@@ -99,25 +119,28 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
       
       const delay = isInCache(videoUrl) ? 0 : 50;
       setTimeout(playWithRetry, delay);
-    } else {
-      // Force pause and reset audio - CRITICAL for fixing the audio bug
-      video.pause();
-      video.muted = true;
-      video.volume = 0;
-      video.currentTime = 0;
     }
     
-    // Cleanup: always pause on unmount or when isActive changes
+    // Cleanup: always stop on unmount or dependency change
     return () => {
       playAttemptRef.current++;
       if (video) {
         video.pause();
         video.muted = true;
         video.volume = 0;
-        video.currentTime = 0;
       }
     };
-  }, [shouldPlay, videoError, videoUrl, isActive]);
+  }, [shouldPlay, videoError, videoUrl, isActive, isPaused, hardStop]);
+
+  // Additional effect specifically to handle when isActive becomes false
+  useEffect(() => {
+    if (!isActive) {
+      const video = videoRef.current;
+      if (video) {
+        hardStop(video);
+      }
+    }
+  }, [isActive, hardStop]);
 
   // Buffering detection
   useEffect(() => {

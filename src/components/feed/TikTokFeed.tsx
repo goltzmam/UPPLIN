@@ -268,7 +268,8 @@ const FeedRow = React.memo(function FeedRow({
         video.muted = true;
         video.volume = 0;
         video.currentTime = 0;
-        // Reset decoding pipeline (helps prevent audio continuing after scroll)
+        // Force teardown of audio/video decoders to prevent lingering audio
+        video.removeAttribute("src");
         video.load();
       } catch {
         // ignore
@@ -288,7 +289,20 @@ const FeedRow = React.memo(function FeedRow({
       return;
     }
 
+    // Active but user paused
+    if (isPaused) {
+      video.pause();
+      video.muted = true;
+      video.volume = 0;
+      return;
+    }
+
     if (shouldPlay) {
+      // Restore src if it was removed
+      if (!video.src || video.src === '') {
+        video.src = item.videoUrl;
+      }
+      
       // Only active video may have sound
       video.muted = false;
       video.volume = 1;
@@ -303,7 +317,7 @@ const FeedRow = React.memo(function FeedRow({
         });
       }
     } else {
-      // Active but paused or error state
+      // Active but not playing
       video.pause();
     }
 
@@ -312,7 +326,7 @@ const FeedRow = React.memo(function FeedRow({
       playAttemptRef.current++;
       hardStop();
     };
-  }, [isActive, shouldPlay, videoError, item.videoUrl]);
+  }, [isActive, shouldPlay, videoError, item.videoUrl, isPaused]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
