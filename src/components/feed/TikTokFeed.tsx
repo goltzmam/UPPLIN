@@ -195,17 +195,14 @@ const ScrollMiniMap = React.memo(function ScrollMiniMap({ current, total, maxVis
 
 const VideoPlaceholder = React.memo(function VideoPlaceholder({ coverUrl, title }: { coverUrl: string | null; title: string }) {
   return (
-    <div className="absolute inset-0 z-[1]">
+    <div className="absolute inset-0 w-full h-full z-[1]">
       {coverUrl ? (
-        <img src={coverUrl} alt={title} className="h-full w-full object-cover" loading="eager" />
+        <img src={coverUrl} alt={title} className="w-full h-full object-cover" loading="eager" />
       ) : (
-        <div className="h-full w-full bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
+        <div className="w-full h-full bg-black" />
       )}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite]" style={{ background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%)' }} />
-      </div>
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-10 h-10 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
       </div>
     </div>
   );
@@ -358,10 +355,10 @@ const FeedRow = React.memo(function FeedRow({
       onDoubleClick={handleDoubleTap} 
       onClick={() => item.videoUrl && !videoError && setIsPaused(p => !p)}
     >
-      <div className="relative w-full h-full">
-        {/* GPU-accelerated media container */}
+      <div className="relative w-full h-full overflow-hidden">
+        {/* GPU-accelerated media container - full screen coverage */}
         <div 
-          className="absolute inset-0" 
+          className="absolute inset-0 w-full h-full" 
           style={{ 
             contain: 'strict',
             transform: 'translateZ(0)',
@@ -370,12 +367,12 @@ const FeedRow = React.memo(function FeedRow({
         >
           {item.videoUrl && !videoError ? (
             <>
-              {/* Cover image as instant background */}
+              {/* Cover image as instant background - full screen */}
               {item.coverImageUrl && (
                 <img 
                   src={item.coverImageUrl} 
                   alt="" 
-                  className="absolute inset-0 h-full w-full object-cover" 
+                  className="absolute inset-0 w-full h-full object-cover" 
                   loading="eager"
                   decoding="async"
                   aria-hidden="true"
@@ -394,7 +391,7 @@ const FeedRow = React.memo(function FeedRow({
                 onCanPlayThrough={() => { setVideoLoaded(true); }}
                 onError={() => { setVideoError(true); setVideoLoaded(false); }}
                 className={cn(
-                  "absolute inset-0 h-full w-full object-cover",
+                  "absolute inset-0 w-full h-full object-cover",
                   videoLoaded ? "opacity-100" : "opacity-0"
                 )}
                 style={{ 
@@ -402,8 +399,7 @@ const FeedRow = React.memo(function FeedRow({
                   WebkitTransform: 'translate3d(0,0,0)',
                   backfaceVisibility: 'hidden',
                   WebkitBackfaceVisibility: 'hidden',
-                  transition: 'opacity 0.4s ease-out',
-                  objectFit: 'cover',
+                  transition: 'opacity 0.3s ease-out',
                 }}
               />
             </>
@@ -411,14 +407,14 @@ const FeedRow = React.memo(function FeedRow({
             <img 
               src={item.coverImageUrl} 
               alt={item.title} 
-              className="absolute inset-0 h-full w-full object-cover" 
+              className="absolute inset-0 w-full h-full object-cover" 
               loading={isActive || shouldPreload ? "eager" : "lazy"} 
               decoding="async"
             />
           ) : (
-            <div className="absolute inset-0 h-full w-full bg-gradient-to-br from-muted to-muted-foreground/20" />
+            <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10 pointer-events-none" />
         </div>
 
         <AnimatePresence>
@@ -757,7 +753,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   }
 
   return (
-    <div className="relative" style={{ height: containerHeight }}>
+    <div className="relative w-full h-full" style={{ height: containerHeight }}>
 
       {/* Pull to refresh indicator */}
       {onRefresh && (
@@ -783,13 +779,13 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="h-full overflow-y-auto overscroll-y-contain scrollbar-hide"
+        className="h-full w-full overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hide"
         style={{
           scrollSnapType: 'y mandatory',
           WebkitOverflowScrolling: 'touch',
           transform: 'translateZ(0)',
           willChange: 'scroll-position',
-          contain: 'layout style paint',
+          contain: 'strict',
         }}
       >
         {items.map((item, index) => {

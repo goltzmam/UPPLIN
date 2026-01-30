@@ -163,29 +163,30 @@ const FeedCard = React.memo(function FeedCard({
         className="relative w-full h-full snap-start snap-always"
         onDoubleClick={handleDoubleTap}
       >
-        {/* Video/Image */}
+        {/* Video/Image - Full screen coverage */}
         {item.videoUrl ? (
           <FeedVideoPlayer
             videoUrl={item.videoUrl}
             coverUrl={item.coverImageUrl}
             isActive={isActive}
+            className="w-full h-full"
           />
         ) : item.coverImageUrl ? (
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 w-full h-full">
             <img 
               src={item.coverImageUrl} 
               alt={item.title} 
-              className="h-full w-full object-cover" 
+              className="w-full h-full object-cover" 
               loading={isActive ? "eager" : "lazy"} 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10 pointer-events-none" />
           </div>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900" />
+          <div className="absolute inset-0 w-full h-full bg-black" />
         )}
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-black/30 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
 
         {/* Double tap heart */}
         <AnimatePresence>
