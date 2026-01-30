@@ -226,6 +226,7 @@ const FeedRow = React.memo(function FeedRow({
   const isActive = index === activeIndex;
   const shouldPreload = Math.abs(index - activeIndex) <= 1;
   const videoRef = useRef<HTMLVideoElement>(null);
+  const playAttemptRef = useRef(0);
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [showLikeParticles, setShowLikeParticles] = useState(false);
@@ -255,47 +256,63 @@ const FeedRow = React.memo(function FeedRow({
   const formattedTime = format(eventDate, "HH:mm");
   const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
-  // CRITICAL: Immediately pause video when not active - fixes audio leak bug
+  // CRITICAL: ensure only the active card can produce audio.
+  // We also cancel any in-flight play() attempt when the card becomes inactive.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    
-    // Always pause immediately when not active - this is the priority check
-    if (!isActive) {
-      video.pause();
-      video.muted = true; // Mute as backup to stop any audio leak
-      video.currentTime = 0;
+
+    const hardStop = () => {
+      try {
+        video.pause();
+        video.muted = true;
+        video.volume = 0;
+        video.currentTime = 0;
+        // Reset decoding pipeline (helps prevent audio continuing after scroll)
+        video.load();
+      } catch {
+        // ignore
+      }
+    };
+
+    // Invalidate any pending play attempt whenever dependencies change
+    const attemptId = ++playAttemptRef.current;
+
+    if (!item.videoUrl || videoError) {
+      hardStop();
       return;
     }
-    
-    // Only play when all conditions are met
-    if (shouldPlay && !videoError && item.videoUrl) {
-      video.muted = false; // Unmute for active video
+
+    if (!isActive) {
+      hardStop();
+      return;
+    }
+
+    if (shouldPlay) {
+      // Only active video may have sound
+      video.muted = false;
+      video.volume = 1;
       const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch((err) => { 
-          if (err.name !== 'AbortError') {
-            console.warn('Video autoplay failed:', err.name);
+      if (playPromise) {
+        playPromise.catch((err) => {
+          // Ignore expected aborts during fast scroll
+          if (playAttemptRef.current !== attemptId) return;
+          if (err?.name !== "AbortError") {
+            console.warn("Video autoplay failed:", err?.name || err);
           }
         });
       }
     } else {
+      // Active but paused or error state
       video.pause();
     }
-  }, [isActive, shouldPlay, videoError, item.videoUrl]);
 
-  // Separate cleanup effect that runs on unmount and when isActive changes to false
-  useEffect(() => {
-    const video = videoRef.current;
-    
     return () => {
-      if (video) {
-        video.pause();
-        video.muted = true;
-        video.currentTime = 0;
-      }
+      // Cancel any pending play and guarantee teardown
+      playAttemptRef.current++;
+      hardStop();
     };
-  }, [isActive]);
+  }, [isActive, shouldPlay, videoError, item.videoUrl]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
@@ -357,6 +374,7 @@ const FeedRow = React.memo(function FeedRow({
                 loop 
                 playsInline
                 webkit-playsinline="true"
+                muted={!isActive}
                 preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
                 onLoadedData={() => { setVideoLoaded(true); setVideoError(false); }}
                 onCanPlayThrough={() => { setVideoLoaded(true); }}
