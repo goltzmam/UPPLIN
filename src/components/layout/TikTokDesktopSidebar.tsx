@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, MapPin, Bookmark, User, LogIn, ArrowUp } from "lucide-react";
+import { Home, MapPin, Bookmark, User, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { FeedSearch } from "@/components/feed/FeedSearch";
@@ -133,17 +133,6 @@ export function TikTokDesktopSidebar() {
           <NavItem to={user ? "/perfil" : "/login"} icon={<User className="h-5 w-5" strokeWidth={1.5} />} label="Perfil" isActive={isActive("/perfil")} />
         </nav>
 
-      {/* Bottom actions - Auth (only show login for non-authenticated users) */}
-        {!user && (
-          <div className="flex flex-col items-center gap-1 pt-4 border-t border-sidebar-border">
-            <NavItem 
-              to="/login" 
-              icon={<LogIn className="h-5 w-5" strokeWidth={1.5} />} 
-              label="Entrar" 
-              isActive={isActive("/login")} 
-            />
-          </div>
-        )}
       </aside>
 
       {/* Search overlay */}
