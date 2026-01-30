@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, MapPin, Bookmark, User, LogOut, LogIn, ArrowUp } from "lucide-react";
+import { Home, MapPin, Bookmark, User, LogIn, ArrowUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { FeedSearch } from "@/components/feed/FeedSearch";
@@ -133,28 +133,17 @@ export function TikTokDesktopSidebar() {
           <NavItem to={user ? "/perfil" : "/login"} icon={<User className="h-5 w-5" strokeWidth={1.5} />} label="Perfil" isActive={isActive("/perfil")} />
         </nav>
 
-      {/* Bottom actions - Auth */}
-        <div className="flex flex-col items-center gap-1 pt-4 border-t border-sidebar-border">
-          {user ? (
-            <button onClick={handleLogout} className="flex flex-col items-center gap-1 py-2 group">
-              <motion.div 
-                whileHover={{ scale: 1.05 }} 
-                whileTap={{ scale: 0.95 }} 
-                className="h-10 w-10 rounded-xl flex items-center justify-center hover:bg-sidebar-accent/60 transition-colors"
-              >
-                <LogOut className="h-5 w-5 text-sidebar-foreground/50 group-hover:text-sidebar-foreground/70" strokeWidth={1.5} />
-              </motion.div>
-              <span className="text-[10px] font-medium text-sidebar-foreground/40">Sair</span>
-            </button>
-          ) : (
+      {/* Bottom actions - Auth (only show login for non-authenticated users) */}
+        {!user && (
+          <div className="flex flex-col items-center gap-1 pt-4 border-t border-sidebar-border">
             <NavItem 
               to="/login" 
               icon={<LogIn className="h-5 w-5" strokeWidth={1.5} />} 
               label="Entrar" 
               isActive={isActive("/login")} 
             />
-          )}
-        </div>
+          </div>
+        )}
       </aside>
 
       {/* Search overlay */}
