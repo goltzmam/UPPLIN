@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 import { Share2, Copy, Check, MessageCircle, Instagram, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,15 +19,16 @@ interface ShareButtonProps {
   strokeWidth?: number;
 }
 
-export function ShareButton({
-  eventId,
-  eventTitle,
-  eventDate,
-  eventImage,
-  className,
-  iconOnly = false,
-  strokeWidth = 2,
-}: ShareButtonProps) {
+export const ShareButton = forwardRef<HTMLButtonElement, ShareButtonProps>(
+  function ShareButton({
+    eventId,
+    eventTitle,
+    eventDate,
+    eventImage,
+    className,
+    iconOnly = false,
+    strokeWidth = 2,
+  }, ref) {
   const [copied, setCopied] = useState(false);
 
   const getEventUrl = () => {
@@ -95,6 +96,7 @@ export function ShareButton({
   if (canNativeShare && iconOnly) {
     return (
       <button
+        ref={ref}
         onClick={handleNativeShare}
         className={className}
         aria-label="Compartilhar evento"
@@ -108,11 +110,11 @@ export function ShareButton({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {iconOnly ? (
-          <button className={className} aria-label="Compartilhar evento">
+          <button ref={ref} className={className} aria-label="Compartilhar evento">
             <Share2 className="h-6 w-6" strokeWidth={strokeWidth} />
           </button>
         ) : (
-          <Button variant="outline" size="sm" className={`hover:border-primary hover:text-primary transition-colors [&_svg]:hover:text-primary ${className}`}>
+          <Button ref={ref} variant="outline" size="sm" className={`hover:border-primary hover:text-primary transition-colors [&_svg]:hover:text-primary ${className}`}>
             <Share2 className="h-4 w-4 mr-2" />
             Compartilhar
           </Button>
@@ -144,4 +146,4 @@ export function ShareButton({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+});
