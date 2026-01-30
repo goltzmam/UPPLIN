@@ -137,19 +137,30 @@ export default function Onboarding() {
         {step === 1 ? (
           <div className="bg-card rounded-3xl shadow-2xl border border-border overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-primary to-accent p-6 text-center">
+            <div className="bg-gradient-to-r from-primary to-accent p-6 text-center" style={{ background: "linear-gradient(135deg, #FF6A00 0%, #FF2D2D 50%, #FF007A 100%)" }}>
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.2, type: "spring" }}
-                className="h-16 w-16 rounded-2xl bg-accent-foreground/20 backdrop-blur flex items-center justify-center mx-auto mb-4"
+                className="mb-4"
               >
-                <CreditCard className="h-8 w-8 text-accent-foreground" />
+                <h2 
+                  className="font-display text-3xl font-bold tracking-tight"
+                  style={{ 
+                    background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+                    WebkitBackgroundClip: "text",
+                    WebkitTextFillColor: "transparent",
+                    backgroundClip: "text",
+                    filter: "brightness(1.5)",
+                  }}
+                >
+                  UPPLIN
+                </h2>
               </motion.div>
-              <h1 className="font-display text-2xl font-bold text-accent-foreground mb-2">
+              <h1 className="font-display text-2xl font-bold text-white mb-2">
                 Complete seu cadastro
               </h1>
-              <p className="text-accent-foreground/80 text-sm">
+              <p className="text-white/80 text-sm">
                 Para sua segurança, precisamos do seu CPF
               </p>
             </div>

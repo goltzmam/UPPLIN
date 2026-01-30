@@ -44,7 +44,21 @@ import ExplorarOrganizadores from "./pages/ExplorarOrganizadores";
 import EventosSalvos from "./pages/EventosSalvos";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 30, // 30 minutes (was cacheTime)
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: 'always',
+      retry: 2,
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    },
+    mutations: {
+      retry: 1,
+    },
+  },
+});
 
 // Animated routes wrapper - smooth fade without flashing
 function AnimatedRoutes() {
