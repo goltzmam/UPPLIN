@@ -244,10 +244,17 @@ export default function OrganizadorCadastro() {
           {/* Mobile Header */}
           <div className="lg:hidden flex flex-col items-center gap-4">
             <Link to="/" className="flex items-center gap-2.5">
-              <div className="h-10 w-10 rounded-xl bg-foreground flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-background" />
-              </div>
-              <span className="font-display text-xl font-bold text-foreground">UPPLIN</span>
+              <span 
+                className="font-display text-2xl font-bold tracking-tight"
+                style={{ 
+                  background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text"
+                }}
+              >
+                UPPLIN
+              </span>
             </Link>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-foreground text-sm font-medium">
               <Building2 className="h-4 w-4" />
