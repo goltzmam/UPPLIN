@@ -1,120 +1,110 @@
 
+## Diagnóstico (por que a UX “antiga” volta)
+Pelo que você descreveu (acontece **no Preview**, em **mobile/desktop/tablet**, e é **aleatório**), isso é praticamente assinatura de **cache/Service Worker entregando uma versão antiga** do app em alguns refreshes.
+
+No seu `vite.config.ts`, existe uma regra que **cacheia navegação (HTML)** com `NetworkFirst` e ainda por cima com `networkTimeoutSeconds: 3`. Isso pode causar exatamente esse comportamento:
+- Se a rede demorar > 3s (ou der uma oscilada), o Service Worker responde com o **HTML do cache** (que pode ser de uma build antiga).
+- Esse HTML antigo referencia bundles/estilos da versão antiga → “volta a UX antiga” e às vezes aparece até erro de runtime por chunks misturados.
+
+Além disso, **no Preview** você está mudando o app o tempo todo; manter Service Worker ativo lá costuma ser receita para inconsistência.
+
 ## Objetivo
-Corrigir de forma definitiva a inconsistência visual (“voltou pro designer antigo”) e o problema de responsividade no mobile/tablet onde a BottomNav está cobrindo o botão/CTA do feed.
+1) **No Preview:** impedir qualquer cache de PWA/SW (sem “voltar versão”).
+2) **No Published:** manter PWA, mas de forma que **não exista chance de voltar UI antiga** (e sem misturar assets).
 
 ---
 
-## O que está acontecendo hoje (diagnóstico)
-1. **O offset do feed está “chutado”**:
-   - O feed usa `--app-bottom-offset` para empurrar os overlays (info do evento + CTA e barra de ações) para cima.
-   - Porém, em `src/pages/Index.tsx` esse valor está fixo em **72px**:
-     ```ts
-     style={{ "--app-bottom-offset": "calc(72px + env(safe-area-inset-bottom, 0px))" }}
-     ```
-   - Só que a BottomNav real (com `pt-4`, labels, safe-area, e principalmente o UP maior) pode ficar **maior que 72px**, então **ela cobre o CTA**.
+## O que vou mudar (alto nível)
+### A) Desativar Service Worker no Preview (fix definitivo para esse ambiente)
+- Ajustar `src/registerSW.ts` para **só registrar SW** no domínio publicado.
+- Em Preview: não registra, e se já tiver SW registrado, **desregistra e limpa caches**.
 
-2. **No desktop, o CTA ainda está no estilo antigo (branco)**:
-   - Em `src/components/feed/DesktopTikTokFeed.tsx` o botão “Comprar” ainda está:
-     ```tsx
-     className="... bg-white text-black ..."
-     ```
-   - Isso dá a sensação de que “voltou pro designer antigo”, porque no PC não está com o degradê da marca.
+Isso remove a causa principal do “volta aleatório” no Preview.
 
----
+### B) Parar de cachear HTML/navegações (ou tornar isso seguro)
+No `vite.config.ts`, vou ajustar o `runtimeCaching` de navegação:
+- Remover `networkTimeoutSeconds: 3` (principal gatilho de “volta aleatório”).
+- Opção mais “garantida”: trocar navegação para `NetworkOnly` (não cacheia HTML).
+  - Resultado: você perde fallback offline do HTML, mas ganha consistência total de versão (prioridade agora).
+- Manter cache para fonts e assets versionados (ok).
 
-## Estratégia de correção (robusta)
-### A) Tornar o `--app-bottom-offset` dinâmico (medido de verdade)
-Em vez de definir 72px no `Index.tsx`, vamos fazer a própria **BottomNav medir a altura real dela** e escrever isso em uma CSS variable global.
+### C) “Build Guard”: detectar versão diferente e forçar atualização (extra blindagem)
+Adicionar um mecanismo simples para nunca ficar preso numa UI antiga:
+- Gerar um arquivo `version.json` a cada build (timestamp/hash).
+- No boot do app (`src/main.tsx`), buscar esse `version.json` com `cache: "no-store"`.
+- Se o valor mudou, então:
+  - limpa `caches`
+  - desregistra SW
+  - recarrega a página
 
-**Onde**: `src/components/layout/BottomNav.tsx`
+Isso cria uma “trava” que impede o cliente de permanecer numa versão antiga por cache.
 
-**Como**:
-- Adicionar `ref` no `<motion.nav ...>` para medir a altura real.
-- Usar `ResizeObserver` (e fallback com `window.resize`) para atualizar em:
-  - troca de orientação (portrait/landscape)
-  - mudanças de safe-area
-  - mudança de layout do botão UP
-- Setar a variável global em `document.documentElement`:
-  - `--app-bottom-offset: <altura-da-bottomnav>px`
-- Quando a BottomNav estiver escondida (rotas hidden) ou desmontar, limpar/setar `--app-bottom-offset` para `0px` para não “sobrar espaço” em outras telas.
-
-**Resultado**: qualquer overlay que use `var(--app-bottom-offset)` fica automaticamente acima da BottomNav, sem precisar ajustar “na mão” e sem quebrar quando você muda o tamanho do UP.
+### D) Tornar update do SW mais agressivo no Published (sem depender só do “onNeedRefresh”)
+No `src/registerSW.ts`:
+- Usar callback `onRegistered` para fazer `registration.update()` em intervalos (ex.: 60–120s) no Published.
+- Logar no console um “Build ID” (para você ver claramente quando mudou de versão).
 
 ---
 
-### B) Remover o hardcode de 72px no MobileFeed
-**Onde**: `src/pages/Index.tsx`
+## Passo a passo de implementação (arquivos)
+1) **`src/registerSW.ts`**
+   - Adicionar detecção de ambiente por hostname:
+     - Se for Preview (ex.: contém `id-preview--` ou `lovableproject.com`), então:
+       - não registrar SW
+       - tentar `navigator.serviceWorker.getRegistrations()` → `unregister()`
+       - limpar `caches`
+   - Se for Published:
+       - registrar normalmente
+       - manter `onNeedRefresh` (limpar caches + reload)
+       - adicionar `onRegistered` com `registration.update()` periódico
 
-**Mudança**:
-- Remover o `style={{ "--app-bottom-offset": "calc(72px + ...)" }}` do wrapper do feed.
-- Deixar o valor ser controlado globalmente pela BottomNav (passo A).
+2) **`vite.config.ts`**
+   - Ajustar `VitePWA.workbox.runtimeCaching` para navegações:
+     - Remover `networkTimeoutSeconds: 3`
+     - Preferencialmente mudar handler para `NetworkOnly` para requests `request.mode === "navigate"`
+   - Manter caches de fonts.
 
-**Resultado**: evita conflito de variáveis (o valor “local” do Index hoje pode sobrescrever o global e manter o bug).
+3) **Gerar `version.json` por build**
+   - Adicionar um pequeno plugin no próprio `vite.config.ts` (sem dependência nova) usando o hook `generateBundle` para criar `version.json` com timestamp.
+   - Garantir que `globPatterns` continue **sem incluir html/json** para não precachear.
 
----
+4) **`src/main.tsx`**
+   - Antes do `createRoot(...).render(<App />)`, rodar `ensureLatestVersion()`:
+     - fetch `/version.json` com `cache: "no-store"`
+     - comparar com `localStorage`
+     - se mudou: limpar caches + unregister SW + `location.reload(true)` (fallback: `location.reload()`)
 
-### C) Ajustar TikTokFeed para depender apenas do offset real
-**Onde**: `src/components/feed/TikTokFeed.tsx`
-
-**Ajustes**:
-- Manter o uso de `var(--app-bottom-offset)` (já está certo), mas trocar os fallbacks “72px” por fallback “0px” (ou garantir que sempre exista).
-- Revalidar os dois pontos principais:
-  1) Barra de ações direita:
-     ```ts
-     bottom: calc(var(--app-bottom-offset) + 40px)
-     ```
-  2) Bloco de info + CTA:
-     ```ts
-     pb-[calc(var(--app-bottom-offset)+20px)]
-     ```
-- Ajustar os “+20px/+40px” se necessário (agora com offset correto, pode reduzir para ficar mais minimalista sem risco de sobrepor).
-
-**Resultado**: no mobile/tablet o CTA nunca fica por baixo da BottomNav.
-
----
-
-### D) Corrigir o “designer antigo” do CTA no DesktopTikTokFeed
-**Onde**: `src/components/feed/DesktopTikTokFeed.tsx`
-
-**Mudança**:
-- Trocar o botão branco (`bg-white text-black`) por **CTA com degradê da marca**, preferencialmente reaproveitando o padrão do projeto:
-  - classe `.btn-gradient` (já existe no `src/index.css`)
-  - ou `Button variant="gradient"` (já existe em `src/components/ui/button.tsx`)
-- Manter UX minimalista:
-  - pill button (rounded-full)
-  - texto branco
-  - hover suave (sem ficar “pesado”)
-
-**Resultado**: desktop fica consistente com o mobile e com a identidade visual (logo/UP).
+5) (Opcional, mas recomendo) **Adicionar um “Resetar cache” escondido**
+   - Um botão em um menu/admin/debug (ou via `?debug=1`) que executa a mesma rotina de limpar caches + unregister + reload.
+   - Isso ajuda quando algum navegador fica “teimoso”.
 
 ---
 
-## Arquivos que serão alterados
-1. `src/components/layout/BottomNav.tsx`
-   - Medição da altura real + escrita do `--app-bottom-offset` global.
-2. `src/pages/Index.tsx`
-   - Remover hardcode do `--app-bottom-offset`.
-3. `src/components/feed/TikTokFeed.tsx`
-   - Garantir cálculos usando offset real e ajustar espaçamentos finais.
-4. `src/components/feed/DesktopTikTokFeed.tsx`
-   - Atualizar CTA “Comprar” do desktop para degradê da marca (remover estilo branco antigo).
+## Como vamos validar (checklist rápido)
+### No Preview (principal)
+1) Abrir Preview no mobile/desktop/tablet.
+2) Confirmar no console: “SW disabled on preview” (vamos adicionar log).
+3) Fazer 2–3 updates pequenos e dar refresh várias vezes:
+   - não pode mais “voltar UX antiga”.
+
+### No Published
+1) Publicar.
+2) Abrir site publicado em 2 dispositivos.
+3) Confirmar no console: buildId atual.
+4) Publicar uma alteração pequena e ver:
+   - ou atualiza sozinho (auto reload)
+   - ou (no pior caso) detecta `version.json` diferente e força refresh “limpo”
+   - sem voltar design antigo.
 
 ---
 
-## Checklist de testes (para garantir que “resolveu de uma vez”)
-1. **Mobile** (rota `/`):
-   - Ver se o botão “Comprar/Participar” não é coberto pela BottomNav.
-   - Testar em iPhone (safe-area) e Android.
-2. **Tablet**:
-   - Testar portrait e landscape (altura do BottomNav muda).
-3. **Desktop**:
-   - Confirmar que o CTA “Comprar” no DesktopTikTokFeed está com o degradê e não branco.
-4. **Rotas onde BottomNav é escondida** (`/checkout`, `/organizador/...`, `/admin`):
-   - Confirmar que o `--app-bottom-offset` vira 0 e não cria espaçamento/bug visual.
+## Riscos / trade-offs (transparentes)
+- Se eu trocar navegação para `NetworkOnly`, o app pode ficar menos “offline-friendly” (mas elimina a regressão de UI por cache de HTML, que hoje está te travando).
+- A limpeza agressiva de caches pode causar 1 reload extra após publish (normal, mas controlado).
 
 ---
 
-## Observações / decisões de UX (mantendo minimalismo)
-- O degradê será aplicado no CTA principal (comprar) para reforçar ação primária.
-- O sistema de offset dinâmico evita “ajustes manuais” a cada alteração do tamanho do UP, labels, paddings ou safe-area.
+## Resultado esperado
+- Preview: “nunca mais volta designer antigo” porque não existe SW/caches interferindo.
+- Published: atualiza com consistência; sem assets misturados e sem regressão de UX após refresh.
 
