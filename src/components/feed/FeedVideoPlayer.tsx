@@ -46,6 +46,23 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    // Always hard-stop when leaving active state to avoid any audio leaking.
+    if (!isActive) {
+      playAttemptRef.current++;
+      try {
+        video.pause();
+        video.muted = true;
+        video.volume = 0;
+        video.currentTime = 0;
+        // Force teardown of decoders/audio pipeline
+        video.removeAttribute("src");
+        video.load();
+      } catch {
+        // ignore
+      }
+      return;
+    }
     
     if (shouldPlay && !videoError) {
       const attemptId = ++playAttemptRef.current;
@@ -54,6 +71,10 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         if (playAttemptRef.current !== attemptId) return;
         
         try {
+            // Only the active video is allowed to have audio.
+            video.muted = false;
+            video.volume = 1;
+
           if (video.readyState < 2) {
             video.load();
             await new Promise(resolve => {
@@ -81,6 +102,8 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     } else {
       // Force pause and reset audio - CRITICAL for fixing the audio bug
       video.pause();
+      video.muted = true;
+      video.volume = 0;
       video.currentTime = 0;
     }
     
@@ -89,6 +112,8 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
       playAttemptRef.current++;
       if (video) {
         video.pause();
+        video.muted = true;
+        video.volume = 0;
         video.currentTime = 0;
       }
     };
@@ -180,6 +205,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         loop
         playsInline
         webkit-playsinline="true"
+        muted={!isActive}
         preload={isActive ? "auto" : "metadata"}
         onLoadedData={handleVideoLoaded}
         onCanPlayThrough={handleVideoLoaded}

@@ -15,9 +15,23 @@ export function setupPWAUpdates() {
     immediate: true,
     onNeedRefresh() {
       // Activate the new SW and reload so we don't run with mixed versions.
+      // Also clear caches to eliminate any stale assets that could resurrect an old UI.
       updateSW(true);
-      // Small delay to let SW take control before reloading.
-      window.setTimeout(() => window.location.reload(), 150);
+
+      const clearCaches = async () => {
+        try {
+          if (!('caches' in window)) return;
+          const keys = await caches.keys();
+          await Promise.all(keys.map((k) => caches.delete(k)));
+        } catch {
+          // ignore
+        }
+      };
+
+      void clearCaches().finally(() => {
+        // Small delay to let SW take control before reloading.
+        window.setTimeout(() => window.location.reload(), 200);
+      });
     },
   });
 }
