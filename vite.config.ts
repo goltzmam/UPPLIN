@@ -42,6 +42,10 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
+        // Prevent stale caches from older deployments causing mixed asset versions.
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}"],
         runtimeCaching: [
           {
