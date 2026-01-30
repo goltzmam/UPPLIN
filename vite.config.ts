@@ -1,8 +1,28 @@
-import { defineConfig } from "vite";
+import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+
+/**
+ * Plugin to generate version.json on each build.
+ * This enables the app to detect when a new version is deployed.
+ */
+function versionPlugin(): Plugin {
+  return {
+    name: "version-plugin",
+    apply: "build",
+    generateBundle() {
+      const buildId = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      this.emitFile({
+        type: "asset",
+        fileName: "version.json",
+        source: JSON.stringify({ buildId, timestamp: new Date().toISOString() }),
+      });
+      console.log(`[Build] Generated version.json with buildId: ${buildId}`);
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -13,6 +33,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
+    versionPlugin(),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt", "pwa-192x192.png", "pwa-512x512.png"],
@@ -47,21 +68,15 @@ export default defineConfig(({ mode }) => ({
         clientsClaim: true,
         skipWaiting: true,
         // Avoid precaching HTML to reduce the chance of serving an older UI shell.
-        // Navigation requests are handled via NetworkFirst below.
         globPatterns: ["**/*.{js,css,ico,png,svg,jpg,jpeg,webp,woff,woff2}"],
+        // Explicitly exclude version.json from precaching
+        globIgnores: ["**/version.json"],
         runtimeCaching: [
           {
-            // SPA navigations: try network first, fall back to cache when offline.
+            // SPA navigations: ALWAYS fetch from network, never cache HTML.
+            // This eliminates the "old UI returns" bug caused by stale HTML.
             urlPattern: ({ request }) => request.mode === "navigate",
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "pages-cache",
-              networkTimeoutSeconds: 3,
-              expiration: {
-                maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24, // 1 day
-              },
-            },
+            handler: "NetworkOnly",
           },
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
