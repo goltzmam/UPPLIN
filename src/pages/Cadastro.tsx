@@ -139,10 +139,17 @@ export default function Cadastro() {
           {/* Mobile Header */}
           <div className="lg:hidden flex flex-col items-center gap-4">
             <Link to="/" className="flex items-center gap-2.5">
-              <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <span className="font-display text-xl font-bold text-foreground">UPPLIN</span>
+              <span 
+                className="font-display text-2xl font-bold tracking-tight"
+                style={{ 
+                  background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text"
+                }}
+              >
+                UPPLIN
+              </span>
             </Link>
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-foreground text-sm font-medium">
               <Ticket className="h-4 w-4" />
@@ -237,9 +244,17 @@ export default function Cadastro() {
       <div className="hidden lg:flex lg:w-1/2 bg-secondary items-center justify-center p-8 xl:p-12">
         <div className="max-w-md text-center text-secondary-foreground">
           <div className="flex justify-center mb-6 sm:mb-8">
-            <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center">
-              <Ticket className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
-            </div>
+            <span 
+              className="font-display text-4xl sm:text-5xl font-bold tracking-tight"
+              style={{ 
+                background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
+            >
+              UPPLIN
+            </span>
           </div>
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">Descubra eventos incríveis</h1>
           <p className="text-sm sm:text-base text-secondary-foreground/70">

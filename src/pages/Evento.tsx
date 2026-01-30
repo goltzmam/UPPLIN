@@ -860,13 +860,16 @@ export default function Evento() {
                   <span className="font-display text-xl font-bold">{formatPrice(totalCents)}</span>
                 </div>
                 <Button
-                  className="w-full"
+                  className="w-full text-white"
                   size="lg"
                   onClick={() => {
                     triggerFeedback({ haptic: "medium", sound: "confirm" });
                     handleCheckout();
                   }}
                   disabled={checkingOut}
+                  style={{
+                    background: "linear-gradient(135deg, #FF6A00 0%, #FF2D2D 50%, #FF007A 100%)",
+                  }}
                 >
                   <Ticket className="h-4 w-4 mr-2" />
                   {checkingOut ? "Processando..." : "Comprar Ingressos"}
