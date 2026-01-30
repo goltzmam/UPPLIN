@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { Search, Calendar, SlidersHorizontal, X, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { Search, Calendar, SlidersHorizontal, X } from "lucide-react";
+import { useState } from "react";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { EventCard } from "@/components/events/EventCard";
@@ -17,7 +17,6 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { cn } from "@/lib/utils";
 import { CategoryPillsSlider } from "@/components/events/CategoryPillsSlider";
 
 const CATEGORIES = [
@@ -77,43 +76,52 @@ export default function Eventos() {
   const hasActiveFilters = search || selectedCategory !== "all";
 
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
+    <div className="min-h-screen flex bg-background text-foreground w-full overflow-x-hidden">
       {/* Desktop Sidebar */}
       <TikTokDesktopSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 pb-20 md:pb-0">
+      <main className="flex-1 min-w-0 pb-24 lg:pb-8">
         {/* Search Header */}
-        <section className="bg-gradient-to-b from-muted/60 to-transparent border-b border-border py-6 sm:py-8 pt-8 sm:pt-10">
-          <div className="max-w-4xl mx-auto px-4">
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-2 text-foreground">Explorar Eventos</h1>
-            <p className="text-muted-foreground text-sm mb-5">Encontre experiências incríveis perto de você</p>
+        <section className="bg-gradient-to-b from-muted/60 to-transparent border-b border-border py-4 sm:py-6 lg:py-8 pt-6 sm:pt-8 lg:pt-10">
+          <div className="w-full max-w-4xl mx-auto px-3 sm:px-4">
+            <h1 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2 text-foreground">
+              Explorar Eventos
+            </h1>
+            <p className="text-muted-foreground text-xs sm:text-sm mb-4 sm:mb-5">
+              Encontre experiências incríveis perto de você
+            </p>
             
-            <div className="flex gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            {/* Search bar */}
+            <div className="flex gap-2 sm:gap-3">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Buscar eventos, artistas, locais..."
-                  className="pl-11 h-11 text-sm rounded-xl bg-muted/60 border-border focus:border-foreground text-foreground placeholder:text-muted-foreground"
+                  placeholder="Buscar eventos..."
+                  className="pl-9 sm:pl-11 h-10 sm:h-11 text-sm rounded-xl bg-muted/60 border-border focus:border-foreground text-foreground placeholder:text-muted-foreground w-full"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
               <Sheet open={showFilters} onOpenChange={setShowFilters}>
                 <SheetTrigger asChild>
-                  <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 relative rounded-xl border-border bg-muted/60 hover:bg-muted text-foreground">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-10 sm:h-11 w-10 sm:w-11 shrink-0 relative rounded-xl border-border bg-muted/60 hover:bg-muted text-foreground"
+                  >
                     <SlidersHorizontal className="h-4 w-4" />
                     {hasActiveFilters && (
                       <span className="absolute -top-1 -right-1 h-3 w-3 bg-primary rounded-full border-2 border-background" />
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent>
+                <SheetContent side="bottom" className="rounded-t-2xl">
                   <SheetHeader>
                     <SheetTitle>Filtros</SheetTitle>
                     <SheetDescription>Filtre os eventos por categoria</SheetDescription>
                   </SheetHeader>
-                  <div className="py-6 space-y-4">
+                  <div className="py-4 sm:py-6 space-y-4">
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Categoria</label>
                       <div className="flex flex-wrap gap-2">
@@ -148,19 +156,21 @@ export default function Eventos() {
             </div>
 
             {/* Category Pills - Draggable Scroll */}
-            <CategoryPillsSlider
-              categories={CATEGORIES}
-              selectedCategory={selectedCategory}
-              onSelectCategory={setSelectedCategory}
-            />
+            <div className="mt-4 -mx-3 sm:-mx-4 px-3 sm:px-4 overflow-hidden">
+              <CategoryPillsSlider
+                categories={CATEGORIES}
+                selectedCategory={selectedCategory}
+                onSelectCategory={setSelectedCategory}
+              />
+            </div>
 
             {/* Active Filters */}
             {hasActiveFilters && (
-              <div className="flex items-center gap-2 mt-3">
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
                 <span className="text-xs text-muted-foreground">Filtros:</span>
                 {search && (
                   <Badge variant="secondary" className="gap-1 text-xs">
-                    Busca: {search}
+                    Busca: {search.length > 15 ? search.slice(0, 15) + "..." : search}
                     <button onClick={() => setSearch("")}>
                       <X className="h-3 w-3" />
                     </button>
@@ -180,12 +190,12 @@ export default function Eventos() {
         </section>
 
         {/* Events Grid */}
-        <section className="py-6 sm:py-8">
-          <div className="max-w-6xl mx-auto px-4">
+        <section className="py-4 sm:py-6 lg:py-8">
+          <div className="w-full max-w-6xl mx-auto px-3 sm:px-4">
             {isLoading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                 {Array.from({ length: 10 }).map((_, i) => (
-                  <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
+                  <div key={i} className="aspect-[3/4] rounded-xl sm:rounded-2xl bg-muted animate-pulse" />
                 ))}
               </div>
             ) : error ? (
@@ -197,10 +207,10 @@ export default function Eventos() {
               />
             ) : filteredEvents && filteredEvents.length > 0 ? (
               <>
-                <p className="text-xs text-muted-foreground mb-4">
+                <p className="text-xs text-muted-foreground mb-3 sm:mb-4">
                   {filteredEvents.length} evento(s) encontrado(s)
                 </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
                   {filteredEvents.map((event: any) => {
                     const minPrice = event.ticket_types?.length
                       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
@@ -231,7 +241,9 @@ export default function Eventos() {
                 description={hasActiveFilters ? "Tente outros filtros ou busca" : "Novos eventos em breve!"}
                 variant="default"
                 action={hasActiveFilters ? (
-                  <Button onClick={clearFilters} className="bg-primary hover:bg-primary/90 text-primary-foreground">Limpar filtros</Button>
+                  <Button onClick={clearFilters} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+                    Limpar filtros
+                  </Button>
                 ) : undefined}
               />
             )}
