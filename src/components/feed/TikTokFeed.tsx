@@ -255,12 +255,12 @@ const FeedRow = React.memo(function FeedRow({
   const formattedTime = format(eventDate, "HH:mm");
   const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
-  // Optimized video autoplay - iOS compatible with smooth transitions and sound
+  // Robust video pause/play - ensures audio stops when not active
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || videoError || !item.videoUrl) return;
+    if (!video || !item.videoUrl) return;
     
-    if (shouldPlay) {
+    if (shouldPlay && !videoError) {
       // Use requestAnimationFrame for smoother start
       requestAnimationFrame(() => {
         if (!videoRef.current) return;
@@ -277,10 +277,19 @@ const FeedRow = React.memo(function FeedRow({
         }
       });
     } else {
-      // Pause smoothly
+      // Force pause and reset to ensure audio stops
       video.pause();
+      video.currentTime = 0;
     }
-  }, [shouldPlay, videoError, item.videoUrl]);
+    
+    // Cleanup: always pause on unmount or when dependencies change
+    return () => {
+      if (video) {
+        video.pause();
+        video.currentTime = 0;
+      }
+    };
+  }, [shouldPlay, videoError, item.videoUrl, isActive]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {

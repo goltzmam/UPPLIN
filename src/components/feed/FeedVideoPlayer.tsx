@@ -42,12 +42,12 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
 
   const shouldPlay = isActive && !isPaused && !videoError;
 
-  // Optimized iOS autoplay with sound
+  // Robust iOS autoplay with guaranteed pause on inactive
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || videoError) return;
+    if (!video) return;
     
-    if (shouldPlay) {
+    if (shouldPlay && !videoError) {
       const attemptId = ++playAttemptRef.current;
       
       const playWithRetry = async () => {
@@ -79,13 +79,20 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
       const delay = isInCache(videoUrl) ? 0 : 50;
       setTimeout(playWithRetry, delay);
     } else {
+      // Force pause and reset audio - CRITICAL for fixing the audio bug
       video.pause();
+      video.currentTime = 0;
     }
     
+    // Cleanup: always pause on unmount or when isActive changes
     return () => {
       playAttemptRef.current++;
+      if (video) {
+        video.pause();
+        video.currentTime = 0;
+      }
     };
-  }, [shouldPlay, videoError, videoUrl]);
+  }, [shouldPlay, videoError, videoUrl, isActive]);
 
   // Buffering detection
   useEffect(() => {
