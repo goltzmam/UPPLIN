@@ -1,4 +1,4 @@
-import { useState, forwardRef } from "react";
+import { useState } from "react";
 import { Share2, Copy, Check, MessageCircle, Instagram, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,16 +19,15 @@ interface ShareButtonProps {
   strokeWidth?: number;
 }
 
-export const ShareButton = forwardRef<HTMLButtonElement, ShareButtonProps>(
-  function ShareButton({
-    eventId,
-    eventTitle,
-    eventDate,
-    eventImage,
-    className,
-    iconOnly = false,
-    strokeWidth = 2,
-  }, ref) {
+export function ShareButton({
+  eventId,
+  eventTitle,
+  eventDate,
+  eventImage,
+  className,
+  iconOnly = false,
+  strokeWidth = 2,
+}: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
 
   const getEventUrl = () => {
@@ -96,7 +95,6 @@ export const ShareButton = forwardRef<HTMLButtonElement, ShareButtonProps>(
   if (canNativeShare && iconOnly) {
     return (
       <button
-        ref={ref}
         onClick={handleNativeShare}
         className={className}
         aria-label="Compartilhar evento"
@@ -110,11 +108,11 @@ export const ShareButton = forwardRef<HTMLButtonElement, ShareButtonProps>(
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {iconOnly ? (
-          <button ref={ref} className={className} aria-label="Compartilhar evento">
+          <button className={className} aria-label="Compartilhar evento">
             <Share2 className="h-6 w-6" strokeWidth={strokeWidth} />
           </button>
         ) : (
-          <Button ref={ref} variant="outline" size="sm" className={`hover:border-primary hover:text-primary transition-colors [&_svg]:hover:text-primary ${className}`}>
+          <Button variant="outline" size="sm" className={`hover:border-primary hover:text-primary transition-colors [&_svg]:hover:text-primary ${className}`}>
             <Share2 className="h-4 w-4 mr-2" />
             Compartilhar
           </Button>
@@ -146,4 +144,4 @@ export const ShareButton = forwardRef<HTMLButtonElement, ShareButtonProps>(
       </DropdownMenuContent>
     </DropdownMenu>
   );
-});
+}
