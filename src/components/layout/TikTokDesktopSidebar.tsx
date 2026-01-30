@@ -144,7 +144,7 @@ export function TikTokDesktopSidebar() {
     <>
       <aside className="hidden lg:flex fixed left-0 top-0 flex-col items-center h-dvh w-[72px] py-4 z-40 bg-sidebar border-r border-sidebar-border">
         {/* Logo - "UP" matching mobile branding */}
-        <Link to="/" className="mb-6">
+        <Link to="/" className="mb-4 shrink-0">
           <span 
             className="font-display text-2xl font-bold"
             style={{ 
@@ -156,8 +156,8 @@ export function TikTokDesktopSidebar() {
           >UP</span>
         </Link>
 
-        {/* Main Navigation - Matching mobile exactly */}
-        <nav className="flex-1 flex flex-col items-center gap-1">
+        {/* Main Navigation - Scrollable if needed */}
+        <nav className="flex-1 flex flex-col items-center gap-0.5 overflow-y-auto overflow-x-hidden min-h-0">
           {/* Início */}
           <NavItem
             to="/"
@@ -193,8 +193,8 @@ export function TikTokDesktopSidebar() {
           />
         </nav>
 
-        {/* Bottom actions - Auth */}
-        <div className="flex flex-col items-center gap-1 pt-4 border-t border-sidebar-border">
+        {/* Bottom actions - Auth - Always visible */}
+        <div className="flex flex-col items-center gap-0.5 pt-3 mt-auto border-t border-sidebar-border shrink-0">
           {user ? (
             <button
               onClick={handleLogout}
