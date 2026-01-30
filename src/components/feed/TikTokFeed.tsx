@@ -255,41 +255,47 @@ const FeedRow = React.memo(function FeedRow({
   const formattedTime = format(eventDate, "HH:mm");
   const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
-  // Robust video pause/play - ensures audio stops when not active
+  // CRITICAL: Immediately pause video when not active - fixes audio leak bug
   useEffect(() => {
     const video = videoRef.current;
-    if (!video || !item.videoUrl) return;
+    if (!video) return;
     
-    if (shouldPlay && !videoError) {
-      // Use requestAnimationFrame for smoother start
-      requestAnimationFrame(() => {
-        if (!videoRef.current) return;
-        
-        videoRef.current.playbackRate = 1.0;
-        
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => { 
-            if (err.name !== 'AbortError') {
-              console.warn('Video autoplay failed:', err.name);
-            }
-          });
-        }
-      });
-    } else {
-      // Force pause and reset to ensure audio stops
+    // Always pause immediately when not active - this is the priority check
+    if (!isActive) {
       video.pause();
+      video.muted = true; // Mute as backup to stop any audio leak
       video.currentTime = 0;
+      return;
     }
     
-    // Cleanup: always pause on unmount or when dependencies change
+    // Only play when all conditions are met
+    if (shouldPlay && !videoError && item.videoUrl) {
+      video.muted = false; // Unmute for active video
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise.catch((err) => { 
+          if (err.name !== 'AbortError') {
+            console.warn('Video autoplay failed:', err.name);
+          }
+        });
+      }
+    } else {
+      video.pause();
+    }
+  }, [isActive, shouldPlay, videoError, item.videoUrl]);
+
+  // Separate cleanup effect that runs on unmount and when isActive changes to false
+  useEffect(() => {
+    const video = videoRef.current;
+    
     return () => {
       if (video) {
         video.pause();
+        video.muted = true;
         video.currentTime = 0;
       }
     };
-  }, [shouldPlay, videoError, item.videoUrl, isActive]);
+  }, [isActive]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
