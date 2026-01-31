@@ -13,6 +13,7 @@ interface SavedEvent {
   id: string;
   event: {
     id: string;
+    slug: string | null;
     title: string;
     cover_image_url: string | null;
     start_at: string;
@@ -33,6 +34,7 @@ export function SavedEventsTab() {
           id,
           events:event_id (
             id,
+            slug,
             title,
             cover_image_url,
             start_at,
@@ -82,7 +84,7 @@ export function SavedEventsTab() {
           : null;
 
         return (
-          <Link key={id} to={`/evento/${event.id}`}>
+          <Link key={id} to={`/evento/${event.slug || event.id}`}>
             <div className="flex gap-3 p-3 bg-card border border-border rounded-xl hover:border-primary/50 transition-colors">
               {/* Event Image */}
               <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">

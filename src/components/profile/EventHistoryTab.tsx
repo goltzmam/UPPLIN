@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 
 interface EventWithTicket {
   id: string;
+  slug: string | null;
   title: string;
   cover_image_url: string | null;
   start_at: string;
@@ -38,6 +39,7 @@ export function EventHistoryTab() {
           event_id,
           events:event_id (
             id,
+            slug,
             title,
             cover_image_url,
             start_at,
@@ -72,6 +74,7 @@ export function EventHistoryTab() {
         } else {
           eventMap.set(eventId, {
             id: ticket.events.id,
+            slug: ticket.events.slug,
             title: ticket.events.title,
             cover_image_url: ticket.events.cover_image_url,
             start_at: ticket.events.start_at,
@@ -163,7 +166,7 @@ function EventCard({
   const isPastEvent = variant === "past";
 
   return (
-    <Link to={`/evento/${event.id}`}>
+    <Link to={`/evento/${event.slug || event.id}`}>
       <div className="flex gap-3 p-3 bg-card border border-border rounded-xl hover:border-primary/50 transition-colors">
         {/* Event Image */}
         <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">

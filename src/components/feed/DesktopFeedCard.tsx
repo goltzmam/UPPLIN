@@ -25,6 +25,7 @@ import { ShareButton } from "@/components/events/ShareButton";
 
 interface FeedItem {
   id: string;
+  slug?: string | null;
   title: string;
   coverImageUrl: string | null;
   videoUrl?: string | null;
@@ -129,6 +130,7 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
   const formattedTime = format(eventDate, "HH:mm");
   const formatPrice = (cents: number) =>
     cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
+  const eventUrl = `/evento/${item.slug || item.id}`;
 
   // Click-to-play/pause video
   useEffect(() => {
@@ -415,9 +417,8 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
           </span>
         </div>
 
-        {/* Event Info */}
         <div className="mt-1 px-1">
-          <Link to={`/evento/${item.id}`} className="group">
+          <Link to={eventUrl} className="group">
             <span className="font-semibold text-sm mr-1.5 group-hover:text-primary transition-colors">
               {item.organizerName}
             </span>

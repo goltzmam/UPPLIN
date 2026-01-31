@@ -17,6 +17,7 @@ import { FeedVideoPlayer } from "./FeedVideoPlayer";
 
 interface TikTokFeedItem {
   id: string;
+  slug?: string | null;
   title: string;
   coverImageUrl: string | null;
   videoUrl?: string | null;
@@ -179,6 +180,7 @@ const FeedRow = React.memo(function FeedRow({
   const formattedDate = format(eventDate, "d MMM", { locale: ptBR });
   const formattedTime = format(eventDate, "HH:mm");
   const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
+  const eventUrl = `/evento/${item.slug || item.id}`;
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
@@ -351,7 +353,7 @@ const FeedRow = React.memo(function FeedRow({
                   className="inline-block rounded-full"
                 >
                   <Link 
-                    to={`/evento/${item.id}`} 
+                    to={eventUrl}
                     onClick={(e) => {
                       e.stopPropagation();
                       triggerFeedback({ haptic: "medium", sound: "tap" });

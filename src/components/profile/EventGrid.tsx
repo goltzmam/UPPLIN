@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 
 interface Event {
   id: string;
+  slug?: string | null;
   title: string;
   cover_image_url: string | null;
   start_at: string;
@@ -26,7 +27,7 @@ export function EventGrid({ events }: EventGridProps) {
           transition={{ duration: 0.2, delay: index * 0.05 }}
         >
           <Link
-            to={`/evento/${event.id}`}
+            to={`/evento/${event.slug || event.id}`}
             className="block relative aspect-square overflow-hidden rounded-sm sm:rounded-lg group"
           >
             {event.cover_image_url ? (

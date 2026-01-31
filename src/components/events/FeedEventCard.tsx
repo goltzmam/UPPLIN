@@ -8,6 +8,7 @@ import { useState } from "react";
 
 interface FeedEventCardProps {
   id: string;
+  slug?: string | null;
   title: string;
   coverImageUrl: string | null;
   startAt: string;
@@ -21,6 +22,7 @@ interface FeedEventCardProps {
 
 export function FeedEventCard({
   id,
+  slug,
   title,
   coverImageUrl,
   startAt,
@@ -31,6 +33,7 @@ export function FeedEventCard({
   minPrice = 0,
   index = 0,
 }: FeedEventCardProps) {
+  const eventUrl = `/evento/${slug || id}`;
   const [isLiked, setIsLiked] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [showHeart, setShowHeart] = useState(false);
@@ -60,7 +63,7 @@ export function FeedEventCard({
       className="feed-card group"
       onDoubleClick={handleDoubleTap}
     >
-      <Link to={`/evento/${id}`} className="block h-full">
+      <Link to={eventUrl} className="block h-full">
         {/* Cover Image */}
         <div className="absolute inset-0">
           {coverImageUrl ? (

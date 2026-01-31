@@ -48,12 +48,21 @@ export default function Evento() {
   const { data: event, isLoading, error } = useQuery({
     queryKey: ["event", id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Try to find by slug first, then by UUID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
+      
+      let query = supabase
         .from("events")
         .select(`*, ticket_types(*), organizer_accounts!organizer_id(*), event_media(*)`)
-        .eq("id", id)
-        .eq("status", "published")
-        .maybeSingle();
+        .eq("status", "published");
+      
+      if (isUUID) {
+        query = query.eq("id", id);
+      } else {
+        query = query.eq("slug", id);
+      }
+      
+      const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
       return data;

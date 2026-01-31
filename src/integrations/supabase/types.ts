@@ -349,6 +349,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           organizer_id: string
+          slug: string | null
           start_at: string
           status: Database["public"]["Enums"]["event_status"] | null
           title: string
@@ -369,6 +370,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           organizer_id: string
+          slug?: string | null
           start_at: string
           status?: Database["public"]["Enums"]["event_status"] | null
           title: string
@@ -389,6 +391,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           organizer_id?: string
+          slug?: string | null
           start_at?: string
           status?: Database["public"]["Enums"]["event_status"] | null
           title?: string

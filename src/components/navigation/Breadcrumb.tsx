@@ -98,10 +98,11 @@ export function useBreadcrumbs(): BreadcrumbItem[] {
     currentPath += `/${segment}`;
     const isLast = index === pathSegments.length - 1;
     
-    // Skip UUID-like segments for display but keep in path
+    // Skip UUID-like segments or slug-like segments for display but keep in path
     const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(segment);
+    const isEventSlug = /^[a-z0-9-]+-\d{4}$/i.test(segment); // Match slug pattern like "festa-do-ano-1234"
     
-    if (!isUUID) {
+    if (!isUUID && !isEventSlug) {
       items.push({
         label: routeLabels[segment] || segment.charAt(0).toUpperCase() + segment.slice(1),
         href: isLast ? undefined : currentPath,
