@@ -55,6 +55,8 @@ export default function Eventos() {
       if (error) throw error;
       return data;
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes - events list doesn't need real-time updates
+    gcTime: 1000 * 60 * 30,
   });
 
   const filteredEvents = events?.filter(event => {

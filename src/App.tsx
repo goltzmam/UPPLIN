@@ -61,8 +61,8 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5,
-      gcTime: 1000 * 60 * 60,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      gcTime: 1000 * 60 * 60, // 1 hour
       refetchOnWindowFocus: false,
       refetchOnReconnect: false,
       refetchOnMount: false,
@@ -72,6 +72,7 @@ const queryClient = new QueryClient({
     },
     mutations: {
       retry: 0,
+      networkMode: 'offlineFirst',
     },
   },
 });
