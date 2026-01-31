@@ -1,11 +1,11 @@
-import { Link } from "react-router-dom";
-import { Grid3X3, Heart, Settings, Ticket } from "lucide-react";
+import { Heart, Settings, Camera, CheckCircle, Users, History } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PageLoading } from "@/components/ui/loading";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
 import { ProfileSettings } from "./ProfileSettings";
-import { EventGrid } from "./EventGrid";
+import { UserPostsTab } from "./UserPostsTab";
+import { CheckInsTab } from "./CheckInsTab";
+import { EventHistoryTab } from "./EventHistoryTab";
+import { FollowingTab } from "./FollowingTab";
+import { SavedEventsTab } from "./SavedEventsTab";
 
 interface Profile {
   id: string;
@@ -18,92 +18,86 @@ interface Profile {
 
 interface ProfileTabsProps {
   defaultTab: string;
-  attendedEvents: any[];
-  savedEvents: any[];
-  attendedLoading: boolean;
-  savedLoading: boolean;
   profile: Profile;
   onProfileUpdate: (updates: Partial<Profile>) => Promise<{ error: any }>;
 }
 
 export function ProfileTabs({
   defaultTab,
-  attendedEvents,
-  savedEvents,
-  attendedLoading,
-  savedLoading,
   profile,
   onProfileUpdate,
 }: ProfileTabsProps) {
   return (
     <div className="container py-4">
       <Tabs defaultValue={defaultTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-3 bg-muted/50 border border-border rounded-xl p-1">
+        <TabsList className="grid w-full grid-cols-6 bg-muted/50 border border-border rounded-xl p-1 h-auto">
           <TabsTrigger 
-            value="eventos" 
-            className="flex items-center gap-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+            value="historico" 
+            className="flex flex-col items-center gap-1 py-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
           >
-            <Grid3X3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Eventos</span>
+            <History className="h-4 w-4" />
+            <span className="text-[10px] sm:text-xs">Eventos</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="posts" 
+            className="flex flex-col items-center gap-1 py-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+          >
+            <Camera className="h-4 w-4" />
+            <span className="text-[10px] sm:text-xs">Posts</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="checkins" 
+            className="flex flex-col items-center gap-1 py-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+          >
+            <CheckCircle className="h-4 w-4" />
+            <span className="text-[10px] sm:text-xs">Check-ins</span>
           </TabsTrigger>
           <TabsTrigger 
             value="salvos" 
-            className="flex items-center gap-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-1 py-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
           >
             <Heart className="h-4 w-4" />
-            <span className="hidden sm:inline">Salvos</span>
+            <span className="text-[10px] sm:text-xs">Salvos</span>
+          </TabsTrigger>
+          <TabsTrigger 
+            value="seguindo" 
+            className="flex flex-col items-center gap-1 py-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+          >
+            <Users className="h-4 w-4" />
+            <span className="text-[10px] sm:text-xs">Seguindo</span>
           </TabsTrigger>
           <TabsTrigger 
             value="config" 
-            className="flex items-center gap-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+            className="flex flex-col items-center gap-1 py-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
           >
             <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">Config</span>
+            <span className="text-[10px] sm:text-xs">Config</span>
           </TabsTrigger>
         </TabsList>
 
-        {/* Eventos Tab - Grid of attended events */}
-        <TabsContent value="eventos" className="animate-fade-in">
-          {attendedLoading ? (
-            <PageLoading />
-          ) : attendedEvents.length > 0 ? (
-            <EventGrid events={attendedEvents.map(t => t.events).filter(Boolean)} />
-          ) : (
-            <EmptyState
-              icon={<Ticket className="h-8 w-8 text-accent" />}
-              title="Nenhum evento ainda"
-              description="Seus eventos aparecerão aqui"
-              variant="default"
-              action={
-                <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Link to="/eventos">Explorar Eventos</Link>
-                </Button>
-              }
-              className="py-12"
-            />
-          )}
+        {/* Histórico de Eventos Tab */}
+        <TabsContent value="historico" className="animate-fade-in">
+          <EventHistoryTab />
+        </TabsContent>
+
+        {/* Posts Tab */}
+        <TabsContent value="posts" className="animate-fade-in">
+          <UserPostsTab />
+        </TabsContent>
+
+        {/* Check-ins Tab */}
+        <TabsContent value="checkins" className="animate-fade-in">
+          <CheckInsTab />
         </TabsContent>
 
         {/* Salvos Tab */}
         <TabsContent value="salvos" className="animate-fade-in">
-          {savedLoading ? (
-            <PageLoading />
-          ) : savedEvents.length > 0 ? (
-            <EventGrid events={savedEvents.map(s => s.events).filter(Boolean)} />
-          ) : (
-            <EmptyState
-              icon={<Heart className="h-8 w-8 text-accent" />}
-              title="Nenhum evento salvo"
-              description="Salve eventos para acompanhá-los"
-              variant="default"
-              action={
-                <Button asChild className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                  <Link to="/eventos">Explorar Eventos</Link>
-                </Button>
-              }
-              className="py-12"
-            />
-          )}
+          <SavedEventsTab />
+        </TabsContent>
+
+        {/* Seguindo Tab */}
+        <TabsContent value="seguindo" className="animate-fade-in">
+          <FollowingTab />
         </TabsContent>
 
         {/* Config Tab */}
