@@ -44,6 +44,12 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminChats from "./pages/admin/AdminChats";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminEvents from "./pages/admin/AdminEvents";
+import AdminOrders from "./pages/admin/AdminOrders";
+import AdminCpf from "./pages/admin/AdminCpf";
+import AdminSettings from "./pages/admin/AdminSettings";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 // Other imports
 import Precos from "./pages/Precos";
@@ -174,6 +180,12 @@ function AnimatedRoutes() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="chats" element={<AdminChats />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="events" element={<AdminEvents />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="cpf" element={<AdminCpf />} />
+            <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="settings" element={<AdminSettings />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
