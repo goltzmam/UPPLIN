@@ -62,50 +62,45 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     const video = videoRef.current;
     if (!video) return;
 
+    const attemptId = ++playAttemptRef.current;
+
     // CRITICAL: Always hard-stop when not active to prevent audio leaks
     if (!isActive) {
-      playAttemptRef.current++;
       hardStop(video);
+      setVideoLoaded(false);
       return;
     }
     
-    // Video is active but user paused - stop playback but keep loaded
+    // Video is active but user paused - full stop
     if (isPaused) {
-      playAttemptRef.current++;
-      // On mobile browsers, pause+mute can still leak audio; do a full teardown.
       hardStop(video);
-      // Ensure the cover is shown again while paused.
       setVideoLoaded(false);
-      setIsBuffering(false);
       return;
     }
     
     // Video should play
     if (shouldPlay && !videoError) {
-      const attemptId = ++playAttemptRef.current;
-      
       // Restore src if it was removed
       if (!video.src || video.src === '') {
         video.src = videoUrl;
       }
       
-      const playWithRetry = async () => {
+      video.muted = false;
+      video.volume = 1;
+      
+      const playVideo = async () => {
         if (playAttemptRef.current !== attemptId) return;
         
         try {
-          // Only the active video is allowed to have audio
-          video.muted = false;
-          video.volume = 1;
-
           if (video.readyState < 2) {
             video.load();
-            await new Promise(resolve => {
+            await new Promise<void>(resolve => {
               const onCanPlay = () => {
                 video.removeEventListener('canplay', onCanPlay);
-                resolve(undefined);
+                resolve();
               };
               video.addEventListener('canplay', onCanPlay);
-              setTimeout(resolve, 1000);
+              setTimeout(resolve, 800);
             });
           }
           
@@ -120,10 +115,10 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
       };
       
       const delay = isInCache(videoUrl) ? 0 : 50;
-      setTimeout(playWithRetry, delay);
+      setTimeout(playVideo, delay);
     }
     
-    // Cleanup: always stop on unmount or dependency change
+    // Cleanup: always stop on dependency change
     return () => {
       playAttemptRef.current++;
       if (video) {

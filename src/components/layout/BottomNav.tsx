@@ -40,20 +40,23 @@ export function BottomNav() {
 
   // Measure actual height and set global CSS variable
   useEffect(() => {
+    // Set a sensible default immediately
+    document.documentElement.style.setProperty('--app-bottom-offset', '80px');
+    
+    if (shouldHide) {
+      document.documentElement.style.setProperty('--app-bottom-offset', '0px');
+      return;
+    }
+
     const updateOffset = () => {
-      if (shouldHide) {
-        document.documentElement.style.setProperty('--app-bottom-offset', '0px');
-        return;
-      }
-      
       if (navRef.current) {
         const height = navRef.current.offsetHeight;
         document.documentElement.style.setProperty('--app-bottom-offset', `${height}px`);
       }
     };
 
-    // Initial measurement
-    updateOffset();
+    // Delay initial measurement to ensure layout is complete
+    const timeoutId = setTimeout(updateOffset, 50);
 
     // Use ResizeObserver for dynamic updates
     const resizeObserver = new ResizeObserver(updateOffset);
@@ -61,14 +64,12 @@ export function BottomNav() {
       resizeObserver.observe(navRef.current);
     }
 
-    // Also listen to window resize for orientation changes
     window.addEventListener('resize', updateOffset);
 
     return () => {
+      clearTimeout(timeoutId);
       resizeObserver.disconnect();
       window.removeEventListener('resize', updateOffset);
-      // Reset offset when component unmounts
-      document.documentElement.style.setProperty('--app-bottom-offset', '0px');
     };
   }, [shouldHide]);
   

@@ -100,18 +100,6 @@ export default function Index() {
     await new Promise(resolve => setTimeout(resolve, 400));
   }, [queryClient]);
 
-  const handleDragEnd = useCallback((event: MouseEvent | TouchEvent | PointerEvent, info: {
-    offset: { x: number };
-    velocity: { x: number };
-  }) => {
-    const swipeThreshold = 50;
-    const velocityThreshold = 500;
-    if (info.offset.x > swipeThreshold || info.velocity.x > velocityThreshold) {
-      setActiveTab("following");
-    } else if (info.offset.x < -swipeThreshold || info.velocity.x < -velocityThreshold) {
-      setActiveTab("foryou");
-    }
-  }, []);
 
   // Shared Header Component for both mobile and desktop
   const FeedHeader = ({ isDesktop = false }: { isDesktop?: boolean }) => (
@@ -194,50 +182,42 @@ export default function Index() {
   // =====================================================================
   const MobileFeed = () => (
     <div className="fixed inset-0 z-0 lg:hidden w-full h-full overflow-hidden">
-      <motion.div 
-        className="absolute inset-0 w-full h-full" 
-        drag="x" 
-        dragConstraints={{ left: 0, right: 0 }} 
-        dragElastic={0.2} 
-        onDragEnd={handleDragEnd}
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          {activeTab === "foryou" ? (
-            <motion.div 
-              key="foryou-mobile" 
-              initial={{ opacity: 0, x: 20 }} 
-              animate={{ opacity: 1, x: 0 }} 
-              exit={{ opacity: 0, x: -20 }} 
-              transition={{ duration: 0.15, ease: "easeOut" }} 
-              className="h-full w-full"
-            >
-              <TikTokFeed 
-                items={feedItems} 
-                isLoading={isLoading} 
-                onLoadMore={fetchNextPage} 
-                hasMore={!!hasNextPage} 
-                isLoadingMore={isFetchingNextPage} 
-                scrollPosition={scrollPosRef.current} 
-                onScrollChange={pos => { scrollPosRef.current = pos; }} 
-                onRefresh={handleRefresh} 
-              />
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="following-mobile" 
-              initial={{ opacity: 0, x: -20 }} 
-              animate={{ opacity: 1, x: 0 }} 
-              exit={{ opacity: 0, x: 20 }} 
-              transition={{ duration: 0.15, ease: "easeOut" }} 
-              className="h-full w-full bg-background overflow-y-auto pb-20"
-            >
-              <div className="pt-24">
-                <FollowingFeed />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
+      <AnimatePresence mode="wait" initial={false}>
+        {activeTab === "foryou" ? (
+          <motion.div 
+            key="foryou-mobile" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            transition={{ duration: 0.1 }} 
+            className="h-full w-full"
+          >
+            <TikTokFeed 
+              items={feedItems} 
+              isLoading={isLoading} 
+              onLoadMore={fetchNextPage} 
+              hasMore={!!hasNextPage} 
+              isLoadingMore={isFetchingNextPage} 
+              scrollPosition={scrollPosRef.current} 
+              onScrollChange={pos => { scrollPosRef.current = pos; }} 
+              onRefresh={handleRefresh} 
+            />
+          </motion.div>
+        ) : (
+          <motion.div 
+            key="following-mobile" 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            exit={{ opacity: 0 }} 
+            transition={{ duration: 0.1 }} 
+            className="h-full w-full bg-background overflow-y-auto pb-20"
+          >
+            <div className="pt-24">
+              <FollowingFeed />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <FeedHeader />
       <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />

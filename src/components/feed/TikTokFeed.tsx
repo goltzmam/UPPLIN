@@ -256,7 +256,6 @@ const FeedRow = React.memo(function FeedRow({
   const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
   // CRITICAL: ensure only the active card can produce audio.
-  // We also cancel any in-flight play() attempt when the card becomes inactive.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -267,48 +266,45 @@ const FeedRow = React.memo(function FeedRow({
         video.muted = true;
         video.volume = 0;
         video.currentTime = 0;
-        // Force teardown of audio/video decoders to prevent lingering audio
         video.removeAttribute("src");
         video.load();
       } catch {
         // ignore
       }
+      setVideoLoaded(false);
     };
 
-    // Invalidate any pending play attempt whenever dependencies change
+    // Always invalidate pending play attempts
     const attemptId = ++playAttemptRef.current;
 
+    // No video URL or error
     if (!item.videoUrl || videoError) {
       hardStop();
       return;
     }
 
-    if (!isActive) {
+    // Not active - kill immediately
+    if (!isActive || pauseAll) {
       hardStop();
       return;
     }
 
     // Active but user paused
     if (isPaused) {
-      // Full teardown to prevent lingering audio on iOS/Android.
-      setVideoLoaded(false);
       hardStop();
       return;
     }
 
+    // Should play
     if (shouldPlay) {
-      // Restore src if it was removed
       if (!video.src || video.src === '') {
         video.src = item.videoUrl;
       }
-      
-      // Only active video may have sound
       video.muted = false;
       video.volume = 1;
       const playPromise = video.play();
       if (playPromise) {
         playPromise.catch((err) => {
-          // Ignore expected aborts during fast scroll
           if (playAttemptRef.current !== attemptId) return;
           if (err?.name !== "AbortError") {
             console.warn("Video autoplay failed:", err?.name || err);
@@ -316,16 +312,14 @@ const FeedRow = React.memo(function FeedRow({
         });
       }
     } else {
-      // Active but not playing
       video.pause();
     }
 
     return () => {
-      // Cancel any pending play and guarantee teardown
       playAttemptRef.current++;
       hardStop();
     };
-  }, [isActive, shouldPlay, videoError, item.videoUrl, isPaused]);
+  }, [isActive, shouldPlay, videoError, item.videoUrl, isPaused, pauseAll]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
@@ -363,12 +357,7 @@ const FeedRow = React.memo(function FeedRow({
       <div className="relative w-full h-full overflow-hidden">
         {/* GPU-accelerated media container - full screen coverage */}
         <div 
-          className="absolute inset-0 w-full h-full" 
-          style={{ 
-            contain: 'strict',
-            transform: 'translateZ(0)',
-            willChange: isActive ? 'auto' : 'transform',
-          }}
+          className="absolute inset-0 w-full h-full"
         >
           {item.videoUrl && !videoError ? (
             <>
@@ -443,7 +432,7 @@ const FeedRow = React.memo(function FeedRow({
         </AnimatePresence>
 
         {/* Right side action bar - TikTok style - positioned near navbar */}
-        <div className="absolute right-3 z-10 flex flex-col items-center gap-4" style={{ bottom: 'calc(var(--app-bottom-offset, 0px) + 48px)' }}>
+        <div className="absolute right-3 z-10 flex flex-col items-center gap-4" style={{ bottom: 'calc(var(--app-bottom-offset, 80px) + 100px)' }}>
           {/* Organizer avatar with follow indicator */}
           <button 
             onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (item.organizerId) navigate(`/organizador/${item.organizerId}`); }}
@@ -512,7 +501,7 @@ const FeedRow = React.memo(function FeedRow({
         </div>
 
         {/* Bottom event info - minimalist */}
-        <div className="absolute bottom-0 left-0 right-16 p-3 pb-[calc(var(--app-bottom-offset,0px)+24px)] z-10">
+        <div className="absolute bottom-0 left-0 right-16 p-3 z-10" style={{ paddingBottom: 'calc(var(--app-bottom-offset, 80px) + 16px)' }}>
           {/* Organizer */}
           <span className="text-white/70 text-xs font-medium block mb-0.5">
             {item.organizerName || "Organizador"}
@@ -799,20 +788,17 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
         </div>
       )}
 
-      {/* Native scroll container with CSS snap - GPU accelerated */}
+      {/* Native scroll container with CSS snap */}
       <div
         ref={containerRef}
         onScroll={handleScroll}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        className="h-full w-full overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hide"
+        className="h-full w-full overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hide touch-pan-y"
         style={{
           scrollSnapType: 'y mandatory',
           WebkitOverflowScrolling: 'touch',
-          transform: 'translateZ(0)',
-          willChange: 'scroll-position',
-          contain: 'strict',
         }}
       >
         {items.map((item, index) => {
