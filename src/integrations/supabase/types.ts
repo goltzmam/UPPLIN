@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_action_logs: {
+        Row: {
+          action_type: string
+          admin_user_id: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          reason: string | null
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          action_type: string
+          admin_user_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          reason?: string | null
+          target_id?: string
+          target_type?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
@@ -699,6 +732,10 @@ export type Database = {
           full_name: string | null
           id: string
           photo_url: string | null
+          status: string | null
+          suspended_at: string | null
+          suspended_by: string | null
+          suspended_reason: string | null
           updated_at: string | null
         }
         Insert: {
@@ -710,6 +747,10 @@ export type Database = {
           full_name?: string | null
           id: string
           photo_url?: string | null
+          status?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -721,6 +762,10 @@ export type Database = {
           full_name?: string | null
           id?: string
           photo_url?: string | null
+          status?: string | null
+          suspended_at?: string | null
+          suspended_by?: string | null
+          suspended_reason?: string | null
           updated_at?: string | null
         }
         Relationships: []

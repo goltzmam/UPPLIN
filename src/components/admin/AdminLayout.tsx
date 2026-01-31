@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
-import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings } from "lucide-react";
+import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/chats", label: "Central de Mensagens", icon: MessageCircle },
   { href: "/admin/users", label: "Usuários", icon: Users },
   { href: "/admin/events", label: "Eventos", icon: Calendar },
