@@ -5,6 +5,28 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 /**
+ * Plugin to inject BUILD_TIMESTAMP in development mode.
+ * This enables the app to detect code changes in Lovable preview.
+ */
+function devBuildTimestampPlugin(): Plugin {
+  return {
+    name: "dev-build-timestamp",
+    apply: "serve", // Only in development
+    transformIndexHtml() {
+      const timestamp = Date.now().toString();
+      return [
+        {
+          tag: "script",
+          attrs: { type: "module" },
+          children: `window.__BUILD_TIMESTAMP__ = "${timestamp}";`,
+          injectTo: "head-prepend",
+        },
+      ];
+    },
+  };
+}
+
+/**
  * Plugin to generate version.json on each build.
  * This enables the app to detect when a new version is deployed.
  */
@@ -33,6 +55,7 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     mode === "development" && componentTagger(),
+    devBuildTimestampPlugin(),
     versionPlugin(),
     VitePWA({
       registerType: "autoUpdate",
