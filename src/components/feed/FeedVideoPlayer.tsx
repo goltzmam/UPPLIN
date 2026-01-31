@@ -7,74 +7,60 @@ interface FeedVideoPlayerProps {
   videoUrl: string;
   coverUrl: string | null;
   isActive: boolean;
+  forceStop?: boolean; // External control to force stop playback
   className?: string;
 }
 
-// Lightweight video cache to prevent reloading
-const videoCache = new Map<string, boolean>();
-const MAX_CACHE_SIZE = 10;
-
-function addToCache(url: string) {
-  if (videoCache.size >= MAX_CACHE_SIZE) {
-    const firstKey = videoCache.keys().next().value;
-    if (firstKey) videoCache.delete(firstKey);
+// Hard stop function to completely kill video playback and audio
+function hardStop(video: HTMLVideoElement) {
+  try {
+    video.pause();
+    video.muted = true;
+    video.volume = 0;
+    video.currentTime = 0;
+    // Force teardown of decoders/audio pipeline
+    video.removeAttribute("src");
+    video.load();
+  } catch {
+    // ignore
   }
-  videoCache.set(url, true);
-}
-
-function isInCache(url: string): boolean {
-  return videoCache.has(url);
 }
 
 export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
   videoUrl,
   coverUrl,
   isActive,
+  forceStop = false,
   className,
 }: FeedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPaused, setIsPaused] = useState(false);
-  const [videoLoaded, setVideoLoaded] = useState(() => isInCache(videoUrl));
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const [showPauseIcon, setShowPauseIcon] = useState(false);
   const playAttemptRef = useRef<number>(0);
 
-  const shouldPlay = isActive && !isPaused && !videoError;
+  const shouldPlay = isActive && !isPaused && !videoError && !forceStop;
 
-  // Hard stop function to completely kill video playback and audio
-  const hardStop = useCallback((video: HTMLVideoElement) => {
-    try {
-      video.pause();
-      video.muted = true;
-      video.volume = 0;
-      video.currentTime = 0;
-      // Force teardown of decoders/audio pipeline
-      video.removeAttribute("src");
-      video.load();
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  // Effect to manage play/pause state based on isActive and isPaused
+  // Main effect to manage play/pause state
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const attemptId = ++playAttemptRef.current;
 
-    // CRITICAL: Always hard-stop when not active to prevent audio leaks
-    if (!isActive) {
+    // CRITICAL: Always hard-stop when not active or force stopped
+    if (!isActive || forceStop) {
       hardStop(video);
       setVideoLoaded(false);
       return;
     }
     
-    // Video is active but user paused - full stop
+    // Video is active but user paused
     if (isPaused) {
-      hardStop(video);
-      setVideoLoaded(false);
+      video.pause();
+      video.muted = true;
       return;
     }
     
@@ -100,7 +86,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
                 resolve();
               };
               video.addEventListener('canplay', onCanPlay);
-              setTimeout(resolve, 800);
+              setTimeout(resolve, 500);
             });
           }
           
@@ -109,27 +95,26 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
           video.playbackRate = 1.0;
           await video.play();
         } catch (err: any) {
-          if (err.name === 'AbortError') return;
-          console.warn('Video autoplay failed:', err.name);
+          if (err?.name === 'AbortError') return;
+          console.warn('Video autoplay failed:', err?.name);
         }
       };
       
-      const delay = isInCache(videoUrl) ? 0 : 50;
-      setTimeout(playVideo, delay);
+      // Small delay to let the DOM settle
+      requestAnimationFrame(() => {
+        if (playAttemptRef.current === attemptId) {
+          playVideo();
+        }
+      });
     }
     
     // Cleanup: always stop on dependency change
     return () => {
       playAttemptRef.current++;
-      if (video) {
-        video.pause();
-        video.muted = true;
-        video.volume = 0;
-      }
     };
-  }, [shouldPlay, videoError, videoUrl, isActive, isPaused, hardStop]);
+  }, [shouldPlay, videoError, videoUrl, isActive, isPaused, forceStop]);
 
-  // Kill audio pipeline when tab/app loses visibility (prevents background audio leaks)
+  // Kill audio pipeline when tab/app loses visibility
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -144,17 +129,18 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
 
     document.addEventListener("visibilitychange", onVisibilityChange);
     return () => document.removeEventListener("visibilitychange", onVisibilityChange);
-  }, [hardStop]);
+  }, []);
 
-  // Additional effect specifically to handle when isActive becomes false
+  // Immediate hard stop when isActive or forceStop changes to false/true
   useEffect(() => {
-    if (!isActive) {
+    if (!isActive || forceStop) {
       const video = videoRef.current;
       if (video) {
         hardStop(video);
+        setVideoLoaded(false);
       }
     }
-  }, [isActive, hardStop]);
+  }, [isActive, forceStop]);
 
   // Buffering detection
   useEffect(() => {
@@ -177,7 +163,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
   }, []);
 
   const handleClick = useCallback(() => {
-    if (videoError) return;
+    if (videoError || forceStop) return;
     
     setIsPaused((p) => {
       const newPaused = !p;
@@ -185,7 +171,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
       setTimeout(() => setShowPauseIcon(false), 800);
       return newPaused;
     });
-  }, [videoError]);
+  }, [videoError, forceStop]);
 
   const handleVideoError = useCallback(() => {
     setVideoError(true);
@@ -197,8 +183,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     setVideoLoaded(true);
     setVideoError(false);
     setIsBuffering(false);
-    addToCache(videoUrl);
-  }, [videoUrl]);
+  }, []);
 
   if (videoError) {
     return (
@@ -214,14 +199,14 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
 
   return (
     <div className={cn("absolute inset-0 w-full h-full", className)} onClick={handleClick}>
-      {/* Cover image as instant background - full screen */}
+      {/* Cover image as instant background */}
       {coverUrl && (
         <img
           src={coverUrl}
           alt=""
           className={cn(
             "absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ease-out",
-            videoLoaded && !isBuffering ? "opacity-0" : "opacity-100"
+            videoLoaded && !isBuffering && !isPaused ? "opacity-0" : "opacity-100"
           )}
           loading="eager"
           aria-hidden="true"
@@ -235,15 +220,15 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         </div>
       )}
 
-      {/* Video element - optimized for iOS with sound */}
+      {/* Video element */}
       <video
         ref={videoRef}
-        src={isActive ? videoUrl : undefined}
+        src={isActive && !forceStop ? videoUrl : undefined}
         loop
         playsInline
         webkit-playsinline="true"
-        muted={!isActive}
-        preload={isActive ? "auto" : "metadata"}
+        muted={!isActive || forceStop}
+        preload={isActive ? "auto" : "none"}
         onLoadedData={handleVideoLoaded}
         onCanPlayThrough={handleVideoLoaded}
         onError={handleVideoError}

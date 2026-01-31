@@ -12,6 +12,8 @@
 
 @layer base {
   :root {
+    /* Safe bottom offset for mobile navigation - CSS fallback */
+    --app-bottom-offset: 100px;
     /* Force dark mode - Base: Pure Black */
     --background: 0 0% 0%;
     --foreground: 0 0% 98%;
