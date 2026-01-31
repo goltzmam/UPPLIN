@@ -5,7 +5,19 @@ import { setupPWAUpdates } from "./registerSW";
 import { ensureLatestVersion, clearAllCaches, unregisterAllSW } from "./lib/version-check";
 
 /**
- * Detects if we're in a preview/development environment
+ * Detects if we're in a Lovable preview environment
+ * This works even in DEV mode when running inside Lovable's preview iframe
+ */
+function isLovablePreview(): boolean {
+  const hostname = window.location.hostname;
+  return (
+    hostname.includes("lovableproject.com") ||
+    hostname.includes("id-preview--")
+  );
+}
+
+/**
+ * Detects if we're in any preview/development environment
  */
 function isPreviewEnvironment(): boolean {
   const hostname = window.location.hostname;
@@ -19,12 +31,27 @@ function isPreviewEnvironment(): boolean {
 
 /**
  * Aggressive cleanup for preview environment to prevent stale UI
+ * This runs ALWAYS in Lovable preview, even in DEV mode
  */
 async function cleanupPreview(): Promise<void> {
   try {
-    await unregisterAllSW();
-    await clearAllCaches();
-    console.log("[Preview] Cleaned up caches and service workers");
+    // Clear React Query cache if available
+    if (typeof window !== "undefined" && "caches" in window) {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+      console.log("[Preview] Cleared browser caches:", keys.length);
+    }
+    
+    // Unregister any service workers
+    if ("serviceWorker" in navigator) {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map((reg) => reg.unregister()));
+      if (registrations.length > 0) {
+        console.log("[Preview] Unregistered service workers:", registrations.length);
+      }
+    }
+    
+    console.log("[Preview] Cleanup complete");
   } catch (e) {
     console.warn("[Preview] Cleanup error:", e);
   }
@@ -37,15 +64,22 @@ if (window.location.search.includes("debug=reset")) {
   });
 }
 
-// Main initialization
+// Main initialization - runs cleanup in Lovable preview ALWAYS (even in DEV mode)
 (async () => {
-  // In preview: always clean up stale caches first
-  if (isPreviewEnvironment()) {
+  // In Lovable preview: ALWAYS clean up to prevent stale UI
+  // This is critical because Lovable rebuilds the app frequently
+  if (isLovablePreview()) {
+    await cleanupPreview();
+  } else if (isPreviewEnvironment()) {
+    // Other preview environments (localhost, etc.)
     await cleanupPreview();
   }
   
-  // Then check version and render
-  await ensureLatestVersion();
+  // Only run version check in production (not DEV mode)
+  if (!import.meta.env.DEV) {
+    await ensureLatestVersion();
+  }
+  
   setupPWAUpdates();
   createRoot(document.getElementById("root")!).render(<App />);
 })();
