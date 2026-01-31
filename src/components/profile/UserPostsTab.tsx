@@ -19,6 +19,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PostLikeButton } from "./PostLikeButton";
+import { PostComments } from "./PostComments";
 
 interface UserPost {
   id: string;
@@ -43,6 +45,7 @@ export function UserPostsTab() {
   const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: posts = [], isLoading } = useQuery({
@@ -356,7 +359,7 @@ export function UserPostsTab() {
                 {post.events && (
                   <Link
                     to={`/evento/${post.events.id}`}
-                    className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                    className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors mb-3"
                   >
                     {post.events.cover_image_url && (
                       <img
@@ -368,6 +371,26 @@ export function UserPostsTab() {
                     <span className="text-sm font-medium">{post.events.title}</span>
                   </Link>
                 )}
+
+                {/* Like and Comment Actions */}
+                <div className="flex items-center gap-2 pt-2 border-t border-border">
+                  <PostLikeButton postId={post.id} />
+                  <PostComments
+                    postId={post.id}
+                    isExpanded={expandedComments.has(post.id)}
+                    onToggle={() => {
+                      setExpandedComments((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(post.id)) {
+                          next.delete(post.id);
+                        } else {
+                          next.add(post.id);
+                        }
+                        return next;
+                      });
+                    }}
+                  />
+                </div>
               </CardContent>
             </Card>
           ))}

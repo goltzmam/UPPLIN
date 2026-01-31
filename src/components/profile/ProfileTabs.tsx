@@ -1,4 +1,4 @@
-import { Heart, Settings, Camera, CheckCircle, Users, History } from "lucide-react";
+import { Heart, Settings, Camera, CheckCircle, Users, History, Newspaper } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSettings } from "./ProfileSettings";
 import { UserPostsTab } from "./UserPostsTab";
@@ -6,6 +6,7 @@ import { CheckInsTab } from "./CheckInsTab";
 import { EventHistoryTab } from "./EventHistoryTab";
 import { FollowingTab } from "./FollowingTab";
 import { SavedEventsTab } from "./SavedEventsTab";
+import { SocialFeedTab } from "./SocialFeedTab";
 
 interface Profile {
   id: string;
@@ -30,7 +31,14 @@ export function ProfileTabs({
   return (
     <div className="container py-4">
       <Tabs defaultValue={defaultTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6 bg-muted/50 border border-border rounded-xl p-1 h-auto">
+        <TabsList className="grid w-full grid-cols-7 bg-muted/50 border border-border rounded-xl p-1 h-auto">
+          <TabsTrigger 
+            value="feed" 
+            className="flex flex-col items-center gap-1 py-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+          >
+            <Newspaper className="h-4 w-4" />
+            <span className="text-[10px] sm:text-xs">Feed</span>
+          </TabsTrigger>
           <TabsTrigger 
             value="historico" 
             className="flex flex-col items-center gap-1 py-2 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
@@ -74,6 +82,11 @@ export function ProfileTabs({
             <span className="text-[10px] sm:text-xs">Config</span>
           </TabsTrigger>
         </TabsList>
+
+        {/* Feed Social Tab */}
+        <TabsContent value="feed" className="animate-fade-in">
+          <SocialFeedTab />
+        </TabsContent>
 
         {/* Histórico de Eventos Tab */}
         <TabsContent value="historico" className="animate-fade-in">
