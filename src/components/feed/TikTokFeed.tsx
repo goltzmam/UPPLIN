@@ -410,7 +410,10 @@ const FeedRow = React.memo(function FeedRow({
 export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMore, scrollPosition = 0, onScrollChange, onRefresh }: TikTokFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
-  const [containerHeight, setContainerHeight] = useState(0);
+  // Initialize with window.innerHeight to prevent zero-height flash
+  const [containerHeight, setContainerHeight] = useState(() => 
+    typeof window !== 'undefined' ? window.innerHeight : 800
+  );
   const [activeIndex, setActiveIndex] = useState(() => {
     try {
       const cached = sessionStorage.getItem(SCROLL_POSITION_KEY);
@@ -425,19 +428,14 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   const [isRefreshing, setIsRefreshing] = useState(false);
   const touchStartY = useRef(0);
 
-  // Measure container height - use window.innerHeight as reliable source
+  // Update container height on resize
   useEffect(() => {
     const updateHeight = () => {
-      // Use window.innerHeight directly - most reliable on all devices
       const height = window.innerHeight;
-      if (height > 0) {
+      if (height > 0 && height !== containerHeight) {
         setContainerHeight(height);
       }
     };
-    
-    // Initial measurement with small delay to ensure DOM is ready
-    updateHeight();
-    requestAnimationFrame(updateHeight);
     
     window.addEventListener('resize', updateHeight);
     window.addEventListener('orientationchange', updateHeight);
@@ -446,11 +444,11 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
       window.removeEventListener('resize', updateHeight);
       window.removeEventListener('orientationchange', updateHeight);
     };
-  }, []);
+  }, [containerHeight]);
 
   // IntersectionObserver for active item detection (replaces scroll handler)
   useEffect(() => {
-    if (containerHeight === 0) return;
+    if (!containerRef.current) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -573,10 +571,8 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeIndex, containerHeight]);
 
-  // Always use 100dvh fallback if containerHeight is not set yet
-  const displayHeight = containerHeight > 0 ? containerHeight : '100dvh';
-  
-  if (isLoading) return <div style={{ height: displayHeight }}><FeedSkeleton /></div>;
+  // Use actual containerHeight (already initialized with window.innerHeight)
+  if (isLoading) return <div style={{ height: containerHeight }}><FeedSkeleton /></div>;
 
   if (items.length === 0) {
     return (
@@ -593,7 +589,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   }
 
   return (
-    <div className="relative w-full h-full" style={{ height: displayHeight }}>
+    <div className="relative w-full h-full" style={{ height: containerHeight }}>
       {/* Pull to refresh indicator */}
       {onRefresh && (
         <div className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
@@ -635,7 +631,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
                 if (el) itemRefs.current.set(index, el);
                 else itemRefs.current.delete(index);
               }}
-              style={{ height: containerHeight > 0 ? containerHeight : '100dvh' }}
+              style={{ height: containerHeight }}
               className="snap-start snap-always"
             >
               {isVisible ? (
