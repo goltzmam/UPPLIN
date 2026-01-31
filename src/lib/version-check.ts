@@ -31,20 +31,9 @@ export async function ensureLatestVersion(): Promise<void> {
     return;
   }
 
-  // In preview environment, do periodic cleanup every 30 seconds
-  if (isPreviewEnvironment()) {
-    const lastCleanup = parseInt(localStorage.getItem(LAST_CLEANUP_KEY) || "0", 10);
-    const now = Date.now();
-    
-    // Force cleanup every 30 seconds in preview
-    if (now - lastCleanup > 30000) {
-      console.log("[Version] Preview cleanup triggered");
-      localStorage.setItem(LAST_CLEANUP_KEY, now.toString());
-      await clearAllCaches();
-      await unregisterAllSW();
-    }
-    return;
-  }
+  // Preview environment: never auto-clear caches/SW (it causes reload loops/flicker).
+  // Any necessary cleanup is handled once by the preview runtime.
+  if (isPreviewEnvironment()) return;
 
   // Published environment: check version.json
   try {
