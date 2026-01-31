@@ -425,12 +425,27 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   const [isRefreshing, setIsRefreshing] = useState(false);
   const touchStartY = useRef(0);
 
-  // Measure container height
+  // Measure container height - use window.innerHeight as reliable source
   useEffect(() => {
-    const updateHeight = () => setContainerHeight(window.innerHeight);
+    const updateHeight = () => {
+      // Use window.innerHeight directly - most reliable on all devices
+      const height = window.innerHeight;
+      if (height > 0) {
+        setContainerHeight(height);
+      }
+    };
+    
+    // Initial measurement with small delay to ensure DOM is ready
     updateHeight();
+    requestAnimationFrame(updateHeight);
+    
     window.addEventListener('resize', updateHeight);
-    return () => window.removeEventListener('resize', updateHeight);
+    window.addEventListener('orientationchange', updateHeight);
+    
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+      window.removeEventListener('orientationchange', updateHeight);
+    };
   }, []);
 
   // IntersectionObserver for active item detection (replaces scroll handler)
@@ -558,7 +573,10 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [activeIndex, containerHeight]);
 
-  if (isLoading || containerHeight === 0) return <div style={{ height: containerHeight || '100dvh' }}><FeedSkeleton /></div>;
+  // Always use 100dvh fallback if containerHeight is not set yet
+  const displayHeight = containerHeight > 0 ? containerHeight : '100dvh';
+  
+  if (isLoading) return <div style={{ height: displayHeight }}><FeedSkeleton /></div>;
 
   if (items.length === 0) {
     return (
@@ -575,7 +593,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   }
 
   return (
-    <div className="relative w-full h-full" style={{ height: containerHeight }}>
+    <div className="relative w-full h-full" style={{ height: displayHeight }}>
       {/* Pull to refresh indicator */}
       {onRefresh && (
         <div className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
@@ -617,7 +635,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
                 if (el) itemRefs.current.set(index, el);
                 else itemRefs.current.delete(index);
               }}
-              style={{ height: containerHeight }}
+              style={{ height: containerHeight > 0 ? containerHeight : '100dvh' }}
               className="snap-start snap-always"
             >
               {isVisible ? (
