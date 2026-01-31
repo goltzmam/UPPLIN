@@ -1,162 +1,185 @@
 
-# Plano: Corrigir Bug de UI Antiga Persistindo no Preview Após Publish
+# Plano: Corrigir Todos os Bugs da Plataforma
 
-## Problema Identificado
+## Problemas Identificados
 
-O Preview do Lovable usa Vite em modo desenvolvimento (DEV), onde:
-- Nao existe `version.json` (so e gerado no build de producao)
-- A logica de limpeza de cache em `main.tsx` pula quando `import.meta.env.DEV === true`
-- Quando voce alterna entre Preview e Published, o navegador mantem cache de modulos/estado antigo
+### 1. Feed nao rola / trava (PC, Android, iPhone)
+**Causa**: O componente TikTokFeed.tsx tem 842 linhas com logica excessivamente complexa. O scroll esta sendo interceptado pelo handler `handleScroll` que chama `setPauseAll(true)` a cada frame, causando re-renders constantes.
+
+### 2. Audio do video tocando sozinho
+**Causa**: Existem DUAS implementacoes de video player separadas:
+- `FeedRow` no TikTokFeed.tsx (mobile) - tem logica de video inline
+- `FeedVideoPlayer.tsx` (desktop) - componente separado
+
+A logica de `hardStop` nao esta sendo propagada corretamente entre as duas implementacoes.
+
+### 3. Secoes travando (Eventos, Explorar, Perfil)
+**Causa**: O AnimatePresence no Index.tsx e App.tsx esta causando conflitos de re-render. A cada mudanca de aba, todos os componentes sao desmontados/remontados.
+
+### 4. Navbar cobrindo o feed
+**Causa**: O calculo de `--app-bottom-offset` esta com timing incorreto. O valor padrao de `80px` nao e suficiente, e o ResizeObserver esta atrasando a medicao.
 
 ## Solucao Tecnica
 
-### Abordagem: "Build Timestamp Reload"
+### Fase 1: Simplificar o Feed (Prioridade Maxima)
 
-1. Injetar um timestamp de build via Vite que muda a cada hot reload
-2. Comparar esse timestamp com o armazenado em sessionStorage
-3. Se diferente, limpar React Query cache e forcar reload da pagina
-
-### Arquivos a Modificar
-
-#### 1. `vite.config.ts`
-Adicionar um plugin que injeta `BUILD_TIMESTAMP` como variavel global em tempo de desenvolvimento:
+**TikTokFeed.tsx** - Refatoracao cirurgica:
+- Remover o `pauseAll` state que causa travamentos
+- Usar IntersectionObserver ao inves de scroll handler para detectar item ativo
+- Delegar TODA logica de video para FeedVideoPlayer
+- Remover video inline do FeedRow
 
 ```text
-+----------------------------------+
-|  Vite Dev Server (HMR)           |
-|  - Gera BUILD_TIMESTAMP a cada   |
-|    reload do modulo              |
-+----------------------------------+
-          |
-          v
-+----------------------------------+
-|  main.tsx                        |
-|  - Compara BUILD_TIMESTAMP com   |
-|    sessionStorage                |
-|  - Se diferente: limpa tudo      |
-|    e recarrega                   |
-+----------------------------------+
+ANTES (bugado):
++------------------+
+|   TikTokFeed     |
+|   - pauseAll     | <-- Estado que causa re-renders
+|   - handleScroll | <-- Throttle 16ms muito frequente
+|   - FeedRow      |
+|     - <video>    | <-- Video duplicado inline
+|     - hardStop   | <-- Logica duplicada
++------------------+
+
+DEPOIS (corrigido):
++------------------+
+|   TikTokFeed     |
+|   - activeIndex  | <-- Apenas um estado
+|   - Intersection | <-- Observer passivo
+|   - FeedRow      |
+|     - FeedVideo  | <-- Componente unico
+|       Player     |    
++------------------+
 ```
 
-#### 2. `src/main.tsx`
-Adicionar logica de verificacao de timestamp:
-- Ler `window.__BUILD_TIMESTAMP__` (injetado pelo Vite)
-- Comparar com `sessionStorage.getItem('upplin_build_ts')`
-- Se diferente: limpar caches e forcar `window.location.reload()`
+### Fase 2: Unificar Video Player
 
-#### 3. `src/lib/version-check.ts`
-Adicionar funcao para limpar React Query cache globalmente:
-- Acessar o QueryClient via referencia global
-- Chamar `queryClient.clear()` para limpar cache em memoria
+**FeedVideoPlayer.tsx** - Unica fonte de verdade para audio/video:
+- Garantir que `hardStop` limpe completamente o pipeline de audio
+- Adicionar `pauseAll` como prop externa (nao estado interno)
+- Mover toda logica de visibilitychange para ca
 
-### Fluxo de Funcionamento
+### Fase 3: Corrigir Layout da Navbar
 
-```text
-Usuario faz alteracao no codigo
-              |
-              v
-Lovable rebuilda o projeto
-              |
-              v
-Vite injeta novo BUILD_TIMESTAMP
-              |
-              v
-main.tsx detecta mudanca de timestamp
-              |
-              v
-Limpa: Cache Storage + SW + React Query + sessionStorage
-              |
-              v
-window.location.reload() - UI fresca
-```
+**BottomNav.tsx**:
+- Aumentar offset padrao para `100px` (mais seguro)
+- Usar `calc(env(safe-area-inset-bottom) + 80px)` como fallback CSS puro
+- Remover dependencia de ResizeObserver para valor inicial
+
+**TikTokFeed.tsx** - Ajustar posicionamento:
+- Usar `pb-[120px]` fixo no container do conteudo
+- Garantir que action bar e info overlay usem offset correto
+
+### Fase 4: Simplificar Transicoes de Pagina
+
+**Index.tsx**:
+- Remover AnimatePresence desnecessario nas abas
+- Usar transicao CSS simples ao inves de Framer Motion
+
+**App.tsx**:
+- Manter AnimatePresence apenas para rotas, nao para conteudo interno
+
+## Arquivos a Modificar
+
+| Arquivo | Alteracoes |
+|---------|-----------|
+| `src/components/feed/TikTokFeed.tsx` | Remover pauseAll, usar IntersectionObserver, delegar video para FeedVideoPlayer |
+| `src/components/feed/FeedVideoPlayer.tsx` | Adicionar prop forceStop, melhorar hardStop |
+| `src/components/layout/BottomNav.tsx` | Aumentar offset padrao, CSS fallback |
+| `src/pages/Index.tsx` | Simplificar transicoes, remover AnimatePresence das abas |
+| `src/index.css` | Adicionar --app-bottom-offset fallback global |
 
 ## Detalhes de Implementacao
 
-### `vite.config.ts`
-- Criar plugin `devBuildTimestampPlugin` que:
-  - So roda em modo desenvolvimento
-  - Injeta `window.__BUILD_TIMESTAMP__` no HTML via `transformIndexHtml`
+### TikTokFeed.tsx - Mudancas Principais
 
-### `src/main.tsx`
-- Antes de `createRoot()`:
-  - Verificar se `window.__BUILD_TIMESTAMP__` existe
-  - Comparar com valor em `sessionStorage`
-  - Se diferente, executar limpeza completa e reload
-
-### `src/App.tsx`
-- Expor o `queryClient` como variavel global para limpeza externa:
-  - `window.__QUERY_CLIENT__ = queryClient`
-
-### `src/lib/version-check.ts`
-- Adicionar `clearReactQueryCache()`:
-  - Acessar `window.__QUERY_CLIENT__`
-  - Chamar `.clear()` se disponivel
-
-## Beneficios
-
-1. **Corrige o bug definitivamente**: UI sempre atualizada no Preview
-2. **Funciona em modo DEV**: Nao depende de `version.json`
-3. **Minimo overhead**: So executa quando ha mudanca real
-4. **Sem impacto em producao**: Plugin so ativo em desenvolvimento
-
-## Secao Tecnica
-
-### Codigo do Plugin Vite (vite.config.ts)
+1. Substituir scroll handler por IntersectionObserver:
 
 ```typescript
-function devBuildTimestampPlugin(): Plugin {
-  return {
-    name: "dev-build-timestamp",
-    apply: "serve", // Apenas em modo desenvolvimento
-    transformIndexHtml() {
-      const timestamp = Date.now().toString();
-      return [
-        {
-          tag: "script",
-          attrs: { type: "module" },
-          children: `window.__BUILD_TIMESTAMP__ = "${timestamp}";`,
-          injectTo: "head-prepend",
-        },
-      ];
+// REMOVER: pauseAll state e pauseAllTimeoutRef
+// REMOVER: handleScrollRaw com setPauseAll
+
+// ADICIONAR: IntersectionObserver para detectar item ativo
+useEffect(() => {
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
+          const index = parseInt(entry.target.getAttribute("data-index") || "0");
+          setActiveIndex(index);
+        }
+      });
     },
-  };
-}
+    { threshold: 0.7 }
+  );
+  // Observar cada item do feed
+}, []);
 ```
 
-### Codigo de Verificacao (main.tsx)
+2. Simplificar FeedRow para usar FeedVideoPlayer:
 
 ```typescript
-const BUILD_TS_KEY = "upplin_build_ts";
+// REMOVER: videoRef, hardStop inline, useEffect de video
+// USAR: <FeedVideoPlayer isActive={isActive} forceStop={false} />
+```
 
-async function ensureFreshBuild(): Promise<void> {
-  const currentTs = (window as any).__BUILD_TIMESTAMP__;
-  if (!currentTs) return; // Nao em dev ou nao injetado
-  
-  const storedTs = sessionStorage.getItem(BUILD_TS_KEY);
-  
-  if (storedTs && storedTs !== currentTs) {
-    console.log("[Build] Nova versao detectada, limpando cache...");
-    sessionStorage.setItem(BUILD_TS_KEY, currentTs);
-    
-    await clearAllCaches();
-    await unregisterAllSW();
-    clearReactQueryCache();
-    
-    window.location.reload();
-    return;
-  }
-  
-  if (!storedTs) {
-    sessionStorage.setItem(BUILD_TS_KEY, currentTs);
+### BottomNav.tsx - CSS Fallback
+
+```css
+/* Fallback global em index.css */
+:root {
+  --app-bottom-offset: 100px;
+}
+
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  :root {
+    --app-bottom-offset: calc(80px + env(safe-area-inset-bottom, 0px));
   }
 }
 ```
 
-### Arquivos Modificados
+### FeedVideoPlayer.tsx - forceStop Prop
 
-| Arquivo | Tipo de Alteracao |
-|---------|------------------|
-| `vite.config.ts` | Adicionar plugin `devBuildTimestampPlugin` |
-| `src/main.tsx` | Adicionar `ensureFreshBuild()` no inicio |
-| `src/App.tsx` | Expor `queryClient` como `window.__QUERY_CLIENT__` |
-| `src/lib/version-check.ts` | Adicionar `clearReactQueryCache()` |
+```typescript
+interface FeedVideoPlayerProps {
+  videoUrl: string;
+  coverUrl: string | null;
+  isActive: boolean;
+  forceStop?: boolean; // Nova prop para controle externo
+  className?: string;
+}
+
+// No useEffect principal:
+if (!isActive || forceStop) {
+  hardStop(video);
+  return;
+}
+```
+
+### Index.tsx - Transicoes Simplificadas
+
+```typescript
+// REMOVER: AnimatePresence nas abas
+// USAR: transicao CSS simples
+<div className={cn(
+  "h-full w-full transition-opacity duration-150",
+  activeTab === "foryou" ? "opacity-100" : "opacity-0 absolute"
+)}>
+  <TikTokFeed ... />
+</div>
+```
+
+## Ordem de Execucao
+
+1. index.css - Adicionar CSS fallback para offset
+2. BottomNav.tsx - Aumentar offset padrao
+3. FeedVideoPlayer.tsx - Adicionar forceStop prop
+4. TikTokFeed.tsx - Refatorar para usar IntersectionObserver e FeedVideoPlayer
+5. Index.tsx - Simplificar transicoes
+
+## Beneficios Esperados
+
+- Feed rola suavemente sem travamentos
+- Audio para imediatamente ao trocar de video
+- Navbar nao cobre mais o conteudo
+- Transicoes de pagina fluidas
+- Menor uso de CPU/memoria
