@@ -213,15 +213,17 @@ const FeedRow = React.memo(function FeedRow({
   style, 
   items, 
   activeIndex,
+  pauseAll,
 }: { 
   index: number; 
   style: React.CSSProperties;
   items: TikTokFeedItem[];
   activeIndex: number;
+  pauseAll: boolean;
 }) {
   const item = items[index];
-  const isActive = index === activeIndex;
-  const shouldPreload = Math.abs(index - activeIndex) <= 1;
+  const isActive = !pauseAll && index === activeIndex;
+  const shouldPreload = !pauseAll && Math.abs(index - activeIndex) <= 1;
   const videoRef = useRef<HTMLVideoElement>(null);
   const playAttemptRef = useRef(0);
   const navigate = useNavigate();
@@ -288,9 +290,9 @@ const FeedRow = React.memo(function FeedRow({
 
     // Active but user paused
     if (isPaused) {
-      video.pause();
-      video.muted = true;
-      video.volume = 0;
+      // Full teardown to prevent lingering audio on iOS/Android.
+      setVideoLoaded(false);
+      hardStop();
       return;
     }
 
@@ -353,7 +355,10 @@ const FeedRow = React.memo(function FeedRow({
       style={style} 
       className="snap-start snap-always" 
       onDoubleClick={handleDoubleTap} 
-      onClick={() => item.videoUrl && !videoError && setIsPaused(p => !p)}
+      onClick={() => {
+        if (pauseAll) return;
+        if (item.videoUrl && !videoError) setIsPaused((p) => !p);
+      }}
     >
       <div className="relative w-full h-full overflow-hidden">
         {/* GPU-accelerated media container - full screen coverage */}
@@ -392,7 +397,7 @@ const FeedRow = React.memo(function FeedRow({
                 onError={() => { setVideoError(true); setVideoLoaded(false); }}
                 className={cn(
                   "absolute inset-0 w-full h-full object-cover",
-                  videoLoaded ? "opacity-100" : "opacity-0"
+                  videoLoaded && !isPaused ? "opacity-100" : "opacity-0"
                 )}
                 style={{ 
                   transform: 'translate3d(0,0,0)',
@@ -627,7 +632,8 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     } catch { return 0; }
   });
   const lastScrollTop = useRef(0);
-  const isScrolling = useRef(false);
+  const [pauseAll, setPauseAll] = useState(false);
+  const pauseAllTimeoutRef = useRef<number | null>(null);
 
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -656,6 +662,17 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     const container = containerRef.current;
     if (!container || containerHeight === 0) return;
 
+    // While the user is actively scrolling, pause ALL videos.
+    // This eliminates audio leaks during fast scroll/snap transitions.
+    setPauseAll(true);
+    if (pauseAllTimeoutRef.current) {
+      window.clearTimeout(pauseAllTimeoutRef.current);
+    }
+    pauseAllTimeoutRef.current = window.setTimeout(() => {
+      setPauseAll(false);
+      pauseAllTimeoutRef.current = null;
+    }, 140);
+
     const scrollTop = container.scrollTop;
     const newIndex = Math.round(scrollTop / containerHeight);
     
@@ -678,6 +695,16 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
     lastScrollTop.current = scrollTop;
   }, [containerHeight, activeIndex, items.length, hasMore, isLoadingMore, onLoadMore]);
+
+  // Cleanup pauseAll timer
+  useEffect(() => {
+    return () => {
+      if (pauseAllTimeoutRef.current) {
+        window.clearTimeout(pauseAllTimeoutRef.current);
+        pauseAllTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   // Throttled version of scroll handler - 60fps max (16ms)
   const handleScroll = useMemo(
@@ -803,6 +830,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
                   style={{ height: '100%' }}
                   items={items}
                   activeIndex={activeIndex}
+                  pauseAll={pauseAll}
                 />
               ) : (
                 <div className="h-full bg-black" />
