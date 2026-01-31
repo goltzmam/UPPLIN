@@ -1,110 +1,162 @@
 
-## Diagnóstico (por que a UX “antiga” volta)
-Pelo que você descreveu (acontece **no Preview**, em **mobile/desktop/tablet**, e é **aleatório**), isso é praticamente assinatura de **cache/Service Worker entregando uma versão antiga** do app em alguns refreshes.
+# Plano: Corrigir Bug de UI Antiga Persistindo no Preview Após Publish
 
-No seu `vite.config.ts`, existe uma regra que **cacheia navegação (HTML)** com `NetworkFirst` e ainda por cima com `networkTimeoutSeconds: 3`. Isso pode causar exatamente esse comportamento:
-- Se a rede demorar > 3s (ou der uma oscilada), o Service Worker responde com o **HTML do cache** (que pode ser de uma build antiga).
-- Esse HTML antigo referencia bundles/estilos da versão antiga → “volta a UX antiga” e às vezes aparece até erro de runtime por chunks misturados.
+## Problema Identificado
 
-Além disso, **no Preview** você está mudando o app o tempo todo; manter Service Worker ativo lá costuma ser receita para inconsistência.
+O Preview do Lovable usa Vite em modo desenvolvimento (DEV), onde:
+- Nao existe `version.json` (so e gerado no build de producao)
+- A logica de limpeza de cache em `main.tsx` pula quando `import.meta.env.DEV === true`
+- Quando voce alterna entre Preview e Published, o navegador mantem cache de modulos/estado antigo
 
-## Objetivo
-1) **No Preview:** impedir qualquer cache de PWA/SW (sem “voltar versão”).
-2) **No Published:** manter PWA, mas de forma que **não exista chance de voltar UI antiga** (e sem misturar assets).
+## Solucao Tecnica
 
----
+### Abordagem: "Build Timestamp Reload"
 
-## O que vou mudar (alto nível)
-### A) Desativar Service Worker no Preview (fix definitivo para esse ambiente)
-- Ajustar `src/registerSW.ts` para **só registrar SW** no domínio publicado.
-- Em Preview: não registra, e se já tiver SW registrado, **desregistra e limpa caches**.
+1. Injetar um timestamp de build via Vite que muda a cada hot reload
+2. Comparar esse timestamp com o armazenado em sessionStorage
+3. Se diferente, limpar React Query cache e forcar reload da pagina
 
-Isso remove a causa principal do “volta aleatório” no Preview.
+### Arquivos a Modificar
 
-### B) Parar de cachear HTML/navegações (ou tornar isso seguro)
-No `vite.config.ts`, vou ajustar o `runtimeCaching` de navegação:
-- Remover `networkTimeoutSeconds: 3` (principal gatilho de “volta aleatório”).
-- Opção mais “garantida”: trocar navegação para `NetworkOnly` (não cacheia HTML).
-  - Resultado: você perde fallback offline do HTML, mas ganha consistência total de versão (prioridade agora).
-- Manter cache para fonts e assets versionados (ok).
+#### 1. `vite.config.ts`
+Adicionar um plugin que injeta `BUILD_TIMESTAMP` como variavel global em tempo de desenvolvimento:
 
-### C) “Build Guard”: detectar versão diferente e forçar atualização (extra blindagem)
-Adicionar um mecanismo simples para nunca ficar preso numa UI antiga:
-- Gerar um arquivo `version.json` a cada build (timestamp/hash).
-- No boot do app (`src/main.tsx`), buscar esse `version.json` com `cache: "no-store"`.
-- Se o valor mudou, então:
-  - limpa `caches`
-  - desregistra SW
-  - recarrega a página
+```text
++----------------------------------+
+|  Vite Dev Server (HMR)           |
+|  - Gera BUILD_TIMESTAMP a cada   |
+|    reload do modulo              |
++----------------------------------+
+          |
+          v
++----------------------------------+
+|  main.tsx                        |
+|  - Compara BUILD_TIMESTAMP com   |
+|    sessionStorage                |
+|  - Se diferente: limpa tudo      |
+|    e recarrega                   |
++----------------------------------+
+```
 
-Isso cria uma “trava” que impede o cliente de permanecer numa versão antiga por cache.
+#### 2. `src/main.tsx`
+Adicionar logica de verificacao de timestamp:
+- Ler `window.__BUILD_TIMESTAMP__` (injetado pelo Vite)
+- Comparar com `sessionStorage.getItem('upplin_build_ts')`
+- Se diferente: limpar caches e forcar `window.location.reload()`
 
-### D) Tornar update do SW mais agressivo no Published (sem depender só do “onNeedRefresh”)
-No `src/registerSW.ts`:
-- Usar callback `onRegistered` para fazer `registration.update()` em intervalos (ex.: 60–120s) no Published.
-- Logar no console um “Build ID” (para você ver claramente quando mudou de versão).
+#### 3. `src/lib/version-check.ts`
+Adicionar funcao para limpar React Query cache globalmente:
+- Acessar o QueryClient via referencia global
+- Chamar `queryClient.clear()` para limpar cache em memoria
 
----
+### Fluxo de Funcionamento
 
-## Passo a passo de implementação (arquivos)
-1) **`src/registerSW.ts`**
-   - Adicionar detecção de ambiente por hostname:
-     - Se for Preview (ex.: contém `id-preview--` ou `lovableproject.com`), então:
-       - não registrar SW
-       - tentar `navigator.serviceWorker.getRegistrations()` → `unregister()`
-       - limpar `caches`
-   - Se for Published:
-       - registrar normalmente
-       - manter `onNeedRefresh` (limpar caches + reload)
-       - adicionar `onRegistered` com `registration.update()` periódico
+```text
+Usuario faz alteracao no codigo
+              |
+              v
+Lovable rebuilda o projeto
+              |
+              v
+Vite injeta novo BUILD_TIMESTAMP
+              |
+              v
+main.tsx detecta mudanca de timestamp
+              |
+              v
+Limpa: Cache Storage + SW + React Query + sessionStorage
+              |
+              v
+window.location.reload() - UI fresca
+```
 
-2) **`vite.config.ts`**
-   - Ajustar `VitePWA.workbox.runtimeCaching` para navegações:
-     - Remover `networkTimeoutSeconds: 3`
-     - Preferencialmente mudar handler para `NetworkOnly` para requests `request.mode === "navigate"`
-   - Manter caches de fonts.
+## Detalhes de Implementacao
 
-3) **Gerar `version.json` por build**
-   - Adicionar um pequeno plugin no próprio `vite.config.ts` (sem dependência nova) usando o hook `generateBundle` para criar `version.json` com timestamp.
-   - Garantir que `globPatterns` continue **sem incluir html/json** para não precachear.
+### `vite.config.ts`
+- Criar plugin `devBuildTimestampPlugin` que:
+  - So roda em modo desenvolvimento
+  - Injeta `window.__BUILD_TIMESTAMP__` no HTML via `transformIndexHtml`
 
-4) **`src/main.tsx`**
-   - Antes do `createRoot(...).render(<App />)`, rodar `ensureLatestVersion()`:
-     - fetch `/version.json` com `cache: "no-store"`
-     - comparar com `localStorage`
-     - se mudou: limpar caches + unregister SW + `location.reload(true)` (fallback: `location.reload()`)
+### `src/main.tsx`
+- Antes de `createRoot()`:
+  - Verificar se `window.__BUILD_TIMESTAMP__` existe
+  - Comparar com valor em `sessionStorage`
+  - Se diferente, executar limpeza completa e reload
 
-5) (Opcional, mas recomendo) **Adicionar um “Resetar cache” escondido**
-   - Um botão em um menu/admin/debug (ou via `?debug=1`) que executa a mesma rotina de limpar caches + unregister + reload.
-   - Isso ajuda quando algum navegador fica “teimoso”.
+### `src/App.tsx`
+- Expor o `queryClient` como variavel global para limpeza externa:
+  - `window.__QUERY_CLIENT__ = queryClient`
 
----
+### `src/lib/version-check.ts`
+- Adicionar `clearReactQueryCache()`:
+  - Acessar `window.__QUERY_CLIENT__`
+  - Chamar `.clear()` se disponivel
 
-## Como vamos validar (checklist rápido)
-### No Preview (principal)
-1) Abrir Preview no mobile/desktop/tablet.
-2) Confirmar no console: “SW disabled on preview” (vamos adicionar log).
-3) Fazer 2–3 updates pequenos e dar refresh várias vezes:
-   - não pode mais “voltar UX antiga”.
+## Beneficios
 
-### No Published
-1) Publicar.
-2) Abrir site publicado em 2 dispositivos.
-3) Confirmar no console: buildId atual.
-4) Publicar uma alteração pequena e ver:
-   - ou atualiza sozinho (auto reload)
-   - ou (no pior caso) detecta `version.json` diferente e força refresh “limpo”
-   - sem voltar design antigo.
+1. **Corrige o bug definitivamente**: UI sempre atualizada no Preview
+2. **Funciona em modo DEV**: Nao depende de `version.json`
+3. **Minimo overhead**: So executa quando ha mudanca real
+4. **Sem impacto em producao**: Plugin so ativo em desenvolvimento
 
----
+## Secao Tecnica
 
-## Riscos / trade-offs (transparentes)
-- Se eu trocar navegação para `NetworkOnly`, o app pode ficar menos “offline-friendly” (mas elimina a regressão de UI por cache de HTML, que hoje está te travando).
-- A limpeza agressiva de caches pode causar 1 reload extra após publish (normal, mas controlado).
+### Codigo do Plugin Vite (vite.config.ts)
 
----
+```typescript
+function devBuildTimestampPlugin(): Plugin {
+  return {
+    name: "dev-build-timestamp",
+    apply: "serve", // Apenas em modo desenvolvimento
+    transformIndexHtml() {
+      const timestamp = Date.now().toString();
+      return [
+        {
+          tag: "script",
+          attrs: { type: "module" },
+          children: `window.__BUILD_TIMESTAMP__ = "${timestamp}";`,
+          injectTo: "head-prepend",
+        },
+      ];
+    },
+  };
+}
+```
 
-## Resultado esperado
-- Preview: “nunca mais volta designer antigo” porque não existe SW/caches interferindo.
-- Published: atualiza com consistência; sem assets misturados e sem regressão de UX após refresh.
+### Codigo de Verificacao (main.tsx)
 
+```typescript
+const BUILD_TS_KEY = "upplin_build_ts";
+
+async function ensureFreshBuild(): Promise<void> {
+  const currentTs = (window as any).__BUILD_TIMESTAMP__;
+  if (!currentTs) return; // Nao em dev ou nao injetado
+  
+  const storedTs = sessionStorage.getItem(BUILD_TS_KEY);
+  
+  if (storedTs && storedTs !== currentTs) {
+    console.log("[Build] Nova versao detectada, limpando cache...");
+    sessionStorage.setItem(BUILD_TS_KEY, currentTs);
+    
+    await clearAllCaches();
+    await unregisterAllSW();
+    clearReactQueryCache();
+    
+    window.location.reload();
+    return;
+  }
+  
+  if (!storedTs) {
+    sessionStorage.setItem(BUILD_TS_KEY, currentTs);
+  }
+}
+```
+
+### Arquivos Modificados
+
+| Arquivo | Tipo de Alteracao |
+|---------|------------------|
+| `vite.config.ts` | Adicionar plugin `devBuildTimestampPlugin` |
+| `src/main.tsx` | Adicionar `ensureFreshBuild()` no inicio |
+| `src/App.tsx` | Expor `queryClient` como `window.__QUERY_CLIENT__` |
+| `src/lib/version-check.ts` | Adicionar `clearReactQueryCache()` |
