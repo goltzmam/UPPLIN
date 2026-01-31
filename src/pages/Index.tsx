@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { TikTokFeed } from "@/components/feed/TikTokFeed";
@@ -100,7 +100,6 @@ export default function Index() {
     await new Promise(resolve => setTimeout(resolve, 400));
   }, [queryClient]);
 
-
   // Shared Header Component for both mobile and desktop
   const FeedHeader = ({ isDesktop = false }: { isDesktop?: boolean }) => (
     <div className={cn(
@@ -178,46 +177,40 @@ export default function Index() {
   );
 
   // =====================================================================
-  // MOBILE: Fullscreen TikTok-style feed
+  // MOBILE: Fullscreen TikTok-style feed - Simplified transitions
   // =====================================================================
   const MobileFeed = () => (
     <div className="fixed inset-0 z-0 lg:hidden w-full h-full overflow-hidden">
-      <AnimatePresence mode="wait" initial={false}>
-        {activeTab === "foryou" ? (
-          <motion.div 
-            key="foryou-mobile" 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
-            transition={{ duration: 0.1 }} 
-            className="h-full w-full"
-          >
-            <TikTokFeed 
-              items={feedItems} 
-              isLoading={isLoading} 
-              onLoadMore={fetchNextPage} 
-              hasMore={!!hasNextPage} 
-              isLoadingMore={isFetchingNextPage} 
-              scrollPosition={scrollPosRef.current} 
-              onScrollChange={pos => { scrollPosRef.current = pos; }} 
-              onRefresh={handleRefresh} 
-            />
-          </motion.div>
-        ) : (
-          <motion.div 
-            key="following-mobile" 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }} 
-            transition={{ duration: 0.1 }} 
-            className="h-full w-full bg-background overflow-y-auto pb-20"
-          >
-            <div className="pt-24">
-              <FollowingFeed />
-            </div>
-          </motion.div>
+      {/* For You feed - always rendered, visibility controlled by CSS */}
+      <div 
+        className={cn(
+          "absolute inset-0 h-full w-full transition-opacity duration-150",
+          activeTab === "foryou" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
         )}
-      </AnimatePresence>
+      >
+        <TikTokFeed 
+          items={feedItems} 
+          isLoading={isLoading} 
+          onLoadMore={fetchNextPage} 
+          hasMore={!!hasNextPage} 
+          isLoadingMore={isFetchingNextPage} 
+          scrollPosition={scrollPosRef.current} 
+          onScrollChange={pos => { scrollPosRef.current = pos; }} 
+          onRefresh={handleRefresh} 
+        />
+      </div>
+
+      {/* Following feed - always rendered, visibility controlled by CSS */}
+      <div 
+        className={cn(
+          "absolute inset-0 h-full w-full bg-background overflow-y-auto pb-20 transition-opacity duration-150",
+          activeTab === "following" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+        )}
+      >
+        <div className="pt-24">
+          <FollowingFeed />
+        </div>
+      </div>
 
       <FeedHeader />
       <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
@@ -234,40 +227,34 @@ export default function Index() {
 
       {/* Main Content - Offset for fixed sidebar */}
       <main className="h-full ml-[72px] relative">
-        <AnimatePresence mode="wait" initial={false}>
-          {activeTab === "foryou" ? (
-            <motion.div 
-              key="foryou-desktop" 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              transition={{ duration: 0.15 }}
-              className="h-full"
-            >
-              <DesktopTikTokFeed
-                items={feedItems}
-                isLoading={isLoading}
-                onLoadMore={fetchNextPage}
-                hasMore={!!hasNextPage}
-                isLoadingMore={isFetchingNextPage}
-                onRefresh={handleRefresh}
-              />
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="following-desktop" 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              transition={{ duration: 0.15 }} 
-              className="h-full bg-background overflow-y-auto"
-            >
-              <div className="max-w-2xl mx-auto py-20 px-4">
-                <FollowingFeed />
-              </div>
-            </motion.div>
+        {/* For You feed - always rendered, visibility controlled by CSS */}
+        <div 
+          className={cn(
+            "absolute inset-0 h-full transition-opacity duration-150",
+            activeTab === "foryou" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
           )}
-        </AnimatePresence>
+        >
+          <DesktopTikTokFeed
+            items={feedItems}
+            isLoading={isLoading}
+            onLoadMore={fetchNextPage}
+            hasMore={!!hasNextPage}
+            isLoadingMore={isFetchingNextPage}
+            onRefresh={handleRefresh}
+          />
+        </div>
+
+        {/* Following feed - always rendered, visibility controlled by CSS */}
+        <div 
+          className={cn(
+            "absolute inset-0 h-full bg-background overflow-y-auto transition-opacity duration-150",
+            activeTab === "following" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+          )}
+        >
+          <div className="max-w-2xl mx-auto py-20 px-4">
+            <FollowingFeed />
+          </div>
+        </div>
 
         {/* Header overlay */}
         <FeedHeader isDesktop />

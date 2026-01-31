@@ -40,8 +40,8 @@ export function BottomNav() {
 
   // Measure actual height and set global CSS variable
   useEffect(() => {
-    // Set a sensible default immediately
-    document.documentElement.style.setProperty('--app-bottom-offset', '80px');
+    // Set a safe default immediately (100px as per plan)
+    document.documentElement.style.setProperty('--app-bottom-offset', '100px');
     
     if (shouldHide) {
       document.documentElement.style.setProperty('--app-bottom-offset', '0px');
@@ -51,12 +51,13 @@ export function BottomNav() {
     const updateOffset = () => {
       if (navRef.current) {
         const height = navRef.current.offsetHeight;
-        document.documentElement.style.setProperty('--app-bottom-offset', `${height}px`);
+        // Add a small buffer to ensure content is never covered
+        document.documentElement.style.setProperty('--app-bottom-offset', `${height + 4}px`);
       }
     };
 
     // Delay initial measurement to ensure layout is complete
-    const timeoutId = setTimeout(updateOffset, 50);
+    const timeoutId = setTimeout(updateOffset, 100);
 
     // Use ResizeObserver for dynamic updates
     const resizeObserver = new ResizeObserver(updateOffset);

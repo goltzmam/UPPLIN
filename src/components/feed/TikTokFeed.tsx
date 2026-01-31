@@ -13,32 +13,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/u
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FeedSkeleton } from "./FeedSkeleton";
-
-// Throttle utility for scroll performance
-function throttle<T extends (...args: any[]) => void>(fn: T, wait: number): T {
-  let lastTime = 0;
-  let timeoutId: ReturnType<typeof setTimeout> | null = null;
-  
-  return ((...args: Parameters<T>) => {
-    const now = Date.now();
-    const remaining = wait - (now - lastTime);
-    
-    if (remaining <= 0) {
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-      lastTime = now;
-      fn(...args);
-    } else if (!timeoutId) {
-      timeoutId = setTimeout(() => {
-        lastTime = Date.now();
-        timeoutId = null;
-        fn(...args);
-      }, remaining);
-    }
-  }) as T;
-}
+import { FeedVideoPlayer } from "./FeedVideoPlayer";
 
 interface TikTokFeedItem {
   id: string;
@@ -164,75 +139,26 @@ const SaveParticles = React.memo(function SaveParticles({ show }: { show: boolea
   );
 });
 
-const ScrollMiniMap = React.memo(function ScrollMiniMap({ current, total, maxVisible = 7 }: { current: number; total: number; maxVisible?: number }) {
-  const visibleRange = useMemo(() => {
-    const half = Math.floor(maxVisible / 2);
-    let start = Math.max(0, current - half);
-    let end = Math.min(total - 1, start + maxVisible - 1);
-    if (end - start < maxVisible - 1) start = Math.max(0, end - maxVisible + 1);
-    const dots: number[] = [];
-    for (let i = start; i <= end; i++) dots.push(i);
-    return { dots, start, end };
-  }, [current, total, maxVisible]);
-
-  if (total <= 1) return null;
-
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      {visibleRange.start > 0 && <div className="w-1 h-1 rounded-full bg-white/30" />}
-      {visibleRange.dots.map((idx) => (
-        <motion.div
-          key={idx}
-          animate={{ scale: idx === current ? 1 : 0.6, opacity: idx === current ? 1 : 0.4 }}
-          transition={{ duration: 0.2 }}
-          className={cn("rounded-full", idx === current ? "w-1.5 h-3 bg-white" : "w-1 h-1 bg-white/50")}
-        />
-      ))}
-      {visibleRange.end < total - 1 && <div className="w-1 h-1 rounded-full bg-white/30" />}
-    </div>
-  );
-});
-
-const VideoPlaceholder = React.memo(function VideoPlaceholder({ coverUrl, title }: { coverUrl: string | null; title: string }) {
-  return (
-    <div className="absolute inset-0 w-full h-full z-[1]">
-      {coverUrl ? (
-        <img src={coverUrl} alt={title} className="w-full h-full object-cover" loading="eager" />
-      ) : (
-        <div className="w-full h-full bg-black" />
-      )}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-      </div>
-    </div>
-  );
-});
-
+// Simplified FeedRow - delegates ALL video logic to FeedVideoPlayer
 const FeedRow = React.memo(function FeedRow({ 
   index, 
   style, 
   items, 
   activeIndex,
-  pauseAll,
+  isScrolling,
 }: { 
   index: number; 
   style: React.CSSProperties;
   items: TikTokFeedItem[];
   activeIndex: number;
-  pauseAll: boolean;
+  isScrolling: boolean;
 }) {
   const item = items[index];
-  const isActive = !pauseAll && index === activeIndex;
-  const shouldPreload = !pauseAll && Math.abs(index - activeIndex) <= 1;
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const playAttemptRef = useRef(0);
+  const isActive = index === activeIndex && !isScrolling;
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [showLikeParticles, setShowLikeParticles] = useState(false);
   const [showSaveParticles, setShowSaveParticles] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [videoLoaded, setVideoLoaded] = useState(false);
-  const [videoError, setVideoError] = useState(false);
   const [showComments, setShowComments] = useState(false);
 
   const { data: commentCount = 0 } = useQuery({
@@ -247,79 +173,12 @@ const FeedRow = React.memo(function FeedRow({
   });
 
   const isLive = useMemo(() => isEventLive(item.startAt, item.endAt), [item.startAt, item.endAt]);
-  const shouldPlay = isActive && !isPaused && !videoError;
-  const { isLiked, likeCount, isSaved, saveCount, toggleLike, toggleSave } = useEventEngagement(item.id);
+  const { isLiked, likeCount, isSaved, toggleLike, toggleSave } = useEventEngagement(item.id);
 
   const eventDate = new Date(item.startAt);
   const formattedDate = format(eventDate, "d MMM", { locale: ptBR });
   const formattedTime = format(eventDate, "HH:mm");
   const formatPrice = (cents: number) => cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
-
-  // CRITICAL: ensure only the active card can produce audio.
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const hardStop = () => {
-      try {
-        video.pause();
-        video.muted = true;
-        video.volume = 0;
-        video.currentTime = 0;
-        video.removeAttribute("src");
-        video.load();
-      } catch {
-        // ignore
-      }
-      setVideoLoaded(false);
-    };
-
-    // Always invalidate pending play attempts
-    const attemptId = ++playAttemptRef.current;
-
-    // No video URL or error
-    if (!item.videoUrl || videoError) {
-      hardStop();
-      return;
-    }
-
-    // Not active - kill immediately
-    if (!isActive || pauseAll) {
-      hardStop();
-      return;
-    }
-
-    // Active but user paused
-    if (isPaused) {
-      hardStop();
-      return;
-    }
-
-    // Should play
-    if (shouldPlay) {
-      if (!video.src || video.src === '') {
-        video.src = item.videoUrl;
-      }
-      video.muted = false;
-      video.volume = 1;
-      const playPromise = video.play();
-      if (playPromise) {
-        playPromise.catch((err) => {
-          if (playAttemptRef.current !== attemptId) return;
-          if (err?.name !== "AbortError") {
-            console.warn("Video autoplay failed:", err?.name || err);
-          }
-        });
-      }
-    } else {
-      video.pause();
-    }
-
-    return () => {
-      playAttemptRef.current++;
-      hardStop();
-    };
-  }, [isActive, shouldPlay, videoError, item.videoUrl, isPaused, pauseAll]);
 
   const handleDoubleTap = useCallback(() => {
     if (!isLiked) {
@@ -345,64 +204,23 @@ const FeedRow = React.memo(function FeedRow({
   }, [isSaved, toggleSave]);
 
   return (
-    <div 
-      style={style} 
-      className="snap-start snap-always" 
-      onDoubleClick={handleDoubleTap} 
-      onClick={() => {
-        if (pauseAll) return;
-        if (item.videoUrl && !videoError) setIsPaused((p) => !p);
-      }}
-    >
+    <div style={style} className="snap-start snap-always" onDoubleClick={handleDoubleTap}>
       <div className="relative w-full h-full overflow-hidden">
-        {/* GPU-accelerated media container - full screen coverage */}
-        <div 
-          className="absolute inset-0 w-full h-full"
-        >
-          {item.videoUrl && !videoError ? (
-            <>
-              {/* Cover image as instant background - full screen */}
-              {item.coverImageUrl && (
-                <img 
-                  src={item.coverImageUrl} 
-                  alt="" 
-                  className="absolute inset-0 w-full h-full object-cover" 
-                  loading="eager"
-                  decoding="async"
-                  aria-hidden="true"
-                />
-              )}
-              {!videoLoaded && !item.coverImageUrl && <VideoPlaceholder coverUrl={null} title={item.title} />}
-              <video 
-                ref={videoRef} 
-                src={isActive || shouldPreload ? item.videoUrl : undefined} 
-                loop 
-                playsInline
-                webkit-playsinline="true"
-                muted={!isActive}
-                preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
-                onLoadedData={() => { setVideoLoaded(true); setVideoError(false); }}
-                onCanPlayThrough={() => { setVideoLoaded(true); }}
-                onError={() => { setVideoError(true); setVideoLoaded(false); }}
-                className={cn(
-                  "absolute inset-0 w-full h-full object-cover",
-                  videoLoaded && !isPaused ? "opacity-100" : "opacity-0"
-                )}
-                style={{ 
-                  transform: 'translate3d(0,0,0)',
-                  WebkitTransform: 'translate3d(0,0,0)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  transition: 'opacity 0.3s ease-out',
-                }}
-              />
-            </>
+        {/* Media container - uses FeedVideoPlayer for video or shows cover image */}
+        <div className="absolute inset-0 w-full h-full">
+          {item.videoUrl ? (
+            <FeedVideoPlayer
+              videoUrl={item.videoUrl}
+              coverUrl={item.coverImageUrl}
+              isActive={isActive}
+              forceStop={isScrolling}
+            />
           ) : item.coverImageUrl ? (
             <img 
               src={item.coverImageUrl} 
               alt={item.title} 
               className="absolute inset-0 w-full h-full object-cover" 
-              loading={isActive || shouldPreload ? "eager" : "lazy"} 
+              loading={isActive ? "eager" : "lazy"} 
               decoding="async"
             />
           ) : (
@@ -411,29 +229,19 @@ const FeedRow = React.memo(function FeedRow({
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10 pointer-events-none" />
         </div>
 
+        {/* Double tap heart animation */}
         <AnimatePresence>
           {showHeart && (
-              <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1.2, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }}
+            <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1.2, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }}
               className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
               <div className="relative"><Heart className="h-24 w-24" style={{ color: '#FF2D2D', fill: '#FF2D2D' }} /><LikeParticles show={showLikeParticles} /></div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <AnimatePresence>
-          {isPaused && item.videoUrl && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-black/20 z-10">
-              <div className="h-16 w-16 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
-                <Play className="h-8 w-8 text-white ml-1" />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Right side action bar - TikTok style - positioned near navbar */}
-        <div className="absolute right-3 z-10 flex flex-col items-center gap-4" style={{ bottom: 'calc(var(--app-bottom-offset, 80px) + 100px)' }}>
-          {/* Organizer avatar with follow indicator */}
+        {/* Right side action bar */}
+        <div className="absolute right-3 z-10 flex flex-col items-center gap-4" style={{ bottom: 'calc(var(--app-bottom-offset, 100px) + 100px)' }}>
+          {/* Organizer avatar */}
           <button 
             onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (item.organizerId) navigate(`/organizador/${item.organizerId}`); }}
             className="relative"
@@ -458,7 +266,7 @@ const FeedRow = React.memo(function FeedRow({
             </div>
           </button>
 
-          {/* Like button with gradient on liked state */}
+          {/* Like button */}
           <motion.button whileTap={{ scale: 0.85 }} onClick={(e) => { e.stopPropagation(); handleLikeClick(); }} className="flex flex-col items-center gap-0.5 relative">
             <div className="relative">
               <motion.div animate={{ scale: isLiked ? [1, 1.2, 1] : 1 }} transition={{ duration: 0.3 }}>
@@ -500,19 +308,16 @@ const FeedRow = React.memo(function FeedRow({
           />
         </div>
 
-        {/* Bottom event info - minimalist */}
-        <div className="absolute bottom-0 left-0 right-16 p-3 z-10" style={{ paddingBottom: 'calc(var(--app-bottom-offset, 80px) + 16px)' }}>
-          {/* Organizer */}
+        {/* Bottom event info */}
+        <div className="absolute bottom-0 left-0 right-16 p-3 z-10" style={{ paddingBottom: 'calc(var(--app-bottom-offset, 100px) + 16px)' }}>
           <span className="text-white/70 text-xs font-medium block mb-0.5">
             {item.organizerName || "Organizador"}
           </span>
           
-          {/* Title */}
           <h3 className="text-base font-semibold text-white leading-snug line-clamp-2 mb-1.5">
             {item.title}
           </h3>
           
-          {/* Date & location - single line */}
           <div className="flex items-center gap-2 text-white/60 text-xs mb-3">
             <span>{formattedDate} • {formattedTime}</span>
             {(item.venueName || item.addressText) && (
@@ -524,13 +329,12 @@ const FeedRow = React.memo(function FeedRow({
             {isLive && <LiveBadge />}
           </div>
 
-          {/* Buy ticket button - prominent CTA with brand gradient */}
+          {/* Buy ticket button */}
           {(() => {
             const isFree = (item.minPrice || 0) === 0;
             const IconComponent = isFree ? Gift : Ticket;
             return (
               <div className="flex items-center gap-2">
-                {/* GRÁTIS Badge - only for free events */}
                 {isFree && (
                   <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
@@ -544,14 +348,6 @@ const FeedRow = React.memo(function FeedRow({
                 <motion.div
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
-                  animate={{ 
-                    boxShadow: isFree 
-                      ? ["0 0 0 0 rgba(34, 197, 94, 0.3)", "0 0 0 4px rgba(34, 197, 94, 0)"]
-                      : ["0 0 0 0 rgba(255, 45, 45, 0.4)", "0 0 0 6px rgba(255, 45, 45, 0)"]
-                  }}
-                  transition={{
-                    boxShadow: { duration: 2, repeat: Infinity, ease: "easeOut" }
-                  }}
                   className="inline-block rounded-full"
                 >
                   <Link 
@@ -613,6 +409,7 @@ const FeedRow = React.memo(function FeedRow({
 
 export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMore, scrollPosition = 0, onScrollChange, onRefresh }: TikTokFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
   const [containerHeight, setContainerHeight] = useState(0);
   const [activeIndex, setActiveIndex] = useState(() => {
     try {
@@ -620,20 +417,55 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
       return cached ? parseInt(cached, 10) : 0;
     } catch { return 0; }
   });
-  const lastScrollTop = useRef(0);
-  const [pauseAll, setPauseAll] = useState(false);
-  const pauseAllTimeoutRef = useRef<number | null>(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const scrollTimeoutRef = useRef<number | null>(null);
+  const prevIndexRef = useRef(activeIndex);
 
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const touchStartY = useRef(0);
 
+  // Measure container height
   useEffect(() => {
     const updateHeight = () => setContainerHeight(window.innerHeight);
     updateHeight();
     window.addEventListener('resize', updateHeight);
     return () => window.removeEventListener('resize', updateHeight);
   }, []);
+
+  // IntersectionObserver for active item detection (replaces scroll handler)
+  useEffect(() => {
+    if (containerHeight === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
+            const index = parseInt(entry.target.getAttribute("data-index") || "0", 10);
+            if (index !== activeIndex) {
+              // Only trigger haptic on actual index change
+              if (index !== prevIndexRef.current) {
+                prevIndexRef.current = index;
+                triggerFeedback({ haptic: "selection" });
+              }
+              setActiveIndex(index);
+            }
+          }
+        });
+      },
+      { 
+        root: containerRef.current,
+        threshold: 0.7 
+      }
+    );
+
+    // Observe all items
+    itemRefs.current.forEach((element) => {
+      observer.observe(element);
+    });
+
+    return () => observer.disconnect();
+  }, [containerHeight, items.length, activeIndex]);
 
   // Save scroll position to cache
   useEffect(() => {
@@ -643,63 +475,37 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     } catch {}
   }, [activeIndex, onScrollChange]);
 
-  // Track previous index to avoid redundant haptics
-  const prevIndexRef = useRef(activeIndex);
-
-  // Optimized scroll handler - throttled for performance
-  const handleScrollRaw = useCallback(() => {
-    const container = containerRef.current;
-    if (!container || containerHeight === 0) return;
-
-    // While the user is actively scrolling, pause ALL videos.
-    // This eliminates audio leaks during fast scroll/snap transitions.
-    setPauseAll(true);
-    if (pauseAllTimeoutRef.current) {
-      window.clearTimeout(pauseAllTimeoutRef.current);
-    }
-    pauseAllTimeoutRef.current = window.setTimeout(() => {
-      setPauseAll(false);
-      pauseAllTimeoutRef.current = null;
-    }, 140);
-
-    const scrollTop = container.scrollTop;
-    const newIndex = Math.round(scrollTop / containerHeight);
+  // Detect scrolling state (for pausing videos during scroll)
+  const handleScroll = useCallback(() => {
+    setIsScrolling(true);
     
-    if (newIndex !== activeIndex && newIndex >= 0 && newIndex < items.length) {
-      // Only trigger haptic when actually changing to a new index
-      if (newIndex !== prevIndexRef.current) {
-        prevIndexRef.current = newIndex;
-        // Minimal haptic - only on actual snap, not during scroll
-        requestAnimationFrame(() => {
-          triggerFeedback({ haptic: "selection" });
-        });
-      }
-      setActiveIndex(newIndex);
+    if (scrollTimeoutRef.current) {
+      window.clearTimeout(scrollTimeoutRef.current);
     }
+    
+    scrollTimeoutRef.current = window.setTimeout(() => {
+      setIsScrolling(false);
+      scrollTimeoutRef.current = null;
+    }, 150);
 
     // Load more when approaching end
-    if (newIndex >= items.length - 3 && hasMore && !isLoadingMore) {
-      onLoadMore?.();
+    const container = containerRef.current;
+    if (container && containerHeight > 0) {
+      const currentIndex = Math.round(container.scrollTop / containerHeight);
+      if (currentIndex >= items.length - 3 && hasMore && !isLoadingMore) {
+        onLoadMore?.();
+      }
     }
+  }, [containerHeight, items.length, hasMore, isLoadingMore, onLoadMore]);
 
-    lastScrollTop.current = scrollTop;
-  }, [containerHeight, activeIndex, items.length, hasMore, isLoadingMore, onLoadMore]);
-
-  // Cleanup pauseAll timer
+  // Cleanup scroll timeout
   useEffect(() => {
     return () => {
-      if (pauseAllTimeoutRef.current) {
-        window.clearTimeout(pauseAllTimeoutRef.current);
-        pauseAllTimeoutRef.current = null;
+      if (scrollTimeoutRef.current) {
+        window.clearTimeout(scrollTimeoutRef.current);
       }
     };
   }, []);
-
-  // Throttled version of scroll handler - 60fps max (16ms)
-  const handleScroll = useMemo(
-    () => throttle(handleScrollRaw, 16),
-    [handleScrollRaw]
-  );
 
   // Touch handlers for pull-to-refresh
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -770,7 +576,6 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   return (
     <div className="relative w-full h-full" style={{ height: containerHeight }}>
-
       {/* Pull to refresh indicator */}
       {onRefresh && (
         <div className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
@@ -807,6 +612,11 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
           return (
             <div
               key={item.id}
+              data-index={index}
+              ref={(el) => {
+                if (el) itemRefs.current.set(index, el);
+                else itemRefs.current.delete(index);
+              }}
               style={{ height: containerHeight }}
               className="snap-start snap-always"
             >
@@ -816,7 +626,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
                   style={{ height: '100%' }}
                   items={items}
                   activeIndex={activeIndex}
-                  pauseAll={pauseAll}
+                  isScrolling={isScrolling}
                 />
               ) : (
                 <div className="h-full bg-black" />
