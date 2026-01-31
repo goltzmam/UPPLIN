@@ -72,7 +72,7 @@ export default function OrganizerDashboardContent() {
           <p className="text-sm text-muted-foreground">Bem-vindo, {organizer?.display_name}</p>
         </div>
         <Button asChild>
-          <Link to="/organizador/evento/novo">
+          <Link to="/organizador/painel/evento/novo">
             <Plus className="h-4 w-4 mr-2" />
             Criar Evento
           </Link>
@@ -132,7 +132,7 @@ export default function OrganizerDashboardContent() {
         <div className="p-4 sm:p-6 border-b border-border flex items-center justify-between">
           <h2 className="font-display text-lg font-bold">Eventos Recentes</h2>
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/organizador/eventos">Ver todos</Link>
+            <Link to="/organizador/painel/eventos">Ver todos</Link>
           </Button>
         </div>
 
@@ -186,7 +186,7 @@ export default function OrganizerDashboardContent() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link to={`/organizador/evento/${event.id}`}>
+                          <Link to={`/organizador/painel/evento/${event.id}`}>
                             <Edit className="h-4 w-4 mr-2" />
                             Editar
                           </Link>
@@ -212,7 +212,7 @@ export default function OrganizerDashboardContent() {
             variant="default"
             action={
               <Button asChild>
-                <Link to="/organizador/evento/novo">
+                <Link to="/organizador/painel/evento/novo">
                   <Plus className="h-4 w-4 mr-2" />
                   Criar Evento
                 </Link>

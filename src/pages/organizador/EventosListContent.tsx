@@ -78,7 +78,7 @@ export default function EventosListContent() {
           <p className="text-sm text-muted-foreground">Gerencie todos os seus eventos</p>
         </div>
         <Button asChild>
-          <Link to="/organizador/evento/novo">
+          <Link to="/organizador/painel/evento/novo">
             <Plus className="h-4 w-4 mr-2" />
             Criar Evento
           </Link>
@@ -174,7 +174,7 @@ export default function EventosListContent() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem asChild>
-                          <Link to={`/organizador/evento/${event.id}`}>
+                          <Link to={`/organizador/painel/evento/${event.id}`}>
                             <Edit className="h-4 w-4 mr-2" />
                             Editar
                           </Link>
@@ -201,7 +201,7 @@ export default function EventosListContent() {
             action={
               !search && statusFilter === "all" && (
                 <Button asChild>
-                  <Link to="/organizador/evento/novo">
+                  <Link to="/organizador/painel/evento/novo">
                     <Plus className="h-4 w-4 mr-2" />
                     Criar Evento
                   </Link>

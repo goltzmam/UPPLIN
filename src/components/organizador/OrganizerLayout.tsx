@@ -28,12 +28,12 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 const SIDEBAR_COLLAPSED_KEY = "upplin_org_sidebar_collapsed";
 
 const navItems = [
-  { href: "/organizador", label: "Dashboard", icon: LayoutDashboard, exact: true },
-  { href: "/organizador/eventos", label: "Meus Eventos", icon: Calendar },
-  { href: "/organizador/cupons", label: "Cupons", icon: Tag },
-  { href: "/organizador/check-in", label: "Check-in", icon: QrCode },
-  { href: "/organizador/relatorios", label: "Relatórios", icon: BarChart3 },
-  { href: "/organizador/configuracoes", label: "Configurações", icon: Settings },
+  { href: "/organizador/painel", label: "Dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/organizador/painel/eventos", label: "Meus Eventos", icon: Calendar },
+  { href: "/organizador/painel/cupons", label: "Cupons", icon: Tag },
+  { href: "/organizador/painel/check-in", label: "Check-in", icon: QrCode },
+  { href: "/organizador/painel/relatorios", label: "Relatórios", icon: BarChart3 },
+  { href: "/organizador/painel/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 interface NavItemProps {
@@ -187,7 +187,7 @@ export function OrganizerLayout() {
 
       {/* Create Event Button */}
       <Link
-        to="/organizador/evento/novo"
+        to="/organizador/painel/evento/novo"
         onClick={onItemClick}
         className={cn(
           "flex items-center gap-2 mb-6 rounded-xl shadow-lg",
@@ -284,7 +284,7 @@ export function OrganizerLayout() {
 
           <div className="flex items-center gap-2">
             <Link
-              to="/organizador/evento/novo"
+              to="/organizador/painel/evento/novo"
               className="h-9 w-9 rounded-full flex items-center justify-center"
               style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)" }}
             >
