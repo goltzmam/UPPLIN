@@ -124,6 +124,21 @@ export async function unregisterAllSW(): Promise<void> {
 }
 
 /**
+ * Clears React Query cache via global reference
+ */
+export function clearReactQueryCache(): void {
+  try {
+    const queryClient = (window as unknown as { __QUERY_CLIENT__?: { clear: () => void } }).__QUERY_CLIENT__;
+    if (queryClient && typeof queryClient.clear === "function") {
+      queryClient.clear();
+      console.log("[Version] Cleared React Query cache");
+    }
+  } catch (error) {
+    console.warn("[Version] Error clearing React Query cache:", error);
+  }
+}
+
+/**
  * Force reset: clears everything and reloads.
  * Can be triggered via ?debug=reset or programmatically.
  */

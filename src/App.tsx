@@ -62,6 +62,11 @@ const queryClient = new QueryClient({
   },
 });
 
+// Expose queryClient globally for cache clearing during version updates
+if (typeof window !== "undefined") {
+  (window as unknown as { __QUERY_CLIENT__?: typeof queryClient }).__QUERY_CLIENT__ = queryClient;
+}
+
 // Animated routes wrapper - smooth fade without flashing
 function AnimatedRoutes() {
   const location = useLocation();

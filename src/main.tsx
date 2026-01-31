@@ -2,11 +2,12 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import { setupPWAUpdates } from "./registerSW";
-import { ensureLatestVersion, clearAllCaches, unregisterAllSW } from "./lib/version-check";
+import { ensureLatestVersion, clearAllCaches, unregisterAllSW, clearReactQueryCache } from "./lib/version-check";
+
+const BUILD_TS_KEY = "upplin_build_ts";
 
 /**
  * Detects if we're in a Lovable preview environment
- * This works even in DEV mode when running inside Lovable's preview iframe
  */
 function isLovablePreview(): boolean {
   const hostname = window.location.hostname;
@@ -17,41 +18,51 @@ function isLovablePreview(): boolean {
 }
 
 /**
- * Detects if we're in any preview/development environment
+ * Ensures fresh build by comparing BUILD_TIMESTAMP.
+ * If mismatch detected, clears all caches and reloads.
  */
-function isPreviewEnvironment(): boolean {
-  const hostname = window.location.hostname;
-  return (
-    hostname.includes("id-preview--") ||
-    hostname.includes("lovableproject.com") ||
-    hostname.includes("localhost") ||
-    hostname.includes("127.0.0.1")
-  );
+async function ensureFreshBuild(): Promise<boolean> {
+  const currentTs = (window as unknown as { __BUILD_TIMESTAMP__?: string }).__BUILD_TIMESTAMP__;
+  if (!currentTs) return false; // Not in dev or not injected
+  
+  const storedTs = sessionStorage.getItem(BUILD_TS_KEY);
+  
+  if (storedTs && storedTs !== currentTs) {
+    console.log("[Build] New version detected, clearing cache...", { stored: storedTs, current: currentTs });
+    sessionStorage.setItem(BUILD_TS_KEY, currentTs);
+    
+    await clearAllCaches();
+    await unregisterAllSW();
+    clearReactQueryCache();
+    
+    window.location.reload();
+    return true; // Indicates reload triggered
+  }
+  
+  if (!storedTs) {
+    sessionStorage.setItem(BUILD_TS_KEY, currentTs);
+    console.log("[Build] First visit, stored timestamp:", currentTs);
+  }
+  
+  return false;
 }
 
 /**
- * Aggressive cleanup for preview environment to prevent stale UI
- * This runs ALWAYS in Lovable preview, even in DEV mode
+ * Aggressive cleanup for preview environment
  */
 async function cleanupPreview(): Promise<void> {
   try {
-    // Clear React Query cache if available
     if (typeof window !== "undefined" && "caches" in window) {
       const keys = await caches.keys();
       await Promise.all(keys.map((key) => caches.delete(key)));
-      console.log("[Preview] Cleared browser caches:", keys.length);
+      if (keys.length > 0) console.log("[Preview] Cleared browser caches:", keys.length);
     }
     
-    // Unregister any service workers
     if ("serviceWorker" in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
       await Promise.all(registrations.map((reg) => reg.unregister()));
-      if (registrations.length > 0) {
-        console.log("[Preview] Unregistered service workers:", registrations.length);
-      }
+      if (registrations.length > 0) console.log("[Preview] Unregistered service workers:", registrations.length);
     }
-    
-    console.log("[Preview] Cleanup complete");
   } catch (e) {
     console.warn("[Preview] Cleanup error:", e);
   }
@@ -64,18 +75,18 @@ if (window.location.search.includes("debug=reset")) {
   });
 }
 
-// Main initialization - runs cleanup in Lovable preview ALWAYS (even in DEV mode)
+// Main initialization
 (async () => {
-  // In Lovable preview: ALWAYS clean up to prevent stale UI
-  // This is critical because Lovable rebuilds the app frequently
+  // In Lovable preview: check build timestamp for freshness
   if (isLovablePreview()) {
-    await cleanupPreview();
-  } else if (isPreviewEnvironment()) {
-    // Other preview environments (localhost, etc.)
+    const reloaded = await ensureFreshBuild();
+    if (reloaded) return; // Don't continue, page is reloading
+    
+    // Also do cleanup on first load
     await cleanupPreview();
   }
   
-  // Only run version check in production (not DEV mode)
+  // Production: check version.json
   if (!import.meta.env.DEV) {
     await ensureLatestVersion();
   }
