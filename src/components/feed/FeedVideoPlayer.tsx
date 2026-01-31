@@ -72,9 +72,11 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     // Video is active but user paused - stop playback but keep loaded
     if (isPaused) {
       playAttemptRef.current++;
-      video.pause();
-      video.muted = true;
-      video.volume = 0;
+      // On mobile browsers, pause+mute can still leak audio; do a full teardown.
+      hardStop(video);
+      // Ensure the cover is shown again while paused.
+      setVideoLoaded(false);
+      setIsBuffering(false);
       return;
     }
     
@@ -131,6 +133,23 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
       }
     };
   }, [shouldPlay, videoError, videoUrl, isActive, isPaused, hardStop]);
+
+  // Kill audio pipeline when tab/app loses visibility (prevents background audio leaks)
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        hardStop(video);
+        setVideoLoaded(false);
+        setIsBuffering(false);
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+  }, [hardStop]);
 
   // Additional effect specifically to handle when isActive becomes false
   useEffect(() => {
