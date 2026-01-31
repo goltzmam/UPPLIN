@@ -34,33 +34,50 @@ import { cn } from "@/lib/utils";
 
 type TabType = "eventos" | "galeria" | "sobre";
 
-export default function OrganizadorPublico() {
-  const { id } = useParams<{ id: string }>();
+export default function OrganizerPublicProfile() {
+  // Support both /o/:slug and /organizador/:id (legacy)
+  const { slug, id } = useParams<{ slug?: string; id?: string }>();
+  const identifier = slug || id;
   const [activeTab, setActiveTab] = useState<TabType>("eventos");
   const [followerCount, setFollowerCount] = useState(0);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  // Fetch organizer data
+  // Fetch organizer data - try by slug first, then by ID
   const { data: organizer, isLoading } = useQuery({
-    queryKey: ["organizer-public", id],
+    queryKey: ["organizer-public", identifier],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First try by slug
+      let { data, error } = await supabase
         .from("organizer_accounts")
         .select("*")
-        .eq("id", id)
+        .eq("slug", identifier)
         .eq("status", "active")
         .maybeSingle();
+
+      // If not found by slug, try by ID
+      if (!data && !error) {
+        const result = await supabase
+          .from("organizer_accounts")
+          .select("*")
+          .eq("id", identifier)
+          .eq("status", "active")
+          .maybeSingle();
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!identifier,
   });
 
-  // Fetch events
+  // Fetch events using organizer ID from fetched data
+  const organizerId = organizer?.id;
+  
   const { data: events = [], isLoading: loadingEvents } = useQuery({
-    queryKey: ["organizer-events-public", id],
+    queryKey: ["organizer-events-public", organizerId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
@@ -76,29 +93,29 @@ export default function OrganizadorPublico() {
           ticket_types(price_cents),
           event_media(id, url, type, sort_order)
         `)
-        .eq("organizer_id", id)
+        .eq("organizer_id", organizerId!)
         .eq("status", "published")
         .order("start_at", { ascending: false });
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!id,
+    enabled: !!organizerId,
   });
 
   // Fetch initial follower count
   const { data: initialFollowerCount = 0 } = useQuery({
-    queryKey: ["organizer-followers", id],
+    queryKey: ["organizer-followers", organizerId],
     queryFn: async () => {
       const { count, error } = await supabase
         .from("follows")
         .select("*", { count: "exact", head: true })
-        .eq("organizer_id", id);
+        .eq("organizer_id", organizerId!);
 
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!id,
+    enabled: !!organizerId,
   });
 
   // Set initial follower count
@@ -108,22 +125,22 @@ export default function OrganizadorPublico() {
 
   // Realtime follower subscription
   useEffect(() => {
-    if (!id) return;
+    if (!organizerId) return;
 
     const channel = supabase
-      .channel(`organizer-followers-${id}`)
+      .channel(`organizer-followers-${organizerId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'follows',
-          filter: `organizer_id=eq.${id}`,
+          filter: `organizer_id=eq.${organizerId}`,
         },
         () => {
           // Refetch follower count on any change
-          queryClient.invalidateQueries({ queryKey: ["organizer-followers", id] });
-          queryClient.invalidateQueries({ queryKey: ["follower-count", id] });
+          queryClient.invalidateQueries({ queryKey: ["organizer-followers", organizerId] });
+          queryClient.invalidateQueries({ queryKey: ["follower-count", organizerId] });
         }
       )
       .subscribe();
@@ -131,7 +148,7 @@ export default function OrganizadorPublico() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [id, queryClient]);
+  }, [organizerId, queryClient]);
 
   // Get all gallery images from events
   const galleryImages = events.flatMap((event: any) => {
@@ -278,12 +295,12 @@ export default function OrganizadorPublico() {
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3">
                   <FollowButton 
-                    organizerId={id!} 
+                    organizerId={organizerId!} 
                     variant="premium"
                     onFollowerCountChange={setFollowerCount}
                   />
                   <ShareButton 
-                    eventId={id!}
+                    eventId={organizerId!}
                     eventTitle={organizer.display_name}
                     className="h-11 px-4 rounded-full border border-border bg-background hover:bg-muted"
                   />

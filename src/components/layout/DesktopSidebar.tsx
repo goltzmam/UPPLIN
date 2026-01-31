@@ -175,7 +175,7 @@ export function DesktopSidebar() {
         
         {/* Create Button - Same gradient style as mobile */}
         <NavItem
-          to={user ? "/organizador/evento" : "/organizador/cadastro"}
+          to={user ? "/organizador/painel/evento/novo" : "/organizador/cadastro"}
           icon={<Plus className="h-6 w-6" />}
           label="Criar"
           isActive={false}
