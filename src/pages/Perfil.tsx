@@ -21,7 +21,7 @@ export default function Perfil() {
     }
   }, [loading, user, navigate]);
 
-  // Fetch user stats
+  // Fetch user stats with aggressive caching
   const { data: stats } = useQuery({
     queryKey: ["user-stats", user?.id],
     queryFn: async () => {
@@ -42,6 +42,8 @@ export default function Perfil() {
       };
     },
     enabled: !!user,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    gcTime: 1000 * 60 * 10,
   });
 
   if (loading) return (

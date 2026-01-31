@@ -71,6 +71,8 @@ export default function OrganizerPublicProfile() {
       return data;
     },
     enabled: !!identifier,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30,
   });
 
   // Fetch events using organizer ID from fetched data
@@ -84,6 +86,7 @@ export default function OrganizerPublicProfile() {
         .select(`
           id,
           title,
+          slug,
           cover_image_url,
           start_at,
           end_at,
@@ -101,6 +104,8 @@ export default function OrganizerPublicProfile() {
       return data || [];
     },
     enabled: !!organizerId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 30,
   });
 
   // Fetch initial follower count

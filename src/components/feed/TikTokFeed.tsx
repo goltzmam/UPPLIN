@@ -162,6 +162,7 @@ const FeedRow = React.memo(function FeedRow({
   const [showSaveParticles, setShowSaveParticles] = useState(false);
   const [showComments, setShowComments] = useState(false);
 
+  // Only fetch comment count when item becomes active - reduced frequency
   const { data: commentCount = 0 } = useQuery({
     queryKey: ["event-comment-count", item.id],
     queryFn: async () => {
@@ -169,7 +170,8 @@ const FeedRow = React.memo(function FeedRow({
       if (error) throw error;
       return count || 0;
     },
-    staleTime: 60000,
+    staleTime: 1000 * 60 * 5, // 5 minutes - comments don't need to be real-time
+    gcTime: 1000 * 60 * 30,
     enabled: isActive,
   });
 
@@ -450,37 +452,51 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   // IntersectionObserver for active item detection (replaces scroll handler)
   useEffect(() => {
-    if (!containerRef.current) return;
+    const container = containerRef.current;
+    if (!container || items.length === 0) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
+        for (const entry of entries) {
           if (entry.isIntersecting && entry.intersectionRatio >= 0.7) {
             const index = parseInt(entry.target.getAttribute("data-index") || "0", 10);
-            if (index !== activeIndex) {
-              // Only trigger haptic on actual index change
-              if (index !== prevIndexRef.current) {
-                prevIndexRef.current = index;
-                triggerFeedback({ haptic: "selection" });
+            setActiveIndex((prev) => {
+              if (index !== prev) {
+                // Only trigger haptic on actual index change
+                if (index !== prevIndexRef.current) {
+                  prevIndexRef.current = index;
+                  triggerFeedback({ haptic: "selection" });
+                }
+                return index;
               }
-              setActiveIndex(index);
-            }
+              return prev;
+            });
+            break; // Exit after first match
           }
-        });
+        }
       },
       { 
-        root: containerRef.current,
-        threshold: 0.7 
+        root: container,
+        threshold: 0.7,
+        rootMargin: '0px'
       }
     );
 
-    // Observe all items
-    itemRefs.current.forEach((element) => {
-      observer.observe(element);
-    });
+    // Observe all items - use requestIdleCallback for non-blocking
+    const observeItems = () => {
+      itemRefs.current.forEach((element) => {
+        observer.observe(element);
+      });
+    };
+
+    if ('requestIdleCallback' in window) {
+      (window as any).requestIdleCallback(observeItems, { timeout: 100 });
+    } else {
+      setTimeout(observeItems, 0);
+    }
 
     return () => observer.disconnect();
-  }, [containerHeight, items.length, activeIndex]);
+  }, [containerHeight, items.length]);
 
   // Save scroll position to cache
   useEffect(() => {

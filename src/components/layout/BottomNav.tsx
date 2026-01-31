@@ -34,8 +34,8 @@ export function BottomNav() {
     { icon: User, label: "Perfil", path: user ? "/perfil" : "/login" },
   ];
 
-  // Only hide on checkout, organizer dashboard, and admin pages
-  const hiddenPaths = ["/checkout", "/organizador/dashboard", "/admin"];
+  // Hide on checkout, organizer painel, and admin pages
+  const hiddenPaths = ["/checkout", "/organizador/painel", "/organizador/dashboard", "/admin"];
   const shouldHide = hiddenPaths.some(path => location.pathname.startsWith(path));
 
   // Measure actual height and set global CSS variable

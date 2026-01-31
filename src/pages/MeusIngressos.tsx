@@ -47,6 +47,8 @@ export default function MeusIngressos() {
       return data;
     },
     enabled: !!user,
+    staleTime: 1000 * 60 * 2, // 2 minutes
+    gcTime: 1000 * 60 * 15,
   });
 
   if (loading || isLoading) return <><Header /><PageLoading /><Footer /></>;
