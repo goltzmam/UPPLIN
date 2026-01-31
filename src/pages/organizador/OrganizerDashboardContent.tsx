@@ -192,7 +192,7 @@ export default function OrganizerDashboardContent() {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem asChild>
-                          <Link to={`/evento/${event.id}`}>
+                          <Link to={`/evento/${event.slug || event.id}`}>
                             <Eye className="h-4 w-4 mr-2" />
                             Ver Página
                           </Link>

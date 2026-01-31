@@ -17,6 +17,7 @@ import { FeedSkeleton } from "./FeedSkeleton";
 
 interface FeedItem {
   id: string;
+  slug?: string | null;
   title: string;
   coverImageUrl: string | null;
   videoUrl?: string | null;
@@ -272,7 +273,7 @@ const FeedCard = React.memo(function FeedCard({
           </Link>
           
           <Link 
-            to={`/evento/${item.id}`}
+            to={`/evento/${item.slug || item.id}`}
             className="block"
             onClick={(e) => e.stopPropagation()}
           >
@@ -296,7 +297,7 @@ const FeedCard = React.memo(function FeedCard({
 
           {/* Buy button - brand gradient */}
           <Link
-            to={`/evento/${item.id}`}
+            to={`/evento/${item.slug || item.id}`}
             onClick={(e) => e.stopPropagation()}
             className="mt-3 inline-flex items-center gap-2 font-semibold px-5 py-2.5 rounded-full text-sm text-white shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98]"
             style={{

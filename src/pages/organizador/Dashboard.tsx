@@ -65,7 +65,7 @@ export default function OrganizerDashboard() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")
-        .select(`*, ticket_types(quantity_total, quantity_sold, price_cents)`)
+        .select(`*, slug, ticket_types(quantity_total, quantity_sold, price_cents)`)
         .eq("organizer_id", organizer!.id)
         .order("created_at", { ascending: false });
 
@@ -315,7 +315,7 @@ export default function OrganizerDashboard() {
                               <Edit className="h-4 w-4 mr-2" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => navigate(`/evento/${event.id}`)}>
+                            <DropdownMenuItem onClick={() => navigate(`/evento/${event.slug || event.id}`)}>
                               <Eye className="h-4 w-4 mr-2" />
                               Ver Página
                             </DropdownMenuItem>

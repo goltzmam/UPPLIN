@@ -123,6 +123,7 @@ export function NearbyEvents({ limit = 4 }: NearbyEventsProps) {
 
     return {
       id: event.id,
+      slug: event.slug,
       title: event.title,
       coverImageUrl: event.cover_image_url,
       startAt: event.start_at,
@@ -246,6 +247,7 @@ export function NearbyEvents({ limit = 4 }: NearbyEventsProps) {
             <div key={item.id} className="relative">
               <EventGridCard
                 id={item.id}
+                slug={item.slug}
                 title={item.title}
                 coverImageUrl={item.coverImageUrl}
                 startAt={item.startAt}

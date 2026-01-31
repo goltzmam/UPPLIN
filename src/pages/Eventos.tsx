@@ -44,6 +44,7 @@ export default function Eventos() {
         .from("events")
         .select(`
           *,
+          slug,
           ticket_types(price_cents),
           organizer:organizer_id(id, display_name, slug)
         `)
@@ -215,22 +216,23 @@ export default function Eventos() {
                     const minPrice = event.ticket_types?.length
                       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
                       : 0;
-                    return (
-                      <EventCard
-                        key={event.id}
-                        id={event.id}
-                        title={event.title}
-                        coverImageUrl={event.cover_image_url}
-                        startAt={event.start_at}
-                        venueName={event.venue_name}
-                        addressText={event.address_text}
-                        minPrice={minPrice}
-                        category={event.category}
-                        organizerId={event.organizer?.id}
-                        organizerName={event.organizer?.display_name}
-                        organizerUsername={event.organizer?.slug}
-                      />
-                    );
+                      return (
+                        <EventCard
+                          key={event.id}
+                          id={event.id}
+                          slug={event.slug}
+                          title={event.title}
+                          coverImageUrl={event.cover_image_url}
+                          startAt={event.start_at}
+                          venueName={event.venue_name}
+                          addressText={event.address_text}
+                          minPrice={minPrice}
+                          category={event.category}
+                          organizerId={event.organizer?.id}
+                          organizerName={event.organizer?.display_name}
+                          organizerUsername={event.organizer?.slug}
+                        />
+                      );
                   })}
                 </div>
               </>

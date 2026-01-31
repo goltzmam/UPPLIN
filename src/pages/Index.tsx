@@ -80,6 +80,7 @@ export default function Index() {
 
     return {
       id: event.id,
+      slug: event.slug,
       title: event.title,
       coverImageUrl,
       videoUrl,

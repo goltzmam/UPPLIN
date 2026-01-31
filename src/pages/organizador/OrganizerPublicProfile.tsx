@@ -455,7 +455,7 @@ export default function OrganizerPublicProfile() {
                           transition={{ delay: index * 0.05 }}
                         >
                           <Link
-                            to={`/evento/${event.id}`}
+                            to={`/evento/${event.slug || event.id}`}
                             className="group relative aspect-[3/4] rounded-xl overflow-hidden block bg-muted"
                           >
                             {/* Image */}

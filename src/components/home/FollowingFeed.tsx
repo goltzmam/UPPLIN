@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 
 interface EventWithOrganizer {
   id: string;
+  slug: string | null;
   title: string;
   cover_image_url: string | null;
   start_at: string;
@@ -47,6 +48,7 @@ export function FollowingFeed() {
         .from("events")
         .select(`
           id,
+          slug,
           title,
           cover_image_url,
           start_at,
@@ -240,6 +242,7 @@ export function FollowingFeed() {
           <FeedEventCard
             key={event.id}
             id={event.id}
+            slug={event.slug}
             title={event.title}
             coverImageUrl={event.cover_image_url}
             startAt={event.start_at}

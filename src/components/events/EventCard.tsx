@@ -7,6 +7,7 @@ import { OrganizerPreviewTooltip } from "./OrganizerPreviewTooltip";
 
 interface EventCardProps {
   id: string;
+  slug?: string | null;
   title: string;
   coverImageUrl: string | null;
   startAt: string;
@@ -22,6 +23,7 @@ interface EventCardProps {
 
 export function EventCard({
   id,
+  slug,
   title,
   coverImageUrl,
   startAt,
@@ -33,6 +35,7 @@ export function EventCard({
   organizerName,
   organizerUsername,
 }: EventCardProps) {
+  const eventUrl = `/evento/${slug || id}`;
   const eventDate = new Date(startAt);
   const formattedDate = format(eventDate, "d 'de' MMM", { locale: ptBR });
   const formattedDay = format(eventDate, "EEEE", { locale: ptBR });
@@ -48,7 +51,7 @@ export function EventCard({
   return (
     <div className="group block bg-card rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-border hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10 transition-all duration-300 w-full min-w-0">
       {/* Cover Image - Clickable */}
-      <Link to={`/evento/${id}`} className="block">
+      <Link to={eventUrl} className="block">
         <div className="relative aspect-[4/3] overflow-hidden">
           {coverImageUrl ? (
             <img
@@ -100,7 +103,7 @@ export function EventCard({
           />
         )}
 
-        <Link to={`/evento/${id}`} className="block">
+        <Link to={eventUrl} className="block">
           <h3 className="font-display font-bold text-sm sm:text-base lg:text-lg leading-tight line-clamp-2 text-card-foreground group-hover:text-accent transition-colors duration-200">
             {title}
           </h3>

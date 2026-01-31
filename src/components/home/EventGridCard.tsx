@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface EventGridCardProps {
   id: string;
+  slug?: string | null;
   title: string;
   coverImageUrl: string | null;
   startAt: string;
@@ -22,6 +23,7 @@ interface EventGridCardProps {
 
 export function EventGridCard({
   id,
+  slug,
   title,
   coverImageUrl,
   startAt,
@@ -33,6 +35,7 @@ export function EventGridCard({
   minPrice,
   index = 0,
 }: EventGridCardProps) {
+  const eventUrl = `/evento/${slug || id}`;
   const formattedDate = format(new Date(startAt), "d MMM", { locale: ptBR });
   const formattedDay = format(new Date(startAt), "EEEE", { locale: ptBR });
   const formattedTime = format(new Date(startAt), "HH:mm", { locale: ptBR });
@@ -47,7 +50,7 @@ export function EventGridCard({
       transition={{ delay: index * 0.03, duration: 0.35, ease: "easeOut" }}
       className="group relative"
     >
-      <Link to={`/evento/${id}`} className="block">
+      <Link to={eventUrl} className="block">
         {/* Card Container with dark theme */}
         <div className="relative aspect-[3/4] rounded-2xl lg:rounded-3xl overflow-hidden bg-card border border-border hover:border-accent/30 shadow-md hover:shadow-2xl hover:shadow-accent/20 transition-all duration-500">
           {/* Image with parallax effect on hover */}
