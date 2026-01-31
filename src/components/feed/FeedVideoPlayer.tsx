@@ -26,6 +26,28 @@ function hardStop(video: HTMLVideoElement) {
   }
 }
 
+function hardStopAnyMedia(media: HTMLMediaElement) {
+  try {
+    media.pause();
+    media.muted = true;
+    media.volume = 0;
+    media.currentTime = 0;
+    media.removeAttribute("src");
+    media.load();
+  } catch {
+    // ignore
+  }
+}
+
+function hardStopAllMediaExcept(except?: HTMLMediaElement) {
+  if (typeof document === "undefined") return;
+  const els = Array.from(document.querySelectorAll<HTMLMediaElement>("video, audio"));
+  for (const el of els) {
+    if (except && el === except) continue;
+    hardStopAnyMedia(el);
+  }
+}
+
 export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
   videoUrl,
   coverUrl,
@@ -59,13 +81,18 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     
     // Video is active but user paused
     if (isPaused) {
-      video.pause();
-      video.muted = true;
+      // IMPORTANT: users reported audio continuing even after pausing.
+      // Use hardStop to tear down the audio pipeline completely.
+      hardStop(video);
+      setVideoLoaded(false);
       return;
     }
     
     // Video should play
     if (shouldPlay && !videoError) {
+      // Safety: guarantee only one media element plays at a time.
+      hardStopAllMediaExcept(video);
+
       // Restore src if it was removed
       if (!video.src || video.src === '') {
         video.src = videoUrl;
@@ -114,6 +141,14 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     };
   }, [shouldPlay, videoError, videoUrl, isActive, isPaused, forceStop]);
 
+  // Absolute guarantee: stop audio on unmount
+  useEffect(() => {
+    return () => {
+      const video = videoRef.current;
+      if (video) hardStop(video);
+    };
+  }, []);
+
   // Kill audio pipeline when tab/app loses visibility
   useEffect(() => {
     const video = videoRef.current;
@@ -127,8 +162,18 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
       }
     };
 
+    const onPageHide = () => {
+      hardStop(video);
+      setVideoLoaded(false);
+      setIsBuffering(false);
+    };
+
     document.addEventListener("visibilitychange", onVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("pagehide", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("pagehide", onPageHide);
+    };
   }, []);
 
   // Immediate hard stop when isActive or forceStop changes to false/true

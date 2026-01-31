@@ -2,6 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { AnimatePresence, motion } from "framer-motion";
@@ -70,6 +71,23 @@ if (typeof window !== "undefined") {
 // Animated routes wrapper - smooth fade without flashing
 function AnimatedRoutes() {
   const location = useLocation();
+
+  // Global kill-switch: prevent any lingering feed audio when navigating away.
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll<HTMLMediaElement>("video, audio"));
+    for (const el of els) {
+      try {
+        el.pause();
+        el.muted = true;
+        el.volume = 0;
+        el.currentTime = 0;
+        el.removeAttribute("src");
+        el.load();
+      } catch {
+        // ignore
+      }
+    }
+  }, [location.pathname]);
 
   return (
     <AnimatePresence mode="popLayout" initial={false}>
