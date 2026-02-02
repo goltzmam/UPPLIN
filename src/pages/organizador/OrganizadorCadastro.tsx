@@ -226,11 +226,11 @@ export default function OrganizadorCadastro() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 py-8 sm:p-6 relative overflow-hidden">
       {/* Animated background gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 
-          className="absolute top-0 left-1/4 w-80 h-80 rounded-full opacity-15 blur-3xl"
+          className="absolute top-0 left-1/4 w-40 h-40 sm:w-80 sm:h-80 rounded-full opacity-15 blur-3xl"
           style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D)" }}
           animate={{ 
             y: [0, 100, 0],
@@ -239,7 +239,7 @@ export default function OrganizadorCadastro() {
           transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div 
-          className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full opacity-15 blur-3xl"
+          className="absolute bottom-0 right-1/4 w-40 h-40 sm:w-80 sm:h-80 rounded-full opacity-15 blur-3xl"
           style={{ background: "linear-gradient(135deg, #FF2D2D, #FF007A)" }}
           animate={{ 
             y: [0, -100, 0],
@@ -252,10 +252,10 @@ export default function OrganizadorCadastro() {
       {/* Back Button */}
       <Link 
         to="/" 
-        className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-foreground hover:bg-muted transition-colors"
+        className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50 flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-foreground hover:bg-muted transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" />
-        <span className="text-sm font-medium">Voltar</span>
+        <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+        <span className="text-xs sm:text-sm font-medium">Voltar</span>
       </Link>
 
       {/* Centered Card */}
@@ -265,12 +265,12 @@ export default function OrganizadorCadastro() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="w-full max-w-md relative z-10"
       >
-        <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-6 sm:p-8 shadow-2xl">
+        <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-5 sm:p-8 shadow-2xl">
           {/* Header */}
-          <div className="text-center space-y-4 mb-6">
+          <div className="text-center space-y-3 sm:space-y-4 mb-5 sm:mb-6">
             <Link to="/" className="inline-block">
               <motion.span 
-                className="font-display text-3xl sm:text-4xl font-bold tracking-tight"
+                className="font-display text-2xl sm:text-4xl font-bold tracking-tight"
                 style={{ 
                   background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
                   WebkitBackgroundClip: "text",
@@ -283,13 +283,13 @@ export default function OrganizadorCadastro() {
                 UPPLIN
               </motion.span>
             </Link>
-            <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium w-fit mx-auto">
-              <Building2 className="h-4 w-4" />
+            <div className="flex items-center justify-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs sm:text-sm font-medium w-fit mx-auto">
+              <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Área do Organizador
             </div>
             <div>
-              <h1 className="font-display text-xl font-bold text-foreground">Criar conta de organizador</h1>
-              <p className="text-sm text-muted-foreground mt-1">
+              <h1 className="font-display text-lg sm:text-xl font-bold text-foreground">Criar conta de organizador</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                 Já tem conta?{" "}
                 <Link to="/organizador/login" className="text-primary hover:underline font-medium">Entrar</Link>
               </p>
@@ -297,11 +297,11 @@ export default function OrganizadorCadastro() {
           </div>
 
           {/* Progress Steps */}
-          <div className="flex items-center justify-center gap-2 mb-6">
+          <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
             {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center gap-2">
+              <div key={s} className="flex items-center gap-1.5 sm:gap-2">
                 <motion.div
-                  className={`relative h-8 w-8 rounded-full flex items-center justify-center font-semibold text-xs transition-colors ${
+                  className={`relative h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center font-semibold text-[10px] sm:text-xs transition-colors ${
                     step > s 
                       ? "bg-primary text-primary-foreground" 
                       : step === s 
@@ -311,10 +311,10 @@ export default function OrganizadorCadastro() {
                   animate={{ scale: step === s ? 1.1 : 1 }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 >
-                  {step > s ? <Check className="h-4 w-4" /> : s}
+                  {step > s ? <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : s}
                 </motion.div>
                 {s < 3 && (
-                  <motion.div className="w-8 h-0.5 rounded-full bg-muted overflow-hidden">
+                  <motion.div className="w-6 sm:w-8 h-0.5 rounded-full bg-muted overflow-hidden">
                     <motion.div
                       className="h-full bg-primary"
                       initial={{ width: "0%" }}
@@ -327,12 +327,12 @@ export default function OrganizadorCadastro() {
             ))}
           </div>
           
-          <p className="text-xs text-muted-foreground text-center font-medium mb-4">
+          <p className="text-[10px] sm:text-xs text-muted-foreground text-center font-medium mb-3 sm:mb-4">
             {step === 1 ? "Dados da conta" : step === 2 ? "Dados da empresa" : "Redes sociais (opcional)"}
           </p>
 
           {/* Form Steps */}
-          <div className="relative overflow-hidden min-h-[280px]">
+          <div className="relative overflow-hidden min-h-[260px] sm:min-h-[280px]">
             <AnimatePresence mode="wait" custom={direction}>
               {step === 1 && (
                 <motion.form
@@ -344,14 +344,14 @@ export default function OrganizadorCadastro() {
                   exit="exit"
                   transition={stepTransition}
                   onSubmit={handleStep1}
-                  className="space-y-4"
+                  className="space-y-3 sm:space-y-4"
                 >
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-sm">Seu nome</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="fullName" className="text-xs sm:text-sm">Seu nome</Label>
                     <ValidatedInput 
                       id="fullName" 
                       placeholder="Nome completo" 
-                      className="h-11" 
+                      className="h-10 sm:h-11 text-sm" 
                       value={fullName} 
                       onChange={(e) => setFullName(e.target.value)} 
                       required
@@ -359,13 +359,13 @@ export default function OrganizadorCadastro() {
                       validationRules={nameRules}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm">Email</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="email" className="text-xs sm:text-sm">Email</Label>
                     <ValidatedInput 
                       id="email" 
                       type="email" 
                       placeholder="seu@email.com" 
-                      className="h-11" 
+                      className="h-10 sm:h-11 text-sm" 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)} 
                       required
@@ -373,13 +373,13 @@ export default function OrganizadorCadastro() {
                       validationRules={emailRules}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-sm">Senha</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="password" className="text-xs sm:text-sm">Senha</Label>
                     <ValidatedInput 
                       id="password" 
                       type="password" 
                       placeholder="Mínimo 6 caracteres" 
-                      className="h-11" 
+                      className="h-10 sm:h-11 text-sm" 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
                       required 
@@ -388,7 +388,7 @@ export default function OrganizadorCadastro() {
                       validationRules={passwordRules}
                     />
                   </div>
-                  <Button type="submit" className="w-full h-11 gap-2 btn-gradient" disabled={!isStep1Valid}>
+                  <Button type="submit" className="w-full h-10 sm:h-11 gap-2 text-xs sm:text-sm btn-gradient" disabled={!isStep1Valid}>
                     Continuar
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -405,14 +405,14 @@ export default function OrganizadorCadastro() {
                   exit="exit"
                   transition={stepTransition}
                   onSubmit={handleStep2}
-                  className="space-y-3"
+                  className="space-y-2.5 sm:space-y-3"
                 >
-                  <div className="space-y-2">
-                    <Label htmlFor="companyName" className="text-sm">Nome da Empresa</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="companyName" className="text-xs sm:text-sm">Nome da Empresa</Label>
                     <ValidatedInput 
                       id="companyName" 
                       placeholder="Ex: Eventos XYZ" 
-                      className="h-11" 
+                      className="h-10 sm:h-11 text-sm" 
                       value={companyName} 
                       onChange={(e) => setCompanyName(e.target.value)} 
                       required
@@ -420,12 +420,12 @@ export default function OrganizadorCadastro() {
                       validationRules={companyRules}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cnpj" className="text-sm">CNPJ</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="cnpj" className="text-xs sm:text-sm">CNPJ</Label>
                     <ValidatedInput 
                       id="cnpj" 
                       placeholder="00.000.000/0000-00" 
-                      className="h-11" 
+                      className="h-10 sm:h-11 text-sm" 
                       value={cnpj} 
                       onChange={(e) => setCnpj(formatCNPJ(e.target.value))} 
                       required
@@ -433,12 +433,12 @@ export default function OrganizadorCadastro() {
                       validationRules={cnpjRules}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone" className="text-sm">Telefone</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="phone" className="text-xs sm:text-sm">Telefone</Label>
                     <ValidatedInput 
                       id="phone" 
                       placeholder="(00) 00000-0000" 
-                      className="h-11" 
+                      className="h-10 sm:h-11 text-sm" 
                       value={phone} 
                       onChange={(e) => setPhone(formatPhone(e.target.value))} 
                       required
@@ -446,14 +446,14 @@ export default function OrganizadorCadastro() {
                       validationRules={phoneRules}
                     />
                   </div>
-                  <div className="flex gap-3 pt-2">
-                    <Button type="button" variant="outline" className="flex-1 h-11 gap-2" onClick={() => goToStep(1)}>
-                      <ChevronLeft className="h-4 w-4" />
+                  <div className="flex gap-2.5 sm:gap-3 pt-1.5 sm:pt-2">
+                    <Button type="button" variant="outline" className="flex-1 h-10 sm:h-11 gap-1.5 sm:gap-2 text-xs sm:text-sm" onClick={() => goToStep(1)}>
+                      <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       Voltar
                     </Button>
-                    <Button type="submit" className="flex-1 h-11 gap-2 btn-gradient" disabled={!isStep2Valid}>
+                    <Button type="submit" className="flex-1 h-10 sm:h-11 gap-1.5 sm:gap-2 text-xs sm:text-sm btn-gradient" disabled={!isStep2Valid}>
                       Continuar
-                      <ChevronRight className="h-4 w-4" />
+                      <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 </motion.form>
@@ -469,53 +469,53 @@ export default function OrganizadorCadastro() {
                   exit="exit"
                   transition={stepTransition}
                   onSubmit={handleSubmit}
-                  className="space-y-3"
+                  className="space-y-2.5 sm:space-y-3"
                 >
-                  <div className="space-y-2">
-                    <Label htmlFor="instagram" className="text-sm">Instagram</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="instagram" className="text-xs sm:text-sm">Instagram</Label>
                     <ValidatedInput 
                       id="instagram" 
                       placeholder="@seuperfil" 
-                      className="h-11" 
+                      className="h-10 sm:h-11 text-sm" 
                       value={instagram} 
                       onChange={(e) => setInstagram(e.target.value)}
                       icon={<Instagram className="h-4 w-4" />}
                       showValidation={false}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="facebook" className="text-sm">Facebook</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="facebook" className="text-xs sm:text-sm">Facebook</Label>
                     <ValidatedInput 
                       id="facebook" 
                       placeholder="facebook.com/suapagina" 
-                      className="h-11" 
+                      className="h-10 sm:h-11 text-sm" 
                       value={facebook} 
                       onChange={(e) => setFacebook(e.target.value)}
                       icon={<Facebook className="h-4 w-4" />}
                       showValidation={false}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="website" className="text-sm">Website</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="website" className="text-xs sm:text-sm">Website</Label>
                     <ValidatedInput 
                       id="website" 
                       placeholder="https://seusite.com" 
-                      className="h-11" 
+                      className="h-10 sm:h-11 text-sm" 
                       value={website} 
                       onChange={(e) => setWebsite(e.target.value)}
                       icon={<Globe className="h-4 w-4" />}
                       showValidation={false}
                     />
                   </div>
-                  <div className="flex gap-3 pt-2">
-                    <Button type="button" variant="outline" className="flex-1 h-11 gap-2" onClick={() => goToStep(2)}>
-                      <ChevronLeft className="h-4 w-4" />
+                  <div className="flex gap-2.5 sm:gap-3 pt-1.5 sm:pt-2">
+                    <Button type="button" variant="outline" className="flex-1 h-10 sm:h-11 gap-1.5 sm:gap-2 text-xs sm:text-sm" onClick={() => goToStep(2)}>
+                      <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       Voltar
                     </Button>
-                    <Button type="submit" className="flex-1 h-11 gap-2 btn-gradient" disabled={loading}>
+                    <Button type="submit" className="flex-1 h-10 sm:h-11 gap-1.5 sm:gap-2 text-xs sm:text-sm btn-gradient" disabled={loading}>
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
                         <>
-                          <Check className="h-4 w-4" />
+                          <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                           Criar Conta
                         </>
                       )}
@@ -527,8 +527,8 @@ export default function OrganizadorCadastro() {
           </div>
 
           {/* Footer */}
-          <div className="mt-6 pt-4 border-t border-border text-center">
-            <p className="text-sm text-muted-foreground">
+          <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-border text-center">
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Quer comprar ingressos?{" "}
               <Link to="/cadastro" className="text-primary hover:underline font-medium">
                 Cadastrar como participante →
