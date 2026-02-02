@@ -120,8 +120,8 @@ export default function AdminLogin() {
             <p className="text-xs text-center text-foreground font-mono">
               estefaniomelo@gmail.com
             </p>
-            <p className="text-xs text-center text-muted-foreground">
-              (use sua senha de admin)
+            <p className="text-xs text-center text-foreground font-mono">
+              Admin@2026
             </p>
           </div>
 
