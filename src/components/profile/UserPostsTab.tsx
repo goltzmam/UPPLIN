@@ -139,7 +139,7 @@ export function UserPostsTab() {
       const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("avatars")
+        .from("user-posts")
         .upload(fileName, file, {
           cacheControl: "3600",
           upsert: false,
@@ -148,7 +148,7 @@ export function UserPostsTab() {
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from("avatars")
+        .from("user-posts")
         .getPublicUrl(fileName);
 
       setMediaUrl(urlData.publicUrl);
