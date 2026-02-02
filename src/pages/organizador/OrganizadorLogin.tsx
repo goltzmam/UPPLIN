@@ -175,6 +175,19 @@ export default function OrganizadorLogin() {
             </Button>
           </form>
 
+          {/* Demo Credentials */}
+          <div className="p-4 bg-muted/50 rounded-lg border border-border">
+            <p className="text-xs text-center text-muted-foreground mb-2">
+              <strong>Demo - Organizador:</strong>
+            </p>
+            <p className="text-xs text-center font-mono text-foreground">
+              demo.organizador@upplin.app
+            </p>
+            <p className="text-xs text-center font-mono text-muted-foreground">
+              Demo@2026
+            </p>
+          </div>
+
           <div className="text-center pt-4 border-t border-border">
             <p className="text-sm text-muted-foreground mb-2">Quer comprar ingressos?</p>
             <Link 

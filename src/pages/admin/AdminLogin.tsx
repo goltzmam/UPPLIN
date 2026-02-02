@@ -104,7 +104,20 @@ export default function AdminLogin() {
             </Button>
           </form>
 
-          <p className="text-xs text-center text-muted-foreground mt-6">
+          {/* Demo Credentials */}
+          <div className="mt-6 p-4 bg-muted/50 rounded-lg border border-border">
+            <p className="text-xs text-center text-muted-foreground mb-2">
+              <strong>Credenciais de Teste:</strong>
+            </p>
+            <p className="text-xs text-center text-foreground font-mono">
+              estefaniomelo@gmail.com
+            </p>
+            <p className="text-xs text-center text-muted-foreground">
+              (use sua senha de admin)
+            </p>
+          </div>
+
+          <p className="text-xs text-center text-muted-foreground mt-4">
             Acesso restrito. Tentativas não autorizadas serão registradas.
           </p>
         </div>
