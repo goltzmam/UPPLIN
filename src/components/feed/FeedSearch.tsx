@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, X, Calendar, User, TrendingUp } from "lucide-react";
+import { Search, Calendar, User, TrendingUp, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 interface FeedSearchProps {
   isOpen: boolean;
@@ -14,20 +15,22 @@ interface FeedSearchProps {
 interface SearchResult {
   type: "event" | "organizer";
   id: string;
+  slug?: string | null;
   title: string;
   subtitle?: string;
   image?: string | null;
 }
 
-const trendingSearches = [
-  "Festival de música",
-  "Stand-up comedy",
-  "Workshops",
-  "Happy hour",
-];
+interface TrendingEvent {
+  id: string;
+  title: string;
+  slug: string | null;
+  cover_image_url: string | null;
+}
 
 export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
   const [query, setQuery] = useState("");
+  const debouncedQuery = useDebouncedValue(query, 200);
   const inputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
@@ -41,31 +44,52 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
     if (!isOpen) setQuery("");
   }, [isOpen]);
 
-  const { data: searchResults, isLoading } = useQuery({
-    queryKey: ["feed-search", query],
+  // Fetch trending events in real-time
+  const { data: trendingEvents } = useQuery({
+    queryKey: ["trending-events"],
     queryFn: async () => {
-      if (query.length < 2) return [];
+      const { data } = await supabase
+        .from("events")
+        .select("id, title, slug, cover_image_url")
+        .eq("status", "published")
+        .gte("start_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(4);
+      
+      return (data || []) as TrendingEvent[];
+    },
+    staleTime: 60000,
+    enabled: isOpen,
+  });
+
+  // Real-time search with debounce
+  const { data: searchResults, isLoading, isFetching } = useQuery({
+    queryKey: ["feed-search", debouncedQuery],
+    queryFn: async () => {
+      if (debouncedQuery.length < 2) return [];
       const results: SearchResult[] = [];
 
       const [{ data: events }, { data: organizers }] = await Promise.all([
         supabase
           .from("events")
-          .select("id, title, venue_name, cover_image_url")
+          .select("id, title, slug, venue_name, cover_image_url")
           .eq("status", "published")
-          .or(`title.ilike.%${query}%,venue_name.ilike.%${query}%,address_text.ilike.%${query}%`)
-          .limit(4),
+          .or(`title.ilike.%${debouncedQuery}%,venue_name.ilike.%${debouncedQuery}%,address_text.ilike.%${debouncedQuery}%`)
+          .order("start_at", { ascending: true })
+          .limit(5),
         supabase
           .from("organizer_accounts")
           .select("id, display_name, slug, logo_url")
           .eq("status", "active")
-          .or(`display_name.ilike.%${query}%,slug.ilike.%${query}%`)
-          .limit(2),
+          .or(`display_name.ilike.%${debouncedQuery}%,slug.ilike.%${debouncedQuery}%`)
+          .limit(3),
       ]);
 
       events?.forEach((event) => {
         results.push({
           type: "event",
           id: event.id,
+          slug: event.slug,
           title: event.title,
           subtitle: event.venue_name || undefined,
           image: event.cover_image_url,
@@ -76,6 +100,7 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
         results.push({
           type: "organizer",
           id: org.id,
+          slug: org.slug,
           title: org.display_name,
           subtitle: org.slug ? `@${org.slug}` : undefined,
           image: org.logo_url,
@@ -84,30 +109,37 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
 
       return results;
     },
-    enabled: query.length >= 2,
-    staleTime: 30000,
+    enabled: debouncedQuery.length >= 2,
+    staleTime: 10000,
   });
 
-  const handleSearch = (searchQuery: string) => {
+  const handleSearch = useCallback((searchQuery: string) => {
     if (searchQuery.trim()) {
       navigate(`/eventos?q=${encodeURIComponent(searchQuery.trim())}`);
       onClose();
     }
-  };
+  }, [navigate, onClose]);
 
-  const handleResultClick = (result: SearchResult) => {
+  const handleResultClick = useCallback((result: SearchResult) => {
     if (result.type === "event") {
-      navigate(`/evento/${result.id}`);
+      navigate(`/evento/${result.slug || result.id}`);
     } else {
-      navigate(`/organizador/${result.id}`);
+      navigate(`/o/${result.slug || result.id}`);
     }
     onClose();
-  };
+  }, [navigate, onClose]);
+
+  const handleTrendingClick = useCallback((event: TrendingEvent) => {
+    navigate(`/evento/${event.slug || event.id}`);
+    onClose();
+  }, [navigate, onClose]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSearch(query);
   };
+
+  const showLoading = isLoading || (isFetching && debouncedQuery.length >= 2);
 
   return (
     <AnimatePresence>
@@ -132,6 +164,11 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
                 placeholder="Buscar eventos, organizadores..."
                 className="w-full pl-10 pr-4 h-10 bg-muted rounded-full text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition-all"
               />
+              {showLoading && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <div className="h-4 w-4 border-2 border-muted-foreground/30 border-t-accent rounded-full animate-spin" />
+                </div>
+              )}
             </form>
             <button
               onClick={onClose}
@@ -143,13 +180,9 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
 
           {/* Content */}
           <div className="px-4 py-4 overflow-y-auto max-h-[calc(100dvh-70px)] scrollbar-hide">
-            {query.length >= 2 ? (
+            {debouncedQuery.length >= 2 ? (
               <div className="space-y-1">
-                {isLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="h-5 w-5 border-2 border-muted-foreground/30 border-t-accent rounded-full animate-spin" />
-                  </div>
-                ) : searchResults && searchResults.length > 0 ? (
+                {searchResults && searchResults.length > 0 ? (
                   <>
                     {searchResults.map((result, index) => (
                       <motion.button
@@ -203,42 +236,54 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
                       Ver todos para "{query}"
                     </button>
                   </>
-                ) : (
+                ) : !showLoading ? (
                   <div className="text-center py-12">
-                    <p className="text-muted-foreground text-sm">Nenhum resultado</p>
+                    <p className="text-muted-foreground text-sm">Nenhum resultado para "{debouncedQuery}"</p>
                   </div>
-                )}
+                ) : null}
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Trending */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp className="h-4 w-4 text-accent" />
-                    <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Em alta</p>
+                {/* Trending Events from DB */}
+                {trendingEvents && trendingEvents.length > 0 && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <TrendingUp className="h-4 w-4 text-accent" />
+                      <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Em alta</p>
+                    </div>
+                    <div className="space-y-0.5">
+                      {trendingEvents.map((event, index) => (
+                        <motion.button
+                          key={event.id}
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          onClick={() => handleTrendingClick(event)}
+                          className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 active:bg-muted transition-colors text-left"
+                        >
+                          <span className="h-7 w-7 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-xs font-bold flex-shrink-0">
+                            {index + 1}
+                          </span>
+                          {event.cover_image_url ? (
+                            <img 
+                              src={event.cover_image_url} 
+                              alt="" 
+                              className="h-8 w-8 rounded-lg object-cover flex-shrink-0"
+                            />
+                          ) : null}
+                          <span className="text-foreground text-sm truncate flex-1">{event.title}</span>
+                        </motion.button>
+                      ))}
+                    </div>
                   </div>
-                  <div className="space-y-0.5">
-                    {trendingSearches.map((search, index) => (
-                      <motion.button
-                        key={search}
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        onClick={() => handleSearch(search)}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 active:bg-muted transition-colors text-left"
-                      >
-                        <span className="h-7 w-7 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-xs font-bold">
-                          {index + 1}
-                        </span>
-                        <span className="text-foreground text-sm">{search}</span>
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
+                )}
 
                 {/* Quick filters */}
                 <div>
-                  <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider mb-3">Explorar por</p>
+                  <div className="flex items-center gap-2 mb-3">
+                    <Sparkles className="h-4 w-4 text-accent" />
+                    <p className="text-muted-foreground text-xs font-medium uppercase tracking-wider">Explorar por</p>
+                  </div>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       onClick={() => { navigate("/eventos"); onClose(); }}
