@@ -3,13 +3,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageCircle, Send, Trash2, Loader2 } from "lucide-react";
+import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useNavigate } from "react-router-dom";
+import { MentionInput, renderTextWithMentions } from "@/components/ui/mention-input";
 
 interface PostComment {
   id: string;
@@ -32,7 +33,12 @@ interface PostCommentsProps {
 export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps) {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
+
+  const handleMentionClick = (slug: string) => {
+    navigate(`/o/${slug}`);
+  };
 
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["post-comments", postId],
@@ -142,7 +148,9 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                       <p className="text-xs font-medium">
                         {comment.profile?.full_name || "Usuário"}
                       </p>
-                      <p className="text-sm break-words">{comment.content}</p>
+                      <p className="text-sm break-words">
+                        {renderTextWithMentions(comment.content, handleMentionClick)}
+                      </p>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-muted-foreground">
@@ -176,11 +184,12 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 flex gap-2">
-                <Textarea
-                  placeholder="Escreva um comentário..."
+                <MentionInput
+                  placeholder="Escreva um comentário... Use @ para marcar"
                   value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  className="min-h-[36px] h-9 py-2 text-sm resize-none bg-muted border-0"
+                  onChange={setNewComment}
+                  className="text-sm bg-muted border-0"
+                  minHeight="36px"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
