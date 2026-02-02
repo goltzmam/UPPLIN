@@ -522,4 +522,15 @@
   .touch-manipulation {
     touch-action: manipulation;
   }
+  
+  /* CRITICAL: Force hide desktop sidebar on mobile to prevent flash/delay issues */
+  .desktop-sidebar-only {
+    display: none !important;
+  }
+  
+  @media (min-width: 1024px) {
+    .desktop-sidebar-only {
+      display: flex !important;
+    }
+  }
 }
