@@ -100,10 +100,7 @@ const UpButtonDesktop = ({
 export function TikTokDesktopSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const {
-    user,
-    signOut
-  } = useAuth();
+  const { user } = useAuth();
   const { isOrganizer, isAdmin, organizerId, isLoading: rolesLoading } = useUserRoles();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUpMenuOpen, setIsUpMenuOpen] = useState(false);
@@ -113,69 +110,90 @@ export function TikTokDesktopSidebar() {
     return location.pathname.startsWith(path);
   };
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-  };
+  // REGRA DE NEGÓCIO:
+  // - Admin NUNCA vê botão "Painel" do organizador (mesmo se tiver conta)
+  // - Admin só vê botão "Admin"
+  // - Organizador (não-admin) vê apenas "Painel"
+  const showAdminButton = !rolesLoading && isAdmin;
+  const showOrganizerButton = !rolesLoading && !isAdmin && isOrganizer && !!organizerId;
 
-  // Determine if user can access organizer dashboard
-  // They need to have an organizer account (not just be an admin)
-  const canAccessOrganizerDashboard = !rolesLoading && isOrganizer && !!organizerId;
-
-  return <>
-      <aside className="desktop-sidebar-only flex-col items-center fixed left-0 top-0 h-dvh w-[72px] py-4 z-40 bg-sidebar border-r border-sidebar-border">
+  return (
+    <>
+      <aside className="desktop-sidebar-only fixed left-0 top-0 h-dvh w-[72px] z-40 bg-sidebar border-r border-sidebar-border flex flex-col">
         {/* Logo - "UP" matching mobile branding */}
-        <Link to="/" className="mb-6">
-          <span className="font-display text-2xl font-bold" style={{
-          background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-          backgroundClip: "text"
-        }}>UP</span>
-        </Link>
+        <div className="flex-shrink-0 flex items-center justify-center py-5">
+          <Link to="/">
+            <span 
+              className="font-display text-2xl font-bold"
+              style={{
+                background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
+            >
+              UP
+            </span>
+          </Link>
+        </div>
 
-        {/* Main Navigation - Matching mobile exactly */}
-        <nav className="flex-1 flex flex-col items-center gap-1 overflow-y-auto overflow-x-hidden">
-          {/* Início */}
-          <NavItem to="/" icon={<Home className="h-5 w-5" strokeWidth={1.5} />} label="Início" isActive={isActive("/")} />
+        {/* Main Navigation - Fixed layout, no scroll */}
+        <nav className="flex-1 flex flex-col items-center justify-center gap-1">
+          <NavItem 
+            to="/" 
+            icon={<Home className="h-5 w-5" strokeWidth={1.5} />} 
+            label="Início" 
+            isActive={isActive("/")} 
+          />
 
-          {/* Por perto (search trigger) - same as mobile */}
-          <NavItem icon={<MapPin className="h-5 w-5" strokeWidth={1.5} />} label="Por perto" onClick={() => setIsSearchOpen(true)} />
+          <NavItem 
+            icon={<MapPin className="h-5 w-5" strokeWidth={1.5} />} 
+            label="Por perto" 
+            onClick={() => setIsSearchOpen(true)} 
+          />
           
           {/* UP Button - Central CTA */}
           <UpButtonDesktop onClick={() => setIsUpMenuOpen(true)} />
           
-          {/* Salvos */}
-          <NavItem to={user ? "/eventos-salvos" : "/login"} icon={<Bookmark className="h-5 w-5" strokeWidth={1.5} />} label="Salvos" isActive={isActive("/eventos-salvos")} />
+          <NavItem 
+            to={user ? "/eventos-salvos" : "/login"} 
+            icon={<Bookmark className="h-5 w-5" strokeWidth={1.5} />} 
+            label="Salvos" 
+            isActive={isActive("/eventos-salvos")} 
+          />
 
-          {/* Perfil */}
-          <NavItem to={user ? "/perfil" : "/login"} icon={<User className="h-5 w-5" strokeWidth={1.5} />} label="Perfil" isActive={isActive("/perfil")} />
+          <NavItem 
+            to={user ? "/perfil" : "/login"} 
+            icon={<User className="h-5 w-5" strokeWidth={1.5} />} 
+            label="Perfil" 
+            isActive={isActive("/perfil")} 
+          />
         </nav>
         
-        {/* Bottom section - Role-specific navigation */}
-        <div className="flex flex-col items-center gap-1 pt-2 border-t border-sidebar-border mt-2">
-          {/* Painel do Organizador - only show if user has organizer account */}
-          {canAccessOrganizerDashboard && (
-            <NavItem 
-              to="/organizador/painel" 
-              icon={<LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />} 
-              label="Painel" 
-              isActive={isActive("/organizador/painel")}
-              highlight
-            />
-          )}
-          
-          {/* Admin Panel - only show for admins (separate from organizer) */}
-          {!rolesLoading && isAdmin && (
-            <NavItem 
-              to="/admin" 
-              icon={<LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />} 
-              label="Admin" 
-              isActive={isActive("/admin")}
-              highlight
-            />
-          )}
-        </div>
+        {/* Bottom section - Role-specific (only ONE button max) */}
+        {(showAdminButton || showOrganizerButton) && (
+          <div className="flex-shrink-0 flex flex-col items-center py-4 border-t border-sidebar-border">
+            {showAdminButton && (
+              <NavItem 
+                to="/admin" 
+                icon={<LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />} 
+                label="Admin" 
+                isActive={isActive("/admin")}
+                highlight
+              />
+            )}
+            
+            {showOrganizerButton && (
+              <NavItem 
+                to="/organizador/painel" 
+                icon={<LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />} 
+                label="Painel" 
+                isActive={isActive("/organizador/painel")}
+                highlight
+              />
+            )}
+          </div>
+        )}
       </aside>
 
       {/* Search overlay */}
@@ -183,5 +201,6 @@ export function TikTokDesktopSidebar() {
       
       {/* UP Action Menu */}
       <UpActionMenu isOpen={isUpMenuOpen} onClose={() => setIsUpMenuOpen(false)} />
-    </>;
+    </>
+  );
 }
