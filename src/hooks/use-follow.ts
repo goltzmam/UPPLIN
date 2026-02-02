@@ -51,9 +51,11 @@ export function useFollow(organizerId: string) {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidate all related queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["follow-status", organizerId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ["follower-count", organizerId] });
-      queryClient.invalidateQueries({ queryKey: ["following-events", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["following-events"] }); // Invalidate all following feeds
+      queryClient.invalidateQueries({ queryKey: ["user-following"] }); // Invalidate profile following tab
       toast.success("Agora você está seguindo este organizador");
     },
     onError: (error) => {
@@ -75,9 +77,11 @@ export function useFollow(organizerId: string) {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidate all related queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["follow-status", organizerId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ["follower-count", organizerId] });
-      queryClient.invalidateQueries({ queryKey: ["following-events", user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["following-events"] }); // Invalidate all following feeds
+      queryClient.invalidateQueries({ queryKey: ["user-following"] }); // Invalidate profile following tab
       toast.success("Você deixou de seguir este organizador");
     },
     onError: (error) => {
