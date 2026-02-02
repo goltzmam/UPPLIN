@@ -94,10 +94,10 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="relative"
+      className="relative w-full overflow-hidden"
     >
       {/* Cover Photo */}
-      <div className="relative h-32 sm:h-48 bg-gradient-to-br from-muted to-muted-foreground/20 overflow-hidden">
+      <div className="relative h-28 sm:h-40 bg-gradient-to-br from-muted to-muted-foreground/20 overflow-hidden">
         {(profile as any).cover_photo_url && (
           <img
             src={(profile as any).cover_photo_url}
@@ -108,7 +108,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         
         {/* Cover upload button */}
-        <label className="absolute top-3 right-3 cursor-pointer">
+        <label className="absolute top-2 right-2 cursor-pointer">
           <input
             type="file"
             accept="image/*"
@@ -125,16 +125,16 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
         </label>
       </div>
 
-      {/* Profile Info */}
-      <div className="container relative">
-        <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4 -mt-12 sm:-mt-16">
+      {/* Profile Info - Centered layout for mobile */}
+      <div className="relative px-4 w-full">
+        <div className="flex flex-col items-center -mt-12 sm:-mt-14">
           {/* Avatar */}
           <div className="relative">
             <div className="avatar-ring-gradient p-[3px] rounded-full">
-              <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background">
+              <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-4 border-background">
                 <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "User"} />
                 <AvatarFallback
-                  className="text-2xl sm:text-3xl font-bold text-accent-foreground"
+                  className="text-xl sm:text-2xl font-bold text-accent-foreground"
                   style={{ backgroundImage: "var(--gradient-social)" }}
                 >
                   {getInitials(profile.full_name)}
@@ -143,7 +143,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
             </div>
             
             {/* Avatar upload button */}
-            <label className="absolute bottom-1 right-1 cursor-pointer">
+            <label className="absolute bottom-0 right-0 cursor-pointer">
               <input
                 type="file"
                 accept="image/*"
@@ -152,31 +152,31 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
                 disabled={uploadingAvatar}
               />
               <div className={cn(
-                "h-8 w-8 rounded-full bg-background text-foreground border border-border flex items-center justify-center transition-transform hover:scale-110",
+                "h-7 w-7 rounded-full bg-background text-foreground border border-border flex items-center justify-center transition-transform hover:scale-110",
                 uploadingAvatar && "animate-pulse"
               )}>
-                <Camera className="h-4 w-4" />
+                <Camera className="h-3.5 w-3.5" />
               </div>
             </label>
           </div>
 
-          {/* Name and Stats */}
-          <div className="flex-1 text-center sm:text-left pb-2">
-            <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground">
+          {/* Name and Email */}
+          <div className="mt-3 text-center w-full">
+            <h1 className="font-display text-lg sm:text-xl font-bold text-foreground truncate px-4">
               {profile.full_name || "Usuário"}
             </h1>
-            <p className="text-sm text-muted-foreground">{profile.email}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground truncate px-4">{profile.email}</p>
           </div>
 
           {/* Stats */}
-          <div className="flex gap-6 sm:gap-8 pb-4">
+          <div className="flex gap-8 mt-4 pb-2">
             <div className="text-center">
-              <div className="font-display text-xl font-bold text-foreground">{stats.events}</div>
-              <div className="text-xs text-muted-foreground">Eventos</div>
+              <div className="font-display text-lg sm:text-xl font-bold text-foreground">{stats.events}</div>
+              <div className="text-[11px] sm:text-xs text-muted-foreground">Eventos</div>
             </div>
             <div className="text-center">
-              <div className="font-display text-xl font-bold text-foreground">{stats.saved}</div>
-              <div className="text-xs text-muted-foreground">Salvos</div>
+              <div className="font-display text-lg sm:text-xl font-bold text-foreground">{stats.saved}</div>
+              <div className="text-[11px] sm:text-xs text-muted-foreground">Salvos</div>
             </div>
           </div>
         </div>
