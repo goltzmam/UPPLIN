@@ -27,7 +27,7 @@ interface EventWithOrganizer {
 export function FollowingFeed() {
   const { user } = useAuth();
 
-  const { data: followedEvents, isLoading } = useQuery({
+  const { data: followedEvents, isLoading, refetch } = useQuery({
     queryKey: ["following-events", user?.id],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -66,6 +66,8 @@ export function FollowingFeed() {
       return events as EventWithOrganizer[];
     },
     enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2, // 2 minutes - shorter to pick up new follows quickly
+    refetchOnMount: true,
   });
 
   // Empty state component with high-conversion design
