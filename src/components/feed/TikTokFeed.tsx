@@ -216,7 +216,7 @@ const FeedRow = React.memo(function FeedRow({
         </AnimatePresence>
 
         {/* Right side action bar */}
-        <div className="absolute right-3 z-10 flex flex-col items-center gap-4" style={{ bottom: 'calc(var(--app-bottom-offset, 100px) + 100px)' }}>
+        <div className="absolute right-3 z-10 flex flex-col items-center gap-4" style={{ bottom: 'calc(var(--app-bottom-offset, 100px) + 130px)' }}>
           {/* Organizer avatar */}
           <button 
             onClick={(e) => { e.stopPropagation(); e.preventDefault(); if (item.organizerId) navigate(`/organizador/${item.organizerId}`); }}
