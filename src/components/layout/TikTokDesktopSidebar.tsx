@@ -1,31 +1,42 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, MapPin, Bookmark, User, ArrowUp } from "lucide-react";
+import { Home, MapPin, Bookmark, User, ArrowUp, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
+import { useUserRoles } from "@/hooks/use-user-roles";
 import { FeedSearch } from "@/components/feed/FeedSearch";
 import { UpActionMenu } from "@/components/navigation/UpActionMenu";
+
 interface NavItemProps {
   to?: string;
   icon: React.ReactNode;
   label: string;
   isActive?: boolean;
   onClick?: () => void;
+  highlight?: boolean;
 }
+
 const NavItem = ({
   to,
   icon,
   label,
   isActive,
-  onClick
+  onClick,
+  highlight
 }: NavItemProps) => {
   const content = <motion.div whileHover={{
     scale: 1.05
   }} whileTap={{
     scale: 0.95
-  }} className={cn("h-10 w-10 rounded-xl flex items-center justify-center transition-colors", isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/60")}>
-      <span className={cn("transition-colors", isActive ? "text-sidebar-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80")}>
+  }} className={cn(
+    "h-10 w-10 rounded-xl flex items-center justify-center transition-colors",
+    highlight ? "bg-gradient-to-br from-[#FF6A00] to-[#FF007A]" : isActive ? "bg-sidebar-accent" : "hover:bg-sidebar-accent/60"
+  )}>
+      <span className={cn(
+        "transition-colors",
+        highlight ? "text-white" : isActive ? "text-sidebar-foreground" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground/80"
+      )}>
         {icon}
       </span>
     </motion.div>;
@@ -93,16 +104,20 @@ export function TikTokDesktopSidebar() {
     user,
     signOut
   } = useAuth();
+  const { isOrganizer, isAdmin, isLoading: rolesLoading } = useUserRoles();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUpMenuOpen, setIsUpMenuOpen] = useState(false);
+  
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
   };
+
   const handleLogout = async () => {
     await signOut();
     navigate("/");
   };
+
   return <>
       <aside className="hidden lg:flex flex-col items-center fixed left-0 top-0 h-dvh w-[72px] py-4 z-40 bg-sidebar border-r border-sidebar-border">
         {/* Logo - "UP" matching mobile branding */}
@@ -131,6 +146,28 @@ export function TikTokDesktopSidebar() {
 
           {/* Perfil */}
           <NavItem to={user ? "/perfil" : "/login"} icon={<User className="h-5 w-5" strokeWidth={1.5} />} label="Perfil" isActive={isActive("/perfil")} />
+          
+          {/* Painel do Organizador - only show for organizers */}
+          {!rolesLoading && isOrganizer && (
+            <NavItem 
+              to="/organizador/painel" 
+              icon={<LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />} 
+              label="Painel" 
+              isActive={isActive("/organizador/painel")}
+              highlight
+            />
+          )}
+          
+          {/* Admin Panel - only show for admins */}
+          {!rolesLoading && isAdmin && (
+            <NavItem 
+              to="/admin" 
+              icon={<LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />} 
+              label="Admin" 
+              isActive={isActive("/admin")}
+              highlight
+            />
+          )}
         </nav>
 
       </aside>
