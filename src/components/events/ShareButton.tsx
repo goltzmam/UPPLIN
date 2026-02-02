@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Share2, Copy, Check, MessageCircle, Instagram, Link2 } from "lucide-react";
+import { Share2, Check, MessageCircle, Instagram, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -7,7 +7,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
 
 interface ShareButtonProps {
   eventId: string;
@@ -41,10 +40,9 @@ export function ShareButton({
     try {
       await navigator.clipboard.writeText(getEventUrl());
       setCopied(true);
-      toast.success("Link copiado!");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Erro ao copiar link");
+      console.error("Erro ao copiar link");
     }
   };
 
@@ -62,11 +60,9 @@ export function ShareButton({
       window.open(instagramUrl, "_blank");
       // Copy the link so user can paste it
       navigator.clipboard.writeText(getEventUrl());
-      toast.success("Link copiado! Cole no seu Story do Instagram");
     } else {
-      // On desktop, copy link and show message
+      // On desktop, copy link
       navigator.clipboard.writeText(getEventUrl());
-      toast.success("Link copiado! Abra o Instagram no celular para compartilhar no Story");
     }
   };
 

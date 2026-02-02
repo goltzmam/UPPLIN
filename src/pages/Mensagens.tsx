@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { MessageCircle, ArrowLeft, Plus, Users, Building2, Shield, Search } from "lucide-react";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,8 +27,6 @@ import { ChatWindow } from "@/components/chat/ChatWindow";
 import { useAuth } from "@/lib/auth";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useEffect } from "react";
 import { PageLoading } from "@/components/ui/loading";
 
 interface Conversation {
@@ -136,19 +134,26 @@ export default function Mensagens() {
         other_participant: { id: participantId, full_name: null, photo_url: null, email: "" },
       });
       setShowNewChat(false);
-      toast.success("Conversa iniciada!");
     } catch (err: any) {
-      toast.error("Erro ao iniciar conversa: " + err.message);
+      console.error("Erro ao iniciar conversa:", err.message);
     }
   };
 
-  if (authLoading) return <><Header /><PageLoading /><Footer /></>;
+  if (authLoading) return (
+    <div className="min-h-screen bg-background">
+      <TikTokDesktopSidebar />
+      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+        <PageLoading />
+      </main>
+      <BottomNav />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
+    <div className="min-h-screen bg-background">
+      <TikTokDesktopSidebar />
 
-      <main className="flex-1 pt-20 sm:pt-24">
+      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
         <div className="container px-4 py-6">
           {/* Breadcrumb */}
           <Breadcrumb 
@@ -252,8 +257,6 @@ export default function Mensagens() {
                   onClick={() => {
                     if (adminUsers.length > 0) {
                       startNewConversation("user_admin", adminUsers[0].id);
-                    } else {
-                      toast.error("Nenhum administrador disponível");
                     }
                   }}
                 >
@@ -299,8 +302,6 @@ export default function Mensagens() {
                 onClick={() => {
                   if (adminUsers.length > 0) {
                     startNewConversation("organizer_admin", adminUsers[0].id);
-                  } else {
-                    toast.error("Nenhum administrador disponível");
                   }
                 }}
               >
@@ -321,7 +322,7 @@ export default function Mensagens() {
         </DialogContent>
       </Dialog>
 
-      <Footer />
+      <BottomNav />
     </div>
   );
 }

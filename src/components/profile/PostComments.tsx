@@ -7,7 +7,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { MentionInput, renderTextWithMentions } from "@/components/ui/mention-input";
@@ -83,10 +82,9 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
       setNewComment("");
-      toast.success("Comentário adicionado!");
     },
-    onError: () => {
-      toast.error("Erro ao adicionar comentário");
+    onError: (error) => {
+      console.error("Erro ao adicionar comentário:", error);
     },
   });
 
@@ -101,10 +99,9 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
-      toast.success("Comentário excluído");
     },
-    onError: () => {
-      toast.error("Erro ao excluir comentário");
+    onError: (error) => {
+      console.error("Erro ao excluir comentário:", error);
     },
   });
 

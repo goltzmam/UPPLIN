@@ -4,8 +4,8 @@ import { Calendar, MapPin, Clock, Share2, Heart, Minus, Plus, Ticket, Instagram,
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageLoading } from "@/components/ui/loading";
@@ -18,7 +18,6 @@ import { OrganizerPreviewTooltip } from "@/components/events/OrganizerPreviewToo
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { useAuth } from "@/lib/auth";
-import { useToast } from "@/hooks/use-toast";
 import { triggerFeedback } from "@/lib/feedback";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -39,7 +38,6 @@ export default function Evento() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selection, setSelection] = useState<TicketSelection>({});
   const [checkingOut, setCheckingOut] = useState(false);
@@ -118,13 +116,11 @@ export default function Evento() {
       } catch (err) {}
     } else {
       await navigator.clipboard.writeText(url);
-      toast({ title: "Link copiado!", description: "Compartilhe com seus amigos." });
     }
   };
 
   const handleSave = async () => {
     if (!user) {
-      toast({ title: "Faça login para salvar", description: "Você precisa estar logado para salvar eventos." });
       navigate("/login");
       return;
     }
@@ -140,19 +136,17 @@ export default function Evento() {
           .eq("user_id", user.id);
 
         if (error) throw error;
-        toast({ title: "Evento removido dos salvos" });
       } else {
         const { error } = await supabase
           .from("saved_events")
           .insert({ event_id: id, user_id: user.id });
 
         if (error) throw error;
-        toast({ title: "Evento salvo!", description: "Veja seus eventos salvos no perfil." });
       }
 
       queryClient.invalidateQueries({ queryKey: ["saved-event", id, user.id] });
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      console.error("Erro ao salvar evento:", err.message);
     } finally {
       setSavingEvent(false);
     }
@@ -160,13 +154,11 @@ export default function Evento() {
 
   const handleCheckout = async () => {
     if (!user) {
-      toast({ title: "Faça login para comprar", description: "Você precisa estar logado para comprar ingressos." });
       navigate("/login");
       return;
     }
 
     if (totalItems === 0) {
-      toast({ title: "Selecione ingressos", description: "Escolha pelo menos um ingresso.", variant: "destructive" });
       return;
     }
 
@@ -202,22 +194,29 @@ export default function Evento() {
       const { error: itemsError } = await supabase.from("order_items").insert(items);
       if (itemsError) throw itemsError;
 
-      toast({ title: "Pedido criado!", description: "Redirecionando para pagamento..." });
       navigate(`/checkout/${order.id}`);
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      console.error("Erro ao criar pedido:", err.message);
     } finally {
       setCheckingOut(false);
     }
   };
 
-  if (isLoading) return <><Header /><PageLoading /><Footer /></>;
+  if (isLoading) return (
+    <div className="min-h-screen bg-background">
+      <TikTokDesktopSidebar />
+      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+        <PageLoading />
+      </main>
+      <BottomNav />
+    </div>
+  );
 
   if (error || !event) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 container py-12">
+      <div className="min-h-screen bg-background">
+        <TikTokDesktopSidebar />
+        <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0 flex items-center justify-center">
           <EmptyState
             icon={<Calendar className="h-8 w-8 text-accent" />}
             title="Evento não encontrado"
@@ -226,7 +225,7 @@ export default function Evento() {
             action={<Button onClick={() => navigate("/eventos")} className="bg-primary hover:bg-primary/90 text-primary-foreground">Ver outros eventos</Button>}
           />
         </main>
-        <Footer />
+        <BottomNav />
       </div>
     );
   }
@@ -245,12 +244,12 @@ export default function Evento() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
+    <div className="min-h-screen bg-background">
+      <TikTokDesktopSidebar />
 
-      <main className="flex-1 pt-16 lg:pt-20">
+      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
         {/* Breadcrumb */}
-        <div className="container py-3 hidden lg:block">
+        <div className="container py-3 pt-4 hidden lg:block">
           <Breadcrumb 
             items={[
               { label: "Eventos", href: "/eventos" },
@@ -285,7 +284,7 @@ export default function Evento() {
             <div className="grid grid-cols-12 gap-6 items-start">
               {/* Left: Vertical Media - Feed Style (3 cols) */}
               <div className="col-span-3">
-                <div className="sticky top-24">
+                <div className="sticky top-8">
                   <div 
                     className="rounded-3xl overflow-hidden bg-black shadow-2xl"
                     style={{ aspectRatio: "9/16", maxHeight: "calc(100vh - 120px)" }}
@@ -484,7 +483,7 @@ export default function Evento() {
 
               {/* Right: Tickets (3 cols) */}
               <div className="col-span-3">
-                <div className="sticky top-24 space-y-4">
+                <div className="sticky top-8 space-y-4">
                   <TicketSelectionCard />
                 </div>
               </div>
@@ -493,7 +492,7 @@ export default function Evento() {
         </div>
       </main>
 
-      <Footer />
+      <BottomNav />
     </div>
   );
 

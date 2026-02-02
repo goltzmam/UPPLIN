@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { toast } from "sonner";
 
 interface UseRsvpOptions {
   eventId: string;
@@ -103,19 +102,13 @@ export function useRsvp({ eventId }: UseRsvpOptions) {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["rsvp", eventId] });
       queryClient.invalidateQueries({ queryKey: ["rsvp-count", eventId] });
       queryClient.invalidateQueries({ queryKey: ["rsvp-people", eventId] });
-      
-      if (data) {
-        toast.success("Você confirmou presença! 🎉");
-      } else {
-        toast.success("RSVP removido");
-      }
     },
     onError: (error: Error) => {
-      toast.error(error.message || "Erro ao confirmar presença");
+      console.error("Erro ao confirmar presença:", error.message);
     },
   });
 

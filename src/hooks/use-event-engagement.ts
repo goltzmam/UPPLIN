@@ -2,7 +2,6 @@ import { useCallback, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { toast } from "sonner";
 
 /**
  * Optimized event engagement hook with batched queries and longer cache times.
@@ -154,7 +153,6 @@ export function useEventEngagement(eventId: string) {
 
   const toggleLike = useCallback(() => {
     if (!user) {
-      toast.error("Faça login para curtir eventos");
       return;
     }
     likeMutation.mutate();
@@ -162,7 +160,6 @@ export function useEventEngagement(eventId: string) {
 
   const toggleSave = useCallback(() => {
     if (!user) {
-      toast.error("Faça login para salvar eventos");
       return;
     }
     saveMutation.mutate();
