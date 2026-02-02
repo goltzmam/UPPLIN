@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 interface UpActionMenuProps {
@@ -109,14 +108,12 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
 
       if (error) throw error;
 
-      toast.success("Post publicado com sucesso!");
       setShowPostDialog(false);
       setPostContent("");
       setSelectedFile(null);
       navigate("/perfil?tab=posts");
     } catch (error) {
       console.error("Error creating post:", error);
-      toast.error("Erro ao publicar post");
     } finally {
       setIsSubmitting(false);
     }
@@ -140,13 +137,11 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
 
       if (error) throw error;
 
-      toast.success("Check-in realizado com sucesso!");
       setShowCheckInDialog(false);
       setSelectedEventId("");
       navigate("/perfil?tab=checkins");
     } catch (error) {
       console.error("Error doing check-in:", error);
-      toast.error("Erro ao fazer check-in");
     } finally {
       setIsSubmitting(false);
     }
@@ -389,7 +384,6 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                     const file = e.target.files?.[0];
                     if (file) {
                       if (file.size > 50 * 1024 * 1024) {
-                        toast.error("Arquivo muito grande (máx. 50MB)");
                         return;
                       }
                       setSelectedFile(file);

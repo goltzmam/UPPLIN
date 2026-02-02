@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Send, Trash2, MoreVertical, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
@@ -97,10 +96,9 @@ export function UserPostsTab() {
       setMediaUrl(null);
       setMediaType(null);
       setIsCreating(false);
-      toast.success("Post publicado!");
     },
     onError: (error: Error) => {
-      toast.error(error.message);
+      console.error("Erro ao criar post:", error.message);
     },
   });
 
@@ -115,10 +113,9 @@ export function UserPostsTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["user-posts", user?.id] });
-      toast.success("Post excluído");
     },
-    onError: () => {
-      toast.error("Erro ao excluir post");
+    onError: (error) => {
+      console.error("Erro ao excluir post:", error);
     },
   });
 
@@ -127,12 +124,10 @@ export function UserPostsTab() {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) {
-      toast.error("Apenas imagens são permitidas");
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Arquivo muito grande (máx. 10MB)");
       return;
     }
 
@@ -159,7 +154,6 @@ export function UserPostsTab() {
       setMediaType("image");
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Erro ao enviar imagem");
     } finally {
       setUploading(false);
     }

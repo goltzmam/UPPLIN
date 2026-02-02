@@ -1,8 +1,6 @@
-import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { toast } from "sonner";
 
 export function useFollow(organizerId: string) {
   const { user } = useAuth();
@@ -54,13 +52,11 @@ export function useFollow(organizerId: string) {
       // Invalidate all related queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["follow-status", organizerId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ["follower-count", organizerId] });
-      queryClient.invalidateQueries({ queryKey: ["following-events"] }); // Invalidate all following feeds
-      queryClient.invalidateQueries({ queryKey: ["user-following"] }); // Invalidate profile following tab
-      toast.success("Agora você está seguindo este organizador");
+      queryClient.invalidateQueries({ queryKey: ["following-events"] });
+      queryClient.invalidateQueries({ queryKey: ["user-following"] });
     },
     onError: (error) => {
-      toast.error("Erro ao seguir organizador");
-      console.error(error);
+      console.error("Erro ao seguir organizador:", error);
     },
   });
 
@@ -80,19 +76,16 @@ export function useFollow(organizerId: string) {
       // Invalidate all related queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["follow-status", organizerId, user?.id] });
       queryClient.invalidateQueries({ queryKey: ["follower-count", organizerId] });
-      queryClient.invalidateQueries({ queryKey: ["following-events"] }); // Invalidate all following feeds
-      queryClient.invalidateQueries({ queryKey: ["user-following"] }); // Invalidate profile following tab
-      toast.success("Você deixou de seguir este organizador");
+      queryClient.invalidateQueries({ queryKey: ["following-events"] });
+      queryClient.invalidateQueries({ queryKey: ["user-following"] });
     },
     onError: (error) => {
-      toast.error("Erro ao deixar de seguir");
-      console.error(error);
+      console.error("Erro ao deixar de seguir:", error);
     },
   });
 
   const toggleFollow = () => {
     if (!user) {
-      toast.error("Faça login para seguir organizadores");
       return;
     }
 

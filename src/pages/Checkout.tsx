@@ -2,15 +2,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { CreditCard, Clock, ShieldCheck, Loader2, Tag, Check, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { useAuth } from "@/lib/auth";
-import { useToast } from "@/hooks/use-toast";
 import { triggerFeedback } from "@/lib/feedback";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,7 +17,6 @@ export default function Checkout() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { toast } = useToast();
   const [processing, setProcessing] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
@@ -27,6 +25,7 @@ export default function Checkout() {
     discount_type: string;
     discount_value: number;
   } | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   useEffect(() => {
@@ -74,6 +73,7 @@ export default function Checkout() {
     if (!couponCode.trim() || !order) return;
     
     setApplyingCoupon(true);
+    setCouponError(null);
     try {
       const { data: coupon, error } = await supabase
         .from("coupons")
@@ -85,40 +85,36 @@ export default function Checkout() {
       if (error) throw error;
 
       if (!coupon) {
-        toast({ title: "Cupom não encontrado", variant: "destructive" });
+        setCouponError("Cupom não encontrado");
         return;
       }
 
       // Check if coupon is for this event or global
       if (coupon.event_id && coupon.event_id !== order.event_id) {
-        toast({ title: "Cupom não válido para este evento", variant: "destructive" });
+        setCouponError("Cupom não válido para este evento");
         return;
       }
 
       // Check validity dates
       const now = new Date();
       if (coupon.valid_from && new Date(coupon.valid_from) > now) {
-        toast({ title: "Cupom ainda não está válido", variant: "destructive" });
+        setCouponError("Cupom ainda não está válido");
         return;
       }
       if (coupon.valid_until && new Date(coupon.valid_until) < now) {
-        toast({ title: "Cupom expirado", variant: "destructive" });
+        setCouponError("Cupom expirado");
         return;
       }
 
       // Check usage limit
       if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) {
-        toast({ title: "Cupom esgotado", variant: "destructive" });
+        setCouponError("Cupom esgotado");
         return;
       }
 
       // Check minimum purchase
       if (coupon.min_purchase_cents && order.total_cents < coupon.min_purchase_cents) {
-        toast({ 
-          title: "Valor mínimo não atingido", 
-          description: `Mínimo de ${formatPrice(coupon.min_purchase_cents)}`,
-          variant: "destructive" 
-        });
+        setCouponError(`Mínimo de ${formatPrice(coupon.min_purchase_cents)}`);
         return;
       }
 
@@ -128,10 +124,8 @@ export default function Checkout() {
         discount_type: coupon.discount_type,
         discount_value: coupon.discount_value,
       });
-      
-      toast({ title: "Cupom aplicado!", description: `Desconto de ${coupon.discount_type === 'percentage' ? `${coupon.discount_value}%` : formatPrice(coupon.discount_value)}` });
     } catch (err: any) {
-      toast({ title: "Erro ao aplicar cupom", description: err.message, variant: "destructive" });
+      setCouponError("Erro ao aplicar cupom");
     } finally {
       setApplyingCoupon(false);
     }
@@ -140,6 +134,7 @@ export default function Checkout() {
   const handleRemoveCoupon = () => {
     setAppliedCoupon(null);
     setCouponCode("");
+    setCouponError(null);
   };
 
   const handlePayment = async () => {
@@ -150,27 +145,31 @@ export default function Checkout() {
     try {
       // Simulate payment processing
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Update order status (in production this would be done via webhook)
-      // For demo purposes, we'll just redirect
-      toast({ title: "Pagamento simulado!", description: "Redirecionando..." });
       
       // For now, navigate back to tickets
       navigate("/meus-ingressos");
     } catch (err: any) {
-      toast({ title: "Erro no pagamento", description: err.message, variant: "destructive" });
+      console.error("Erro no pagamento:", err.message);
     } finally {
       setProcessing(false);
     }
   };
 
-  if (authLoading || isLoading) return <><Header /><PageLoading /><Footer /></>;
+  if (authLoading || isLoading) return (
+    <div className="min-h-screen bg-background">
+      <TikTokDesktopSidebar />
+      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+        <PageLoading />
+      </main>
+      <BottomNav />
+    </div>
+  );
 
   if (!order) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-1 container py-12">
+      <div className="min-h-screen bg-background">
+        <TikTokDesktopSidebar />
+        <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0 flex items-center justify-center">
           <EmptyState
             icon={<CreditCard className="h-8 w-8 text-accent" />}
             title="Pedido não encontrado"
@@ -179,7 +178,7 @@ export default function Checkout() {
             action={<Button onClick={() => navigate("/eventos")} className="bg-primary hover:bg-primary/90 text-primary-foreground">Ver Eventos</Button>}
           />
         </main>
-        <Footer />
+        <BottomNav />
       </div>
     );
   }
@@ -188,10 +187,10 @@ export default function Checkout() {
   const isExpired = expiresAt && expiresAt < new Date();
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted/30">
-      <Header />
+    <div className="min-h-screen bg-muted/30">
+      <TikTokDesktopSidebar />
 
-      <main className="flex-1 py-6 sm:py-8 pt-20 sm:pt-24">
+      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0 py-6 sm:py-8">
         <div className="container max-w-4xl px-4">
           {/* Breadcrumb */}
           <Breadcrumb 
@@ -248,20 +247,28 @@ export default function Checkout() {
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex gap-2">
-                        <Input
-                          placeholder="Digite o código"
-                          value={couponCode}
-                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                          className="flex-1"
-                        />
-                        <Button 
-                          variant="outline" 
-                          onClick={handleApplyCoupon}
-                          disabled={applyingCoupon || !couponCode.trim()}
-                        >
-                          {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : <Tag className="h-4 w-4" />}
-                        </Button>
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Digite o código"
+                            value={couponCode}
+                            onChange={(e) => {
+                              setCouponCode(e.target.value.toUpperCase());
+                              setCouponError(null);
+                            }}
+                            className="flex-1"
+                          />
+                          <Button 
+                            variant="outline" 
+                            onClick={handleApplyCoupon}
+                            disabled={applyingCoupon || !couponCode.trim()}
+                          >
+                            {applyingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : <Tag className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        {couponError && (
+                          <p className="text-sm text-destructive">{couponError}</p>
+                        )}
                       </div>
                     )}
                   </div>
@@ -336,7 +343,7 @@ export default function Checkout() {
         </div>
       </main>
 
-      <Footer />
+      <BottomNav />
     </div>
   );
 }

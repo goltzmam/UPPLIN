@@ -5,7 +5,6 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 interface PostLikeButtonProps {
   postId: string;
@@ -40,7 +39,6 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
   const toggleLike = useMutation({
     mutationFn: async () => {
       if (!user) {
-        toast.error("Faça login para curtir");
         throw new Error("Not authenticated");
       }
 
@@ -64,9 +62,9 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["post-likes", postId] });
     },
-    onError: () => {
+    onError: (error) => {
       setOptimisticLiked(null);
-      toast.error("Erro ao curtir post");
+      console.error("Erro ao curtir post:", error);
     },
     onSettled: () => {
       setOptimisticLiked(null);
