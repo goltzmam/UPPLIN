@@ -79,12 +79,12 @@ export default function Eventos() {
   const hasActiveFilters = search || selectedCategory !== "all";
 
   return (
-    <div className="min-h-screen flex bg-background text-foreground w-full overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground w-full overflow-x-hidden">
       {/* Desktop Sidebar */}
       <TikTokDesktopSidebar />
 
-      {/* Main Content */}
-      <main className="flex-1 min-w-0 pb-24 lg:pb-8">
+      {/* Main Content - offset for fixed sidebar on desktop */}
+      <main className="min-w-0 pb-24 lg:pb-8 lg:ml-[72px]">
         {/* Search Header */}
         <section className="bg-gradient-to-b from-muted/60 to-transparent border-b border-border py-4 sm:py-6 lg:py-8 pt-4 sm:pt-6 lg:pt-8">
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4">
