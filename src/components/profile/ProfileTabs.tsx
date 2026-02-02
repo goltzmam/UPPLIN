@@ -29,62 +29,63 @@ export function ProfileTabs({
   onProfileUpdate,
 }: ProfileTabsProps) {
   return (
-    <div className="py-4 px-3">
+    <div className="py-4">
       <Tabs defaultValue={defaultTab} className="space-y-4">
-        {/* Horizontal scrollable tabs container for mobile */}
-        <div className="overflow-x-auto scrollbar-hide -mx-3">
-          <TabsList className="inline-flex w-max gap-0.5 bg-muted/50 border border-border rounded-xl p-1 h-auto mx-3">
+        {/* Horizontal scrollable tabs - fixed width container */}
+        <div className="w-full overflow-x-auto scrollbar-hide">
+          <TabsList className="flex w-max gap-0.5 bg-muted/50 border border-border rounded-xl p-1 h-auto mx-auto">
             <TabsTrigger 
               value="feed" 
-              className="flex flex-col items-center gap-0.5 py-1.5 px-2 sm:py-2 sm:px-3 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground whitespace-nowrap min-w-[44px]"
+              className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <Newspaper className="h-4 w-4" />
-              <span className="text-[9px] sm:text-[10px]">Feed</span>
+              <span className="text-[9px]">Feed</span>
             </TabsTrigger>
             <TabsTrigger 
               value="historico" 
-              className="flex flex-col items-center gap-0.5 py-1.5 px-2 sm:py-2 sm:px-3 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground whitespace-nowrap min-w-[44px]"
+              className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <History className="h-4 w-4" />
-              <span className="text-[9px] sm:text-[10px]">Eventos</span>
+              <span className="text-[9px]">Eventos</span>
             </TabsTrigger>
             <TabsTrigger 
               value="posts" 
-              className="flex flex-col items-center gap-0.5 py-1.5 px-2 sm:py-2 sm:px-3 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground whitespace-nowrap min-w-[44px]"
+              className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <Camera className="h-4 w-4" />
-              <span className="text-[9px] sm:text-[10px]">Posts</span>
+              <span className="text-[9px]">Posts</span>
             </TabsTrigger>
             <TabsTrigger 
               value="checkins" 
-              className="flex flex-col items-center gap-0.5 py-1.5 px-2 sm:py-2 sm:px-3 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground whitespace-nowrap min-w-[44px]"
+              className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <CheckCircle className="h-4 w-4" />
-              <span className="text-[9px] sm:text-[10px]">Check-ins</span>
+              <span className="text-[9px]">Check-ins</span>
             </TabsTrigger>
             <TabsTrigger 
               value="salvos" 
-              className="flex flex-col items-center gap-0.5 py-1.5 px-2 sm:py-2 sm:px-3 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground whitespace-nowrap min-w-[44px]"
+              className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <Heart className="h-4 w-4" />
-              <span className="text-[9px] sm:text-[10px]">Salvos</span>
+              <span className="text-[9px]">Salvos</span>
             </TabsTrigger>
             <TabsTrigger 
               value="seguindo" 
-              className="flex flex-col items-center gap-0.5 py-1.5 px-2 sm:py-2 sm:px-3 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground whitespace-nowrap min-w-[44px]"
+              className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <Users className="h-4 w-4" />
-              <span className="text-[9px] sm:text-[10px]">Seguindo</span>
+              <span className="text-[9px]">Seguindo</span>
             </TabsTrigger>
             <TabsTrigger 
               value="config" 
-              className="flex flex-col items-center gap-0.5 py-1.5 px-2 sm:py-2 sm:px-3 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground whitespace-nowrap min-w-[44px]"
+              className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <Settings className="h-4 w-4" />
-              <span className="text-[9px] sm:text-[10px]">Config</span>
+              <span className="text-[9px]">Config</span>
             </TabsTrigger>
           </TabsList>
         </div>
+
 
         {/* Feed Social Tab */}
         <TabsContent value="feed" className="animate-fade-in">
