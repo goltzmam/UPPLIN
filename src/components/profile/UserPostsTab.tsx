@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageLoading } from "@/components/ui/loading";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import { Camera, Send, Trash2, MoreVertical, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PostLikeButton } from "./PostLikeButton";
 import { PostComments } from "./PostComments";
-
+import { MentionInput, renderTextWithMentions } from "@/components/ui/mention-input";
 interface UserPost {
   id: string;
   user_id: string;
@@ -41,6 +40,7 @@ interface UserPost {
 export function UserPostsTab() {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [content, setContent] = useState("");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
@@ -49,6 +49,10 @@ export function UserPostsTab() {
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Navigate to organizer profile when mention is clicked
+  const handleMentionClick = (slug: string) => {
+    navigate(`/o/${slug}`);
+  };
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["user-posts", user?.id],
     queryFn: async () => {
@@ -170,11 +174,12 @@ export function UserPostsTab() {
         <CardContent className="p-4">
           {isCreating ? (
             <div className="space-y-4">
-              <Textarea
-                placeholder="O que você está pensando?"
+              <MentionInput
+                placeholder="O que você está pensando? Use @ para marcar organizadores"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="min-h-[100px] resize-none bg-background border-border"
+                onChange={setContent}
+                className="bg-background border-border"
+                minHeight="100px"
               />
 
               {mediaUrl && (
@@ -337,7 +342,9 @@ export function UserPostsTab() {
                 </div>
 
                 {post.content && (
-                  <p className="text-sm mb-3 whitespace-pre-wrap">{post.content}</p>
+                  <p className="text-sm mb-3 whitespace-pre-wrap">
+                    {renderTextWithMentions(post.content, handleMentionClick)}
+                  </p>
                 )}
 
                 {post.media_url && (
