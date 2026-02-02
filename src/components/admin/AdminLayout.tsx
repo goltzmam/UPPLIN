@@ -1,11 +1,13 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
-import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3 } from "lucide-react";
+import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3, Menu, X } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { Button } from "@/components/ui/button";
 import { PageLoading } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -23,6 +25,7 @@ export function AdminLayout() {
   const { isAdmin, isLoading: rolesLoading } = useUserRoles();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !rolesLoading) {
@@ -47,12 +50,17 @@ export function AdminLayout() {
     return null;
   }
 
+  const isActive = (path: string) => {
+    if (path === "/admin") return location.pathname === "/admin";
+    return location.pathname.startsWith(path);
+  };
+
   return (
-    <div className="min-h-screen bg-muted/30 flex">
-      {/* Sidebar */}
-      <aside className="hidden lg:flex w-64 flex-col bg-card border-r border-border">
-        {/* Logo */}
-        <div className="p-6 border-b border-border">
+    <div className="min-h-[100dvh] bg-muted/30 flex">
+      {/* Desktop Sidebar - Fixed with internal scroll */}
+      <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 z-40 bg-card border-r border-border">
+        {/* Logo - Fixed at top */}
+        <div className="p-6 border-b border-border shrink-0">
           <Link to="/admin" className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
               <Shield className="h-5 w-5 text-primary-foreground" />
@@ -64,30 +72,32 @@ export function AdminLayout() {
           </Link>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
-                location.pathname === item.href
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        {/* Navigation - Scrollable */}
+        <ScrollArea className="flex-1">
+          <nav className="p-4 space-y-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+                  isActive(item.href)
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </ScrollArea>
 
-        {/* User */}
-        <div className="p-4 border-t border-border">
+        {/* User - Fixed at bottom */}
+        <div className="p-4 border-t border-border shrink-0">
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 text-muted-foreground"
+            className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
             onClick={handleSignOut}
           >
             <LogOut className="h-5 w-5" />
@@ -97,23 +107,81 @@ export function AdminLayout() {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border p-4">
-        <div className="flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
+        <div className="flex items-center justify-between px-4 py-3">
           <Link to="/admin" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Shield className="h-4 w-4 text-primary-foreground" />
             </div>
             <span className="font-display font-bold">Admin</span>
           </Link>
-          <Button variant="ghost" size="icon" onClick={handleSignOut}>
-            <LogOut className="h-5 w-5" />
-          </Button>
+
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] p-0">
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="flex items-center gap-3 p-6 border-b border-border shrink-0">
+                  <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+                    <Shield className="h-5 w-5 text-primary-foreground" />
+                  </div>
+                  <div>
+                    <p className="font-semibold">Admin Panel</p>
+                    <p className="text-sm text-muted-foreground">UPPLIN</p>
+                  </div>
+                </div>
+
+                {/* Navigation - Scrollable */}
+                <ScrollArea className="flex-1">
+                  <nav className="p-4 space-y-1">
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        to={item.href}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+                          isActive(item.href)
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        )}
+                      >
+                        <item.icon className="h-5 w-5 shrink-0" />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </nav>
+                </ScrollArea>
+
+                {/* Logout - Fixed at bottom */}
+                <div className="p-4 border-t border-border shrink-0">
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleSignOut();
+                    }}
+                  >
+                    <LogOut className="h-5 w-5" />
+                    Sair
+                  </Button>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 lg:p-8 p-4 pt-20 lg:pt-8">
-        <Outlet />
+      {/* Main Content - Offset for fixed sidebar */}
+      <main className="flex-1 lg:ml-64 min-w-0">
+        <div className="p-4 pt-[72px] lg:pt-8 lg:p-8 min-h-[100dvh]">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
