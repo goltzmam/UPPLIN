@@ -6,85 +6,25 @@
     <title>UPPLIN</title>
     <meta name="description" content="Descubra os melhores eventos do Brasil. Shows, festas, conferências e muito mais">
     <meta name="author" content="UPPLIN" />
-
-    <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#000000">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="UPPLIN">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="UPPLIN">
-    <meta name="msapplication-TileColor" content="#000000">
-    <meta name="msapplication-tap-highlight" content="no">
-    <meta name="format-detection" content="telephone=no">
-    
-    <!-- PWA Icons -->
-    <link rel="apple-touch-icon" href="/pwa-192x192.png">
-    <link rel="apple-touch-icon" sizes="192x192" href="/pwa-192x192.png">
-    <link rel="apple-touch-icon" sizes="512x512" href="/pwa-512x512.png">
     
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
-    
-    
-    
+    <meta property="og:title" content="UPPLIN">
+    <meta property="og:description" content="Descubra os melhores eventos do Brasil. Shows, festas, conferências e muito mais">
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@upplin" />
-    
-    
-    
+    <meta name="twitter:title" content="UPPLIN">
+    <meta name="twitter:description" content="Descubra os melhores eventos do Brasil. Shows, festas, conferências e muito mais">
     
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="https://storage.googleapis.com/gpt-engineer-file-uploads/3GyNfSv1cIVY8dtP0xJm7MYReow1/uploads/1769815890468-Captura de tela 2026-01-29 223802.png">
-    
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  <meta property="og:title" content="UPPLIN">
-  <meta name="twitter:title" content="UPPLIN">
-  <meta property="og:description" content="Descubra os melhores eventos do Brasil. Shows, festas, conferências e muito mais">
-  <meta name="twitter:description" content="Descubra os melhores eventos do Brasil. Shows, festas, conferências e muito mais">
-</head>
+  </head>
 
   <body>
     <div id="root"></div>
-    
-    <!-- CRITICAL: Inline cache buster runs BEFORE main bundle loads -->
-    <!-- This ensures stale SWs/caches are cleared even if JS is cached -->
-    <script>
-      (function() {
-        var isPreview = location.hostname.indexOf('lovable.app') !== -1 || 
-                        location.hostname.indexOf('lovable.dev') !== -1;
-        if (!isPreview) return;
-        
-        // Immediately unregister all service workers
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            registrations.forEach(function(reg) {
-              reg.unregister();
-            });
-          });
-        }
-        
-        // Clear all caches
-        if ('caches' in window) {
-          caches.keys().then(function(keys) {
-            keys.forEach(function(key) {
-              caches.delete(key);
-            });
-          });
-        }
-      })();
-    </script>
-    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
