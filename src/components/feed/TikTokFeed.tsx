@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Plus, Ticket, Gift } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FeedSkeleton } from "./FeedSkeleton";
 import { FeedVideoPlayer } from "./FeedVideoPlayer";
+import { stopAllMediaPipelines } from "@/lib/media";
 
 interface TikTokFeedItem {
   id: string;
@@ -41,6 +42,8 @@ interface TikTokFeedProps {
   scrollPosition?: number;
   onScrollChange?: (position: number) => void;
   onRefresh?: () => Promise<void>;
+  /** When false, the feed stays mounted but MUST NOT keep playing audio/video. */
+  isVisible?: boolean;
 }
 
 const SCROLL_POSITION_KEY = "upplin_feed_scroll_position";
@@ -380,9 +383,21 @@ const FeedRow = React.memo(function FeedRow({
   );
 });
 
-export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMore, scrollPosition = 0, onScrollChange, onRefresh }: TikTokFeedProps) {
+export function TikTokFeed({
+  items,
+  isLoading,
+  onLoadMore,
+  hasMore,
+  isLoadingMore,
+  scrollPosition = 0,
+  onScrollChange,
+  onRefresh,
+  isVisible = true,
+}: TikTokFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<number, HTMLDivElement>>(new Map());
+  const location = useLocation();
+  const mountedPathRef = useRef(location.pathname);
   // Initialize with window.innerHeight to prevent zero-height flash
   const [containerHeight, setContainerHeight] = useState(() => 
     typeof window !== 'undefined' ? window.innerHeight : 800
@@ -400,6 +415,25 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   const [pullDistance, setPullDistance] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const touchStartY = useRef(0);
+
+  // HARD stop any media when this feed is kept mounted but not visible (tabs/overlays)
+  useEffect(() => {
+    if (!isVisible) {
+      setIsScrolling(true);
+      stopAllMediaPipelines();
+      return;
+    }
+    // When becoming visible again, allow playback to resume normally
+    setIsScrolling(false);
+  }, [isVisible]);
+
+  // If route changes while this component is still mounted (e.g. transitions), stop media and prevent restart
+  useEffect(() => {
+    if (location.pathname !== mountedPathRef.current) {
+      setIsScrolling(true);
+      stopAllMediaPipelines();
+    }
+  }, [location.pathname]);
 
   // Update container height on resize
   useEffect(() => {
@@ -422,7 +456,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
   // IntersectionObserver for active item detection (replaces scroll handler)
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || items.length === 0) return;
+    if (!isVisible || !container || items.length === 0) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -465,7 +499,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     }
 
     return () => observer.disconnect();
-  }, [containerHeight, items.length]);
+  }, [containerHeight, items.length, isVisible]);
 
   // Save scroll position to cache
   useEffect(() => {
@@ -477,6 +511,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   // Detect scrolling state (for pausing videos during scroll)
   const handleScroll = useCallback(() => {
+    if (!isVisible) return;
     setIsScrolling(true);
     
     if (scrollTimeoutRef.current) {
@@ -496,7 +531,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
         onLoadMore?.();
       }
     }
-  }, [containerHeight, items.length, hasMore, isLoadingMore, onLoadMore]);
+  }, [containerHeight, items.length, hasMore, isLoadingMore, onLoadMore, isVisible]);
 
   // Cleanup scroll timeout
   useEffect(() => {
@@ -544,6 +579,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
 
   // Keyboard navigation
   useEffect(() => {
+    if (!isVisible) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       const container = containerRef.current;
       if (!container) return;
@@ -556,7 +592,7 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeIndex, containerHeight]);
+  }, [activeIndex, containerHeight, isVisible]);
 
   // Use actual containerHeight (already initialized with window.innerHeight)
   if (isLoading) return <div style={{ height: containerHeight }}><FeedSkeleton /></div>;
@@ -608,7 +644,9 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
         }}
       >
         {items.map((item, index) => {
-          const isVisible = Math.abs(index - activeIndex) <= 2;
+          const effectiveActiveIndex = isVisible ? activeIndex : -1;
+          const isInRenderWindow = Math.abs(index - effectiveActiveIndex) <= 2;
+          const effectiveIsScrolling = !isVisible ? true : isScrolling;
           
           return (
             <div
@@ -621,13 +659,13 @@ export function TikTokFeed({ items, isLoading, onLoadMore, hasMore, isLoadingMor
               style={{ height: containerHeight }}
               className="snap-start snap-always"
             >
-              {isVisible ? (
+              {isInRenderWindow ? (
                 <FeedRow
                   index={index}
                   style={{ height: '100%' }}
                   items={items}
-                  activeIndex={activeIndex}
-                  isScrolling={isScrolling}
+                  activeIndex={effectiveActiveIndex}
+                  isScrolling={effectiveIsScrolling}
                 />
               ) : (
                 <div className="h-full bg-black" />

@@ -6,6 +6,7 @@ import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { stopAllMediaPipelines } from "@/lib/media";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
@@ -86,18 +87,8 @@ function AnimatedRoutes() {
 
   // Global kill-switch: stop any media when navigating
   useEffect(() => {
-    const els = Array.from(document.querySelectorAll<HTMLMediaElement>("video, audio"));
-    for (const el of els) {
-      try {
-        el.pause();
-        el.muted = true;
-        el.removeAttribute("src");
-        el.load();
-      } catch {
-        // ignore
-      }
-    }
-  }, [location.pathname]);
+    stopAllMediaPipelines();
+  }, [location.pathname, location.search, location.hash]);
 
   return (
     <div style={{ minHeight: '100vh' }}>

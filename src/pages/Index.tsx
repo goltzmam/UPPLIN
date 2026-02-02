@@ -11,6 +11,7 @@ import { FeedSearch } from "@/components/feed/FeedSearch";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
+import { stopAllMediaPipelines } from "@/lib/media";
 
 const PAGE_SIZE = 12;
 
@@ -132,7 +133,10 @@ export default function Index() {
         {/* Centered tabs */}
         <div className={cn("flex items-center gap-4", isDesktop ? "mx-auto" : "mx-4")}>
           <button 
-            onClick={() => setActiveTab("following")} 
+            onClick={() => {
+              stopAllMediaPipelines();
+              setActiveTab("following");
+            }} 
             className={cn(
               "relative py-0.5 text-[13px] font-medium transition-all whitespace-nowrap",
               activeTab === "following" 
@@ -198,6 +202,7 @@ export default function Index() {
           scrollPosition={scrollPosRef.current} 
           onScrollChange={pos => { scrollPosRef.current = pos; }} 
           onRefresh={handleRefresh} 
+          isVisible={activeTab === "foryou" && !isSearchOpen}
         />
       </div>
 
@@ -242,6 +247,7 @@ export default function Index() {
             hasMore={!!hasNextPage}
             isLoadingMore={isFetchingNextPage}
             onRefresh={handleRefresh}
+            isVisible={activeTab === "foryou" && !isSearchOpen}
           />
         </div>
 

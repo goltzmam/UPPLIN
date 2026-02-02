@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FeedVideoPlayer } from "./FeedVideoPlayer";
 import { FeedSkeleton } from "./FeedSkeleton";
+import { stopAllMediaPipelines } from "@/lib/media";
 
 interface FeedItem {
   id: string;
@@ -39,6 +40,8 @@ interface DesktopTikTokFeedProps {
   hasMore?: boolean;
   isLoadingMore?: boolean;
   onRefresh?: () => Promise<void>;
+  /** When false, the feed stays mounted but MUST NOT keep playing audio/video. */
+  isVisible?: boolean;
 }
 
 function formatEngagementCount(count: number): string {
@@ -334,14 +337,19 @@ export function DesktopTikTokFeed({
   onLoadMore,
   hasMore,
   isLoadingMore,
+  isVisible = true,
 }: DesktopTikTokFeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
 
+  useEffect(() => {
+    if (!isVisible) stopAllMediaPipelines();
+  }, [isVisible]);
+
   // Scroll-based active detection
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!isVisible || !container) return;
 
     const handleScroll = () => {
       const scrollTop = container.scrollTop;
@@ -361,7 +369,7 @@ export function DesktopTikTokFeed({
 
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [activeIndex, items.length, hasMore, isLoadingMore, onLoadMore]);
+  }, [activeIndex, items.length, hasMore, isLoadingMore, onLoadMore, isVisible]);
 
   if (isLoading) {
     return (
@@ -384,7 +392,7 @@ export function DesktopTikTokFeed({
         >
           <FeedCard
             item={item}
-            isActive={index === activeIndex}
+            isActive={isVisible && index === activeIndex}
             index={index}
           />
         </div>
