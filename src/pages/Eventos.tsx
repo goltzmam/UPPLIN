@@ -86,7 +86,7 @@ export default function Eventos() {
       {/* Main Content */}
       <main className="flex-1 min-w-0 pb-24 lg:pb-8">
         {/* Search Header */}
-        <section className="bg-gradient-to-b from-muted/60 to-transparent border-b border-border py-4 sm:py-6 lg:py-8 pt-6 sm:pt-8 lg:pt-10">
+        <section className="bg-gradient-to-b from-muted/60 to-transparent border-b border-border py-4 sm:py-6 lg:py-8 pt-4 sm:pt-6 lg:pt-8">
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4">
             <h1 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2 text-foreground">
               Explorar Eventos
