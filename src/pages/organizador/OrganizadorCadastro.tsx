@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
@@ -22,19 +22,16 @@ import {
 // Animation variants for step transitions
 const stepVariants = {
   enter: (direction: number) => ({
-    x: direction > 0 ? 100 : -100,
+    x: direction > 0 ? 50 : -50,
     opacity: 0,
-    scale: 0.95,
   }),
   center: {
     x: 0,
     opacity: 1,
-    scale: 1,
   },
   exit: (direction: number) => ({
-    x: direction < 0 ? 100 : -100,
+    x: direction < 0 ? 50 : -50,
     opacity: 0,
-    scale: 0.95,
   }),
 };
 
@@ -229,8 +226,30 @@ export default function OrganizadorCadastro() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Back Button - Fixed Position */}
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background gradient orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div 
+          className="absolute top-0 left-1/4 w-80 h-80 rounded-full opacity-15 blur-3xl"
+          style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D)" }}
+          animate={{ 
+            y: [0, 100, 0],
+            scale: [1, 1.2, 1]
+          }}
+          transition={{ duration: 20, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-0 right-1/4 w-80 h-80 rounded-full opacity-15 blur-3xl"
+          style={{ background: "linear-gradient(135deg, #FF2D2D, #FF007A)" }}
+          animate={{ 
+            y: [0, -100, 0],
+            scale: [1.2, 1, 1.2]
+          }}
+          transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      {/* Back Button */}
       <Link 
         to="/" 
         className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-foreground hover:bg-muted transition-colors"
@@ -239,66 +258,63 @@ export default function OrganizadorCadastro() {
         <span className="text-sm font-medium">Voltar</span>
       </Link>
 
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-md space-y-6 sm:space-y-8">
-          {/* Mobile Header */}
-          <div className="lg:hidden flex flex-col items-center gap-4">
-            <Link to="/" className="flex items-center gap-2.5">
-              <span 
-                className="font-display text-2xl font-bold tracking-tight"
+      {/* Centered Card */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-6 sm:p-8 shadow-2xl">
+          {/* Header */}
+          <div className="text-center space-y-4 mb-6">
+            <Link to="/" className="inline-block">
+              <motion.span 
+                className="font-display text-3xl sm:text-4xl font-bold tracking-tight"
                 style={{ 
                   background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text"
                 }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 400 }}
               >
                 UPPLIN
-              </span>
+              </motion.span>
             </Link>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-foreground text-sm font-medium">
+            <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium w-fit mx-auto">
               <Building2 className="h-4 w-4" />
               Área do Organizador
             </div>
-          </div>
-          
-          <div className="text-center lg:text-left space-y-2">
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground">Criar conta de organizador</h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Já tem conta?{" "}
-              <Link to="/organizador/login" className="text-primary hover:underline font-medium">Entrar</Link>
-            </p>
+            <div>
+              <h1 className="font-display text-xl font-bold text-foreground">Criar conta de organizador</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Já tem conta?{" "}
+                <Link to="/organizador/login" className="text-primary hover:underline font-medium">Entrar</Link>
+              </p>
+            </div>
           </div>
 
           {/* Progress Steps */}
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-2 mb-6">
             {[1, 2, 3].map((s) => (
-              <div key={s} className="flex items-center gap-3">
+              <div key={s} className="flex items-center gap-2">
                 <motion.div
-                  className={`relative h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm transition-colors ${
+                  className={`relative h-8 w-8 rounded-full flex items-center justify-center font-semibold text-xs transition-colors ${
                     step > s 
                       ? "bg-primary text-primary-foreground" 
                       : step === s 
-                        ? "bg-primary text-primary-foreground ring-4 ring-primary/20" 
+                        ? "bg-primary text-primary-foreground ring-2 ring-primary/30" 
                         : "bg-muted text-muted-foreground"
                   }`}
                   animate={{ scale: step === s ? 1.1 : 1 }}
                   transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 >
-                  {step > s ? (
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    >
-                      <Check className="h-5 w-5" />
-                    </motion.div>
-                  ) : (
-                    s
-                  )}
+                  {step > s ? <Check className="h-4 w-4" /> : s}
                 </motion.div>
                 {s < 3 && (
-                  <motion.div className="w-12 h-1 rounded-full bg-muted overflow-hidden">
+                  <motion.div className="w-8 h-0.5 rounded-full bg-muted overflow-hidden">
                     <motion.div
                       className="h-full bg-primary"
                       initial={{ width: "0%" }}
@@ -311,17 +327,12 @@ export default function OrganizadorCadastro() {
             ))}
           </div>
           
-          <motion.p 
-            key={step}
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-sm text-muted-foreground text-center font-medium"
-          >
-            {step === 1 ? "Dados da conta" : step === 2 ? "Dados da empresa" : "Redes sociais"}
-          </motion.p>
+          <p className="text-xs text-muted-foreground text-center font-medium mb-4">
+            {step === 1 ? "Dados da conta" : step === 2 ? "Dados da empresa" : "Redes sociais (opcional)"}
+          </p>
 
           {/* Form Steps */}
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden min-h-[280px]">
             <AnimatePresence mode="wait" custom={direction}>
               {step === 1 && (
                 <motion.form
@@ -336,10 +347,10 @@ export default function OrganizadorCadastro() {
                   className="space-y-4"
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="fullName" className="text-sm">Seu nome completo</Label>
+                    <Label htmlFor="fullName" className="text-sm">Seu nome</Label>
                     <ValidatedInput 
                       id="fullName" 
-                      placeholder="Seu nome" 
+                      placeholder="Nome completo" 
                       className="h-11" 
                       value={fullName} 
                       onChange={(e) => setFullName(e.target.value)} 
@@ -377,7 +388,7 @@ export default function OrganizadorCadastro() {
                       validationRules={passwordRules}
                     />
                   </div>
-                  <Button type="submit" className="w-full h-11 gap-2" disabled={!isStep1Valid}>
+                  <Button type="submit" className="w-full h-11 gap-2 btn-gradient" disabled={!isStep1Valid}>
                     Continuar
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -394,10 +405,10 @@ export default function OrganizadorCadastro() {
                   exit="exit"
                   transition={stepTransition}
                   onSubmit={handleStep2}
-                  className="space-y-4"
+                  className="space-y-3"
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="companyName" className="text-sm">Nome da Produtora/Organizadora</Label>
+                    <Label htmlFor="companyName" className="text-sm">Nome da Empresa</Label>
                     <ValidatedInput 
                       id="companyName" 
                       placeholder="Ex: Eventos XYZ" 
@@ -435,22 +446,12 @@ export default function OrganizadorCadastro() {
                       validationRules={phoneRules}
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="description" className="text-sm">Descrição da empresa (opcional)</Label>
-                    <Textarea 
-                      id="description" 
-                      placeholder="Conte um pouco sobre sua empresa..." 
-                      className="min-h-[80px]" 
-                      value={description} 
-                      onChange={(e) => setDescription(e.target.value)} 
-                    />
-                  </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 pt-2">
                     <Button type="button" variant="outline" className="flex-1 h-11 gap-2" onClick={() => goToStep(1)}>
                       <ChevronLeft className="h-4 w-4" />
                       Voltar
                     </Button>
-                    <Button type="submit" className="flex-1 h-11 gap-2" disabled={!isStep2Valid}>
+                    <Button type="submit" className="flex-1 h-11 gap-2 btn-gradient" disabled={!isStep2Valid}>
                       Continuar
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -468,10 +469,10 @@ export default function OrganizadorCadastro() {
                   exit="exit"
                   transition={stepTransition}
                   onSubmit={handleSubmit}
-                  className="space-y-4"
+                  className="space-y-3"
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="instagram" className="text-sm">Instagram (opcional)</Label>
+                    <Label htmlFor="instagram" className="text-sm">Instagram</Label>
                     <ValidatedInput 
                       id="instagram" 
                       placeholder="@seuperfil" 
@@ -483,7 +484,7 @@ export default function OrganizadorCadastro() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="facebook" className="text-sm">Facebook (opcional)</Label>
+                    <Label htmlFor="facebook" className="text-sm">Facebook</Label>
                     <ValidatedInput 
                       id="facebook" 
                       placeholder="facebook.com/suapagina" 
@@ -495,7 +496,7 @@ export default function OrganizadorCadastro() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="website" className="text-sm">Website (opcional)</Label>
+                    <Label htmlFor="website" className="text-sm">Website</Label>
                     <ValidatedInput 
                       id="website" 
                       placeholder="https://seusite.com" 
@@ -506,12 +507,12 @@ export default function OrganizadorCadastro() {
                       showValidation={false}
                     />
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 pt-2">
                     <Button type="button" variant="outline" className="flex-1 h-11 gap-2" onClick={() => goToStep(2)}>
                       <ChevronLeft className="h-4 w-4" />
                       Voltar
                     </Button>
-                    <Button type="submit" className="flex-1 h-11 gap-2" disabled={loading}>
+                    <Button type="submit" className="flex-1 h-11 gap-2 btn-gradient" disabled={loading}>
                       {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : (
                         <>
                           <Check className="h-4 w-4" />
@@ -525,67 +526,17 @@ export default function OrganizadorCadastro() {
             </AnimatePresence>
           </div>
 
-          <div className="text-center pt-4 border-t border-border">
-            <p className="text-sm text-muted-foreground mb-2">Quer comprar ingressos?</p>
-            <Link 
-              to="/cadastro" 
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              Cadastrar como participante →
-            </Link>
+          {/* Footer */}
+          <div className="mt-6 pt-4 border-t border-border text-center">
+            <p className="text-sm text-muted-foreground">
+              Quer comprar ingressos?{" "}
+              <Link to="/cadastro" className="text-primary hover:underline font-medium">
+                Cadastrar como participante →
+              </Link>
+            </p>
           </div>
         </div>
-      </div>
-
-      <div className="hidden lg:flex lg:w-1/2 bg-secondary items-center justify-center p-8 xl:p-12">
-        <div className="max-w-md text-center text-secondary-foreground">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="flex justify-center mb-6 sm:mb-8"
-          >
-            <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-xl sm:rounded-2xl bg-primary flex items-center justify-center">
-              <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
-            </div>
-          </motion.div>
-          <motion.h1 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4"
-          >
-            Comece a criar eventos incríveis
-          </motion.h1>
-          <motion.p 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-sm sm:text-base text-secondary-foreground/70"
-          >
-            Junte-se a milhares de organizadores que confiam na UPPLIN para vender ingressos.
-          </motion.p>
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 grid grid-cols-3 gap-4 text-center"
-          >
-            <div>
-              <div className="text-2xl font-bold">2M+</div>
-              <div className="text-xs text-secondary-foreground/60">Ingressos vendidos</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">50k+</div>
-              <div className="text-xs text-secondary-foreground/60">Eventos</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">99.9%</div>
-              <div className="text-xs text-secondary-foreground/60">Uptime</div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

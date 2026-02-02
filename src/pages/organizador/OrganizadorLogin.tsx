@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, Mail, Lock, Loader2, Building2, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Loader2, Building2, ArrowLeft } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -29,13 +29,35 @@ export default function OrganizadorLogin() {
     if (error) {
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
     } else {
-      navigate("/organizador");
+      navigate("/organizador/painel");
     }
   };
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Back Button - Fixed Position */}
+    <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Animated background gradient orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div 
+          className="absolute top-1/4 -right-20 w-80 h-80 rounded-full opacity-15 blur-3xl"
+          style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D)" }}
+          animate={{ 
+            scale: [1, 1.3, 1],
+            x: [0, 50, 0]
+          }}
+          transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.div 
+          className="absolute bottom-1/4 -left-20 w-80 h-80 rounded-full opacity-15 blur-3xl"
+          style={{ background: "linear-gradient(135deg, #FF2D2D, #FF007A)" }}
+          animate={{ 
+            scale: [1.3, 1, 1.3],
+            x: [0, -50, 0]
+          }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
+        />
+      </div>
+
+      {/* Back Button */}
       <Link 
         to="/" 
         className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-foreground hover:bg-muted transition-colors"
@@ -44,103 +66,68 @@ export default function OrganizadorLogin() {
         <span className="text-sm font-medium">Voltar</span>
       </Link>
 
-      <div className="hidden lg:flex lg:w-1/2 bg-secondary items-center justify-center p-8 xl:p-12">
-        <div className="max-w-md text-center text-secondary-foreground">
-          <motion.div 
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            className="flex justify-center mb-6 sm:mb-8"
-          >
-            <span 
-              className="font-display text-4xl sm:text-5xl font-bold tracking-tight"
-              style={{ 
-                background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text"
-              }}
-            >
-              UPPLIN
-            </span>
-          </motion.div>
-          <motion.h1 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4"
-          >
-            Portal do Organizador
-          </motion.h1>
-          <motion.p 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-sm sm:text-base text-secondary-foreground/70"
-          >
-            Acesse sua área exclusiva para gerenciar eventos e vendas.
-          </motion.p>
-          <motion.div 
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8 grid grid-cols-3 gap-4 text-center"
-          >
-            <div>
-              <div className="text-2xl font-bold">2M+</div>
-              <div className="text-xs text-secondary-foreground/60">Ingressos vendidos</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">50k+</div>
-              <div className="text-xs text-secondary-foreground/60">Eventos</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold">99.9%</div>
-              <div className="text-xs text-secondary-foreground/60">Uptime</div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
-        <div className="w-full max-w-md space-y-6 sm:space-y-8">
-          {/* Mobile Header */}
-          <div className="lg:hidden flex flex-col items-center gap-4">
-            <Link to="/" className="flex items-center gap-2.5">
-              <span 
-                className="font-display text-2xl font-bold tracking-tight"
+      {/* Centered Card */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="w-full max-w-md relative z-10"
+      >
+        <div className="bg-card/80 backdrop-blur-xl border border-border rounded-2xl p-6 sm:p-8 shadow-2xl">
+          {/* Header */}
+          <div className="text-center space-y-4 mb-8">
+            <Link to="/" className="inline-block">
+              <motion.span 
+                className="font-display text-3xl sm:text-4xl font-bold tracking-tight"
                 style={{ 
                   background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   backgroundClip: "text"
                 }}
+                whileHover={{ scale: 1.05 }}
+                transition={{ type: "spring", stiffness: 400 }}
               >
                 UPPLIN
-              </span>
+              </motion.span>
             </Link>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted border border-border text-foreground text-sm font-medium">
+            <div className="flex items-center justify-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-medium w-fit mx-auto">
               <Building2 className="h-4 w-4" />
               Área do Organizador
             </div>
-          </div>
-          
-          <div className="text-center lg:text-left space-y-2">
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground">Entrar na sua conta</h2>
-            <p className="text-sm sm:text-base text-muted-foreground">
-              Não tem conta?{" "}
-              <Link to="/organizador/cadastro" className="text-primary hover:underline font-medium">Criar conta de organizador</Link>
-            </p>
+            <div>
+              <h1 className="font-display text-xl sm:text-2xl font-bold text-foreground">Portal do Organizador</h1>
+              <p className="text-sm text-muted-foreground mt-1">
+                Gerencie seus eventos e vendas.
+              </p>
+            </div>
           </div>
 
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3 mb-6 p-4 bg-muted/30 rounded-xl border border-border/50">
+            <div className="text-center">
+              <div className="text-lg font-bold text-foreground">2M+</div>
+              <div className="text-[10px] text-muted-foreground">Ingressos</div>
+            </div>
+            <div className="text-center border-x border-border/50">
+              <div className="text-lg font-bold text-foreground">50k+</div>
+              <div className="text-[10px] text-muted-foreground">Eventos</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-bold text-foreground">99.9%</div>
+              <div className="text-[10px] text-muted-foreground">Uptime</div>
+            </div>
+          </div>
+
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm">Email</Label>
+              <Label htmlFor="email" className="text-sm font-medium">Email</Label>
               <ValidatedInput 
                 id="email" 
                 type="email" 
                 placeholder="seu@email.com" 
-                className="h-11 sm:h-12 text-sm sm:text-base" 
+                className="h-12" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
                 required
@@ -150,11 +137,8 @@ export default function OrganizadorLogin() {
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm">Senha</Label>
-                <Link 
-                  to="/recuperar-senha?tipo=organizador" 
-                  className="text-xs text-primary hover:underline"
-                >
+                <Label htmlFor="password" className="text-sm font-medium">Senha</Label>
+                <Link to="/recuperar-senha?tipo=organizador" className="text-xs text-primary hover:underline">
                   Esqueceu a senha?
                 </Link>
               </div>
@@ -162,7 +146,7 @@ export default function OrganizadorLogin() {
                 id="password" 
                 type="password" 
                 placeholder="••••••••" 
-                className="h-11 sm:h-12 text-sm sm:text-base" 
+                className="h-12" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 required
@@ -170,35 +154,36 @@ export default function OrganizadorLogin() {
                 validationRules={passwordRules}
               />
             </div>
-            <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading}>
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
+            <Button type="submit" className="w-full h-12 text-sm font-medium btn-gradient" disabled={loading}>
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar no Painel"}
             </Button>
           </form>
 
           {/* Demo Credentials */}
-          <div className="p-4 bg-muted/50 rounded-lg border border-border">
-            <p className="text-xs text-center text-muted-foreground mb-2">
-              <strong>Demo - Organizador:</strong>
-            </p>
-            <p className="text-xs text-center font-mono text-foreground">
-              demo.organizador@upplin.app
+          <div className="mt-6 p-4 bg-muted/30 rounded-xl border border-border/50">
+            <p className="text-xs text-center text-muted-foreground mb-1">
+              <strong>Demo:</strong> demo.organizador@upplin.app
             </p>
             <p className="text-xs text-center font-mono text-muted-foreground">
-              Demo@2026
+              Senha: Demo@2026
             </p>
           </div>
 
-          <div className="text-center pt-4 border-t border-border">
-            <p className="text-sm text-muted-foreground mb-2">Quer comprar ingressos?</p>
-            <Link 
-              to="/login" 
-              className="text-sm font-medium text-primary hover:underline"
-            >
-              Entrar como participante →
-            </Link>
+          {/* Footer Links */}
+          <div className="mt-6 pt-6 border-t border-border text-center space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Não tem conta?{" "}
+              <Link to="/organizador/cadastro" className="text-primary hover:underline font-medium">Criar conta</Link>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Quer comprar ingressos?{" "}
+              <Link to="/login" className="text-primary hover:underline font-medium">
+                Entrar como participante →
+              </Link>
+            </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
