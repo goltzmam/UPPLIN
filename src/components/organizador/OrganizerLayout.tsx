@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Outlet, Link, useLocation, useOutletContext } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -10,9 +9,7 @@ import {
   LogOut, 
   ChevronLeft,
   ChevronRight,
-  User,
   Menu,
-  X,
   Plus,
   BarChart3
 } from "lucide-react";
@@ -24,6 +21,7 @@ import { PageLoading } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const SIDEBAR_COLLAPSED_KEY = "upplin_org_sidebar_collapsed";
 
@@ -35,32 +33,6 @@ const navItems = [
   { href: "/organizador/painel/relatorios", label: "Relatórios", icon: BarChart3 },
   { href: "/organizador/painel/configuracoes", label: "Configurações", icon: Settings },
 ];
-
-interface NavItemProps {
-  item: typeof navItems[0];
-  isActive: boolean;
-  isCollapsed: boolean;
-  onClick?: () => void;
-}
-
-const NavItem = ({ item, isActive, isCollapsed, onClick }: NavItemProps) => (
-  <Link
-    to={item.href}
-    onClick={onClick}
-    className={cn(
-      "flex items-center gap-3 px-3 py-3 rounded-xl transition-all group",
-      isCollapsed && "justify-center",
-      isActive
-        ? "bg-primary text-primary-foreground"
-        : "text-muted-foreground hover:bg-muted hover:text-foreground"
-    )}
-  >
-    <item.icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary-foreground")} />
-    {!isCollapsed && (
-      <span className="text-sm font-medium">{item.label}</span>
-    )}
-  </Link>
-);
 
 export function OrganizerLayout() {
   const { user, loading: authLoading, signOut } = useAuth();
@@ -141,128 +113,134 @@ export function OrganizerLayout() {
     return null;
   }
 
-  const SidebarContent = ({ onItemClick }: { onItemClick?: () => void }) => (
-    <>
-      {/* Logo */}
-      <div className={cn(
-        "flex items-center mb-8",
-        isCollapsed ? "justify-center" : "justify-between px-3"
-      )}>
-        <Link to="/" className="flex items-center gap-2">
-          <span 
-            className={cn(
-              "font-display font-bold",
-              isCollapsed ? "text-2xl" : "text-xl"
-            )}
-            style={{ 
-              background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text"
-            }}
-          >
-            {isCollapsed ? "U" : "UPPLIN"}
-          </span>
-        </Link>
-        
-        {!isCollapsed && (
-          <button
-            onClick={() => setIsCollapsed(true)}
-            className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hidden lg:block"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-        )}
-      </div>
-
-      {/* Expand button when collapsed */}
-      {isCollapsed && (
-        <button
-          onClick={() => setIsCollapsed(false)}
-          className="flex items-center justify-center p-2 mb-4 rounded-lg hover:bg-muted transition-colors text-muted-foreground hidden lg:flex"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </button>
-      )}
-
-      {/* Create Event Button */}
-      <Link
-        to="/organizador/painel/evento/novo"
-        onClick={onItemClick}
+  return (
+    <div className="min-h-[100dvh] bg-background flex">
+      {/* Desktop Sidebar - Fixed with internal scroll */}
+      <aside 
         className={cn(
-          "flex items-center gap-2 mb-6 rounded-xl shadow-lg",
-          isCollapsed ? "justify-center p-3" : "px-4 py-3"
+          "hidden lg:flex flex-col fixed inset-y-0 left-0 z-40 border-r border-border bg-card transition-all duration-300",
+          isCollapsed ? "w-[72px]" : "w-[240px]"
         )}
-        style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)" }}
       >
-        <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
-        {!isCollapsed && (
-          <span className="text-white font-semibold text-sm">Criar Evento</span>
-        )}
-      </Link>
-
-      {/* Navigation */}
-      <nav className="flex-1 flex flex-col gap-1">
-        {navItems.map((item) => (
-          <NavItem
-            key={item.href}
-            item={item}
-            isActive={isActive(item.href, item.exact)}
-            isCollapsed={isCollapsed}
-            onClick={onItemClick}
-          />
-        ))}
-      </nav>
-
-      {/* Organizer Info */}
-      <div className={cn(
-        "pt-4 border-t border-border",
-        isCollapsed && "flex flex-col items-center"
-      )}>
+        {/* Logo - Fixed at top */}
         <div className={cn(
-          "flex items-center gap-3 p-3 rounded-xl bg-muted/50 mb-3",
-          isCollapsed && "p-2"
+          "flex items-center shrink-0 py-6 border-b border-border",
+          isCollapsed ? "justify-center px-2" : "justify-between px-4"
         )}>
-          <Avatar className="h-9 w-9">
-            <AvatarImage src={organizer.logo_url || undefined} />
-            <AvatarFallback className="text-xs">
-              {organizer.display_name?.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <Link to="/" className="flex items-center gap-2">
+            <span 
+              className={cn(
+                "font-display font-bold",
+                isCollapsed ? "text-2xl" : "text-xl"
+              )}
+              style={{ 
+                background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text"
+              }}
+            >
+              {isCollapsed ? "U" : "UPPLIN"}
+            </span>
+          </Link>
+          
           {!isCollapsed && (
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-sm truncate">{organizer.display_name}</p>
-              <p className="text-xs text-muted-foreground truncate">Organizador</p>
-            </div>
+            <button
+              onClick={() => setIsCollapsed(true)}
+              className="p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
           )}
         </div>
 
-        <button
-          onClick={handleSignOut}
-          className={cn(
-            "flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-muted-foreground hover:bg-muted/50 hover:text-destructive w-full",
-            isCollapsed && "justify-center"
-          )}
-        >
-          <LogOut className="h-5 w-5 shrink-0" />
-          {!isCollapsed && (
-            <span className="text-sm">Sair</span>
-          )}
-        </button>
-      </div>
-    </>
-  );
-
-  return (
-    <div className="min-h-screen bg-background flex">
-      {/* Desktop Sidebar */}
-      <aside 
-        className={cn(
-          "hidden lg:flex flex-col h-screen border-r border-border py-6 sticky top-0 shrink-0 transition-all duration-300 bg-card",
-          isCollapsed ? "w-[72px] px-2" : "w-[240px] px-4"
+        {/* Expand button when collapsed */}
+        {isCollapsed && (
+          <button
+            onClick={() => setIsCollapsed(false)}
+            className="flex items-center justify-center p-2 mx-2 mt-4 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
         )}
-      >
-        <SidebarContent />
+
+        {/* Create Event Button */}
+        <div className={cn("shrink-0", isCollapsed ? "px-2 pt-4" : "px-4 pt-6")}>
+          <Link
+            to="/organizador/painel/evento/novo"
+            className={cn(
+              "flex items-center gap-2 rounded-xl shadow-lg",
+              isCollapsed ? "justify-center p-3" : "px-4 py-3"
+            )}
+            style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)" }}
+          >
+            <Plus className="h-5 w-5 text-white" strokeWidth={2.5} />
+            {!isCollapsed && (
+              <span className="text-white font-semibold text-sm">Criar Evento</span>
+            )}
+          </Link>
+        </div>
+
+        {/* Navigation - Scrollable */}
+        <ScrollArea className="flex-1 py-4">
+          <nav className={cn("flex flex-col gap-1", isCollapsed ? "px-2" : "px-4")}>
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-3 rounded-xl transition-all",
+                  isCollapsed && "justify-center",
+                  isActive(item.href, item.exact)
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                )}
+              >
+                <item.icon className="h-5 w-5 shrink-0" />
+                {!isCollapsed && (
+                  <span className="text-sm font-medium">{item.label}</span>
+                )}
+              </Link>
+            ))}
+          </nav>
+        </ScrollArea>
+
+        {/* Organizer Info - Fixed at bottom */}
+        <div className={cn(
+          "shrink-0 border-t border-border",
+          isCollapsed ? "p-2" : "p-4"
+        )}>
+          <div className={cn(
+            "flex items-center gap-3 p-3 rounded-xl bg-muted/50 mb-3",
+            isCollapsed && "p-2 justify-center"
+          )}>
+            <Avatar className="h-9 w-9 shrink-0">
+              <AvatarImage src={organizer.logo_url || undefined} />
+              <AvatarFallback className="text-xs">
+                {organizer.display_name?.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {!isCollapsed && (
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold text-sm truncate">{organizer.display_name}</p>
+                <p className="text-xs text-muted-foreground truncate">Organizador</p>
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={handleSignOut}
+            className={cn(
+              "flex items-center gap-3 px-3 py-3 rounded-xl transition-all text-muted-foreground hover:bg-muted/50 hover:text-destructive w-full",
+              isCollapsed && "justify-center"
+            )}
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            {!isCollapsed && (
+              <span className="text-sm">Sair</span>
+            )}
+          </button>
+        </div>
       </aside>
 
       {/* Mobile Header */}
@@ -298,10 +276,10 @@ export function OrganizerLayout() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px] p-0">
-                <div className="flex flex-col h-full p-6">
+                <div className="flex flex-col h-full">
                   {/* Mobile Organizer Info */}
-                  <div className="flex items-center gap-3 pb-6 border-b border-border mb-6">
-                    <Avatar className="h-12 w-12">
+                  <div className="flex items-center gap-3 p-6 border-b border-border shrink-0">
+                    <Avatar className="h-12 w-12 shrink-0">
                       <AvatarImage src={organizer.logo_url || undefined} />
                       <AvatarFallback>
                         {organizer.display_name?.slice(0, 2).toUpperCase()}
@@ -313,37 +291,41 @@ export function OrganizerLayout() {
                     </div>
                   </div>
 
-                  {/* Mobile Navigation */}
-                  <nav className="flex-1 flex flex-col gap-1">
-                    {navItems.map((item) => (
-                      <Link
-                        key={item.href}
-                        to={item.href}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
-                          isActive(item.href, item.exact)
-                            ? "bg-primary text-primary-foreground"
-                            : "text-muted-foreground hover:bg-muted"
-                        )}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        <span className="font-medium">{item.label}</span>
-                      </Link>
-                    ))}
-                  </nav>
+                  {/* Mobile Navigation - Scrollable */}
+                  <ScrollArea className="flex-1">
+                    <nav className="p-4 space-y-1">
+                      {navItems.map((item) => (
+                        <Link
+                          key={item.href}
+                          to={item.href}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all",
+                            isActive(item.href, item.exact)
+                              ? "bg-primary text-primary-foreground"
+                              : "text-muted-foreground hover:bg-muted"
+                          )}
+                        >
+                          <item.icon className="h-5 w-5 shrink-0" />
+                          <span className="font-medium">{item.label}</span>
+                        </Link>
+                      ))}
+                    </nav>
+                  </ScrollArea>
 
-                  {/* Mobile Logout */}
-                  <button
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      handleSignOut();
-                    }}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-muted hover:text-destructive transition-all mt-4"
-                  >
-                    <LogOut className="h-5 w-5" />
-                    <span className="font-medium">Sair</span>
-                  </button>
+                  {/* Mobile Logout - Fixed at bottom */}
+                  <div className="p-4 border-t border-border shrink-0">
+                    <button
+                      onClick={() => {
+                        setMobileMenuOpen(false);
+                        handleSignOut();
+                      }}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-muted hover:text-destructive transition-all w-full"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      <span className="font-medium">Sair</span>
+                    </button>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -351,9 +333,12 @@ export function OrganizerLayout() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 min-w-0">
-        <div className="lg:p-8 p-4 pt-20 lg:pt-8">
+      {/* Main Content - Offset for fixed sidebar */}
+      <main className={cn(
+        "flex-1 min-w-0 transition-all duration-300",
+        isCollapsed ? "lg:ml-[72px]" : "lg:ml-[240px]"
+      )}>
+        <div className="p-4 pt-[72px] lg:pt-8 lg:p-8 min-h-[100dvh]">
           <Outlet context={{ organizer }} />
         </div>
       </main>
