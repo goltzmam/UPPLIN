@@ -155,6 +155,19 @@ export default function Login() {
             </Button>
           </form>
 
+          {/* Demo Credentials */}
+          <div className="p-4 bg-muted/50 rounded-lg border border-border">
+            <p className="text-xs text-center text-muted-foreground mb-2">
+              <strong>Demo - Participante:</strong>
+            </p>
+            <p className="text-xs text-center font-mono text-foreground">
+              demo.participante@upplin.app
+            </p>
+            <p className="text-xs text-center font-mono text-muted-foreground">
+              Demo@2026
+            </p>
+          </div>
+
           <div className="text-center pt-4 border-t border-border">
             <p className="text-sm text-muted-foreground mb-2">É organizador de eventos?</p>
             <Link 
