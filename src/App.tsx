@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
-import { AnimatePresence, motion } from "framer-motion";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -81,19 +80,17 @@ if (typeof window !== "undefined") {
   (window as unknown as { __QUERY_CLIENT__?: typeof queryClient }).__QUERY_CLIENT__ = queryClient;
 }
 
-// Animated routes wrapper
+// Simplified routes wrapper - removed heavy AnimatePresence for mobile performance
 function AnimatedRoutes() {
   const location = useLocation();
 
-  // Global kill-switch: prevent any lingering feed audio when navigating away.
+  // Global kill-switch: stop any media when navigating
   useEffect(() => {
     const els = Array.from(document.querySelectorAll<HTMLMediaElement>("video, audio"));
     for (const el of els) {
       try {
         el.pause();
         el.muted = true;
-        el.volume = 0;
-        el.currentTime = 0;
         el.removeAttribute("src");
         el.load();
       } catch {
@@ -103,16 +100,8 @@ function AnimatedRoutes() {
   }, [location.pathname]);
 
   return (
-    <AnimatePresence mode="popLayout" initial={false}>
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.15, ease: "easeOut" }}
-        style={{ minHeight: '100vh' }}
-      >
-        <Routes location={location}>
+    <div style={{ minHeight: '100vh' }}>
+      <Routes location={location}>
           {/* ============================================ */}
           {/* PUBLIC ROUTES - Accessible to everyone       */}
           {/* ============================================ */}
@@ -191,8 +180,7 @@ function AnimatedRoutes() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </motion.div>
-    </AnimatePresence>
+    </div>
   );
 }
 

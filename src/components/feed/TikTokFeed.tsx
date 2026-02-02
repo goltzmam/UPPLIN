@@ -70,73 +70,42 @@ function LiveBadge() {
   );
 }
 
+// Simplified particles - CSS only, no framer-motion for performance
 const LikeParticles = React.memo(function LikeParticles({ show }: { show: boolean }) {
-  const particles = useMemo(() => 
-    Array.from({ length: 12 }).map((_, i) => ({
-      id: i,
-      angle: (i * 30) + Math.random() * 15,
-      distance: 60 + Math.random() * 40,
-      size: 4 + Math.random() * 4,
-      delay: Math.random() * 0.1,
-    })), []
-  );
-
+  if (!show) return null;
   return (
-    <AnimatePresence>
-      {show && particles.map((particle) => (
-        <motion.div
-          key={particle.id}
-          initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
-          animate={{ 
-            scale: [0, 1, 0.5],
-            x: Math.cos(particle.angle * Math.PI / 180) * particle.distance,
-            y: Math.sin(particle.angle * Math.PI / 180) * particle.distance,
-            opacity: [1, 1, 0]
-          }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6, delay: particle.delay, ease: "easeOut" }}
-          className="absolute pointer-events-none"
-          style={{ width: particle.size, height: particle.size }}
-        >
-          <Heart className="w-full h-full" style={{ color: '#FF2D2D', fill: '#FF2D2D' }} />
-        </motion.div>
-      ))}
-    </AnimatePresence>
+    <div className="absolute inset-0 pointer-events-none">
+      <Heart 
+        className="absolute animate-ping" 
+        style={{ 
+          color: '#FF2D2D', 
+          fill: '#FF2D2D',
+          width: 16, 
+          height: 16,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+        }} 
+      />
+    </div>
   );
 });
 
 const SaveParticles = React.memo(function SaveParticles({ show }: { show: boolean }) {
-  const particles = useMemo(() => 
-    Array.from({ length: 8 }).map((_, i) => ({
-      id: i,
-      angle: (i * 45) + Math.random() * 20,
-      distance: 40 + Math.random() * 30,
-      size: 3 + Math.random() * 3,
-      delay: Math.random() * 0.08,
-    })), []
-  );
-
+  if (!show) return null;
   return (
-    <AnimatePresence>
-      {show && particles.map((particle) => (
-        <motion.div
-          key={particle.id}
-          initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
-          animate={{ 
-            scale: [0, 1, 0.3],
-            x: Math.cos(particle.angle * Math.PI / 180) * particle.distance,
-            y: Math.sin(particle.angle * Math.PI / 180) * particle.distance,
-            opacity: [1, 1, 0]
-          }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5, delay: particle.delay, ease: "easeOut" }}
-          className="absolute pointer-events-none"
-          style={{ width: particle.size, height: particle.size }}
-        >
-          <Bookmark className="w-full h-full text-white fill-white" />
-        </motion.div>
-      ))}
-    </AnimatePresence>
+    <div className="absolute inset-0 pointer-events-none">
+      <Bookmark 
+        className="absolute animate-ping text-white fill-white" 
+        style={{ 
+          width: 14, 
+          height: 14,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%)',
+        }} 
+      />
+    </div>
   );
 });
 
