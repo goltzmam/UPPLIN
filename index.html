@@ -56,6 +56,35 @@
 
   <body>
     <div id="root"></div>
+    
+    <!-- CRITICAL: Inline cache buster runs BEFORE main bundle loads -->
+    <!-- This ensures stale SWs/caches are cleared even if JS is cached -->
+    <script>
+      (function() {
+        var isPreview = location.hostname.indexOf('lovable.app') !== -1 || 
+                        location.hostname.indexOf('lovable.dev') !== -1;
+        if (!isPreview) return;
+        
+        // Immediately unregister all service workers
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            registrations.forEach(function(reg) {
+              reg.unregister();
+            });
+          });
+        }
+        
+        // Clear all caches
+        if ('caches' in window) {
+          caches.keys().then(function(keys) {
+            keys.forEach(function(key) {
+              caches.delete(key);
+            });
+          });
+        }
+      })();
+    </script>
+    
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
