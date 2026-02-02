@@ -17,7 +17,7 @@ import Perfil from "./pages/Perfil";
 import MeusIngressos from "./pages/MeusIngressos";
 import Mensagens from "./pages/Mensagens";
 import Checkout from "./pages/Checkout";
-import Instalar from "./pages/Instalar";
+
 import RecuperarSenha from "./pages/RecuperarSenha";
 import RedefinirSenha from "./pages/RedefinirSenha";
 
@@ -106,7 +106,7 @@ function AnimatedRoutes() {
           <Route path="/precos" element={<Precos />} />
           <Route path="/organizadores" element={<Organizadores />} />
           <Route path="/explorar-organizadores" element={<ExplorarOrganizadores />} />
-          <Route path="/instalar" element={<Instalar />} />
+          
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}
           <Route path="/o/:slug" element={<OrganizerPublicProfile />} />
