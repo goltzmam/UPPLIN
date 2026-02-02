@@ -4,6 +4,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =============================================================================
+   CRITICAL: Desktop sidebar visibility control - MUST be outside layers
+   This prevents the sidebar from flashing on mobile during hydration
+   ============================================================================= */
+.desktop-sidebar-only {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+@media (min-width: 1024px) {
+  .desktop-sidebar-only {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+  }
+}
+
 /* UPPLIN - Social Events Platform
    Design System: DARK MODE PREMIUM with Neon Accents
    Inspired by TikTok & Nightlife aesthetics
@@ -523,14 +541,4 @@
     touch-action: manipulation;
   }
   
-  /* CRITICAL: Force hide desktop sidebar on mobile to prevent flash/delay issues */
-  .desktop-sidebar-only {
-    display: none !important;
-  }
-  
-  @media (min-width: 1024px) {
-    .desktop-sidebar-only {
-      display: flex !important;
-    }
-  }
 }
