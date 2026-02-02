@@ -104,7 +104,7 @@ export function TikTokDesktopSidebar() {
     user,
     signOut
   } = useAuth();
-  const { isOrganizer, isAdmin, isLoading: rolesLoading } = useUserRoles();
+  const { isOrganizer, isAdmin, organizerId, isLoading: rolesLoading } = useUserRoles();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUpMenuOpen, setIsUpMenuOpen] = useState(false);
   
@@ -117,6 +117,10 @@ export function TikTokDesktopSidebar() {
     await signOut();
     navigate("/");
   };
+
+  // Determine if user can access organizer dashboard
+  // They need to have an organizer account (not just be an admin)
+  const canAccessOrganizerDashboard = !rolesLoading && isOrganizer && !!organizerId;
 
   return <>
       <aside className="desktop-sidebar-only flex-col items-center fixed left-0 top-0 h-dvh w-[72px] py-4 z-40 bg-sidebar border-r border-sidebar-border">
@@ -131,7 +135,7 @@ export function TikTokDesktopSidebar() {
         </Link>
 
         {/* Main Navigation - Matching mobile exactly */}
-        <nav className="flex-1 flex flex-col items-center gap-1">
+        <nav className="flex-1 flex flex-col items-center gap-1 overflow-y-auto overflow-x-hidden">
           {/* Início */}
           <NavItem to="/" icon={<Home className="h-5 w-5" strokeWidth={1.5} />} label="Início" isActive={isActive("/")} />
 
@@ -146,9 +150,12 @@ export function TikTokDesktopSidebar() {
 
           {/* Perfil */}
           <NavItem to={user ? "/perfil" : "/login"} icon={<User className="h-5 w-5" strokeWidth={1.5} />} label="Perfil" isActive={isActive("/perfil")} />
-          
-          {/* Painel do Organizador - only show for organizers */}
-          {!rolesLoading && isOrganizer && (
+        </nav>
+        
+        {/* Bottom section - Role-specific navigation */}
+        <div className="flex flex-col items-center gap-1 pt-2 border-t border-sidebar-border mt-2">
+          {/* Painel do Organizador - only show if user has organizer account */}
+          {canAccessOrganizerDashboard && (
             <NavItem 
               to="/organizador/painel" 
               icon={<LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />} 
@@ -158,7 +165,7 @@ export function TikTokDesktopSidebar() {
             />
           )}
           
-          {/* Admin Panel - only show for admins */}
+          {/* Admin Panel - only show for admins (separate from organizer) */}
           {!rolesLoading && isAdmin && (
             <NavItem 
               to="/admin" 
@@ -168,8 +175,7 @@ export function TikTokDesktopSidebar() {
               highlight
             />
           )}
-        </nav>
-
+        </div>
       </aside>
 
       {/* Search overlay */}

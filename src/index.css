@@ -7,11 +7,19 @@
 /* =============================================================================
    CRITICAL: Desktop sidebar visibility control - MUST be outside layers
    This prevents the sidebar from flashing on mobile during hydration
+   Priority: Use !important to override any inline styles or other rules
    ============================================================================= */
 .desktop-sidebar-only {
   display: none !important;
   visibility: hidden !important;
   pointer-events: none !important;
+  width: 0 !important;
+  min-width: 0 !important;
+  max-width: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
 }
 
 @media (min-width: 1024px) {
@@ -19,6 +27,24 @@
     display: flex !important;
     visibility: visible !important;
     pointer-events: auto !important;
+    width: 72px !important;
+    min-width: 72px !important;
+    max-width: 72px !important;
+    opacity: 1 !important;
+    overflow: visible !important;
+    position: fixed !important;
+    left: 0 !important;
+  }
+}
+
+/* Ensure content offset only applies on desktop */
+.desktop-content-offset {
+  margin-left: 0 !important;
+}
+
+@media (min-width: 1024px) {
+  .desktop-content-offset {
+    margin-left: 72px !important;
   }
 }
 

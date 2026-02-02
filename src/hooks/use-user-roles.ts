@@ -11,8 +11,9 @@ export interface UserRoles {
 }
 
 export function useUserRoles(): UserRoles & { isLoading: boolean } {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
+  // Fetch roles from user_roles table
   const { data: roles = [], isLoading: rolesLoading } = useQuery({
     queryKey: ["user-roles", user?.id],
     queryFn: async () => {
@@ -25,9 +26,10 @@ export function useUserRoles(): UserRoles & { isLoading: boolean } {
       if (error) throw error;
       return data?.map(r => r.role) || [];
     },
-    enabled: !!user,
+    enabled: !!user && !authLoading,
   });
 
+  // Fetch organizer account (only if not admin - admins don't auto-get organizer features)
   const { data: organizer, isLoading: orgLoading } = useQuery({
     queryKey: ["user-organizer", user?.id],
     queryFn: async () => {
@@ -41,15 +43,23 @@ export function useUserRoles(): UserRoles & { isLoading: boolean } {
       if (error) throw error;
       return data;
     },
-    enabled: !!user,
+    enabled: !!user && !authLoading,
   });
 
+  // CRITICAL: isOrganizer should ONLY be true if:
+  // 1. User has 'organizer' role in user_roles table, OR
+  // 2. User has an organizer_account
+  // But NOT just because they are admin!
+  const hasOrganizerRole = roles.includes("organizer");
+  const hasOrganizerAccount = !!organizer;
+  
   return {
     isAdmin: roles.includes("admin"),
-    isOrganizer: roles.includes("organizer") || !!organizer,
+    // Only organizer if they have the role OR have an organizer account
+    isOrganizer: hasOrganizerRole || hasOrganizerAccount,
     isUser: roles.includes("user"),
     roles,
     organizerId: organizer?.id || null,
-    isLoading: rolesLoading || orgLoading,
+    isLoading: authLoading || rolesLoading || orgLoading,
   };
 }
