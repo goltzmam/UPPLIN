@@ -4,8 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Calendar, MapPin, QrCode, Ticket, Download, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
+import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,11 +47,19 @@ export default function MeusIngressos() {
       return data;
     },
     enabled: !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 15,
   });
 
-  if (loading || isLoading) return <><Header /><PageLoading /><Footer /></>;
+  if (loading || isLoading) return (
+    <div className="min-h-screen bg-background">
+      <TikTokDesktopSidebar />
+      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+        <PageLoading />
+      </main>
+      <BottomNav />
+    </div>
+  );
 
   const upcomingTickets = tickets?.filter(
     (t) => new Date(t.events?.start_at) >= new Date() && t.status === "issued"
@@ -64,11 +72,11 @@ export default function MeusIngressos() {
   const statusBadge = (status: string) => {
     switch (status) {
       case "issued":
-        return <Badge variant="default" className="bg-success">Válido</Badge>;
+        return <Badge variant="default" className="bg-success text-[10px] sm:text-xs">Válido</Badge>;
       case "used":
-        return <Badge variant="secondary">Utilizado</Badge>;
+        return <Badge variant="secondary" className="text-[10px] sm:text-xs">Utilizado</Badge>;
       case "cancelled":
-        return <Badge variant="destructive">Cancelado</Badge>;
+        return <Badge variant="destructive" className="text-[10px] sm:text-xs">Cancelado</Badge>;
       default:
         return null;
     }
@@ -79,10 +87,10 @@ export default function MeusIngressos() {
     const isPast = eventDate < new Date();
 
     return (
-      <div className={`bg-card rounded-2xl border border-border overflow-hidden ${isPast ? "opacity-70" : ""}`}>
-        <div className="flex flex-col md:flex-row">
+      <div className={`bg-card rounded-xl sm:rounded-2xl border border-border overflow-hidden ${isPast ? "opacity-70" : ""}`}>
+        <div className="flex flex-col sm:flex-row">
           {/* Event Image */}
-          <div className="md:w-48 h-32 md:h-auto relative shrink-0">
+          <div className="sm:w-40 md:w-48 h-28 sm:h-auto relative shrink-0">
             {ticket.events?.cover_image_url ? (
               <img src={ticket.events.cover_image_url} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -93,47 +101,47 @@ export default function MeusIngressos() {
           </div>
 
           {/* Content */}
-          <div className="flex-1 p-4 md:p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
+          <div className="flex-1 p-3 sm:p-4 md:p-6 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1.5">
                   {statusBadge(ticket.status)}
-                  <span className="text-sm text-muted-foreground">{ticket.ticket_types?.name}</span>
+                  <span className="text-[10px] sm:text-sm text-muted-foreground truncate">{ticket.ticket_types?.name}</span>
                 </div>
-                <h3 className="font-display font-bold text-lg mb-2">{ticket.events?.title}</h3>
-                <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
+                <h3 className="font-display font-bold text-sm sm:text-lg mb-1.5 truncate">{ticket.events?.title}</h3>
+                <div className="flex flex-wrap gap-3 text-[11px] sm:text-sm text-muted-foreground">
                   <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
+                    <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
                     <span>{format(eventDate, "d 'de' MMM, HH:mm", { locale: ptBR })}</span>
                   </div>
                   {ticket.events?.venue_name && (
                     <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      <span>{ticket.events.venue_name}</span>
+                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                      <span className="truncate">{ticket.events.venue_name}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* QR Code Preview */}
+              {/* QR Code Preview - desktop only */}
               {ticket.status === "issued" && !isPast && (
-                <div className="hidden md:flex flex-col items-center gap-2">
-                  <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-border">
-                    <QrCode className="h-10 w-10 text-muted-foreground" />
+                <div className="hidden md:flex flex-col items-center gap-2 shrink-0">
+                  <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center border-2 border-dashed border-border">
+                    <QrCode className="h-8 w-8 text-muted-foreground" />
                   </div>
-                  <span className="text-xs text-muted-foreground font-mono">{ticket.qr_token?.slice(0, 8)}...</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">{ticket.qr_token?.slice(0, 8)}...</span>
                 </div>
               )}
             </div>
 
             {ticket.status === "issued" && !isPast && (
-              <div className="flex gap-2 mt-4 pt-4 border-t border-border">
-                <Button variant="outline" size="sm" onClick={() => setSelectedTicket(ticket)}>
-                  <QrCode className="h-4 w-4 mr-2" />
+              <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+                <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelectedTicket(ticket)}>
+                  <QrCode className="h-3.5 w-3.5 mr-1.5" />
                   Ver QR Code
                 </Button>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
+                <Button variant="outline" size="sm" className="text-xs h-8">
+                  <Download className="h-3.5 w-3.5 mr-1.5" />
                   Baixar PDF
                 </Button>
               </div>
@@ -173,26 +181,28 @@ export default function MeusIngressos() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
+    <div className="min-h-screen bg-background text-foreground w-full overflow-x-hidden">
+      <TikTokDesktopSidebar />
       <QRCodeModal />
 
-      <main className="flex-1 py-8 pt-24">
-        <div className="container px-4">
-          {/* Breadcrumb */}
-          <Breadcrumb 
-            items={[{ label: "Meus Ingressos" }]} 
-            className="mb-4"
-          />
-          <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Meus Ingressos</h1>
+      <main className="pb-24 lg:pb-8 lg:ml-[72px]">
+        <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+          {/* Breadcrumb - desktop only */}
+          <div className="hidden lg:block">
+            <Breadcrumb 
+              items={[{ label: "Meus Ingressos" }]} 
+              className="mb-4"
+            />
+          </div>
+          <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6">Meus Ingressos</h1>
 
-          <Tabs defaultValue="upcoming" className="space-y-6">
+          <Tabs defaultValue="upcoming" className="space-y-4 sm:space-y-6">
             <TabsList className="w-full sm:w-auto">
-              <TabsTrigger value="upcoming" className="flex-1 sm:flex-none">Próximos ({upcomingTickets.length})</TabsTrigger>
-              <TabsTrigger value="past" className="flex-1 sm:flex-none">Anteriores ({pastTickets.length})</TabsTrigger>
+              <TabsTrigger value="upcoming" className="flex-1 sm:flex-none text-xs sm:text-sm">Próximos ({upcomingTickets.length})</TabsTrigger>
+              <TabsTrigger value="past" className="flex-1 sm:flex-none text-xs sm:text-sm">Anteriores ({pastTickets.length})</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="upcoming" className="space-y-4">
+            <TabsContent value="upcoming" className="space-y-3 sm:space-y-4">
               {upcomingTickets.length > 0 ? (
                 upcomingTickets.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)
               ) : (
@@ -206,7 +216,7 @@ export default function MeusIngressos() {
               )}
             </TabsContent>
 
-            <TabsContent value="past" className="space-y-4">
+            <TabsContent value="past" className="space-y-3 sm:space-y-4">
               {pastTickets.length > 0 ? (
                 pastTickets.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)
               ) : (
@@ -222,7 +232,7 @@ export default function MeusIngressos() {
         </div>
       </main>
 
-      <Footer />
+      <BottomNav />
     </div>
   );
 }

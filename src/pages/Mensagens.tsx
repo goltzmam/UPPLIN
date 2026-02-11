@@ -154,39 +154,44 @@ export default function Mensagens() {
       <TikTokDesktopSidebar />
 
       <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
-        <div className="container px-4 py-6">
-          {/* Breadcrumb */}
-          <Breadcrumb 
-            items={[{ label: "Mensagens" }]} 
-            className="mb-4"
-          />
+        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+          {/* Breadcrumb - desktop only */}
+          <div className="hidden lg:block">
+            <Breadcrumb 
+              items={[{ label: "Mensagens" }]} 
+              className="mb-4"
+            />
+          </div>
           
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate(-1)}>
                 <ArrowLeft className="h-5 w-5" />
               </Button>
-              <div>
-                <h1 className="font-display text-2xl font-bold">Mensagens</h1>
-                <p className="text-sm text-muted-foreground">Suas conversas</p>
+              <div className="min-w-0">
+                <h1 className="font-display text-lg sm:text-2xl font-bold truncate">Mensagens</h1>
+                <p className="text-xs sm:text-sm text-muted-foreground">Suas conversas</p>
               </div>
             </div>
-            <Button onClick={() => setShowNewChat(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nova Conversa
+            <Button size="sm" className="shrink-0 text-xs sm:text-sm" onClick={() => setShowNewChat(true)}>
+              <Plus className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Nova Conversa</span>
+              <span className="sm:hidden">Nova</span>
             </Button>
           </div>
 
-          <div className="grid lg:grid-cols-[350px_1fr] gap-6 h-[calc(100vh-220px)]">
+          {/* Mobile: stacked layout, Desktop: side-by-side */}
+          <div className="flex flex-col lg:grid lg:grid-cols-[350px_1fr] gap-4 sm:gap-6 h-auto lg:h-[calc(100vh-220px)]">
             {/* Conversations List */}
-            <div className="bg-card rounded-2xl border overflow-hidden">
+            {/* Conversations - hide on mobile when chat is selected */}
+            <div className={`bg-card rounded-xl sm:rounded-2xl border overflow-hidden min-h-[300px] lg:min-h-0 ${selectedConversation ? 'hidden lg:block' : ''}`}>
               <Tabs defaultValue="all" className="h-full flex flex-col">
-                <TabsList className="w-full justify-start rounded-none border-b p-1 h-auto flex-wrap">
-                  <TabsTrigger value="all" className="text-xs">Todas</TabsTrigger>
-                  <TabsTrigger value="user_organizer" className="text-xs gap-1">
+                <TabsList className="w-full justify-start rounded-none border-b p-1 h-auto">
+                  <TabsTrigger value="all" className="text-[10px] sm:text-xs">Todas</TabsTrigger>
+                  <TabsTrigger value="user_organizer" className="text-[10px] sm:text-xs gap-1">
                     <Building2 className="h-3 w-3" /> Eventos
                   </TabsTrigger>
-                  <TabsTrigger value="support" className="text-xs gap-1">
+                  <TabsTrigger value="support" className="text-[10px] sm:text-xs gap-1">
                     <Shield className="h-3 w-3" /> Suporte
                   </TabsTrigger>
                 </TabsList>
@@ -213,8 +218,8 @@ export default function Mensagens() {
               </Tabs>
             </div>
 
-            {/* Chat Window */}
-            <div className="bg-card rounded-2xl border overflow-hidden">
+            {/* Chat Window - full width on mobile when selected */}
+            <div className={`bg-card rounded-xl sm:rounded-2xl border overflow-hidden min-h-[400px] lg:min-h-0 ${selectedConversation ? '' : 'hidden lg:block'}`}>
               {selectedConversation ? (
                 <ChatWindow
                   conversationId={selectedConversation.id}
@@ -228,11 +233,11 @@ export default function Mensagens() {
                   className="h-full border-0 rounded-none"
                 />
               ) : (
-                <div className="h-full flex items-center justify-center text-muted-foreground">
+                <div className="h-full flex items-center justify-center text-muted-foreground py-16">
                   <div className="text-center">
-                    <MessageCircle className="h-16 w-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium">Selecione uma conversa</p>
-                    <p className="text-sm">ou inicie uma nova</p>
+                    <MessageCircle className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 opacity-50" />
+                    <p className="text-sm sm:text-lg font-medium">Selecione uma conversa</p>
+                    <p className="text-xs sm:text-sm">ou inicie uma nova</p>
                   </div>
                 </div>
               )}
