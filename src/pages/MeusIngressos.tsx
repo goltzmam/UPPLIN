@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MapPin, QrCode, Ticket, Download, X } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,13 +14,19 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TicketQRCode } from "@/components/tickets/TicketQRCode";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function MeusIngressos() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
+
+  const handleRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["my-tickets", user?.id] });
+  }, [queryClient, user?.id]);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -186,7 +192,7 @@ export default function MeusIngressos() {
       <QRCodeModal />
 
       <main className="pb-24 lg:pb-8 lg:ml-[72px]">
-        <div className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <PullToRefresh onRefresh={handleRefresh} className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
           {/* Breadcrumb - desktop only */}
           <div className="hidden lg:block">
             <Breadcrumb 
@@ -229,7 +235,7 @@ export default function MeusIngressos() {
               )}
             </TabsContent>
           </Tabs>
-        </div>
+        </PullToRefresh>
       </main>
 
       <BottomNav />
