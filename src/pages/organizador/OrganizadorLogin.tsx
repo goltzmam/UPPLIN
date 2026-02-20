@@ -1,31 +1,42 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Loader2, Building2, ArrowLeft } from "lucide-react";
+import { Mail, Lock, Loader2, Building2, ArrowLeft, LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ValidatedInput } from "@/components/ui/validated-input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { isValidEmail } from "@/lib/validation";
+import { checkSessionConflict } from "@/lib/session-guard";
 
 export default function OrganizadorLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const [conflictEmail, setConflictEmail] = useState<string | null>(null);
+  const { signIn, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const emailRules = useMemo(() => [{ test: isValidEmail }], []);
   const passwordRules = useMemo(() => [{ test: (v: string) => v.length >= 1 }], []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const doSignIn = async () => {
     setLoading(true);
     const { error } = await signIn(email, password);
     setLoading(false);
-    
+
     if (error) {
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
     } else {
@@ -33,33 +44,74 @@ export default function OrganizadorLogin() {
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const { conflict, currentEmail } = await checkSessionConflict(email);
+    setLoading(false);
+
+    if (conflict) {
+      setConflictEmail(currentEmail);
+      return;
+    }
+
+    await doSignIn();
+  };
+
+  const handleForceLogin = async () => {
+    setConflictEmail(null);
+    await signOut();
+    await doSignIn();
+  };
+
   return (
     <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 py-8 sm:p-6 relative overflow-hidden">
+      {/* Conflict Dialog */}
+      <AlertDialog open={!!conflictEmail} onOpenChange={(open) => { if (!open) setConflictEmail(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <LogOut className="h-5 w-5 text-destructive" />
+              Sessão ativa detectada
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Já existe uma sessão ativa com a conta{" "}
+              <strong className="text-foreground">{conflictEmail}</strong>.
+              {" "}Para entrar com outra conta, você precisa deslogar da conta atual primeiro.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleForceLogin}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Deslogar e entrar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Animated background gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
+        <motion.div
           className="absolute top-1/4 -right-10 w-40 h-40 sm:w-80 sm:h-80 rounded-full opacity-15 blur-3xl"
           style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D)" }}
-          animate={{ 
-            scale: [1, 1.3, 1],
-            x: [0, 50, 0]
-          }}
+          animate={{ scale: [1, 1.3, 1], x: [0, 50, 0] }}
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
         />
-        <motion.div 
+        <motion.div
           className="absolute bottom-1/4 -left-10 w-40 h-40 sm:w-80 sm:h-80 rounded-full opacity-15 blur-3xl"
           style={{ background: "linear-gradient(135deg, #FF2D2D, #FF007A)" }}
-          animate={{ 
-            scale: [1.3, 1, 1.3],
-            x: [0, -50, 0]
-          }}
+          animate={{ scale: [1.3, 1, 1.3], x: [0, -50, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
 
       {/* Back Button */}
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50 flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-foreground hover:bg-muted transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
@@ -67,7 +119,7 @@ export default function OrganizadorLogin() {
       </Link>
 
       {/* Centered Card */}
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
@@ -77,13 +129,13 @@ export default function OrganizadorLogin() {
           {/* Header */}
           <div className="text-center space-y-3 sm:space-y-4 mb-5 sm:mb-8">
             <Link to="/" className="inline-block">
-              <motion.span 
+              <motion.span
                 className="font-display text-2xl sm:text-4xl font-bold tracking-tight"
-                style={{ 
+                style={{
                   background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
-                  backgroundClip: "text"
+                  backgroundClip: "text",
                 }}
                 whileHover={{ scale: 1.05 }}
                 transition={{ type: "spring", stiffness: 400 }}
@@ -123,13 +175,13 @@ export default function OrganizadorLogin() {
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="space-y-1.5 sm:space-y-2">
               <Label htmlFor="email" className="text-xs sm:text-sm font-medium">Email</Label>
-              <ValidatedInput 
-                id="email" 
-                type="email" 
-                placeholder="seu@email.com" 
-                className="h-11 sm:h-12 text-sm" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
+              <ValidatedInput
+                id="email"
+                type="email"
+                placeholder="seu@email.com"
+                className="h-11 sm:h-12 text-sm"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 icon={<Mail className="h-4 w-4" />}
                 validationRules={emailRules}
@@ -142,13 +194,13 @@ export default function OrganizadorLogin() {
                   Esqueceu a senha?
                 </Link>
               </div>
-              <ValidatedInput 
-                id="password" 
-                type="password" 
-                placeholder="••••••••" 
-                className="h-11 sm:h-12 text-sm" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
+              <ValidatedInput
+                id="password"
+                type="password"
+                placeholder="••••••••"
+                className="h-11 sm:h-12 text-sm"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 icon={<Lock className="h-4 w-4" />}
                 validationRules={passwordRules}
