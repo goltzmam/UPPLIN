@@ -27,16 +27,33 @@ export default function RecuperarSenha() {
     }
     
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/redefinir-senha${isOrganizer ? "?tipo=organizador" : ""}`,
-    });
-    setLoading(false);
+
+    // 1. Trigger Supabase native reset (creates the token)
+    const redirectTo = `${window.location.origin}/redefinir-senha${isOrganizer ? "?tipo=organizador" : ""}`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
 
     if (error) {
+      setLoading(false);
       toast({ title: "Erro ao enviar email", description: error.message, variant: "destructive" });
-    } else {
-      setSent(true);
+      return;
     }
+
+    // 2. Also send branded email via Resend (best-effort, non-blocking)
+    try {
+      await supabase.functions.invoke("send-email", {
+        body: {
+          type: "password_reset",
+          to: email,
+          data: { resetLink: redirectTo },
+        },
+      });
+    } catch (err) {
+      // Resend failure is non-critical; Supabase native email already sent
+      console.warn("Resend email failed (non-critical):", err);
+    }
+
+    setLoading(false);
+    setSent(true);
   };
 
   const loginPath = isOrganizer ? "/organizador/login" : "/login";
