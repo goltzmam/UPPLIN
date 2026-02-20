@@ -22,7 +22,11 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
+  /** Returns the currently active user ID stored in localStorage (cross-tab aware) */
+  getActiveUserId: () => string | null;
 }
+
+const AUTH_USER_KEY = "upplin_active_user_id";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -53,11 +57,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const getActiveUserId = (): string | null => {
+    return localStorage.getItem(AUTH_USER_KEY);
+  };
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, currentSession) => {
+        const incomingUserId = currentSession?.user?.id ?? null;
+        const currentActiveId = localStorage.getItem(AUTH_USER_KEY);
+
+        // ─── Cross-tab session hijack detection ───────────────────────────
+        // If another tab logged in as a DIFFERENT user, force this tab out.
+        if (
+          event === "SIGNED_IN" &&
+          currentActiveId &&
+          incomingUserId &&
+          currentActiveId !== incomingUserId
+        ) {
+          // A different user is now logged in from another tab — sign out here too.
+          await supabase.auth.signOut();
+          setSession(null);
+          setUser(null);
+          setProfile(null);
+          setLoading(false);
+          localStorage.removeItem(AUTH_USER_KEY);
+          // Redirect to login with a notice
+          window.location.href = "/login?sessao_encerrada=1";
+          return;
+        }
+
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
+
+        if (event === "SIGNED_IN" && incomingUserId) {
+          localStorage.setItem(AUTH_USER_KEY, incomingUserId);
+        }
+
+        if (event === "SIGNED_OUT") {
+          localStorage.removeItem(AUTH_USER_KEY);
+        }
 
         if (currentSession?.user) {
           setTimeout(async () => {
@@ -75,8 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      
+
       if (currentSession?.user) {
+        localStorage.setItem(AUTH_USER_KEY, currentSession.user.id);
         fetchProfile(currentSession.user.id).then((profileData) => {
           setProfile(profileData);
           setLoading(false);
@@ -117,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
+    localStorage.removeItem(AUTH_USER_KEY);
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -151,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         updateProfile,
         refreshProfile,
+        getActiveUserId,
       }}
     >
       {children}
