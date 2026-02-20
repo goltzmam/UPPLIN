@@ -9,6 +9,7 @@ import { ValidatedInput } from "@/components/ui/validated-input";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { isValidEmail, isValidName, isValidPassword } from "@/lib/validation";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Cadastro() {
   const [fullName, setFullName] = useState("");
@@ -63,6 +64,19 @@ export default function Cadastro() {
     if (error) {
       toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
     } else {
+      // Send welcome email via Resend (best-effort)
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            type: "welcome",
+            to: email,
+            data: { userName: fullName },
+          },
+        });
+      } catch (err) {
+        console.warn("Welcome email failed (non-critical):", err);
+      }
+
       setShowSuccess(true);
       triggerConfetti();
       toast({ title: "Conta criada!", description: "Complete seu cadastro para continuar." });
