@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Ticket, Bookmark, Users } from "lucide-react";
+import { Menu, X, User, LogOut, Ticket, Bookmark, Users, RefreshCw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -175,8 +175,18 @@ export function Header({ minimal = false }: HeaderProps) {
                     
                     <DropdownMenuSeparator />
                     
-                    {/* Logout */}
+                    {/* Switch Account & Logout */}
                     <div className="p-1.5">
+                      <DropdownMenuItem 
+                        onClick={async () => {
+                          await signOut();
+                          navigate("/login");
+                        }} 
+                        className="rounded-lg py-2.5 cursor-pointer"
+                      >
+                        <RefreshCw className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Trocar Conta
+                      </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={handleSignOut} 
                         className="rounded-lg py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
