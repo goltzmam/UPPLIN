@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Instagram, Twitter, Mail, Heart } from "lucide-react";
+import { Instagram, Twitter, Mail, Heart, Phone, MessageCircle } from "lucide-react";
 
 export function Footer() {
   return (
@@ -67,14 +67,22 @@ export function Footer() {
             <h4 className="font-semibold text-sm mb-6 uppercase tracking-wider text-muted-foreground">Suporte</h4>
             <ul className="space-y-4 text-sm">
               <li>
-                <Link to="/ajuda" className="text-foreground/80 hover:text-foreground transition-colors">
-                  Central de Ajuda
-                </Link>
+                <a href="mailto:contato@upplin.com" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  contato@upplin.com
+                </a>
               </li>
               <li>
-                <Link to="/contato" className="text-foreground/80 hover:text-foreground transition-colors">
-                  Contato
-                </Link>
+                <a href="https://wa.me/558520103399" target="_blank" rel="noopener noreferrer" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  (85) 2010-3399
+                </a>
+              </li>
+              <li>
+                <a href="tel:+558520103399" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Ligar agora
+                </a>
               </li>
               <li>
                 <Link to="/faq" className="text-foreground/80 hover:text-foreground transition-colors">
