@@ -12,7 +12,7 @@ const FROM_EMAIL = "UPPLIN <onboarding@resend.dev>";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://upplin.lovable.app";
 
 interface EmailRequest {
-  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome";
+  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer";
   to: string;
   data: {
     userName?: string;
@@ -24,6 +24,7 @@ interface EmailRequest {
     totalAmount?: string;
     orderId?: string;
     resetLink?: string;
+    companyName?: string;
   };
 }
 
@@ -257,23 +258,23 @@ const emailTemplates = {
         <div class="container">
           <div class="header">
             <div class="logo">UPPLIN</div>
-            <p style="color: rgba(255,255,255,0.85); margin-top: 8px; font-size: 16px;">A melhor experiência em eventos</p>
+            <p style="color: rgba(255,255,255,0.85); margin-top: 8px; font-size: 16px;">Descubra os melhores eventos</p>
           </div>
           <div class="content">
             <h2 style="color: #1e293b;">Bem-vindo${data.userName ? `, ${data.userName}` : ""}! 🎉</h2>
-            <p style="color: #64748b;">Sua conta foi criada com sucesso. Agora você pode aproveitar tudo que o UPPLIN oferece:</p>
+            <p style="color: #64748b;">Que bom ter você aqui! Sua conta de participante foi criada com sucesso. Veja o que você pode fazer:</p>
             
             <div class="feature">
               <span class="feature-icon">🎟️</span>
-              <div><strong>Compre ingressos</strong><br><span style="color: #64748b; font-size: 14px;">Acesse os melhores eventos da sua cidade</span></div>
+              <div><strong>Compre ingressos</strong><br><span style="color: #64748b; font-size: 14px;">Garanta seu lugar nos melhores eventos da cidade</span></div>
             </div>
             <div class="feature">
               <span class="feature-icon">📅</span>
-              <div><strong>Salve eventos</strong><br><span style="color: #64748b; font-size: 14px;">Não perca nenhum evento que você quer ir</span></div>
+              <div><strong>Salve seus favoritos</strong><br><span style="color: #64748b; font-size: 14px;">Nunca mais perca um evento que você curtiu</span></div>
             </div>
             <div class="feature">
               <span class="feature-icon">👥</span>
-              <div><strong>Siga organizadores</strong><br><span style="color: #64748b; font-size: 14px;">Receba novidades dos seus organizadores favoritos</span></div>
+              <div><strong>Siga organizadores</strong><br><span style="color: #64748b; font-size: 14px;">Fique por dentro das novidades dos seus favoritos</span></div>
             </div>
             
             <p style="text-align: center; margin-top: 32px;">
@@ -282,6 +283,67 @@ const emailTemplates = {
           </div>
           <div class="footer">
             <p><strong>UPPLIN</strong></p>
+            <p>Este é um email automático, por favor não responda.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
+  welcome_organizer: (data: EmailRequest["data"]) => ({
+    subject: "🚀 Sua conta de organizador está pronta - UPPLIN",
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A); padding: 50px 30px; text-align: center; }
+          .content { padding: 30px; }
+          .feature { display: flex; align-items: flex-start; margin: 16px 0; }
+          .feature-icon { font-size: 24px; margin-right: 12px; min-width: 32px; }
+          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
+          .logo { font-size: 32px; font-weight: 900; color: white; letter-spacing: -1px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 16px 36px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">UPPLIN</div>
+            <p style="color: rgba(255,255,255,0.85); margin-top: 8px; font-size: 16px;">Painel do Organizador</p>
+          </div>
+          <div class="content">
+            <h2 style="color: #1e293b;">Bem-vindo, ${data.userName || "Organizador"}! 🚀</h2>
+            <p style="color: #64748b;">Sua conta de organizador <strong>${data.companyName || ""}</strong> foi criada com sucesso. Tudo pronto para você começar a criar eventos incríveis!</p>
+            
+            <div class="feature">
+              <span class="feature-icon">🎪</span>
+              <div><strong>Crie eventos</strong><br><span style="color: #64748b; font-size: 14px;">Publique e gerencie seus eventos em poucos cliques</span></div>
+            </div>
+            <div class="feature">
+              <span class="feature-icon">📊</span>
+              <div><strong>Acompanhe vendas</strong><br><span style="color: #64748b; font-size: 14px;">Relatórios em tempo real de ingressos e receita</span></div>
+            </div>
+            <div class="feature">
+              <span class="feature-icon">📱</span>
+              <div><strong>Check-in por QR Code</strong><br><span style="color: #64748b; font-size: 14px;">Valide ingressos na entrada do evento com rapidez</span></div>
+            </div>
+            <div class="feature">
+              <span class="feature-icon">🎫</span>
+              <div><strong>Cupons de desconto</strong><br><span style="color: #64748b; font-size: 14px;">Crie promoções para atrair mais público</span></div>
+            </div>
+            
+            <p style="text-align: center; margin-top: 32px;">
+              <a href="${SITE_URL}/organizador/dashboard" class="btn">Acessar Meu Painel</a>
+            </p>
+          </div>
+          <div class="footer">
+            <p><strong>UPPLIN</strong> — A melhor experiência em eventos</p>
             <p>Este é um email automático, por favor não responda.</p>
           </div>
         </div>

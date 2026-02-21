@@ -160,6 +160,19 @@ export default function OrganizadorCadastro() {
         if (orgError) throw orgError;
       }
 
+      // Send welcome email for organizer (best-effort)
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            type: "welcome_organizer",
+            to: email,
+            data: { userName: fullName, companyName },
+          },
+        });
+      } catch (err) {
+        console.warn("Welcome email failed (non-critical):", err);
+      }
+
       setShowSuccess(true);
       triggerConfetti();
 
