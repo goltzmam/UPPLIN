@@ -1,6 +1,7 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { User, Mail, CreditCard, Loader2, AlertCircle, Bell, LogOut, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle, Bell, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,6 +30,7 @@ interface ProfileSettingsProps {
 
 export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsProps) {
   const { signOut } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { isSupported, isSubscribed, subscribe, unsubscribe, loading: pushLoading } = usePushNotifications();
   
@@ -350,15 +352,29 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
         </div>
       )}
 
-      {/* Logout */}
-      <Button
-        variant="outline"
-        className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
-        onClick={signOut}
-      >
-        <LogOut className="h-4 w-4 mr-2" />
-        Sair da conta
-      </Button>
+      {/* Account Actions */}
+      <div className="flex flex-col gap-3">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={async () => {
+            await signOut();
+            navigate("/login");
+          }}
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Trocar Conta
+        </Button>
+
+        <Button
+          variant="outline"
+          className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
+          onClick={signOut}
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sair da conta
+        </Button>
+      </div>
     </div>
   );
 }
