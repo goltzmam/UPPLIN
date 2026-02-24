@@ -74,7 +74,7 @@ export function AdminLayout() {
         </div>
 
         {/* Navigation - Scrollable */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto scrollbar-hide">
           <nav className="p-4 space-y-1">
             {navItems.map((item) => (
               <Link
@@ -179,7 +179,7 @@ export function AdminLayout() {
       </div>
 
       {/* Main Content - Offset for fixed sidebar */}
-      <main className="flex-1 lg:ml-64 min-w-0 overflow-y-auto">
+      <main className="flex-1 lg:ml-64 min-w-0 overflow-y-auto scrollbar-thin">
         <div className="p-4 pt-[72px] lg:pt-8 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div
