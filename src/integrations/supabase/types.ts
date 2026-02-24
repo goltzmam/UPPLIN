@@ -1171,7 +1171,12 @@ export type Database = {
     Enums: {
       app_role: "admin" | "user" | "organizer"
       cpf_request_status: "pending" | "approved" | "rejected"
-      event_status: "draft" | "published" | "cancelled"
+      event_status:
+        | "draft"
+        | "published"
+        | "cancelled"
+        | "paused"
+        | "pending_review"
       media_type: "image" | "video"
       order_status: "pending" | "paid" | "failed" | "cancelled" | "refunded"
       organizer_status: "active" | "suspended"
@@ -1308,7 +1313,13 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "user", "organizer"],
       cpf_request_status: ["pending", "approved", "rejected"],
-      event_status: ["draft", "published", "cancelled"],
+      event_status: [
+        "draft",
+        "published",
+        "cancelled",
+        "paused",
+        "pending_review",
+      ],
       media_type: ["image", "video"],
       order_status: ["pending", "paid", "failed", "cancelled", "refunded"],
       organizer_status: ["active", "suspended"],

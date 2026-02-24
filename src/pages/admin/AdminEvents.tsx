@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -43,12 +44,16 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  Eye,
   ExternalLink,
   Trash2,
   Star,
   StarOff,
   Calendar,
+  Pause,
+  Play,
+  ShieldCheck,
+  ShieldX,
+  AlertTriangle,
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -73,21 +78,28 @@ interface EventWithOrganizer {
   } | null;
 }
 
+const MAX_FEATURED = 6;
+
 export default function AdminEvents() {
   const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState("published");
   const [cancelDialog, setCancelDialog] = useState<{ open: boolean; event: EventWithOrganizer | null }>({
     open: false,
     event: null,
   });
+  const [rejectDialog, setRejectDialog] = useState<{ open: boolean; event: EventWithOrganizer | null }>({
+    open: false,
+    event: null,
+  });
   const [cancelReason, setCancelReason] = useState("");
+  const [rejectReason, setRejectReason] = useState("");
 
   // Fetch events
   const { data: events = [], isLoading } = useQuery({
-    queryKey: ["admin-events-full", search, statusFilter, categoryFilter],
+    queryKey: ["admin-events-full", search, categoryFilter],
     queryFn: async () => {
       let query = supabase
         .from("events")
@@ -96,10 +108,6 @@ export default function AdminEvents() {
 
       if (search) {
         query = query.ilike("title", `%${search}%`);
-      }
-
-      if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter as "draft" | "published" | "cancelled");
       }
 
       if (categoryFilter !== "all") {
@@ -132,30 +140,41 @@ export default function AdminEvents() {
       eventId,
       updates,
       reason,
+      actionType,
     }: {
       eventId: string;
       updates: Record<string, any>;
       reason?: string;
+      actionType?: string;
     }) => {
       const { error } = await supabase.from("events").update(updates).eq("id", eventId);
       if (error) throw error;
 
-      // Log the action
       await supabase.from("admin_action_logs").insert({
         admin_user_id: currentUser!.id,
-        action_type: updates.status === "cancelled" ? "event_cancelled" : "event_updated",
+        action_type: actionType || "event_updated",
         target_type: "event",
         target_id: eventId,
         reason,
         metadata: updates,
       });
     },
-    onSuccess: (_, { updates }) => {
+    onSuccess: (_, { updates, actionType }) => {
       queryClient.invalidateQueries({ queryKey: ["admin-events-full"] });
-      if (updates.status === "cancelled") {
+      if (actionType === "event_cancelled") {
         toast.success("Evento cancelado com sucesso");
         setCancelDialog({ open: false, event: null });
         setCancelReason("");
+      } else if (actionType === "event_approved") {
+        toast.success("Evento aprovado e publicado!");
+      } else if (actionType === "event_rejected") {
+        toast.success("Evento rejeitado");
+        setRejectDialog({ open: false, event: null });
+        setRejectReason("");
+      } else if (actionType === "event_paused") {
+        toast.success("Evento pausado");
+      } else if (actionType === "event_unpaused") {
+        toast.success("Evento reativado");
       } else if (updates.is_featured !== undefined) {
         toast.success(updates.is_featured ? "Evento destacado" : "Destaque removido");
       } else {
@@ -175,6 +194,10 @@ export default function AdminEvents() {
         return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />Rascunho</Badge>;
       case "cancelled":
         return <Badge variant="destructive"><XCircle className="h-3 w-3 mr-1" />Cancelado</Badge>;
+      case "paused":
+        return <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30"><Pause className="h-3 w-3 mr-1" />Pausado</Badge>;
+      case "pending_review":
+        return <Badge className="bg-blue-500/20 text-blue-400 border border-blue-500/30"><Clock className="h-3 w-3 mr-1" />Aguardando</Badge>;
       default:
         return <Badge variant="secondary">{status || "draft"}</Badge>;
     }
@@ -183,20 +206,191 @@ export default function AdminEvents() {
   const stats = {
     total: events.length,
     published: events.filter((e) => e.status === "published").length,
-    draft: events.filter((e) => e.status === "draft" || !e.status).length,
+    pending: events.filter((e) => e.status === "pending_review").length,
+    paused: events.filter((e) => e.status === "paused").length,
     cancelled: events.filter((e) => e.status === "cancelled").length,
     featured: events.filter((e) => e.is_featured).length,
   };
+
+  const featuredCount = stats.featured;
+
+  // Filter events by active tab
+  const filteredEvents = events.filter((e) => {
+    switch (activeTab) {
+      case "published":
+        return e.status === "published";
+      case "pending":
+        return e.status === "pending_review";
+      case "paused":
+        return e.status === "paused";
+      case "all":
+      default:
+        return true;
+    }
+  });
+
+  const handleApprove = (event: EventWithOrganizer) => {
+    updateEventMutation.mutate({
+      eventId: event.id,
+      updates: { status: "published" },
+      actionType: "event_approved",
+    });
+  };
+
+  const handlePause = (event: EventWithOrganizer) => {
+    updateEventMutation.mutate({
+      eventId: event.id,
+      updates: { status: "paused" },
+      actionType: "event_paused",
+    });
+  };
+
+  const handleUnpause = (event: EventWithOrganizer) => {
+    updateEventMutation.mutate({
+      eventId: event.id,
+      updates: { status: "published" },
+      actionType: "event_unpaused",
+    });
+  };
+
+  const handleFeature = (event: EventWithOrganizer) => {
+    if (!event.is_featured && featuredCount >= MAX_FEATURED) {
+      toast.error(`Limite de ${MAX_FEATURED} eventos destacados atingido. Remova um destaque antes.`);
+      return;
+    }
+    updateEventMutation.mutate({
+      eventId: event.id,
+      updates: { is_featured: !event.is_featured },
+    });
+  };
+
+  const renderEventRow = (event: EventWithOrganizer) => (
+    <TableRow key={event.id}>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-16 rounded bg-muted overflow-hidden flex-shrink-0">
+            {event.cover_image_url ? (
+              <img src={event.cover_image_url} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-muted-foreground" />
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium truncate">{event.title}</p>
+            {event.is_featured && (
+              <Badge variant="outline" className="text-xs mt-1">
+                <Star className="h-3 w-3 mr-1 fill-yellow-500 text-yellow-500" />
+                Destacado
+              </Badge>
+            )}
+          </div>
+        </div>
+      </TableCell>
+      <TableCell className="text-sm">
+        {event.organizer_accounts?.display_name || "-"}
+      </TableCell>
+      <TableCell className="text-sm">
+        {format(new Date(event.start_at), "dd/MM/yy HH:mm", { locale: ptBR })}
+      </TableCell>
+      <TableCell>
+        {event.category && <Badge variant="secondary">{event.category}</Badge>}
+      </TableCell>
+      <TableCell>{getStatusBadge(event.status)}</TableCell>
+      <TableCell className="text-right">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem asChild>
+              <Link to={`/evento/${event.slug || event.id}`} target="_blank">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Ver evento
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+
+            {/* Approve (only for pending_review) */}
+            {event.status === "pending_review" && (
+              <>
+                <DropdownMenuItem onClick={() => handleApprove(event)} className="text-emerald-400">
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  Aprovar e publicar
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setRejectDialog({ open: true, event })}
+                  className="text-destructive"
+                >
+                  <ShieldX className="h-4 w-4 mr-2" />
+                  Rejeitar
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
+
+            {/* Pause / Unpause */}
+            {event.status === "published" && (
+              <DropdownMenuItem onClick={() => handlePause(event)}>
+                <Pause className="h-4 w-4 mr-2" />
+                Pausar evento
+              </DropdownMenuItem>
+            )}
+            {event.status === "paused" && (
+              <DropdownMenuItem onClick={() => handleUnpause(event)}>
+                <Play className="h-4 w-4 mr-2" />
+                Reativar evento
+              </DropdownMenuItem>
+            )}
+
+            {/* Feature toggle */}
+            {(event.status === "published") && (
+              <DropdownMenuItem onClick={() => handleFeature(event)}>
+                {event.is_featured ? (
+                  <>
+                    <StarOff className="h-4 w-4 mr-2" />
+                    Remover destaque
+                  </>
+                ) : (
+                  <>
+                    <Star className="h-4 w-4 mr-2" />
+                    Destacar evento ({featuredCount}/{MAX_FEATURED})
+                  </>
+                )}
+              </DropdownMenuItem>
+            )}
+
+            {/* Cancel */}
+            {event.status !== "cancelled" && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setCancelDialog({ open: true, event })}
+                  className="text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Cancelar evento
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TableCell>
+    </TableRow>
+  );
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Gerenciamento de Eventos</h1>
-        <p className="text-muted-foreground">Modere e gerencie eventos da plataforma</p>
+        <p className="text-muted-foreground">Modere, valide e gerencie eventos da plataforma</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4">
             <p className="text-2xl font-bold">{stats.total}</p>
@@ -209,10 +403,16 @@ export default function AdminEvents() {
             <p className="text-sm text-muted-foreground">Publicados</p>
           </CardContent>
         </Card>
+        <Card className={stats.pending > 0 ? "border-blue-500/50 bg-blue-500/5" : ""}>
+          <CardContent className="p-4">
+            <p className="text-2xl font-bold text-blue-400">{stats.pending}</p>
+            <p className="text-sm text-muted-foreground">Aguardando</p>
+          </CardContent>
+        </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-2xl font-bold text-muted-foreground">{stats.draft}</p>
-            <p className="text-sm text-muted-foreground">Rascunhos</p>
+            <p className="text-2xl font-bold text-amber-400">{stats.paused}</p>
+            <p className="text-sm text-muted-foreground">Pausados</p>
           </CardContent>
         </Card>
         <Card>
@@ -224,178 +424,111 @@ export default function AdminEvents() {
         <Card>
           <CardContent className="p-4">
             <p className="text-2xl font-bold text-primary">{stats.featured}</p>
-            <p className="text-sm text-muted-foreground">Destacados</p>
+            <p className="text-sm text-muted-foreground">Destacados ({MAX_FEATURED} máx)</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters and Table */}
+      {/* Tabs + Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Eventos</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por título..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-              />
+        <CardContent className="p-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <div className="border-b px-4 pt-4">
+              <TabsList className="w-full justify-start bg-transparent p-0 h-auto gap-0">
+                <TabsTrigger
+                  value="published"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Publicados ({stats.published})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="pending"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3"
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Aguardando Validação
+                  {stats.pending > 0 && (
+                    <Badge className="ml-2 bg-blue-500 text-white text-xs px-1.5 py-0">{stats.pending}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="paused"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-amber-400 data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3"
+                >
+                  <Pause className="h-4 w-4 mr-2" />
+                  Pausados ({stats.paused})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="all"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-muted-foreground data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 pb-3"
+                >
+                  Todos ({stats.total})
+                </TabsTrigger>
+              </TabsList>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="published">Publicados</SelectItem>
-                <SelectItem value="draft">Rascunhos</SelectItem>
-                <SelectItem value="cancelled">Cancelados</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-40">
-                <SelectValue placeholder="Categoria" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Evento</TableHead>
-                  <TableHead>Organizador</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Categoria</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4 p-4">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por título..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-full md:w-40">
+                  <SelectValue placeholder="Categoria" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Shared table content for all tabs */}
+            <div className="overflow-x-auto px-4 pb-4">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Carregando...
-                    </TableCell>
+                    <TableHead>Evento</TableHead>
+                    <TableHead>Organizador</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Categoria</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ) : events.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      Nenhum evento encontrado
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  events.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <div className="h-12 w-16 rounded bg-muted overflow-hidden flex-shrink-0">
-                            {event.cover_image_url ? (
-                              <img
-                                src={event.cover_image_url}
-                                alt=""
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center">
-                                <Calendar className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="font-medium truncate">{event.title}</p>
-                            {event.is_featured && (
-                              <Badge variant="outline" className="text-xs mt-1">
-                                <Star className="h-3 w-3 mr-1 fill-yellow-500 text-yellow-500" />
-                                Destacado
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {event.organizer_accounts?.display_name || "-"}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {format(new Date(event.start_at), "dd/MM/yy HH:mm", { locale: ptBR })}
-                      </TableCell>
-                      <TableCell>
-                        {event.category && <Badge variant="secondary">{event.category}</Badge>}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(event.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem asChild>
-                              <Link to={`/evento/${event.slug || event.id}`} target="_blank">
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                Ver evento
-                              </Link>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            {event.is_featured ? (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  updateEventMutation.mutate({
-                                    eventId: event.id,
-                                    updates: { is_featured: false },
-                                  })
-                                }
-                              >
-                                <StarOff className="h-4 w-4 mr-2" />
-                                Remover destaque
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  updateEventMutation.mutate({
-                                    eventId: event.id,
-                                    updates: { is_featured: true },
-                                  })
-                                }
-                              >
-                                <Star className="h-4 w-4 mr-2" />
-                                Destacar evento
-                              </DropdownMenuItem>
-                            )}
-                            {event.status !== "cancelled" && (
-                              <>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => setCancelDialog({ open: true, event })}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Cancelar evento
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                </TableHeader>
+                <TableBody>
+                  {isLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        Carregando...
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ) : filteredEvents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        {activeTab === "pending"
+                          ? "Nenhum evento aguardando validação 🎉"
+                          : "Nenhum evento encontrado"}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredEvents.map(renderEventRow)
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -427,10 +560,7 @@ export default function AdminEvents() {
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setCancelDialog({ open: false, event: null })}
-            >
+            <Button variant="outline" onClick={() => setCancelDialog({ open: false, event: null })}>
               Voltar
             </Button>
             <Button
@@ -444,11 +574,65 @@ export default function AdminEvents() {
                   eventId: cancelDialog.event!.id,
                   updates: { status: "cancelled" },
                   reason: cancelReason,
+                  actionType: "event_cancelled",
                 });
               }}
               disabled={updateEventMutation.isPending}
             >
               {updateEventMutation.isPending ? "Cancelando..." : "Cancelar Evento"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reject Event Dialog */}
+      <Dialog
+        open={rejectDialog.open}
+        onOpenChange={(open) => !open && setRejectDialog({ open: false, event: null })}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rejeitar Evento</DialogTitle>
+            <DialogDescription>
+              O evento voltará para rascunho e o organizador será notificado.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-muted-foreground">Evento</p>
+              <p className="font-medium">{rejectDialog.event?.title}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Motivo da rejeição</Label>
+              <Textarea
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+                placeholder="Ex: Conteúdo inadequado, informações incompletas..."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectDialog({ open: false, event: null })}>
+              Voltar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (!rejectReason.trim()) {
+                  toast.error("Informe o motivo da rejeição");
+                  return;
+                }
+                updateEventMutation.mutate({
+                  eventId: rejectDialog.event!.id,
+                  updates: { status: "draft" },
+                  reason: rejectReason,
+                  actionType: "event_rejected",
+                });
+              }}
+              disabled={updateEventMutation.isPending}
+            >
+              {updateEventMutation.isPending ? "Rejeitando..." : "Rejeitar Evento"}
             </Button>
           </DialogFooter>
         </DialogContent>
