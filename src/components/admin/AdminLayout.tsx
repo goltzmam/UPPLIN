@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PageLoading } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
@@ -73,7 +73,7 @@ export function AdminLayout() {
         </div>
 
         {/* Navigation - Scrollable */}
-        <ScrollArea className="flex-1">
+        <div className="flex-1 overflow-y-auto">
           <nav className="p-4 space-y-1">
             {navItems.map((item) => (
               <Link
@@ -91,7 +91,7 @@ export function AdminLayout() {
               </Link>
             ))}
           </nav>
-        </ScrollArea>
+        </div>
 
         {/* User - Fixed at bottom */}
         <div className="p-4 border-t border-border shrink-0">
@@ -136,7 +136,7 @@ export function AdminLayout() {
                 </div>
 
                 {/* Navigation - Scrollable */}
-                <ScrollArea className="flex-1">
+                <div className="flex-1 overflow-y-auto">
                   <nav className="p-4 space-y-1">
                     {navItems.map((item) => (
                       <Link
@@ -155,7 +155,7 @@ export function AdminLayout() {
                       </Link>
                     ))}
                   </nav>
-                </ScrollArea>
+                </div>
 
                 {/* Logout - Fixed at bottom */}
                 <div className="p-4 border-t border-border shrink-0">
