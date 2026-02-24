@@ -46,7 +46,8 @@ export default function Eventos() {
           *,
           slug,
           ticket_types(price_cents),
-          organizer:organizer_id(id, display_name, slug)
+          organizer:organizer_id(id, display_name, slug),
+          event_media(url, type, sort_order)
         `)
         .eq("status", "published")
         .gte("start_at", new Date().toISOString())
@@ -218,13 +219,19 @@ export default function Eventos() {
                     const minPrice = event.ticket_types?.length
                       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
                       : 0;
+                    // Fallback: use first event_media if no cover_image_url
+                    const firstImage = event.event_media?.find((m: any) => m.type === "image");
+                    const firstVideo = event.event_media?.find((m: any) => m.type === "video");
+                    const coverUrl = event.cover_image_url || firstImage?.url || firstVideo?.url || null;
+                    const isCoverVideo = !event.cover_image_url && !firstImage?.url && !!firstVideo?.url;
                       return (
                         <EventCard
                           key={event.id}
                           id={event.id}
                           slug={event.slug}
                           title={event.title}
-                          coverImageUrl={event.cover_image_url}
+                          coverImageUrl={coverUrl}
+                          isVideo={isCoverVideo}
                           startAt={event.start_at}
                           venueName={event.venue_name}
                           addressText={event.address_text}
