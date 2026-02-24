@@ -67,12 +67,12 @@ export default function ConfiguracoesContent() {
       const filePath = `organizers/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("media")
+        .from("event-images")
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from("media").getPublicUrl(filePath);
+      const { data } = supabase.storage.from("event-images").getPublicUrl(filePath);
       setLogoUrl(data.publicUrl);
       toast({ title: "Logo atualizado!" });
     } catch (err: any) {
