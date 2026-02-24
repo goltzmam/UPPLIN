@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
-import { Play, Loader2 } from "lucide-react";
+import { Play, Loader2, Volume2, VolumeX } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FeedVideoPlayerProps {
   videoUrl: string;
@@ -33,12 +34,26 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
 }: FeedVideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // start muted for autoplay compliance
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoError, setVideoError] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
   const playAttemptRef = useRef(0);
+  const isMobile = useIsMobile();
+
+  // Long-press refs for mobile
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressTriggeredRef = useRef(false);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   const shouldPlay = isActive && !isPaused && !videoError && !forceStop;
+
+  // Reset pause state when item changes (isActive toggles)
+  useEffect(() => {
+    if (isActive) {
+      setIsPaused(false);
+    }
+  }, [isActive]);
 
   // Single consolidated effect for play/pause management
   useEffect(() => {
@@ -60,8 +75,8 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         video.src = videoUrl;
       }
 
-      video.muted = false;
-      video.volume = 1;
+      video.muted = isMuted;
+      video.volume = isMuted ? 0 : 1;
 
       const playVideo = async () => {
         if (playAttemptRef.current !== attemptId) return;
@@ -86,7 +101,6 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         }
       };
 
-      // Use RAF for smoother initialization
       requestAnimationFrame(() => {
         if (playAttemptRef.current === attemptId) {
           playVideo();
@@ -97,7 +111,16 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     return () => {
       playAttemptRef.current++;
     };
-  }, [shouldPlay, videoUrl, isActive, isPaused, forceStop]);
+  }, [shouldPlay, videoUrl, isActive, isPaused, forceStop, isMuted]);
+
+  // Sync mute to video element
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video && isActive && !forceStop) {
+      video.muted = isMuted;
+      video.volume = isMuted ? 0 : 1;
+    }
+  }, [isMuted, isActive, forceStop]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -127,7 +150,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     };
   }, []);
 
-  // Buffering detection - simplified
+  // Buffering detection
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
@@ -146,10 +169,57 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
     };
   }, []);
 
-  const handleClick = useCallback(() => {
-    if (videoError || forceStop) return;
+  // Desktop: simple click to toggle pause
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if (isMobile || videoError || forceStop) return;
+    // Don't toggle if clicking the mute button
+    if ((e.target as HTMLElement).closest('[data-mute-btn]')) return;
     setIsPaused((p) => !p);
-  }, [videoError, forceStop]);
+  }, [isMobile, videoError, forceStop]);
+
+  // Mobile: long-press to pause
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (!isMobile || videoError || forceStop) return;
+    // Don't handle if touching the mute button
+    if ((e.target as HTMLElement).closest('[data-mute-btn]')) return;
+
+    const touch = e.touches[0];
+    touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+    longPressTriggeredRef.current = false;
+
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      setIsPaused((p) => !p);
+    }, 400); // 400ms long press
+  }, [isMobile, videoError, forceStop]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartPosRef.current) return;
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - touchStartPosRef.current.x);
+    const dy = Math.abs(touch.clientY - touchStartPosRef.current.y);
+    // Cancel long-press if finger moves too much (scrolling)
+    if (dx > 10 || dy > 10) {
+      if (longPressTimerRef.current) {
+        clearTimeout(longPressTimerRef.current);
+        longPressTimerRef.current = null;
+      }
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+    touchStartPosRef.current = null;
+  }, []);
+
+  const handleToggleMute = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsMuted((m) => !m);
+  }, []);
 
   const handleVideoError = useCallback(() => {
     setVideoError(true);
@@ -176,7 +246,13 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
   }
 
   return (
-    <div className={cn("absolute inset-0 w-full h-full", className)} onClick={handleClick}>
+    <div
+      className={cn("absolute inset-0 w-full h-full", className)}
+      onClick={handleClick}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* Cover image as background */}
       {coverUrl && (
         <img
@@ -198,7 +274,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         loop
         playsInline
         webkit-playsinline="true"
-        muted={!isActive || forceStop}
+        muted={isMuted || !isActive || forceStop}
         preload={isActive ? "auto" : "none"}
         onLoadedData={handleVideoLoaded}
         onCanPlayThrough={handleVideoLoaded}
@@ -213,14 +289,38 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         }}
       />
 
-      {/* Buffering indicator - simple CSS only */}
+      {/* Mute/Unmute button */}
+      {isActive && !forceStop && videoLoaded && !isPaused && (
+        <button
+          data-mute-btn
+          onClick={handleToggleMute}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            // Cancel any long-press
+            if (longPressTimerRef.current) {
+              clearTimeout(longPressTimerRef.current);
+              longPressTimerRef.current = null;
+            }
+            handleToggleMute(e);
+          }}
+          className="absolute top-4 right-4 h-9 w-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center z-20 border border-white/10"
+        >
+          {isMuted ? (
+            <VolumeX className="h-4 w-4 text-white" />
+          ) : (
+            <Volume2 className="h-4 w-4 text-white" />
+          )}
+        </button>
+      )}
+
+      {/* Buffering indicator */}
       {isBuffering && videoLoaded && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 z-10">
           <Loader2 className="h-10 w-10 text-white animate-spin" />
         </div>
       )}
 
-      {/* Pause overlay - simple CSS only */}
+      {/* Pause overlay */}
       {isPaused && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-10">
           <div className="h-20 w-20 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center border border-white/10">
