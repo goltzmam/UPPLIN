@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Upload, Loader2, Instagram, Globe, Facebook } from "lucide-react";
+import { Save, Upload, Loader2, Instagram, Globe, Facebook, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { formatCPF, formatCNPJ, formatPhone, isValidCPF, isValidCNPJ } from "@/lib/validation";
+
+type DocumentType = "cpf" | "cnpj";
 
 export default function ConfiguracoesContent() {
   const { organizer } = useOutletContext<{ organizer: any }>();
@@ -20,15 +23,79 @@ export default function ConfiguracoesContent() {
   const [description, setDescription] = useState(organizer?.description || "");
   const [email, setEmail] = useState(organizer?.email || "");
   const [phone, setPhone] = useState(organizer?.phone || "");
-  const [cnpj, setCnpj] = useState(organizer?.cnpj || "");
   const [instagram, setInstagram] = useState(organizer?.social_instagram || "");
   const [facebook, setFacebook] = useState(organizer?.social_facebook || "");
   const [website, setWebsite] = useState(organizer?.social_website || "");
   const [logoUrl, setLogoUrl] = useState(organizer?.logo_url || "");
   const [uploadingLogo, setUploadingLogo] = useState(false);
 
+  // Document (CPF or CNPJ)
+  const initialDocType: DocumentType = organizer?.cpf ? "cpf" : "cnpj";
+  const [docType, setDocType] = useState<DocumentType>(initialDocType);
+  const [cpf, setCpf] = useState(organizer?.cpf || "");
+  const [cnpj, setCnpj] = useState(organizer?.cnpj || "");
+
+  // Address fields
+  const [cep, setCep] = useState(organizer?.cep || "");
+  const [street, setStreet] = useState(organizer?.street || "");
+  const [streetNumber, setStreetNumber] = useState(organizer?.street_number || "");
+  const [complement, setComplement] = useState(organizer?.complement || "");
+  const [neighborhood, setNeighborhood] = useState(organizer?.neighborhood || "");
+  const [city, setCity] = useState(organizer?.city || "");
+  const [state, setState] = useState(organizer?.state || "");
+  const [loadingCep, setLoadingCep] = useState(false);
+
+  const formatCep = (value: string) => {
+    const digits = value.replace(/\D/g, "").slice(0, 8);
+    if (digits.length > 5) return digits.replace(/(\d{5})(\d)/, "$1-$2");
+    return digits;
+  };
+
+  const fetchCep = useCallback(async (cepValue: string) => {
+    const digits = cepValue.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+
+    setLoadingCep(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await res.json();
+      if (data.erro) {
+        toast({ title: "CEP não encontrado", variant: "destructive" });
+        return;
+      }
+      setStreet(data.logradouro || "");
+      setNeighborhood(data.bairro || "");
+      setCity(data.localidade || "");
+      setState(data.uf || "");
+    } catch {
+      toast({ title: "Erro ao buscar CEP", variant: "destructive" });
+    } finally {
+      setLoadingCep(false);
+    }
+  }, [toast]);
+
+  const handleCepChange = (value: string) => {
+    const formatted = formatCep(value);
+    setCep(formatted);
+    if (value.replace(/\D/g, "").length === 8) {
+      fetchCep(value);
+    }
+  };
+
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Validate document
+      const documentValue = docType === "cpf" ? cpf : cnpj;
+      if (!documentValue || documentValue.replace(/\D/g, "").length === 0) {
+        throw new Error("CPF ou CNPJ é obrigatório");
+      }
+      if (docType === "cpf" && !isValidCPF(cpf)) {
+        throw new Error("CPF inválido");
+      }
+      if (docType === "cnpj" && !isValidCNPJ(cnpj)) {
+        throw new Error("CNPJ inválido");
+      }
+
       const { error } = await supabase
         .from("organizer_accounts")
         .update({
@@ -36,12 +103,20 @@ export default function ConfiguracoesContent() {
           description,
           email,
           phone,
-          cnpj,
+          cpf: docType === "cpf" ? cpf : null,
+          cnpj: docType === "cnpj" ? cnpj : null,
           social_instagram: instagram,
           social_facebook: facebook,
           social_website: website,
           logo_url: logoUrl,
-        })
+          cep: cep.replace(/\D/g, ""),
+          street,
+          street_number: streetNumber,
+          complement,
+          neighborhood,
+          city,
+          state,
+        } as any)
         .eq("id", organizer.id);
 
       if (error) throw error;
@@ -60,7 +135,6 @@ export default function ConfiguracoesContent() {
     if (!file) return;
 
     setUploadingLogo(true);
-
     try {
       const fileExt = file.name.split(".").pop();
       const fileName = `${organizer.id}-logo.${fileExt}`;
@@ -107,7 +181,6 @@ export default function ConfiguracoesContent() {
           <CardDescription>Informações públicas do seu perfil de organizador</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Logo */}
           <div className="flex items-center gap-6">
             <Avatar className="h-20 w-20">
               <AvatarImage src={logoUrl || undefined} />
@@ -138,7 +211,6 @@ export default function ConfiguracoesContent() {
             </div>
           </div>
 
-          {/* Name */}
           <div className="space-y-2">
             <Label htmlFor="displayName">Nome do Organizador</Label>
             <Input
@@ -149,7 +221,6 @@ export default function ConfiguracoesContent() {
             />
           </div>
 
-          {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Descrição</Label>
             <Textarea
@@ -186,19 +257,151 @@ export default function ConfiguracoesContent() {
               <Input
                 id="phone"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(formatPhone(e.target.value))}
                 placeholder="(11) 99999-9999"
               />
             </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="cnpj">CNPJ</Label>
-            <Input
-              id="cnpj"
-              value={cnpj}
-              onChange={(e) => setCnpj(e.target.value)}
-              placeholder="00.000.000/0000-00"
-            />
+
+          {/* Document: CPF or CNPJ */}
+          <div className="space-y-3">
+            <Label>Documento <span className="text-destructive">*</span></Label>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={docType === "cpf" ? "default" : "outline"}
+                onClick={() => setDocType("cpf")}
+              >
+                CPF
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={docType === "cnpj" ? "default" : "outline"}
+                onClick={() => setDocType("cnpj")}
+              >
+                CNPJ
+              </Button>
+            </div>
+            {docType === "cpf" ? (
+              <div className="space-y-1">
+                <Input
+                  id="cpf"
+                  value={cpf}
+                  onChange={(e) => setCpf(formatCPF(e.target.value))}
+                  placeholder="000.000.000-00"
+                  maxLength={14}
+                />
+                {cpf && cpf.replace(/\D/g, "").length === 11 && !isValidCPF(cpf) && (
+                  <p className="text-xs text-destructive">CPF inválido</p>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <Input
+                  id="cnpj"
+                  value={cnpj}
+                  onChange={(e) => setCnpj(formatCNPJ(e.target.value))}
+                  placeholder="00.000.000/0000-00"
+                  maxLength={18}
+                />
+                {cnpj && cnpj.replace(/\D/g, "").length === 14 && !isValidCNPJ(cnpj) && (
+                  <p className="text-xs text-destructive">CNPJ inválido</p>
+                )}
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Address */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Endereço
+          </CardTitle>
+          <CardDescription>Endereço do organizador</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="cep">CEP</Label>
+              <div className="relative">
+                <Input
+                  id="cep"
+                  value={cep}
+                  onChange={(e) => handleCepChange(e.target.value)}
+                  placeholder="00000-000"
+                  maxLength={9}
+                />
+                {loadingCep && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="street">Rua / Logradouro</Label>
+              <Input
+                id="street"
+                value={street}
+                onChange={(e) => setStreet(e.target.value)}
+                placeholder="Nome da rua"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="streetNumber">Número</Label>
+              <Input
+                id="streetNumber"
+                value={streetNumber}
+                onChange={(e) => setStreetNumber(e.target.value)}
+                placeholder="123"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="complement">Complemento</Label>
+              <Input
+                id="complement"
+                value={complement}
+                onChange={(e) => setComplement(e.target.value)}
+                placeholder="Sala 1"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="neighborhood">Bairro</Label>
+              <Input
+                id="neighborhood"
+                value={neighborhood}
+                onChange={(e) => setNeighborhood(e.target.value)}
+                placeholder="Bairro"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="city">Cidade</Label>
+              <Input
+                id="city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Cidade"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="state">Estado (UF)</Label>
+              <Input
+                id="state"
+                value={state}
+                onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))}
+                placeholder="SP"
+                maxLength={2}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

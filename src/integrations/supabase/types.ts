@@ -623,54 +623,78 @@ export type Database = {
       }
       organizer_accounts: {
         Row: {
+          cep: string | null
+          city: string | null
           cnpj: string | null
+          complement: string | null
+          cpf: string | null
           created_at: string | null
           description: string | null
           display_name: string
           email: string | null
           id: string
           logo_url: string | null
+          neighborhood: string | null
           owner_user_id: string
           phone: string | null
           slug: string | null
           social_facebook: string | null
           social_instagram: string | null
           social_website: string | null
+          state: string | null
           status: Database["public"]["Enums"]["organizer_status"] | null
+          street: string | null
+          street_number: string | null
           updated_at: string | null
         }
         Insert: {
+          cep?: string | null
+          city?: string | null
           cnpj?: string | null
+          complement?: string | null
+          cpf?: string | null
           created_at?: string | null
           description?: string | null
           display_name: string
           email?: string | null
           id?: string
           logo_url?: string | null
+          neighborhood?: string | null
           owner_user_id: string
           phone?: string | null
           slug?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_website?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["organizer_status"] | null
+          street?: string | null
+          street_number?: string | null
           updated_at?: string | null
         }
         Update: {
+          cep?: string | null
+          city?: string | null
           cnpj?: string | null
+          complement?: string | null
+          cpf?: string | null
           created_at?: string | null
           description?: string | null
           display_name?: string
           email?: string | null
           id?: string
           logo_url?: string | null
+          neighborhood?: string | null
           owner_user_id?: string
           phone?: string | null
           slug?: string | null
           social_facebook?: string | null
           social_instagram?: string | null
           social_website?: string | null
+          state?: string | null
           status?: Database["public"]["Enums"]["organizer_status"] | null
+          street?: string | null
+          street_number?: string | null
           updated_at?: string | null
         }
         Relationships: []
