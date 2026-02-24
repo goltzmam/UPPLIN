@@ -34,7 +34,7 @@ export default function Login() {
   const sessionExpired = searchParams.get("sessao_encerrada") === "1";
 
   const emailRules = useMemo(() => [{ test: isValidEmail }], []);
-  const passwordRules = useMemo(() => [{ test: (v: string) => v.length >= 1 }], []);
+  const passwordRules = useMemo(() => [{ test: (v: string) => v.length >= 6 }], []);
 
   const doSignIn = async () => {
     setLoading(true);
