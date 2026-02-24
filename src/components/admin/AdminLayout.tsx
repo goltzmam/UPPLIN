@@ -57,7 +57,7 @@ export function AdminLayout() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-muted/30 flex">
+    <div className="min-h-[100dvh] h-[100dvh] bg-muted/30 flex overflow-hidden">
       {/* Desktop Sidebar - Fixed with internal scroll */}
       <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 z-40 bg-card border-r border-border">
         {/* Logo - Fixed at top */}
@@ -179,8 +179,8 @@ export function AdminLayout() {
       </div>
 
       {/* Main Content - Offset for fixed sidebar */}
-      <main className="flex-1 lg:ml-64 min-w-0">
-        <div className="p-4 pt-[72px] lg:pt-8 lg:p-8 min-h-[100dvh]">
+      <main className="flex-1 lg:ml-64 min-w-0 overflow-y-auto">
+        <div className="p-4 pt-[72px] lg:pt-8 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}
