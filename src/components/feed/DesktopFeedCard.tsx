@@ -101,13 +101,13 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
   const videoRef = useRef<HTMLVideoElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
-  // Changed: isPlaying state for click-to-play instead of hover
   const [isPlaying, setIsPlaying] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [showLikeParticles, setShowLikeParticles] = useState(false);
   const [showBigHeart, setShowBigHeart] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   const { isLiked, likeCount, isSaved, saveCount, toggleLike, toggleSave } =
     useEventEngagement(item.id);
@@ -132,6 +132,28 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
     cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
   const eventUrl = `/evento/${item.slug || item.id}`;
 
+  // IntersectionObserver to detect when card leaves viewport → stop video
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        const visible = entry.isIntersecting;
+        setIsVisible(visible);
+        if (!visible && videoRef.current) {
+          videoRef.current.pause();
+          videoRef.current.muted = true;
+          setIsPlaying(false);
+        }
+      },
+      { threshold: 0.3 }
+    );
+
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, []);
+
   // Click-to-play/pause video
   useEffect(() => {
     const video = videoRef.current;
@@ -139,12 +161,12 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
 
     video.muted = globalMuted;
 
-    if (isPlaying && videoLoaded) {
+    if (isPlaying && videoLoaded && isVisible) {
       video.play().catch(() => setIsPlaying(false));
     } else {
       video.pause();
     }
-  }, [isPlaying, videoLoaded, item.videoUrl, globalMuted]);
+  }, [isPlaying, videoLoaded, item.videoUrl, globalMuted, isVisible]);
 
   // Sync mute state
   useEffect(() => {
@@ -152,6 +174,20 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
       videoRef.current.muted = globalMuted;
     }
   }, [globalMuted]);
+
+  // Cleanup on unmount - full hard stop
+  useEffect(() => {
+    return () => {
+      const video = videoRef.current;
+      if (video) {
+        video.pause();
+        video.muted = true;
+        video.volume = 0;
+        video.removeAttribute("src");
+        video.load();
+      }
+    };
+  }, []);
 
   const handleVideoClick = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -249,7 +285,7 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
             <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 via-zinc-700 to-zinc-900" />
           )}
           
-          {/* Cover Image - Always visible, fades when video plays */}
+          {/* Cover Image */}
           {item.coverImageUrl && (
             <img
               src={item.coverImageUrl}
@@ -318,7 +354,7 @@ export const DesktopFeedCard = React.memo(function DesktopFeedCard({
             </AnimatePresence>
           )}
 
-          {/* Volume Control (visible when playing) */}
+          {/* Volume Control */}
           {item.videoUrl && isPlaying && (
             <motion.button
               initial={{ opacity: 0 }}
