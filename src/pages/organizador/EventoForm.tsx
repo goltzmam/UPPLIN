@@ -46,7 +46,7 @@ export default function EventoForm() {
   const [addressText, setAddressText] = useState("");
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [feedVideoUrl, setFeedVideoUrl] = useState<string | null>(null);
-  const [status, setStatus] = useState<"draft" | "published">("draft");
+  const [status, setStatus] = useState<"draft" | "pending_review">("draft");
   const [ticketTypes, setTicketTypes] = useState<TicketTypeForm[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -86,7 +86,7 @@ export default function EventoForm() {
       setEndAt(event.end_at?.slice(0, 16) || "");
       setVenueName(event.venue_name || "");
       setAddressText(event.address_text || "");
-      setStatus(event.status as "draft" | "published");
+      setStatus(event.status === "published" || event.status === "pending_review" ? "pending_review" : "draft");
       setTicketTypes(
         event.ticket_types?.map((t: any) => ({
           id: t.id,
@@ -459,15 +459,20 @@ export default function EventoForm() {
         <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
           <div className="space-y-2">
             <Label>Status do Evento</Label>
-            <Select value={status} onValueChange={(v) => setStatus(v as "draft" | "published")}>
+            <Select value={status} onValueChange={(v) => setStatus(v as "draft" | "pending_review")}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="draft">Rascunho</SelectItem>
-                <SelectItem value="published">Publicado</SelectItem>
+                <SelectItem value="pending_review">Enviar para aprovação</SelectItem>
               </SelectContent>
             </Select>
+            {status === "pending_review" && (
+              <p className="text-xs text-muted-foreground">
+                O evento será revisado pela equipe antes de ser publicado.
+              </p>
+            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
