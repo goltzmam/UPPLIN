@@ -136,11 +136,11 @@ export default function EventoForm() {
       return;
     }
 
-    // Validate cover image is required
-    if (media.length === 0) {
+    // Validate cover media is required (image or video)
+    if (media.length === 0 && !feedVideoUrl) {
       toast({ 
-        title: "Imagem de destaque obrigatória", 
-        description: "Adicione pelo menos uma imagem para o seu evento.", 
+        title: "Mídia de destaque obrigatória", 
+        description: "Adicione pelo menos uma imagem ou vídeo para o seu evento.", 
         variant: "destructive" 
       });
       return;
@@ -151,8 +151,10 @@ export default function EventoForm() {
     try {
       let eventIdToUse = eventId;
       
-      // Get cover image from first media item
-      const coverImageUrl = media.length > 0 && media[0].type === "image" ? media[0].url : null;
+      // Get cover image: prefer first image, leave null if only video exists
+      const coverImageUrl = media.length > 0 && media[0].type === "image" 
+        ? media[0].url 
+        : null;
 
       if (isEditing) {
         // Update event
@@ -345,10 +347,10 @@ export default function EventoForm() {
             media={media}
             onChange={setMedia}
           />
-          {media.length === 0 && (
+          {media.length === 0 && !feedVideoUrl && (
             <p className="text-xs text-amber-600 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              Adicione pelo menos uma imagem para publicar o evento
+              Adicione pelo menos uma imagem ou vídeo para publicar o evento
             </p>
           )}
         </div>

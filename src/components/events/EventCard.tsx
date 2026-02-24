@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Calendar, MapPin } from "lucide-react";
+import { Calendar, MapPin, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -10,6 +10,7 @@ interface EventCardProps {
   slug?: string | null;
   title: string;
   coverImageUrl: string | null;
+  isVideo?: boolean;
   startAt: string;
   venueName: string | null;
   addressText: string | null;
@@ -26,6 +27,7 @@ export function EventCard({
   slug,
   title,
   coverImageUrl,
+  isVideo = false,
   startAt,
   venueName,
   addressText,
@@ -54,11 +56,28 @@ export function EventCard({
       <Link to={eventUrl} className="block">
         <div className="relative aspect-[4/3] overflow-hidden">
           {coverImageUrl ? (
-            <img
-              src={coverImageUrl}
-              alt={title}
-              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
+            isVideo ? (
+              <div className="relative h-full w-full">
+                <video
+                  src={coverImageUrl}
+                  className="h-full w-full object-cover"
+                  muted
+                  playsInline
+                  preload="metadata"
+                />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center">
+                    <Play className="h-5 w-5 text-white ml-0.5" />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <img
+                src={coverImageUrl}
+                alt={title}
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+            )
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-accent/20 to-secondary/20 flex items-center justify-center">
               <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground" />
