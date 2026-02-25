@@ -61,6 +61,7 @@ import PagamentoSucesso from "./pages/PagamentoSucesso";
 import PagamentoPendente from "./pages/PagamentoPendente";
 import CollaboratorScanner from "./pages/CollaboratorScanner";
 import NotFound from "./pages/NotFound";
+import LpOrganizador from "./pages/LpOrganizador";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -111,6 +112,7 @@ function AnimatedRoutes() {
           <Route path="/organizadores" element={<Organizadores />} />
           <Route path="/explorar-organizadores" element={<ExplorarOrganizadores />} />
           <Route path="/por-perto" element={<PorPerto />} />
+          <Route path="/lp/organizador" element={<LpOrganizador />} />
           
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}
