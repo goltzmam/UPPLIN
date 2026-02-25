@@ -179,6 +179,13 @@
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    /* Hide scrollbar - app native UX */
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  html::-webkit-scrollbar {
+    display: none;
   }
 
   body {
@@ -186,13 +193,18 @@
     min-height: 100%;
     overflow-x: hidden;
     overflow-y: auto !important;
-    overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+  }
+  body::-webkit-scrollbar {
+    display: none;
   }
 
   #root {
@@ -200,8 +212,8 @@
     min-height: 100dvh;
     width: 100%;
     overflow-x: hidden;
-    overflow-y: auto !important;
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 
   img, video {
