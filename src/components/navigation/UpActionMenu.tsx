@@ -139,13 +139,35 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
           url: window.location.origin,
         };
 
+    const copyToClipboard = async () => {
+      try {
+        await navigator.clipboard.writeText(shareData.url);
+        toast({ title: "Link copiado! 📋" });
+      } catch {
+        // Fallback for insecure contexts
+        const textarea = document.createElement("textarea");
+        textarea.value = shareData.url;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+        toast({ title: "Link copiado! 📋" });
+      }
+    };
+
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch {}
+      } catch (err: any) {
+        // User cancelled or share failed — fallback to copy
+        if (err?.name !== "AbortError") {
+          await copyToClipboard();
+        }
+      }
     } else {
-      await navigator.clipboard.writeText(shareData.url);
-      toast({ title: "Link copiado!" });
+      await copyToClipboard();
     }
   };
 
