@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Share2, Heart, Minus, Plus, Ticket, Instagram, Facebook, Globe, Building2, Play, Pause, ChevronLeft, ChevronRight, ImageIcon } from "lucide-react";
+import { Calendar, MapPin, Clock, Share2, Heart, Minus, Plus, Ticket, Instagram, Facebook, Globe, Building2, Play, Pause, ChevronLeft, ChevronRight, ImageIcon, Users } from "lucide-react";
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -70,6 +70,21 @@ export default function Evento() {
     gcTime: 1000 * 60 * 30, // 30 minutes cache
   });
 
+  // Check-in counter (posts tagged with this event)
+  const { data: checkinCount = 0 } = useQuery({
+    queryKey: ["event-checkins", event?.id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("user_posts")
+        .select("id", { count: "exact", head: true })
+        .eq("event_id", event!.id);
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!event?.id,
+    staleTime: 1000 * 60 * 2,
+  });
+
   const { data: isSaved } = useQuery({
     queryKey: ["saved-event", id, user?.id],
     queryFn: async () => {
@@ -84,7 +99,7 @@ export default function Evento() {
       return !!data;
     },
     enabled: !!id && !!user,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 2,
   });
 
   const updateSelection = (ticketTypeId: string, delta: number) => {
@@ -456,6 +471,21 @@ export default function Evento() {
                 {/* Who's Going */}
                 <WhoIsGoingSection eventId={event.id} />
 
+                {/* Check-in Counter */}
+                {checkinCount > 0 && (
+                  <div className="bg-card rounded-2xl border border-border p-5 flex items-center gap-4">
+                    <div className="h-11 w-11 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #FF6A00, #FF007A)" }}>
+                      <Users className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-display text-lg font-bold">{checkinCount}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {checkinCount === 1 ? "pessoa fez check-in" : "pessoas fizeram check-in"}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Reviews */}
                 <div className="bg-card rounded-2xl border border-border p-6">
                   <EventReviews eventId={event.id} />
@@ -782,6 +812,21 @@ export default function Evento() {
         </div>
 
         <TicketSelectionCard />
+
+        {/* Check-in Counter */}
+        {checkinCount > 0 && (
+          <div className="flex items-center gap-3 p-4 rounded-2xl border border-border bg-card">
+            <div className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: "linear-gradient(135deg, #FF6A00, #FF007A)" }}>
+              <Users className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="font-display text-base font-bold">{checkinCount}</p>
+              <p className="text-xs text-muted-foreground">
+                {checkinCount === 1 ? "pessoa fez check-in" : "pessoas fizeram check-in"}
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="bg-card rounded-2xl border border-border p-4">
           <EventReviews eventId={event.id} />
