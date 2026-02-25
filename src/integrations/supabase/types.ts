@@ -1430,6 +1430,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_user_by_email: {
+        Args: { p_email: string }
+        Returns: {
+          full_name: string
+          id: string
+        }[]
+      }
       get_organizer_commission: {
         Args: { p_organizer_id: string }
         Returns: number

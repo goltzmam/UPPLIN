@@ -81,12 +81,11 @@ export function CollaboratorManager({ organizerId, events, selectedEventId }: Co
 
   const addMutation = useMutation({
     mutationFn: async () => {
-      // Find user by email
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, full_name")
-        .eq("email", email.trim().toLowerCase())
-        .maybeSingle();
+      // Find user by email using secure RPC function
+      const { data: profiles, error: profileError } = await supabase
+        .rpc("find_user_by_email", { p_email: email.trim().toLowerCase() });
+
+      const profile = profiles?.[0];
 
       if (profileError || !profile) {
         throw new Error("Usuário não encontrado. O colaborador precisa ter uma conta na plataforma.");
