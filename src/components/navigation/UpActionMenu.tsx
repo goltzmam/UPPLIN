@@ -298,20 +298,32 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
         
         <div className="space-y-4">
           {/* File upload */}
-          <div className="border-2 border-dashed border-muted-foreground/30 rounded-xl p-6 text-center">
+          <div className="border-2 border-dashed border-muted-foreground/30 rounded-xl overflow-hidden text-center">
             {selectedFile ? (
               <div className="space-y-2">
-                <div className="flex items-center justify-center gap-2 text-primary">
+                {/* Media Preview */}
+                <div className="relative w-full bg-black/20">
                   {selectedFile.type.startsWith('video/') ? (
-                    <Video className="h-8 w-8" />
+                    <video
+                      src={URL.createObjectURL(selectedFile)}
+                      className="w-full max-h-52 object-contain mx-auto"
+                      controls
+                      muted
+                    />
                   ) : (
-                    <Image className="h-8 w-8" />
+                    <img
+                      src={URL.createObjectURL(selectedFile)}
+                      alt="Preview"
+                      className="w-full max-h-52 object-contain mx-auto"
+                    />
                   )}
                 </div>
-                <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)}>
-                  Remover
-                </Button>
+                <div className="px-4 pb-3 pt-1">
+                  <p className="text-xs text-muted-foreground truncate">{selectedFile.name}</p>
+                  <Button variant="ghost" size="sm" className="mt-1 text-xs" onClick={() => setSelectedFile(null)}>
+                    Remover
+                  </Button>
+                </div>
               </div>
             ) : (
               <label className="cursor-pointer block">
