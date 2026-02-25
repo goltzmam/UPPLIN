@@ -1,6 +1,6 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -90,9 +90,16 @@ if (typeof window !== "undefined") {
 function AnimatedRoutes() {
   const location = useLocation();
 
-  // Global kill-switch: stop any media when navigating
+  // Global kill-switch: stop any media when navigating away from feed pages
+  const prevPathRef = useRef(location.pathname);
   useEffect(() => {
-    stopAllMediaPipelines();
+    const feedPaths = ["/", "/feed"];
+    const isGoingToFeed = feedPaths.some(p => location.pathname === p);
+    // Only kill media when navigating AWAY from feed, not when arriving at it
+    if (!isGoingToFeed && prevPathRef.current !== location.pathname) {
+      stopAllMediaPipelines();
+    }
+    prevPathRef.current = location.pathname;
   }, [location.pathname, location.search, location.hash]);
 
   return (
