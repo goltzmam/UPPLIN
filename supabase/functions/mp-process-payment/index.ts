@@ -223,6 +223,43 @@ serve(async (req) => {
         method: "pix",
         raw: mpData,
       });
+
+      // Send PIX QR Code email to user
+      try {
+        const pixData = mpData.point_of_interaction?.transaction_data;
+        const expirationDate = mpData.date_of_expiration
+          ? new Date(mpData.date_of_expiration).toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })
+          : "30 minutos";
+
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+        await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${supabaseServiceKey}`,
+          },
+          body: JSON.stringify({
+            type: "pix_pending",
+            to: user.email,
+            data: {
+              userName: user.user_metadata?.full_name || user.user_metadata?.name || undefined,
+              eventTitle: order.events?.title || "Evento",
+              totalAmount: `R$ ${(order.total_cents / 100).toFixed(2).replace(".", ",")}`,
+              orderId: order_id,
+              pixQrCodeBase64: pixData?.qr_code_base64 || undefined,
+              pixCopyPaste: pixData?.qr_code || undefined,
+              pixExpiration: expirationDate,
+              paymentLink: `${Deno.env.get("SITE_URL") || "https://upplin.lovable.app"}/pagamento-pendente/${order_id}`,
+            },
+          }),
+        });
+        console.log("PIX pending email sent to", user.email);
+      } catch (emailErr) {
+        console.error("Failed to send PIX email:", emailErr);
+        // Don't fail the payment flow if email fails
+      }
     }
 
     return new Response(

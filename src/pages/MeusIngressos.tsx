@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MapPin, QrCode, Ticket, Download, X } from "lucide-react";
+import { Calendar, MapPin, QrCode, Ticket, Download, X, Clock, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
@@ -26,6 +26,7 @@ export default function MeusIngressos() {
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["my-tickets", user?.id] });
+    await queryClient.invalidateQueries({ queryKey: ["my-pending-orders", user?.id] });
   }, [queryClient, user?.id]);
 
   useEffect(() => {
@@ -57,6 +58,27 @@ export default function MeusIngressos() {
     gcTime: 1000 * 60 * 15,
   });
 
+  const { data: pendingOrders } = useQuery({
+    queryKey: ["my-pending-orders", user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("orders")
+        .select(`
+          *,
+          events(title, start_at, venue_name, cover_image_url),
+          order_items(qty, unit_price_cents, ticket_types(name))
+        `)
+        .eq("buyer_user_id", user!.id)
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+    staleTime: 1000 * 60,
+  });
+
   if (loading || isLoading) return (
     <div className="min-h-screen bg-background">
       <TikTokDesktopSidebar />
@@ -86,6 +108,72 @@ export default function MeusIngressos() {
       default:
         return null;
     }
+  };
+
+  const PendingOrderCard = ({ order }: { order: any }) => {
+    const eventDate = order.events?.start_at ? new Date(order.events.start_at) : null;
+    const isExpired = order.expires_at && new Date(order.expires_at) < new Date();
+
+    if (isExpired) return null;
+
+    return (
+      <div className="bg-card rounded-xl sm:rounded-2xl border border-yellow-500/40 overflow-hidden">
+        <div className="flex flex-col sm:flex-row">
+          <div className="sm:w-40 md:w-48 h-28 sm:h-auto relative shrink-0">
+            {order.events?.cover_image_url ? (
+              <img src={order.events.cover_image_url} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-yellow-500/20 to-secondary flex items-center justify-center">
+                <Clock className="h-8 w-8 text-muted-foreground/50" />
+              </div>
+            )}
+          </div>
+
+          <div className="flex-1 p-3 sm:p-4 md:p-6 min-w-0">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Badge variant="outline" className="text-[10px] sm:text-xs text-yellow-600 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/30 dark:text-yellow-400">
+                    <Clock className="h-3 w-3 mr-1" />
+                    Pagamento Pendente
+                  </Badge>
+                </div>
+                <h3 className="font-display font-bold text-sm sm:text-lg mb-1.5 truncate">{order.events?.title}</h3>
+                <div className="flex flex-wrap gap-3 text-[11px] sm:text-sm text-muted-foreground">
+                  {eventDate && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                      <span>{format(eventDate, "d 'de' MMM, HH:mm", { locale: ptBR })}</span>
+                    </div>
+                  )}
+                  {order.events?.venue_name && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                      <span className="truncate">{order.events.venue_name}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1">
+                    <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                    <span>R$ {(order.total_cents / 100).toFixed(2).replace(".", ",")}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+              <Button 
+                size="sm" 
+                className="text-xs h-8"
+                onClick={() => navigate(`/pagamento-pendente/${order.id}`)}
+              >
+                <CreditCard className="h-3.5 w-3.5 mr-1.5" />
+                Pagar Agora
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const TicketCard = ({ ticket }: { ticket: any }) => {
@@ -186,6 +274,10 @@ export default function MeusIngressos() {
     );
   };
 
+  const activePendingOrders = pendingOrders?.filter(
+    (o) => !o.expires_at || new Date(o.expires_at) > new Date()
+  ) || [];
+
   return (
     <div className="min-h-screen bg-background text-foreground w-full overflow-x-hidden">
       <TikTokDesktopSidebar />
@@ -201,6 +293,19 @@ export default function MeusIngressos() {
             />
           </div>
           <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold mb-4 sm:mb-6">Meus Ingressos</h1>
+
+          {/* Pending Orders Section */}
+          {activePendingOrders.length > 0 && (
+            <div className="mb-6 space-y-3">
+              <h2 className="font-display text-sm font-semibold text-yellow-600 dark:text-yellow-400 flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Pagamentos Pendentes ({activePendingOrders.length})
+              </h2>
+              {activePendingOrders.map((order) => (
+                <PendingOrderCard key={order.id} order={order} />
+              ))}
+            </div>
+          )}
 
           <Tabs defaultValue="upcoming" className="space-y-4 sm:space-y-6">
             <TabsList className="w-full sm:w-auto">

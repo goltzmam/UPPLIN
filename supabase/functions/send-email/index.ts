@@ -12,7 +12,7 @@ const FROM_EMAIL = "UPPLIN <onboarding@resend.dev>";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://upplin.lovable.app";
 
 interface EmailRequest {
-  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer";
+  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer" | "pix_pending";
   to: string;
   data: {
     userName?: string;
@@ -25,6 +25,10 @@ interface EmailRequest {
     orderId?: string;
     resetLink?: string;
     companyName?: string;
+    pixQrCodeBase64?: string;
+    pixCopyPaste?: string;
+    pixExpiration?: string;
+    paymentLink?: string;
   };
 }
 
@@ -340,6 +344,72 @@ const emailTemplates = {
             
             <p style="text-align: center; margin-top: 32px;">
               <a href="${SITE_URL}/organizador/dashboard" class="btn">Acessar Meu Painel</a>
+            </p>
+          </div>
+          <div class="footer">
+            <p><strong>UPPLIN</strong> — A melhor experiência em eventos</p>
+            <p>Este é um email automático, por favor não responda.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
+  pix_pending: (data: EmailRequest["data"]) => ({
+    subject: `💳 PIX pendente - ${data.eventTitle}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A); padding: 40px 30px; text-align: center; }
+          .content { padding: 30px; }
+          .qr-container { text-align: center; margin: 24px 0; padding: 20px; background: #f8fafc; border-radius: 12px; }
+          .qr-container img { max-width: 220px; }
+          .copy-paste { background: #f1f5f9; border: 1px dashed #94a3b8; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 11px; word-break: break-all; color: #334155; margin: 16px 0; }
+          .info-box { background: #fef9ec; border: 1px solid #fde68a; border-radius: 12px; padding: 16px; margin: 20px 0; color: #92400e; font-size: 14px; }
+          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
+          .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -1px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">UPPLIN</div>
+            <h1 style="color: white; margin-top: 12px;">💳 Pagamento PIX Pendente</h1>
+          </div>
+          <div class="content">
+            <p>Olá <strong>${data.userName || "Cliente"}</strong>,</p>
+            <p>Seu pedido para <strong>${data.eventTitle}</strong> está aguardando pagamento via PIX.</p>
+            
+            ${data.pixQrCodeBase64 ? `
+            <div class="qr-container">
+              <p style="font-weight: bold; margin-bottom: 12px;">Escaneie o QR Code abaixo:</p>
+              <img src="data:image/png;base64,${data.pixQrCodeBase64}" alt="QR Code PIX" />
+            </div>
+            ` : ""}
+            
+            ${data.pixCopyPaste ? `
+            <p style="font-weight: bold; font-size: 14px;">Ou copie o código PIX:</p>
+            <div class="copy-paste">${data.pixCopyPaste}</div>
+            ` : ""}
+            
+            <div class="info-box">
+              ⏰ <strong>Atenção:</strong> O pagamento expira em ${data.pixExpiration || "30 minutos"}. Após esse prazo, o pedido será cancelado automaticamente.
+            </div>
+            
+            <p style="text-align: center; margin-top: 24px;">
+              <a href="${data.paymentLink || SITE_URL + "/meus-ingressos"}" class="btn">Ver Pedido</a>
+            </p>
+            
+            <p style="color: #64748b; font-size: 14px; text-align: center; margin-top: 16px;">
+              Valor: <strong>${data.totalAmount}</strong> · Pedido #${data.orderId?.slice(0, 8).toUpperCase() || ""}
             </p>
           </div>
           <div class="footer">
