@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FeedVideoPlayer } from "./FeedVideoPlayer";
 import { FeedSkeleton } from "./FeedSkeleton";
 import { stopAllMediaPipelines } from "@/lib/media";
+import { markEventsSeen } from "@/lib/seen-events";
 
 interface FeedItem {
   id: string;
@@ -346,7 +347,7 @@ export function DesktopTikTokFeed({
     if (!isVisible) stopAllMediaPipelines();
   }, [isVisible]);
 
-  // Scroll-based active detection
+  // Scroll-based active detection + mark seen
   useEffect(() => {
     const container = containerRef.current;
     if (!isVisible || !container) return;
@@ -359,6 +360,8 @@ export function DesktopTikTokFeed({
       if (newIndex !== activeIndex && newIndex >= 0 && newIndex < items.length) {
         setActiveIndex(newIndex);
         triggerFeedback({ haptic: "selection" });
+        // Mark event as seen
+        markEventsSeen([items[newIndex].id]);
       }
 
       // Load more when near end
@@ -369,7 +372,7 @@ export function DesktopTikTokFeed({
 
     container.addEventListener("scroll", handleScroll, { passive: true });
     return () => container.removeEventListener("scroll", handleScroll);
-  }, [activeIndex, items.length, hasMore, isLoadingMore, onLoadMore, isVisible]);
+  }, [activeIndex, items.length, hasMore, isLoadingMore, onLoadMore, isVisible, items]);
 
   if (isLoading) {
     return (

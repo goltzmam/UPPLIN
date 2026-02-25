@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,7 @@ import { FollowingFeed } from "@/components/home/FollowingFeed";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { stopAllMediaPipelines } from "@/lib/media";
+import { prioritizeUnseenEvents, markEventsSeen } from "@/lib/seen-events";
 
 const PAGE_SIZE = 12;
 
@@ -71,7 +72,7 @@ export default function Index() {
   // Demo video URL from public CDN for first event display
   const DEMO_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
 
-  const feedItems = events.map((event: any, index: number) => {
+  const rawFeedItems = events.map((event: any, index: number) => {
     const videoMedia = event.event_media?.find((m: any) => m.type === "video");
     const minPrice = event.ticket_types?.length > 0
       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
@@ -96,6 +97,18 @@ export default function Index() {
       minPrice
     };
   });
+
+  // Prioritize unseen events — push already-viewed events to the end
+  const feedItems = prioritizeUnseenEvents(rawFeedItems);
+
+  // Mark the first few visible events as seen after data loads
+  useEffect(() => {
+    if (feedItems.length > 0) {
+      // Mark the first 3 events as seen immediately (user will see them on load)
+      const firstBatch = feedItems.slice(0, 3).map(e => e.id);
+      markEventsSeen(firstBatch);
+    }
+  }, [feedItems.length > 0 && feedItems[0]?.id]);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.removeQueries({ queryKey: ["homepage-events-infinite"] });

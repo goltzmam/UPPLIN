@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FeedSkeleton } from "./FeedSkeleton";
 import { FeedVideoPlayer } from "./FeedVideoPlayer";
 import { stopAllMediaPipelines } from "@/lib/media";
+import { markEventsSeen } from "@/lib/seen-events";
 
 interface TikTokFeedItem {
   id: string;
@@ -501,13 +502,17 @@ export function TikTokFeed({
     return () => observer.disconnect();
   }, [containerHeight, items.length, isVisible]);
 
-  // Save scroll position to cache
+  // Save scroll position and mark event as seen
   useEffect(() => {
     try {
       sessionStorage.setItem(SCROLL_POSITION_KEY, String(activeIndex));
       onScrollChange?.(activeIndex);
+      // Mark current event as seen
+      if (items[activeIndex]) {
+        markEventsSeen([items[activeIndex].id]);
+      }
     } catch {}
-  }, [activeIndex, onScrollChange]);
+  }, [activeIndex, onScrollChange, items]);
 
   // Detect scrolling state (for pausing videos during scroll)
   const handleScroll = useCallback(() => {
