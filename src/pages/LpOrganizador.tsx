@@ -1,13 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useEffect } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import {
   Zap, BarChart3, QrCode, Tag, Shield, Smartphone,
   Users, TrendingUp, ArrowRight, Check, Star, ChevronDown,
   CreditCard, Clock, Globe, Headphones, MessageSquare, Ticket
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import type { Easing } from "framer-motion";
 
 // Images
@@ -166,6 +166,40 @@ export default function LpOrganizador() {
     };
   }, []);
 
+  // ── LIVE COUNTER (persisted, never decreases) ──
+  const getPersistedCount = () => {
+    try {
+      const saved = localStorage.getItem("upplin_org_counter");
+      const savedTs = localStorage.getItem("upplin_org_counter_ts");
+      if (saved && savedTs) {
+        const elapsed = (Date.now() - Number(savedTs)) / 1000;
+        const offlineGrowth = Math.floor(elapsed / 60);
+        return Math.max(Number(saved), 127) + offlineGrowth;
+      }
+    } catch {}
+    return 127;
+  };
+
+  const [orgCount, setOrgCount] = useState(getPersistedCount);
+
+  useEffect(() => {
+    localStorage.setItem("upplin_org_counter", String(orgCount));
+    localStorage.setItem("upplin_org_counter_ts", String(Date.now()));
+  }, [orgCount]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout>;
+    const tick = () => {
+      const delay = (30 + Math.random() * 60) * 1000;
+      timer = setTimeout(() => {
+        setOrgCount(prev => prev + 1);
+        tick();
+      }, delay);
+    };
+    tick();
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* ── URGENCY BANNER ── */}
@@ -176,7 +210,7 @@ export default function LpOrganizador() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
             </span>
-            <strong>127+ organizadores</strong> já estão vendendo na UPPLIN
+            <strong>{orgCount}+ organizadores</strong> já estão vendendo na UPPLIN
           </span>
         </p>
       </div>
