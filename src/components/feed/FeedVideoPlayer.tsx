@@ -253,13 +253,24 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Cover image as background */}
+      {/* Cover image as blurred background */}
+      {coverUrl && (
+        <img
+          src={coverUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60"
+          loading="eager"
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Cover image preserving aspect ratio */}
       {coverUrl && (
         <img
           src={coverUrl}
           alt=""
           className={cn(
-            "absolute inset-0 w-full h-full object-cover transition-opacity duration-200",
+            "absolute inset-0 w-full h-full object-contain z-[1] transition-opacity duration-200",
             videoLoaded && !isBuffering && !isPaused ? "opacity-0" : "opacity-100"
           )}
           loading="eager"
@@ -267,7 +278,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         />
       )}
 
-      {/* Video element */}
+      {/* Video element - preserve aspect ratio */}
       <video
         ref={videoRef}
         src={isActive && !forceStop ? videoUrl : undefined}
@@ -280,7 +291,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         onCanPlayThrough={handleVideoLoaded}
         onError={handleVideoError}
         className={cn(
-          "absolute inset-0 w-full h-full object-cover transition-opacity duration-200",
+          "absolute inset-0 w-full h-full object-contain z-[1] transition-opacity duration-200",
           videoLoaded ? "opacity-100" : "opacity-0"
         )}
         style={{

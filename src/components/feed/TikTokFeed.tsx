@@ -129,6 +129,10 @@ const FeedRow = React.memo(function FeedRow({
 }) {
   const item = items[index];
   const isActive = index === activeIndex && !isScrolling;
+
+  // Horizontal swipe to organizer
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipeLockedRef = useRef<"horizontal" | "vertical" | null>(null);
   const navigate = useNavigate();
   const [showHeart, setShowHeart] = useState(false);
   const [showLikeParticles, setShowLikeParticles] = useState(false);
@@ -180,10 +184,47 @@ const FeedRow = React.memo(function FeedRow({
     toggleSave();
   }, [isSaved, toggleSave]);
 
+  const handleSwipeStart = useCallback((e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+    swipeLockedRef.current = null;
+  }, []);
+
+  const handleSwipeMove = useCallback((e: React.TouchEvent) => {
+    if (!swipeStartRef.current) return;
+    const touch = e.touches[0];
+    const dx = touch.clientX - swipeStartRef.current.x;
+    const dy = touch.clientY - swipeStartRef.current.y;
+    // Lock direction after 10px movement
+    if (!swipeLockedRef.current && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+      swipeLockedRef.current = Math.abs(dx) > Math.abs(dy) ? "horizontal" : "vertical";
+    }
+  }, []);
+
+  const handleSwipeEnd = useCallback((e: React.TouchEvent) => {
+    if (!swipeStartRef.current) return;
+    const touch = e.changedTouches[0];
+    const dx = touch.clientX - swipeStartRef.current.x;
+    swipeStartRef.current = null;
+    // Swipe left → navigate to organizer
+    if (swipeLockedRef.current === "horizontal" && dx < -80 && item.organizerId) {
+      triggerFeedback({ haptic: "medium" });
+      navigate(`/organizador/${item.organizerId}`);
+    }
+    swipeLockedRef.current = null;
+  }, [item.organizerId, navigate]);
+
   return (
-    <div style={style} className="snap-start snap-always" onDoubleClick={handleDoubleTap}>
+    <div 
+      style={style} 
+      className="snap-start snap-always" 
+      onDoubleClick={handleDoubleTap}
+      onTouchStart={handleSwipeStart}
+      onTouchMove={handleSwipeMove}
+      onTouchEnd={handleSwipeEnd}
+    >
       <div className="relative w-full h-full overflow-hidden">
-        {/* Media container - uses FeedVideoPlayer for video or shows cover image */}
+        {/* Media container - blurred bg + object-contain to preserve aspect ratio */}
         <div className="absolute inset-0 w-full h-full">
           {item.videoUrl ? (
             <FeedVideoPlayer
@@ -193,17 +234,29 @@ const FeedRow = React.memo(function FeedRow({
               forceStop={isScrolling}
             />
           ) : item.coverImageUrl ? (
-            <img 
-              src={item.coverImageUrl} 
-              alt={item.title} 
-              className="absolute inset-0 w-full h-full object-cover" 
-              loading={isActive ? "eager" : "lazy"} 
-              decoding="async"
-            />
+            <>
+              {/* Blurred background fill */}
+              <img 
+                src={item.coverImageUrl} 
+                alt="" 
+                aria-hidden="true"
+                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" 
+                loading={isActive ? "eager" : "lazy"} 
+                decoding="async"
+              />
+              {/* Main image preserving aspect ratio */}
+              <img 
+                src={item.coverImageUrl} 
+                alt={item.title} 
+                className="absolute inset-0 w-full h-full object-contain z-[1]" 
+                loading={isActive ? "eager" : "lazy"} 
+                decoding="async"
+              />
+            </>
           ) : (
             <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10 pointer-events-none z-[2]" />
         </div>
 
         {/* Double tap heart animation */}
