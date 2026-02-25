@@ -217,15 +217,6 @@ export default function OrganizadorLogin() {
             </Button>
           </form>
 
-          {/* Demo credentials */}
-          <div className="mt-4 p-3 rounded-xl bg-muted/30 border border-border/50 text-center">
-            <p className="text-[10px] sm:text-xs text-muted-foreground">
-              <strong className="text-foreground">Demo:</strong> demo.organizador@upplin.app
-            </p>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">
-              <strong className="text-foreground">Senha:</strong> Demo@2026
-            </p>
-          </div>
 
           {/* Footer Links */}
           <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border text-center space-y-2 sm:space-y-3">
