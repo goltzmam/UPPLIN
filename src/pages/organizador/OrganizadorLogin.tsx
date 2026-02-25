@@ -71,7 +71,7 @@ export default function OrganizadorLogin() {
     setGoogleLoading(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin,
+        redirect_uri: window.location.origin + "/organizador/onboarding",
       });
       if (error) {
         toast({ title: "Erro com Google", description: String(error), variant: "destructive" });
