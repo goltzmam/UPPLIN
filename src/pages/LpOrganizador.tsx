@@ -210,7 +210,18 @@ export default function LpOrganizador() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
             </span>
-            <strong>{orgCount}+ organizadores</strong> já estão vendendo na UPPLIN
+            <strong>
+              <motion.span
+                key={orgCount}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                className="inline-block"
+              >
+                {orgCount}+
+              </motion.span>
+              {" "}organizadores
+            </strong> já estão vendendo na UPPLIN
           </span>
         </p>
       </div>
