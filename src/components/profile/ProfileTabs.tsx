@@ -1,11 +1,11 @@
-import { Bookmark, Settings, Camera, CheckCircle, Users, History, Newspaper } from "lucide-react";
+import { Settings, Camera, CheckCircle, Users, History, Newspaper } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSettings } from "./ProfileSettings";
 import { UserPostsTab } from "./UserPostsTab";
 import { CheckInsTab } from "./CheckInsTab";
 import { EventHistoryTab } from "./EventHistoryTab";
 import { FollowingTab } from "./FollowingTab";
-import { SavedEventsTab } from "./SavedEventsTab";
+
 import { SocialFeedTab } from "./SocialFeedTab";
 
 interface Profile {
@@ -63,13 +63,6 @@ export function ProfileTabs({
               <span className="text-[9px]">Check-ins</span>
             </TabsTrigger>
             <TabsTrigger 
-              value="salvos" 
-              className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
-            >
-              <Bookmark className="h-4 w-4" />
-              <span className="text-[9px]">Salvos</span>
-            </TabsTrigger>
-            <TabsTrigger 
               value="seguindo" 
               className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
@@ -108,10 +101,6 @@ export function ProfileTabs({
         </TabsContent>
 
 
-        {/* Salvos Tab */}
-        <TabsContent value="salvos" className="animate-fade-in">
-          <SavedEventsTab />
-        </TabsContent>
 
         {/* Seguindo Tab */}
         <TabsContent value="seguindo" className="animate-fade-in">
