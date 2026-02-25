@@ -263,11 +263,9 @@ export default function MeusIngressos() {
               eventTitle={selectedTicket.events?.title || "Evento"}
               ticketType={selectedTicket.ticket_types?.name || "Ingresso"}
               date={format(eventDate, "d 'de' MMMM 'às' HH:mm", { locale: ptBR })}
+              venue={selectedTicket.events?.venue_name}
               status={selectedTicket.status as "issued" | "used" | "cancelled"}
             />
-            <p className="text-center text-sm text-muted-foreground mt-4">
-              Apresente este QR Code na entrada do evento
-            </p>
           </div>
         </DialogContent>
       </Dialog>

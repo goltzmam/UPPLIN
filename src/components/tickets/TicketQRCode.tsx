@@ -1,6 +1,7 @@
 import { QRCodeSVG } from "qrcode.react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Calendar, MapPin, Ticket, Shield } from "lucide-react";
 
 interface TicketQRCodeProps {
   ticketId: string;
@@ -8,6 +9,7 @@ interface TicketQRCodeProps {
   eventTitle: string;
   ticketType: string;
   date: string;
+  venue?: string;
   status: "issued" | "used" | "cancelled";
   className?: string;
 }
@@ -18,102 +20,128 @@ export function TicketQRCode({
   eventTitle,
   ticketType,
   date,
+  venue,
   status,
   className,
 }: TicketQRCodeProps) {
   const qrValue = JSON.stringify({
     ticketId,
     token: qrToken,
-    timestamp: Date.now(),
   });
 
-  const statusConfig = {
-    issued: {
-      label: "Válido",
-      bgColor: "bg-success/10",
-      textColor: "text-success",
-      borderColor: "border-success/30",
-    },
-    used: {
-      label: "Utilizado",
-      bgColor: "bg-muted",
-      textColor: "text-muted-foreground",
-      borderColor: "border-border",
-    },
-    cancelled: {
-      label: "Cancelado",
-      bgColor: "bg-destructive/10",
-      textColor: "text-destructive",
-      borderColor: "border-destructive/30",
-    },
-  };
-
-  const config = statusConfig[status];
+  const isValid = status === "issued";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={cn(
-        "relative overflow-hidden rounded-3xl border-2 bg-card",
-        config.borderColor,
-        status !== "issued" && "opacity-75",
-        className
-      )}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ type: "spring", stiffness: 200, damping: 20 }}
+      className={cn("relative w-full max-w-[360px] mx-auto", className)}
     >
-      {/* Ticket Header */}
-      <div className="bg-secondary px-6 py-4">
-        <h3 className="font-display text-lg font-bold text-secondary-foreground truncate">
-          {eventTitle}
-        </h3>
-        <p className="text-sm text-secondary-foreground/70">{date}</p>
-      </div>
+      {/* Main Ticket Card */}
+      <div className="relative overflow-hidden rounded-3xl shadow-xl">
+        {/* Top gradient header */}
+        <div className="relative bg-gradient-to-br from-primary via-primary to-accent px-6 pt-6 pb-8">
+          {/* Decorative circles */}
+          <div className="absolute top-4 right-4 h-20 w-20 rounded-full bg-white/10 blur-xl" />
+          <div className="absolute bottom-2 left-6 h-12 w-12 rounded-full bg-white/5" />
 
-      {/* QR Code Section */}
-      <div className="p-6 flex flex-col items-center">
-        <div className={cn(
-          "p-4 rounded-2xl bg-white mb-4",
-          status !== "issued" && "filter grayscale"
-        )}>
-          <QRCodeSVG
-            value={qrValue}
-            size={160}
-            level="H"
-            includeMargin={false}
-          />
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="h-8 w-8 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <Ticket className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-white/80 text-xs font-semibold uppercase tracking-wider">UPPLIN Ticket</span>
+            </div>
+            <h3 className="text-white font-display text-xl font-bold leading-tight mb-2 line-clamp-2">
+              {eventTitle}
+            </h3>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-white/80 text-sm">
+                <Calendar className="h-3.5 w-3.5 shrink-0" />
+                <span>{date}</span>
+              </div>
+              {venue && (
+                <div className="flex items-center gap-2 text-white/80 text-sm">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{venue}</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Ticket Type Badge */}
-        <div className={cn(
-          "inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-2",
-          config.bgColor,
-          config.textColor
-        )}>
-          <span className={cn(
-            "h-2 w-2 rounded-full",
-            status === "issued" && "bg-success animate-pulse",
-            status === "used" && "bg-muted-foreground",
-            status === "cancelled" && "bg-destructive"
-          )} />
-          {config.label}
+        {/* Tear perforation */}
+        <div className="relative">
+          <div className="absolute -left-4 -top-4 h-8 w-8 rounded-full bg-background z-10" />
+          <div className="absolute -right-4 -top-4 h-8 w-8 rounded-full bg-background z-10" />
+          <div className="border-t-2 border-dashed border-border mx-8" />
         </div>
 
-        <p className="text-lg font-semibold">{ticketType}</p>
-        <p className="text-xs text-muted-foreground font-mono mt-1">
-          #{ticketId.slice(0, 8).toUpperCase()}
-        </p>
-      </div>
+        {/* QR Code section */}
+        <div className="bg-card px-6 pt-6 pb-5">
+          <div className="flex flex-col items-center">
+            {/* QR Code */}
+            <div className={cn(
+              "relative p-4 rounded-2xl bg-white shadow-sm border border-border/50 mb-4",
+              !isValid && "opacity-40 grayscale"
+            )}>
+              <QRCodeSVG
+                value={qrValue}
+                size={180}
+                level="H"
+                includeMargin={false}
+                imageSettings={{
+                  src: "",
+                  height: 0,
+                  width: 0,
+                  excavate: false,
+                }}
+              />
+              {!isValid && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="bg-destructive/90 text-white px-4 py-1.5 rounded-full text-sm font-bold uppercase -rotate-12 shadow-lg">
+                    {status === "used" ? "Utilizado" : "Cancelado"}
+                  </div>
+                </div>
+              )}
+            </div>
 
-      {/* Decorative Elements */}
-      <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2">
-        <div className="h-8 w-8 rounded-full bg-background" />
-      </div>
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2">
-        <div className="h-8 w-8 rounded-full bg-background" />
-      </div>
+            {/* Status indicator */}
+            {isValid && (
+              <motion.div
+                animate={{ opacity: [0.5, 1, 0.5] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="flex items-center gap-2 mb-3"
+              >
+                <Shield className="h-4 w-4 text-primary" />
+                <span className="text-xs font-medium text-primary">Ingresso verificado</span>
+              </motion.div>
+            )}
 
-      {/* Dashed Line */}
-      <div className="absolute left-8 right-8 top-[calc(50%+24px)] border-t-2 border-dashed border-border" />
+            {/* Ticket info */}
+            <div className="w-full space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Tipo</p>
+                  <p className="font-display font-bold text-foreground">{ticketType}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider">Pedido</p>
+                  <p className="font-mono text-sm font-semibold text-foreground">#{ticketId.slice(0, 8).toUpperCase()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="bg-muted/50 px-6 py-3 flex items-center justify-center">
+          <p className="text-[11px] text-muted-foreground text-center">
+            Apresente este QR Code na entrada do evento
+          </p>
+        </div>
+      </div>
     </motion.div>
   );
 }
