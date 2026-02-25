@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Ticket, Bookmark, Users, RefreshCw } from "lucide-react";
+import { Menu, X, User, LogOut, Ticket, Bookmark, Users, RefreshCw, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,6 +14,7 @@ import { useAuth } from "@/lib/auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
+import { FeedSearch } from "@/components/feed/FeedSearch";
 
 interface HeaderProps {
   showSearch?: boolean;
@@ -23,6 +24,7 @@ interface HeaderProps {
 
 export function Header({ minimal = false }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
@@ -50,6 +52,7 @@ export function Header({ minimal = false }: HeaderProps) {
   };
 
   return (
+    <>
     <header 
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-out",
@@ -99,6 +102,16 @@ export function Header({ minimal = false }: HeaderProps) {
             </Link>
 
             <div className="w-px h-5 bg-border/50 mx-3" />
+
+            {/* Search button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full hover:bg-muted"
+              onClick={() => setIsSearchOpen(true)}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
 
             {user ? (
               <div className="flex items-center gap-2">
@@ -217,8 +230,16 @@ export function Header({ minimal = false }: HeaderProps) {
             )}
           </nav>
 
-          {/* Mobile: Notification only for logged users, Menu for non-logged */}
-          <div className="flex items-center gap-2 md:hidden">
+          {/* Mobile: Search + Notification/Menu */}
+          <div className="flex items-center gap-1 md:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="rounded-full h-9 w-9"
+              onClick={() => setIsSearchOpen(true)}
+            >
+              <Search className="h-5 w-5" />
+            </Button>
             {user ? (
               <NotificationCenter />
             ) : (
@@ -286,5 +307,9 @@ export function Header({ minimal = false }: HeaderProps) {
         )}
       </AnimatePresence>
     </header>
+
+    {/* Search Overlay */}
+    <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+    </>
   );
 }

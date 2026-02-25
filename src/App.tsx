@@ -54,6 +54,7 @@ import Precos from "./pages/Precos";
 import Organizadores from "./pages/Organizadores";
 import ExplorarOrganizadores from "./pages/ExplorarOrganizadores";
 import EventosSalvos from "./pages/EventosSalvos";
+import PorPerto from "./pages/PorPerto";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -104,6 +105,7 @@ function AnimatedRoutes() {
           <Route path="/precos" element={<Precos />} />
           <Route path="/organizadores" element={<Organizadores />} />
           <Route path="/explorar-organizadores" element={<ExplorarOrganizadores />} />
+          <Route path="/por-perto" element={<PorPerto />} />
           
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}
