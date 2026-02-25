@@ -12,7 +12,7 @@ const FROM_EMAIL = "UPPLIN <onboarding@resend.dev>";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://upplin.lovable.app";
 
 interface EmailRequest {
-  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer" | "pix_pending" | "collaborator_invite";
+  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer" | "pix_pending" | "pix_confirmed" | "collaborator_invite";
   to: string;
   data: {
     userName?: string;
@@ -413,6 +413,70 @@ const emailTemplates = {
             
             <p style="color: #64748b; font-size: 14px; text-align: center; margin-top: 16px;">
               Valor: <strong>${data.totalAmount}</strong> · Pedido #${data.orderId?.slice(0, 8).toUpperCase() || ""}
+            </p>
+          </div>
+          <div class="footer">
+            <p><strong>UPPLIN</strong> — A melhor experiência em eventos</p>
+            <p>Este é um email automático, por favor não responda.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
+  pix_confirmed: (data: EmailRequest["data"]) => ({
+    subject: `✅ PIX confirmado - ${data.eventTitle}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #10b981, #059669); padding: 40px 30px; text-align: center; }
+          .content { padding: 30px; }
+          .event-card { background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #10b981; }
+          .event-title { font-size: 20px; font-weight: bold; color: #1e293b; margin-bottom: 10px; }
+          .event-detail { color: #64748b; margin: 5px 0; }
+          .ticket-info { background: #ecfdf5; border-radius: 8px; padding: 15px; margin: 15px 0; border: 1px solid #a7f3d0; }
+          .total { font-size: 24px; font-weight: bold; color: #059669; text-align: center; margin: 20px 0; }
+          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px 0; }
+          .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -1px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">UPPLIN</div>
+            <h1 style="color: white; margin-top: 12px;">✅ PIX Confirmado!</h1>
+          </div>
+          <div class="content">
+            <p>Olá <strong>${data.userName || "Cliente"}</strong>,</p>
+            <p>Seu pagamento via PIX foi confirmado com sucesso! Seus ingressos já estão disponíveis.</p>
+            
+            <div class="event-card">
+              <div class="event-title">${data.eventTitle}</div>
+              ${data.eventDate ? `<div class="event-detail">📅 ${data.eventDate}</div>` : ""}
+              ${data.eventVenue ? `<div class="event-detail">📍 ${data.eventVenue}</div>` : ""}
+            </div>
+            
+            <div class="ticket-info">
+              ${data.ticketType ? `<strong>Ingresso:</strong> ${data.ticketType}<br>` : ""}
+              ${data.ticketQuantity ? `<strong>Quantidade:</strong> ${data.ticketQuantity}x` : ""}
+            </div>
+            
+            <div class="total">Total: ${data.totalAmount}</div>
+            
+            <p style="text-align: center;">
+              <a href="${SITE_URL}/meus-ingressos" class="btn">Ver Meus Ingressos</a>
+            </p>
+            
+            <p style="color: #64748b; font-size: 14px; text-align: center;">
+              Pedido: #${data.orderId?.slice(0, 8).toUpperCase() || ""}
             </p>
           </div>
           <div class="footer">
