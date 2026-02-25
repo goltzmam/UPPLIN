@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Plus, Ticket, Gift } from "lucide-react";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Plus, Ticket, Gift, ChevronLeft } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -258,6 +258,21 @@ const FeedRow = React.memo(function FeedRow({
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-black/10 pointer-events-none z-[2]" />
         </div>
+
+        {/* Swipe hint - only on first card */}
+        {index === 0 && item.organizerId && (
+          <motion.div
+            initial={{ opacity: 0, x: 0 }}
+            animate={{ opacity: [0, 0.9, 0.9, 0], x: [0, -24, -24, -40] }}
+            transition={{ duration: 2.5, delay: 1.5, ease: "easeInOut" }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-[15] pointer-events-none flex items-center gap-1"
+          >
+            <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+              <ChevronLeft className="h-4 w-4 text-white" />
+              <span className="text-white text-xs font-medium whitespace-nowrap">Ver organizador</span>
+            </div>
+          </motion.div>
+        )}
 
         {/* Double tap heart animation */}
         <AnimatePresence>
