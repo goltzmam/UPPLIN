@@ -583,30 +583,39 @@ export type Database = {
       orders: {
         Row: {
           buyer_user_id: string
+          commission_cents: number | null
           created_at: string | null
           event_id: string
           expires_at: string | null
           id: string
+          mp_payment_id: string | null
+          mp_preference_id: string | null
           status: Database["public"]["Enums"]["order_status"] | null
           total_cents: number
           updated_at: string | null
         }
         Insert: {
           buyer_user_id: string
+          commission_cents?: number | null
           created_at?: string | null
           event_id: string
           expires_at?: string | null
           id?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           total_cents?: number
           updated_at?: string | null
         }
         Update: {
           buyer_user_id?: string
+          commission_cents?: number | null
           created_at?: string | null
           event_id?: string
           expires_at?: string | null
           id?: string
+          mp_payment_id?: string | null
+          mp_preference_id?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           total_cents?: number
           updated_at?: string | null
@@ -626,6 +635,7 @@ export type Database = {
           cep: string | null
           city: string | null
           cnpj: string | null
+          commission_percent: number
           complement: string | null
           cpf: string | null
           created_at: string | null
@@ -651,6 +661,7 @@ export type Database = {
           cep?: string | null
           city?: string | null
           cnpj?: string | null
+          commission_percent?: number
           complement?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -676,6 +687,7 @@ export type Database = {
           cep?: string | null
           city?: string | null
           cnpj?: string | null
+          commission_percent?: number
           complement?: string | null
           cpf?: string | null
           created_at?: string | null
@@ -698,6 +710,50 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      organizer_mp_accounts: {
+        Row: {
+          connected_at: string
+          id: string
+          mp_access_token: string
+          mp_email: string | null
+          mp_public_key: string | null
+          mp_refresh_token: string | null
+          mp_user_id: string
+          organizer_id: string
+          updated_at: string
+        }
+        Insert: {
+          connected_at?: string
+          id?: string
+          mp_access_token: string
+          mp_email?: string | null
+          mp_public_key?: string | null
+          mp_refresh_token?: string | null
+          mp_user_id: string
+          organizer_id: string
+          updated_at?: string
+        }
+        Update: {
+          connected_at?: string
+          id?: string
+          mp_access_token?: string
+          mp_email?: string | null
+          mp_public_key?: string | null
+          mp_refresh_token?: string | null
+          mp_user_id?: string
+          organizer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizer_mp_accounts_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: true
+            referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {

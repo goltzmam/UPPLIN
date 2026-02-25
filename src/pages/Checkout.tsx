@@ -1,6 +1,6 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CreditCard, Clock, ShieldCheck, Loader2, Tag, Check, X } from "lucide-react";
+import { CreditCard, Clock, ShieldCheck, Loader2, Tag, Check, X, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -12,12 +12,24 @@ import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { useAuth } from "@/lib/auth";
 import { triggerFeedback } from "@/lib/feedback";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Checkout() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
   const [processing, setProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+
+  // Check for MP redirect status
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status === "rejected") {
+      setPaymentError("Pagamento recusado. Tente novamente.");
+    }
+  }, [searchParams]);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
     id: string;
@@ -139,17 +151,27 @@ export default function Checkout() {
 
   const handlePayment = async () => {
     setProcessing(true);
+    setPaymentError(null);
 
-    // In production, this would call an edge function to create a payment intent
-    // For now, we simulate a successful payment
     try {
-      // Simulate payment processing
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      
-      // For now, navigate back to tickets
-      navigate("/meus-ingressos");
+      // Call edge function to create Mercado Pago preference with split
+      const { data, error } = await supabase.functions.invoke("mp-create-preference", {
+        body: { order_id: orderId },
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data?.init_point) throw new Error(data?.error || "Erro ao criar pagamento");
+
+      // Redirect to Mercado Pago checkout
+      window.location.href = data.init_point;
     } catch (err: any) {
       console.error("Erro no pagamento:", err.message);
+      setPaymentError(err.message || "Erro ao processar pagamento");
+      toast({
+        title: "Erro no pagamento",
+        description: err.message,
+        variant: "destructive",
+      });
     } finally {
       setProcessing(false);
     }
@@ -327,9 +349,16 @@ export default function Checkout() {
                       {processing ? "Processando..." : "Pagar Agora"}
                     </Button>
 
+                    {paymentError && (
+                      <div className="flex items-center gap-2 text-xs sm:text-sm text-destructive bg-destructive/10 p-3 rounded-xl">
+                        <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
+                        <span>{paymentError}</span>
+                      </div>
+                    )}
+
                     <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground justify-center">
                       <ShieldCheck className="h-3 w-3 sm:h-4 sm:w-4" />
-                      <span>Pagamento 100% seguro</span>
+                      <span>Pagamento 100% seguro via Mercado Pago</span>
                     </div>
                   </div>
                 </div>

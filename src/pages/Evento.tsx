@@ -165,36 +165,22 @@ export default function Evento() {
     setCheckingOut(true);
 
     try {
-      const { data: order, error: orderError } = await supabase
-        .from("orders")
-        .insert({
-          buyer_user_id: user.id,
-          event_id: event!.id,
-          total_cents: totalCents,
-          status: "pending",
-          expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-        })
-        .select()
-        .single();
-
-      if (orderError) throw orderError;
-
+      // Use edge function to create order (validates stock, reserves tickets)
       const items = Object.entries(selection)
         .filter(([, qty]) => qty > 0)
-        .map(([ticketTypeId, qty]) => {
-          const tt = event!.ticket_types!.find((t: any) => t.id === ticketTypeId);
-          return {
-            order_id: order.id,
-            ticket_type_id: ticketTypeId,
-            unit_price_cents: tt?.price_cents || 0,
-            qty,
-          };
-        });
+        .map(([ticketTypeId, qty]) => ({
+          ticket_type_id: ticketTypeId,
+          qty,
+        }));
 
-      const { error: itemsError } = await supabase.from("order_items").insert(items);
-      if (itemsError) throw itemsError;
+      const { data, error } = await supabase.functions.invoke("create-order", {
+        body: { event_id: event!.id, items },
+      });
 
-      navigate(`/checkout/${order.id}`);
+      if (error) throw new Error(error.message);
+      if (!data?.order_id) throw new Error(data?.error || "Erro ao criar pedido");
+
+      navigate(`/checkout/${data.order_id}`);
     } catch (err: any) {
       console.error("Erro ao criar pedido:", err.message);
     } finally {
