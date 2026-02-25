@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, Settings, Bell, Check } from "lucide-react";
+import { Camera, Settings, Bell, Check, CalendarPlus, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRoles } from "@/hooks/use-user-roles";
 import { cn } from "@/lib/utils";
 
 interface Profile {
@@ -26,6 +28,8 @@ interface ProfileHeaderProps {
 
 export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeaderProps) {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const { isOrganizer, isLoading: rolesLoading } = useUserRoles();
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
@@ -179,6 +183,42 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
               <div className="text-[11px] sm:text-xs text-muted-foreground">Salvos</div>
             </div>
           </div>
+
+          {/* Organizer CTA - only for non-organizers */}
+          {!rolesLoading && !isOrganizer && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              onClick={() => navigate("/organizador/cadastro")}
+              className="mt-4 w-full max-w-sm flex items-center gap-3 p-3 rounded-2xl border border-border/50 bg-muted/30 hover:bg-muted/60 transition-all group"
+            >
+              <div 
+                className="h-10 w-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ background: "linear-gradient(135deg, #FF6A00, #FF007A)" }}
+              >
+                <CalendarPlus className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 text-left min-w-0">
+                <p className="text-sm font-semibold text-foreground">Quero ser organizador</p>
+                <p className="text-xs text-muted-foreground">Crie e promova seus eventos</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform shrink-0" />
+            </motion.button>
+          )}
+
+          {/* Organizer Dashboard Link */}
+          {!rolesLoading && isOrganizer && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={() => navigate("/organizador/painel")}
+            >
+              <CalendarPlus className="h-4 w-4 mr-2" />
+              Painel do organizador
+            </Button>
+          )}
         </div>
       </div>
     </motion.div>
