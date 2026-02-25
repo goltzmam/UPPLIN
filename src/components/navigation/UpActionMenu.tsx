@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Video, CalendarPlus, MapPin, X, Sparkles, Image, Upload, Loader2 } from "lucide-react";
+import { Camera, MapPin, X, Users, Compass, Loader2, Upload, Video, Image, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
-import { useUserRoles } from "@/hooks/use-user-roles";
 import { triggerHaptic } from "@/hooks/use-haptic";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 interface UpActionMenuProps {
   isOpen: boolean;
@@ -20,21 +20,20 @@ interface UpActionMenuProps {
 export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { isOrganizer, isLoading: rolesLoading } = useUserRoles();
+  const { toast } = useToast();
   const [showPostDialog, setShowPostDialog] = useState(false);
-  const [showCheckInDialog, setShowCheckInDialog] = useState(false);
   const [postContent, setPostContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
+  const [showEventPicker, setShowEventPicker] = useState(false);
 
-  // Fetch user's upcoming events for check-in
+  // Fetch user's upcoming events for tagging
   const { data: userEvents } = useQuery({
-    queryKey: ["user-events-for-checkin", user?.id],
+    queryKey: ["user-events-for-tagging", user?.id],
     queryFn: async () => {
       if (!user) return [];
       
-      // Get events the user has tickets to
       const { data, error } = await supabase
         .from("tickets")
         .select(`
@@ -51,15 +50,14 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
       
       if (error) throw error;
       
-      // Filter for events happening today or in the near future
       const now = new Date();
       return data
         ?.map(t => t.events)
         .filter((e): e is NonNullable<typeof e> => e !== null)
-        .filter(e => new Date(e.start_at) >= new Date(now.getTime() - 12 * 60 * 60 * 1000)) // within last 12h
+        .filter(e => new Date(e.start_at) >= new Date(now.getTime() - 24 * 60 * 60 * 1000))
         || [];
     },
-    enabled: !!user && showCheckInDialog,
+    enabled: !!user && showPostDialog,
   });
 
   const handleAction = (action: () => void) => {
@@ -76,7 +74,6 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
       let mediaUrl: string | null = null;
       let mediaType: string | null = null;
 
-      // Upload file if selected
       if (selectedFile) {
         const fileExt = selectedFile.name.split('.').pop();
         const fileName = `${user.id}/${Date.now()}.${fileExt}`;
@@ -96,7 +93,6 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
         mediaType = isVideo ? "video" : "image";
       }
 
-      // Create post
       const { error } = await supabase
         .from("user_posts")
         .insert({
@@ -104,122 +100,76 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
           content: postContent || null,
           media_url: mediaUrl,
           media_type: mediaType,
+          event_id: selectedEventId || null,
         });
 
       if (error) throw error;
 
+      toast({ title: "Momento compartilhado! 🎉" });
       setShowPostDialog(false);
       setPostContent("");
       setSelectedFile(null);
+      setSelectedEventId("");
       navigate("/perfil?tab=posts");
     } catch (error) {
       console.error("Error creating post:", error);
+      toast({ title: "Erro ao publicar", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCheckIn = async () => {
-    if (!user || !selectedEventId) return;
+  const handleShareApp = async () => {
+    const shareData = {
+      title: "UP - Descubra eventos incríveis",
+      text: "Vem descobrir os melhores rolês perto de você! 🎉",
+      url: window.location.origin,
+    };
 
-    setIsSubmitting(true);
-    try {
-      // Create a check-in post
-      const selectedEvent = userEvents?.find(e => e.id === selectedEventId);
-      
-      const { error } = await supabase
-        .from("user_posts")
-        .insert({
-          user_id: user.id,
-          event_id: selectedEventId,
-          content: `📍 Check-in no evento: ${selectedEvent?.title || 'Evento'}`,
-        });
-
-      if (error) throw error;
-
-      setShowCheckInDialog(false);
-      setSelectedEventId("");
-      navigate("/perfil?tab=checkins");
-    } catch (error) {
-      console.error("Error doing check-in:", error);
-    } finally {
-      setIsSubmitting(false);
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch {}
+    } else {
+      await navigator.clipboard.writeText(shareData.url);
+      toast({ title: "Link copiado!" });
     }
   };
 
-  // Define action type
-  type ActionItem = {
-    icon: typeof Video;
-    label: string;
-    description: string;
-    gradient: string;
-    onClick: () => void;
-    highlight?: boolean;
-  };
+  const selectedEvent = userEvents?.find(e => e.id === selectedEventId);
 
-  // Build actions based on user role - only show organizer features to organizers
-  const actions: ActionItem[] = [
+  const actions = [
     {
-      icon: Video,
-      label: "Postar vídeo do rolê",
-      description: "Compartilhe o momento",
+      icon: Camera,
+      label: "Compartilhar momento",
+      description: "Foto, vídeo ou check-in no evento",
       gradient: "from-[#FF6A00] to-[#FF2D2D]",
       onClick: () => {
-        if (!user) {
-          navigate("/login");
-        } else {
-          setShowPostDialog(true);
-        }
+        if (!user) { navigate("/login"); } 
+        else { setShowPostDialog(true); }
       },
     },
     {
-      icon: MapPin,
-      label: "Check-in",
-      description: "Estou aqui agora",
+      icon: Users,
+      label: "Convidar amigos",
+      description: "Compartilhe o app com a galera",
       gradient: "from-[#FF007A] to-[#FF6A00]",
-      onClick: () => {
-        if (!user) {
-          navigate("/login");
-        } else {
-          setShowCheckInDialog(true);
-        }
-      },
+      onClick: () => handleShareApp(),
+    },
+    {
+      icon: Compass,
+      label: "Eventos por perto",
+      description: "Descubra rolês na sua região",
+      gradient: "from-[#FF2D2D] to-[#FF007A]",
+      onClick: () => navigate("/por-perto"),
     },
   ];
-
-  // Only show organizer-related option if user is NOT already an organizer (for participant conversion)
-  // OR if they ARE an organizer (to go to dashboard)
-  if (!rolesLoading) {
-    if (isOrganizer) {
-      actions.push({
-        icon: CalendarPlus,
-        label: "Gerenciar eventos",
-        description: "Ir para o painel do organizador",
-        gradient: "from-[#FF2D2D] to-[#FF007A]",
-        onClick: () => {
-          navigate("/organizador/painel");
-        },
-      });
-    } else {
-      actions.push({
-        icon: CalendarPlus,
-        label: "Quero ser organizador",
-        description: "Crie e promova seus eventos",
-        gradient: "from-[#FF2D2D] to-[#FF007A]",
-        onClick: () => {
-          navigate("/organizador/cadastro");
-        },
-        highlight: true,
-      });
-    }
-  }
 
   return (
     <>
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -229,7 +179,6 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
             onClick={onClose}
           />
 
-          {/* Bottom Sheet */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
@@ -239,33 +188,24 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={0.2}
             onDragEnd={(_, info) => {
-              if (info.offset.y > 100) {
-                onClose();
-              }
+              if (info.offset.y > 100) onClose();
             }}
             className="fixed bottom-0 left-0 right-0 z-[70] bg-[#0a0a0a] rounded-t-3xl overflow-hidden"
-            style={{
-              boxShadow: "0 -10px 40px rgba(255, 45, 45, 0.2)",
-            }}
+            style={{ boxShadow: "0 -10px 40px rgba(255, 45, 45, 0.2)" }}
           >
-            {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-2">
               <div className="w-10 h-1 rounded-full bg-white/20" />
             </div>
 
-            {/* Header */}
             <div className="px-6 pb-4 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <h2 className="text-xl font-bold text-white">
                   <span 
                     className="bg-clip-text text-transparent"
-                    style={{
-                      backgroundImage: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
-                    }}
+                    style={{ backgroundImage: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)" }}
                   >
                     UP
                   </span>
-                  
                 </h2>
                 <p className="text-sm text-white/50">O que você quer fazer?</p>
               </div>
@@ -279,7 +219,6 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
               </Button>
             </div>
 
-            {/* Actions */}
             <div className="px-4 pb-8 space-y-3">
               {actions.map((action, index) => {
                 const Icon = action.icon;
@@ -292,64 +231,40 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                     onClick={() => handleAction(action.onClick)}
                     className="w-full flex items-center gap-4 p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all group relative overflow-hidden"
                   >
-                    {/* Icon with gradient background */}
                     <div 
                       className={`h-12 w-12 rounded-xl flex items-center justify-center bg-gradient-to-br ${action.gradient} shadow-lg`}
-                      style={{
-                        boxShadow: `0 4px 20px rgba(255, 45, 45, 0.3)`,
-                      }}
+                      style={{ boxShadow: "0 4px 20px rgba(255, 45, 45, 0.3)" }}
                     >
                       <Icon className="h-6 w-6 text-white" strokeWidth={2} />
                     </div>
-
-                    {/* Text */}
                     <div className="flex-1 text-left">
                       <p className="font-semibold text-white group-hover:text-white/90 transition-colors">
                         {action.label}
                       </p>
-                      <p className="text-sm text-white/40">
-                        {action.description}
-                      </p>
+                      <p className="text-sm text-white/40">{action.description}</p>
                     </div>
-
-                    {/* Highlight badge for "become organizer" */}
-                    {action.highlight && (
-                      <span 
-                        className="px-2 py-1 text-xs font-bold rounded-full text-white"
-                        style={{
-                          background: "linear-gradient(135deg, #FF6A00, #FF007A)",
-                        }}
-                      >
-                        PRO
-                      </span>
-                    )}
-
-                    {/* Hover glow effect */}
                     <motion.div
                       className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
-                      style={{
-                        background: `linear-gradient(90deg, transparent, rgba(255,106,0,0.05), transparent)`,
-                      }}
+                      style={{ background: "linear-gradient(90deg, transparent, rgba(255,106,0,0.05), transparent)" }}
                     />
                   </motion.button>
                 );
               })}
             </div>
 
-            {/* Safe area padding */}
             <div className="h-[env(safe-area-inset-bottom)]" />
           </motion.div>
         </>
       )}
     </AnimatePresence>
 
-    {/* Post Dialog */}
+    {/* Unified Post Dialog with Event Tagging */}
     <Dialog open={showPostDialog} onOpenChange={setShowPostDialog}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Compartilhar momento</DialogTitle>
           <DialogDescription>
-            Poste uma foto ou vídeo do seu rolê
+            Poste uma foto ou vídeo e marque o evento que você está curtindo
           </DialogDescription>
         </DialogHeader>
         
@@ -366,11 +281,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                   )}
                 </div>
                 <p className="text-sm font-medium truncate">{selectedFile.name}</p>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setSelectedFile(null)}
-                >
+                <Button variant="ghost" size="sm" onClick={() => setSelectedFile(null)}>
                   Remover
                 </Button>
               </div>
@@ -383,9 +294,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      if (file.size > 50 * 1024 * 1024) {
-                        return;
-                      }
+                      if (file.size > 50 * 1024 * 1024) return;
                       setSelectedFile(file);
                     }
                   }}
@@ -396,6 +305,83 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                 </p>
               </label>
             )}
+          </div>
+
+          {/* Event Tag Picker */}
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowEventPicker(!showEventPicker)}
+              className={cn(
+                "w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left",
+                selectedEventId 
+                  ? "border-primary bg-primary/5" 
+                  : "border-border hover:border-muted-foreground/50"
+              )}
+            >
+              <MapPin className={cn("h-5 w-5 shrink-0", selectedEventId ? "text-primary" : "text-muted-foreground")} />
+              <div className="flex-1 min-w-0">
+                {selectedEvent ? (
+                  <>
+                    <p className="text-sm font-medium truncate">{selectedEvent.title}</p>
+                    {selectedEvent.venue_name && (
+                      <p className="text-xs text-muted-foreground truncate">{selectedEvent.venue_name}</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Marcar evento (check-in)</p>
+                )}
+              </div>
+              <ChevronDown className={cn(
+                "h-4 w-4 text-muted-foreground transition-transform",
+                showEventPicker && "rotate-180"
+              )} />
+            </button>
+
+            <AnimatePresence>
+              {showEventPicker && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="mt-2 space-y-1.5 max-h-40 overflow-y-auto">
+                    {selectedEventId && (
+                      <button
+                        onClick={() => { setSelectedEventId(""); setShowEventPicker(false); }}
+                        className="w-full p-2.5 rounded-lg text-left text-sm text-muted-foreground hover:bg-muted/50 transition-colors"
+                      >
+                        Remover marcação
+                      </button>
+                    )}
+                    {userEvents && userEvents.length > 0 ? (
+                      userEvents.map((event) => (
+                        <button
+                          key={event.id}
+                          onClick={() => { setSelectedEventId(event.id); setShowEventPicker(false); }}
+                          className={cn(
+                            "w-full p-2.5 rounded-lg text-left transition-all",
+                            selectedEventId === event.id
+                              ? "bg-primary/10 border border-primary"
+                              : "hover:bg-muted/50"
+                          )}
+                        >
+                          <p className="text-sm font-medium truncate">{event.title}</p>
+                          {event.venue_name && (
+                            <p className="text-xs text-muted-foreground truncate">{event.venue_name}</p>
+                          )}
+                        </button>
+                      ))
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-3">
+                        Nenhum evento disponível para marcar
+                      </p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Text content */}
@@ -418,82 +404,12 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                 Publicando...
               </>
             ) : (
-              "Publicar"
+              <>
+                <Camera className="h-4 w-4 mr-2" />
+                {selectedEventId ? "Publicar com check-in" : "Publicar"}
+              </>
             )}
           </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-
-    {/* Check-in Dialog */}
-    <Dialog open={showCheckInDialog} onOpenChange={setShowCheckInDialog}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>📍 Fazer Check-in</DialogTitle>
-          <DialogDescription>
-            Mostre que você está em um evento agora
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="space-y-4">
-          {userEvents && userEvents.length > 0 ? (
-            <>
-              <div className="space-y-2">
-                {userEvents.map((event) => (
-                  <button
-                    key={event.id}
-                    onClick={() => setSelectedEventId(event.id)}
-                    className={cn(
-                      "w-full p-4 rounded-xl border-2 text-left transition-all",
-                      selectedEventId === event.id 
-                        ? "border-primary bg-primary/10" 
-                        : "border-muted hover:border-muted-foreground/50"
-                    )}
-                  >
-                    <p className="font-semibold">{event.title}</p>
-                    {event.venue_name && (
-                      <p className="text-sm text-muted-foreground">{event.venue_name}</p>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <Button
-                className="w-full"
-                onClick={handleCheckIn}
-                disabled={isSubmitting || !selectedEventId}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Fazendo check-in...
-                  </>
-                ) : (
-                  <>
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Confirmar Check-in
-                  </>
-                )}
-              </Button>
-            </>
-          ) : (
-            <div className="text-center py-8">
-              <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">
-                Você não tem ingressos para eventos no momento.
-              </p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => {
-                  setShowCheckInDialog(false);
-                  navigate("/eventos");
-                }}
-              >
-                Explorar eventos
-              </Button>
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
