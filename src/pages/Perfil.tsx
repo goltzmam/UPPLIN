@@ -55,12 +55,12 @@ export default function Perfil() {
   if (!user || !profile) return null;
 
   return (
-    <div className="min-h-screen flex bg-background text-foreground overflow-x-hidden">
+    <div className="min-h-screen flex flex-col bg-background text-foreground overflow-x-hidden overflow-y-auto">
       {/* Desktop Sidebar */}
       <TikTokDesktopSidebar />
 
       {/* Main Content */}
-      <main className="flex-1 pb-20 md:pb-0 lg:ml-[72px] w-full overflow-x-hidden">
+      <main className="flex-1 pb-20 md:pb-0 lg:ml-[72px] w-full overflow-x-hidden overflow-y-auto">
         <div className="max-w-2xl mx-auto px-2 sm:px-4">
           <ProfileHeader
             profile={profile}
