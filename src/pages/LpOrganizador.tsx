@@ -168,8 +168,22 @@ export default function LpOrganizador() {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
-      {/* ── NAVBAR ── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
+      {/* ── URGENCY BANNER ── */}
+      <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#FF6A00] via-[#FF2D2D] to-[#FF007A] text-white text-center py-2 px-4">
+        <p className="text-xs sm:text-sm font-medium flex items-center justify-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+            </span>
+            <strong>127+ organizadores</strong> já estão vendendo na UPPLIN
+          </span>
+          <span className="hidden sm:inline">•</span>
+          <span>Comece grátis agora — vagas limitadas para o plano beta!</span>
+        </p>
+      </div>
+
+      <nav className="fixed top-[36px] sm:top-[36px] left-0 right-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 h-16">
           <span className="text-xl font-extrabold tracking-tight bg-gradient-to-r from-[#FF6A00] via-[#FF2D2D] to-[#FF007A] bg-clip-text text-transparent">
             UPPLIN
@@ -186,7 +200,7 @@ export default function LpOrganizador() {
       </nav>
 
       {/* ── HERO ── */}
-      <section className="relative pt-32 pb-20 sm:pt-40 sm:pb-28 px-4 overflow-hidden">
+      <section className="relative pt-40 pb-20 sm:pt-48 sm:pb-28 px-4 overflow-hidden">
         {/* Background orbs */}
         <div className="absolute top-20 left-1/4 w-[500px] h-[500px] bg-[#FF6A00]/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-[#FF007A]/10 rounded-full blur-[120px] pointer-events-none" />
