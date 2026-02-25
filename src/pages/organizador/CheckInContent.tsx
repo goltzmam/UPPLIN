@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { QrCode, CheckCircle, XCircle, Search, Ticket, User, Calendar, Keyboard } from "lucide-react";
+import { QrCode, CheckCircle, XCircle, Search, Ticket, User, Calendar, Keyboard, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,10 @@ import { QRScanner } from "@/components/checkin/QRScanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { triggerFeedback } from "@/lib/feedback";
+import { useAuth } from "@/lib/auth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import confetti from "canvas-confetti";
+import { CollaboratorManager } from "@/components/checkin/CollaboratorManager";
 
 interface CheckInResult {
   success: boolean;
@@ -33,6 +35,7 @@ interface CheckInResult {
 
 export default function CheckInContent() {
   const { organizer } = useOutletContext<{ organizer: any }>();
+  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedEvent, setSelectedEvent] = useState<string>("");
@@ -99,7 +102,7 @@ export default function CheckInContent() {
 
       const { error: updateError } = await supabase
         .from("tickets")
-        .update({ status: "used", used_at: new Date().toISOString() })
+        .update({ status: "used", used_at: new Date().toISOString(), checked_in_by: user?.id || null })
         .eq("id", ticketId);
 
       if (updateError) throw updateError;
@@ -422,6 +425,12 @@ export default function CheckInContent() {
               </div>
             </CardContent>
           </Card>
+          {/* Collaborator Manager */}
+          <CollaboratorManager
+            organizerId={organizer.id}
+            events={events.map((e) => ({ id: e.id, title: e.title }))}
+            selectedEventId={selectedEvent}
+          />
         </>
       )}
     </div>

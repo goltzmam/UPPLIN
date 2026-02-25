@@ -59,6 +59,7 @@ import EventosSalvos from "./pages/EventosSalvos";
 import PorPerto from "./pages/PorPerto";
 import PagamentoSucesso from "./pages/PagamentoSucesso";
 import PagamentoPendente from "./pages/PagamentoPendente";
+import CollaboratorScanner from "./pages/CollaboratorScanner";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -129,6 +130,7 @@ function AnimatedRoutes() {
           <Route path="/pagamento-sucesso" element={<ProtectedRoute><PagamentoSucesso /></ProtectedRoute>} />
           <Route path="/pagamento-pendente/:orderId" element={<ProtectedRoute><PagamentoPendente /></ProtectedRoute>} />
           <Route path="/eventos-salvos" element={<ProtectedRoute><EventosSalvos /></ProtectedRoute>} />
+          <Route path="/scan/:eventId" element={<ProtectedRoute><CollaboratorScanner /></ProtectedRoute>} />
 
           {/* ============================================ */}
           {/* ORGANIZER AUTH ROUTES                        */}
