@@ -283,7 +283,7 @@ export default function EventoForm() {
 
       queryClient.invalidateQueries({ queryKey: ["organizer-events"] });
       toast({ title: isEditing ? "Evento atualizado!" : "Evento criado!" });
-      navigate("/organizador");
+      navigate("/organizador/painel/eventos");
     } catch (err: any) {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     } finally {
