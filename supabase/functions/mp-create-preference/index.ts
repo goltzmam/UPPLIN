@@ -75,7 +75,12 @@ serve(async (req) => {
     }
 
     const organizer = order.events?.organizer_accounts;
-    const commissionPercent = organizer?.commission_percent ?? 10;
+
+    // Get commission from subscription plan (uses DB function)
+    const { data: commissionResult } = await adminClient.rpc("get_organizer_commission", {
+      p_organizer_id: organizer?.id,
+    });
+    const commissionPercent = commissionResult ?? organizer?.commission_percent ?? 10;
 
     // Fetch organizer's Mercado Pago account
     const { data: mpAccount } = await adminClient
@@ -114,7 +119,7 @@ serve(async (req) => {
       },
       marketplace_fee: commissionCents / 100, // MP expects in reais
       back_urls: {
-        success: `${req.headers.get("origin") || "https://upplin.lovable.app"}/meus-ingressos?status=approved`,
+        success: `${req.headers.get("origin") || "https://upplin.lovable.app"}/pagamento-sucesso?status=approved`,
         failure: `${req.headers.get("origin") || "https://upplin.lovable.app"}/checkout/${order_id}?status=rejected`,
         pending: `${req.headers.get("origin") || "https://upplin.lovable.app"}/checkout/${order_id}?status=pending`,
       },
