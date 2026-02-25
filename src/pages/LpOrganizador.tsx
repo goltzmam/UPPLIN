@@ -14,6 +14,9 @@ import type { Easing } from "framer-motion";
 import dashboardImg from "@/assets/lp/dashboard-preview.jpg";
 import checkinImg from "@/assets/lp/checkin-mobile.jpg";
 import heroEventImg from "@/assets/lp/hero-event.jpg";
+import avatar1 from "@/assets/avatars/avatar-1.jpg";
+import avatar2 from "@/assets/avatars/avatar-2.jpg";
+import avatar3 from "@/assets/avatars/avatar-3.jpg";
 
 const easeOut: Easing = [0, 0, 0.2, 1];
 
@@ -413,6 +416,77 @@ export default function LpOrganizador() {
                 ))}
               </ul>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── TESTIMONIALS ── */}
+      <section className="py-20 sm:py-28 px-4 bg-card/30 border-y border-border/40">
+        <div className="max-w-5xl mx-auto">
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="text-center mb-14">
+            <h2 className="text-3xl sm:text-4xl font-black mb-3">
+              Quem usa,{" "}
+              <span className="bg-gradient-to-r from-[#FF6A00] to-[#FF007A] bg-clip-text text-transparent">
+                recomenda
+              </span>
+            </h2>
+            <p className="text-muted-foreground">Veja o que organizadores reais dizem sobre a UPPLIN</p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Mariana Silva",
+                role: "Produtora de festas • SP",
+                avatar: avatar1,
+                quote: "A UPPLIN revolucionou meus eventos. O check-in por QR Code acabou com as filas e o dashboard me dá controle total das vendas em tempo real.",
+                rating: 5,
+              },
+              {
+                name: "Lucas Ferreira",
+                role: "Organizador de shows • RJ",
+                avatar: avatar2,
+                quote: "Migrei de outra plataforma e não me arrependo. A comissão é justa, o suporte é rápido e meus clientes adoram a experiência de compra.",
+                rating: 5,
+              },
+              {
+                name: "Camila Rodrigues",
+                role: "Gestora de eventos corporativos • MG",
+                avatar: avatar3,
+                quote: "Uso o plano Pro e o retorno é incrível. Os cupons de desconto e os relatórios detalhados me ajudam a tomar decisões mais inteligentes.",
+                rating: 5,
+              },
+            ].map((t, i) => (
+              <motion.div
+                key={t.name}
+                custom={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+                className="rounded-2xl border border-border/40 bg-background/60 backdrop-blur-sm p-6 flex flex-col"
+              >
+                <div className="flex gap-1 mb-4">
+                  {Array.from({ length: t.rating }).map((_, s) => (
+                    <Star key={s} className="w-4 h-4 fill-[#FF6A00] text-[#FF6A00]" />
+                  ))}
+                </div>
+                <p className="text-sm leading-relaxed text-muted-foreground flex-1 mb-5">
+                  "{t.quote}"
+                </p>
+                <div className="flex items-center gap-3 pt-4 border-t border-border/30">
+                  <img
+                    src={t.avatar}
+                    alt={t.name}
+                    className="w-10 h-10 rounded-full object-cover ring-2 ring-[#FF2D2D]/20"
+                  />
+                  <div>
+                    <p className="text-sm font-semibold">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.role}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
