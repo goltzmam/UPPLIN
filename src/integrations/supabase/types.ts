@@ -47,6 +47,54 @@ export type Database = {
         }
         Relationships: []
       }
+      checkin_collaborators: {
+        Row: {
+          created_at: string
+          display_name: string
+          event_id: string | null
+          id: string
+          organizer_id: string
+          revoked_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string
+          event_id?: string | null
+          id?: string
+          organizer_id: string
+          revoked_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          event_id?: string | null
+          id?: string
+          organizer_id?: string
+          revoked_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_collaborators_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_collaborators_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           created_at: string
@@ -1147,6 +1195,7 @@ export type Database = {
       tickets: {
         Row: {
           buyer_user_id: string
+          checked_in_by: string | null
           event_id: string
           id: string
           issued_at: string | null
@@ -1158,6 +1207,7 @@ export type Database = {
         }
         Insert: {
           buyer_user_id: string
+          checked_in_by?: string | null
           event_id: string
           id?: string
           issued_at?: string | null
@@ -1169,6 +1219,7 @@ export type Database = {
         }
         Update: {
           buyer_user_id?: string
+          checked_in_by?: string | null
           event_id?: string
           id?: string
           issued_at?: string | null
