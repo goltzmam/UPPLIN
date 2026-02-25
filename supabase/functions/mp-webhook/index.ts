@@ -32,6 +32,17 @@ serve(async (req) => {
       status: "received",
     });
 
+    // Handle subscription (preapproval) notifications
+    if (type === "subscription_preapproval" || action === "updated") {
+      if (data?.id) {
+        await handleSubscriptionWebhook(adminClient, data.id);
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // We only care about payment notifications
     if (type !== "payment" && action !== "payment.updated") {
       return new Response(JSON.stringify({ ok: true }), {
@@ -263,3 +274,106 @@ serve(async (req) => {
     });
   }
 });
+
+async function handleSubscriptionWebhook(adminClient: any, preapprovalId: string) {
+  try {
+    const mpAccessToken = Deno.env.get("MP_ACCESS_TOKEN")!;
+    const resp = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
+      headers: { Authorization: `Bearer ${mpAccessToken}` },
+    });
+
+    if (!resp.ok) {
+      console.error("Failed to fetch preapproval:", resp.status);
+      return;
+    }
+
+    const preapproval = await resp.json();
+    console.log("Preapproval details:", JSON.stringify({
+      id: preapproval.id,
+      status: preapproval.status,
+      external_reference: preapproval.external_reference,
+    }));
+
+    const externalRef = preapproval.external_reference;
+    if (!externalRef?.startsWith("sub_")) return;
+
+    // Parse: sub_{organizer_id}_{plan_id}
+    const parts = externalRef.split("_");
+    const organizerId = parts.slice(1, -1).join("_");
+    const planId = parts[parts.length - 1];
+
+    if (preapproval.status === "authorized") {
+      // Subscription approved - activate
+      const nextPeriodEnd = new Date();
+      nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+
+      await adminClient
+        .from("organizer_subscriptions")
+        .upsert({
+          organizer_id: organizerId,
+          plan_id: planId,
+          status: "active",
+          current_period_start: new Date().toISOString(),
+          current_period_end: nextPeriodEnd.toISOString(),
+          mp_subscription_id: preapprovalId,
+        }, { onConflict: "organizer_id" });
+
+      // Notify organizer
+      const { data: org } = await adminClient
+        .from("organizer_accounts")
+        .select("owner_user_id, display_name")
+        .eq("id", organizerId)
+        .single();
+
+      if (org) {
+        const { data: plan } = await adminClient
+          .from("subscription_plans")
+          .select("name")
+          .eq("id", planId)
+          .single();
+
+        await adminClient.from("notifications").insert({
+          user_id: org.owner_user_id,
+          title: "✅ Assinatura ativada!",
+          body: `Seu plano ${plan?.name || planId} foi ativado com sucesso. Aproveite os benefícios!`,
+          type: "subscription_activated",
+          data: { organizer_id: organizerId, plan_id: planId },
+        });
+      }
+
+      console.log(`Subscription activated: organizer=${organizerId}, plan=${planId}`);
+    } else if (preapproval.status === "cancelled" || preapproval.status === "paused") {
+      // Downgrade to free
+      await adminClient
+        .from("organizer_subscriptions")
+        .upsert({
+          organizer_id: organizerId,
+          plan_id: "free",
+          status: "active",
+          current_period_start: new Date().toISOString(),
+          current_period_end: null,
+          mp_subscription_id: null,
+        }, { onConflict: "organizer_id" });
+
+      const { data: org } = await adminClient
+        .from("organizer_accounts")
+        .select("owner_user_id")
+        .eq("id", organizerId)
+        .single();
+
+      if (org) {
+        await adminClient.from("notifications").insert({
+          user_id: org.owner_user_id,
+          title: "📋 Assinatura cancelada",
+          body: "Sua assinatura foi cancelada. Você foi migrado para o plano Free.",
+          type: "subscription_cancelled",
+          data: { organizer_id: organizerId },
+        });
+      }
+
+      console.log(`Subscription cancelled, downgraded to free: organizer=${organizerId}`);
+    }
+  } catch (err) {
+    console.error("Error handling subscription webhook:", err);
+  }
+}
