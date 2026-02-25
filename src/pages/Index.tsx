@@ -254,7 +254,7 @@ export default function Index() {
         {/* Following feed - always rendered, visibility controlled by CSS */}
         <div 
           className={cn(
-            "absolute inset-0 h-full bg-background overflow-y-auto transition-opacity duration-150",
+            "absolute inset-0 h-full bg-background overflow-y-auto scrollbar-hide transition-opacity duration-150",
             activeTab === "following" ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
           )}
         >
