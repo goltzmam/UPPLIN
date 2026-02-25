@@ -350,17 +350,42 @@ async function handleSubscriptionWebhook(adminClient: any, preapprovalId: string
       // Subscription approved - activate
       const nextPeriodEnd = new Date();
       nextPeriodEnd.setMonth(nextPeriodEnd.getMonth() + 1);
+      const periodStart = new Date();
 
-      await adminClient
+      const { data: subUpsert } = await adminClient
         .from("organizer_subscriptions")
         .upsert({
           organizer_id: organizerId,
           plan_id: planId,
           status: "active",
-          current_period_start: new Date().toISOString(),
+          current_period_start: periodStart.toISOString(),
           current_period_end: nextPeriodEnd.toISOString(),
           mp_subscription_id: preapprovalId,
-        }, { onConflict: "organizer_id" });
+        }, { onConflict: "organizer_id" })
+        .select("id")
+        .single();
+
+      // Fetch plan to get price
+      const { data: plan } = await adminClient
+        .from("subscription_plans")
+        .select("name, price_cents")
+        .eq("id", planId)
+        .single();
+
+      // Record subscription invoice
+      if (subUpsert) {
+        await adminClient.from("subscription_invoices").insert({
+          organizer_id: organizerId,
+          subscription_id: subUpsert.id,
+          plan_id: planId,
+          amount_cents: plan?.price_cents || 0,
+          status: "paid",
+          paid_at: new Date().toISOString(),
+          period_start: periodStart.toISOString(),
+          period_end: nextPeriodEnd.toISOString(),
+          mp_payment_id: preapprovalId,
+        });
+      }
 
       // Notify organizer
       const { data: org } = await adminClient
@@ -370,12 +395,6 @@ async function handleSubscriptionWebhook(adminClient: any, preapprovalId: string
         .single();
 
       if (org) {
-        const { data: plan } = await adminClient
-          .from("subscription_plans")
-          .select("name")
-          .eq("id", planId)
-          .single();
-
         await adminClient.from("notifications").insert({
           user_id: org.owner_user_id,
           title: "✅ Assinatura ativada!",

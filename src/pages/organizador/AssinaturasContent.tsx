@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Crown, Check, Loader2, Zap, Sparkles, ArrowRight, AlertTriangle, MessageCircle, Phone, Receipt, Calendar, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { Crown, Check, Loader2, Zap, Sparkles, ArrowRight, AlertTriangle, MessageCircle, Phone, Receipt, Calendar, CheckCircle2, Clock, XCircle, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +37,7 @@ export default function AssinaturasContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [subscribingPlan, setSubscribingPlan] = useState<string | null>(null);
-
+  const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
   const { data: plans, isLoading: loadingPlans } = useQuery({
     queryKey: ["subscription-plans"],
     queryFn: async () => {
@@ -126,6 +126,29 @@ export default function AssinaturasContent() {
   const currentPlanId = currentSub?.plan_id;
   const isActive = currentSub?.status === "active";
   const hasPaidPlan = isActive && currentPlanId && currentPlanId !== "free";
+
+  const handleDownloadReceipt = useCallback(async (invoiceId: string) => {
+    setDownloadingInvoice(invoiceId);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-receipt", {
+        body: { invoiceId },
+      });
+      if (error) throw error;
+
+      // Open HTML in a new window for print/save as PDF
+      const win = window.open("", "_blank");
+      if (win) {
+        win.document.write(data.html);
+        win.document.close();
+        // Auto-trigger print dialog for PDF save
+        setTimeout(() => win.print(), 500);
+      }
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message || "Não foi possível gerar o recibo", variant: "destructive" });
+    } finally {
+      setDownloadingInvoice(null);
+    }
+  }, [toast]);
 
   if (loadingPlans || loadingSub) {
     return (
@@ -294,6 +317,7 @@ export default function AssinaturasContent() {
                   <TableHead>Valor</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="hidden sm:table-cell">Data</TableHead>
+                  <TableHead className="w-[60px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -329,6 +353,22 @@ export default function AssinaturasContent() {
                         {inv.paid_at
                           ? new Date(inv.paid_at).toLocaleDateString("pt-BR")
                           : new Date(inv.created_at).toLocaleDateString("pt-BR")}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0"
+                          disabled={downloadingInvoice === inv.id}
+                          onClick={() => handleDownloadReceipt(inv.id)}
+                          title="Baixar comprovante"
+                        >
+                          {downloadingInvoice === inv.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Download className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );
