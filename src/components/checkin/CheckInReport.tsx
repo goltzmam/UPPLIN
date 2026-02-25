@@ -108,6 +108,15 @@ export function CheckInReport({ eventId, eventTitle, organizerId }: CheckInRepor
         hourCounts[hour] = (hourCounts[hour] || 0) + 1;
       });
       const peakEntry = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0];
+      const uniqueHours = Object.keys(hourCounts).length;
+      const avgPerHour = uniqueHours > 0 ? dayTickets.length / uniqueHours : 0;
+
+      // Time span between first and last check-in
+      const timestamps = dayTickets.map((t: any) => new Date(t.used_at).getTime()).sort((a, b) => a - b);
+      const spanMinutes = timestamps.length >= 2 ? Math.round((timestamps[timestamps.length - 1] - timestamps[0]) / 60000) : 0;
+      const spanLabel = spanMinutes >= 60
+        ? `${Math.floor(spanMinutes / 60)}h${spanMinutes % 60 > 0 ? `${spanMinutes % 60}m` : ""}`
+        : `${spanMinutes}m`;
 
       return {
         date: d,
@@ -116,12 +125,20 @@ export function CheckInReport({ eventId, eventTitle, organizerId }: CheckInRepor
         count: dayTickets.length,
         peakHour: peakEntry?.[0] || "—",
         peakCount: peakEntry?.[1] || 0,
+        avgPerHour: Math.round(avgPerHour * 10) / 10,
+        spanMinutes,
+        spanLabel,
       };
     });
 
     const maxDay = days.reduce((a, b) => (a.count > b.count ? a : b));
+    const totalAvgPerHour = Math.round(days.reduce((s, d) => s + d.avgPerHour, 0) / days.length * 10) / 10;
+    const avgSpanMinutes = Math.round(days.reduce((s, d) => s + d.spanMinutes, 0) / days.length);
+    const avgSpanLabel = avgSpanMinutes >= 60
+      ? `${Math.floor(avgSpanMinutes / 60)}h${avgSpanMinutes % 60 > 0 ? `${avgSpanMinutes % 60}m` : ""}`
+      : `${avgSpanMinutes}m`;
 
-    return { days, maxDay };
+    return { days, maxDay, totalAvgPerHour, avgSpanLabel };
   }, [tickets, availableDates]);
 
   const exportCSV = () => {
@@ -236,21 +253,37 @@ export function CheckInReport({ eventId, eventTitle, organizerId }: CheckInRepor
 
             {/* Summary cards */}
             <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-lg border bg-emerald-500/10 border-emerald-500/20 p-3">
+              <div className="rounded-lg border bg-primary/10 border-primary/20 p-3">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Trophy className="h-3.5 w-3.5 text-emerald-600" />
-                  <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">Dia com mais check-ins</span>
+                  <Trophy className="h-3.5 w-3.5 text-primary" />
+                  <span className="text-[11px] font-medium text-primary">Dia com mais check-ins</span>
                 </div>
                 <p className="text-lg font-bold">{dayComparisonData.maxDay.count}</p>
                 <p className="text-xs text-muted-foreground">{dayComparisonData.maxDay.label}</p>
               </div>
-              <div className="rounded-lg border bg-orange-500/10 border-orange-500/20 p-3">
+              <div className="rounded-lg border bg-accent/50 border-accent p-3">
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Zap className="h-3.5 w-3.5 text-orange-600" />
-                  <span className="text-[11px] font-medium text-orange-700 dark:text-orange-400">Horário de pico geral</span>
+                  <Zap className="h-3.5 w-3.5 text-accent-foreground" />
+                  <span className="text-[11px] font-medium text-accent-foreground">Horário de pico geral</span>
                 </div>
                 <p className="text-lg font-bold">{dayComparisonData.maxDay.peakHour}</p>
                 <p className="text-xs text-muted-foreground">{dayComparisonData.maxDay.peakCount} check-ins nesse horário</p>
+              </div>
+              <div className="rounded-lg border bg-secondary/50 border-secondary p-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <BarChart3 className="h-3.5 w-3.5 text-secondary-foreground" />
+                  <span className="text-[11px] font-medium text-secondary-foreground">Média por hora</span>
+                </div>
+                <p className="text-lg font-bold">{dayComparisonData.totalAvgPerHour}</p>
+                <p className="text-xs text-muted-foreground">check-ins/hora (média)</p>
+              </div>
+              <div className="rounded-lg border bg-muted/50 border-border p-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                  <span className="text-[11px] font-medium text-muted-foreground">Duração média</span>
+                </div>
+                <p className="text-lg font-bold">{dayComparisonData.avgSpanLabel}</p>
+                <p className="text-xs text-muted-foreground">entre 1º e último check-in</p>
               </div>
             </div>
 
@@ -282,12 +315,14 @@ export function CheckInReport({ eventId, eventTitle, organizerId }: CheckInRepor
             </div>
 
             {/* Peak hour per day table */}
-            <div className="rounded-lg border overflow-hidden">
+            <div className="rounded-lg border overflow-hidden overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="bg-muted/50">
                     <th className="text-left py-1.5 px-3 font-medium">Dia</th>
                     <th className="text-right py-1.5 px-3 font-medium">Check-ins</th>
+                    <th className="text-right py-1.5 px-3 font-medium">Média/h</th>
+                    <th className="text-right py-1.5 px-3 font-medium">Duração</th>
                     <th className="text-right py-1.5 px-3 font-medium">Pico</th>
                   </tr>
                 </thead>
@@ -296,6 +331,8 @@ export function CheckInReport({ eventId, eventTitle, organizerId }: CheckInRepor
                     <tr key={d.date} className="border-t border-border/50">
                       <td className="py-1.5 px-3">{d.label}</td>
                       <td className="py-1.5 px-3 text-right font-medium">{d.count}</td>
+                      <td className="py-1.5 px-3 text-right text-muted-foreground">{d.avgPerHour}</td>
+                      <td className="py-1.5 px-3 text-right text-muted-foreground">{d.spanLabel}</td>
                       <td className="py-1.5 px-3 text-right text-muted-foreground">
                         {d.peakHour} ({d.peakCount})
                       </td>
