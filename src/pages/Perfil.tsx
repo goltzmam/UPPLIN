@@ -52,7 +52,24 @@ export default function Perfil() {
     </div>
   );
   
-  if (!user || !profile) return null;
+  if (!user) return null;
+  
+  if (!profile) return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 p-4">
+      <p className="text-muted-foreground text-center">Não foi possível carregar seu perfil. Tente sair e entrar novamente.</p>
+      <button 
+        onClick={async () => {
+          const { signOut } = await import("@/integrations/supabase/client").then(m => ({ signOut: () => m.supabase.auth.signOut() }));
+          await signOut();
+          localStorage.removeItem("upplin_active_user_id");
+          window.location.href = "/login";
+        }}
+        className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
+      >
+        Sair e fazer login novamente
+      </button>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background text-foreground">
