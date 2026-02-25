@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, MapPin, X, Users, Compass, Loader2, Upload, Video, Image, ChevronDown } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { triggerHaptic } from "@/hooks/use-haptic";
@@ -19,6 +19,7 @@ interface UpActionMenuProps {
 
 export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const [showPostDialog, setShowPostDialog] = useState(false);
@@ -119,12 +120,24 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
     }
   };
 
+  // Detect if user is on an event page
+  const isOnEventPage = location.pathname.startsWith("/evento/");
+
   const handleShareApp = async () => {
-    const shareData = {
-      title: "UP - Descubra eventos incríveis",
-      text: "Vem descobrir os melhores rolês perto de você! 🎉",
-      url: window.location.origin,
-    };
+    const isEventPage = isOnEventPage;
+    const currentUrl = window.location.href;
+
+    const shareData = isEventPage
+      ? {
+          title: "Confira este evento no UP!",
+          text: "Vem comigo nesse rolê! 🎉",
+          url: currentUrl,
+        }
+      : {
+          title: "UP - Descubra eventos incríveis",
+          text: "Vem descobrir os melhores rolês perto de você! 🎉",
+          url: window.location.origin,
+        };
 
     if (navigator.share) {
       try {
@@ -151,8 +164,8 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
     },
     {
       icon: Users,
-      label: "Convidar amigos",
-      description: "Compartilhe o app com a galera",
+      label: isOnEventPage ? "Convidar para este evento" : "Convidar amigos",
+      description: isOnEventPage ? "Compartilhe este evento com a galera" : "Compartilhe o app com a galera",
       gradient: "from-[#FF007A] to-[#FF6A00]",
       onClick: () => handleShareApp(),
     },
