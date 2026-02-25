@@ -206,7 +206,7 @@ serve(async (req) => {
       try {
         const { data: event } = await adminClient
           .from("events")
-          .select("title, organizer_id, organizer_accounts!organizer_id(owner_user_id, display_name)")
+          .select("title, organizer_id, start_at, venue_name, organizer_accounts!organizer_id(owner_user_id, display_name)")
           .eq("id", order.event_id)
           .single();
 
@@ -214,7 +214,7 @@ serve(async (req) => {
         const paymentMethod = payment.payment_method_id || payment.payment_type_id || "";
         const isPix = paymentMethod === "pix" || payment.payment_type_id === "bank_transfer";
 
-        // Notify buyer
+        // Notify buyer in-app
         await adminClient.from("notifications").insert({
           user_id: order.buyer_user_id,
           title: isPix ? "✅ PIX confirmado!" : "✅ Pagamento confirmado!",
@@ -227,6 +227,59 @@ serve(async (req) => {
             tickets_count: ticketsToCreate.length,
           },
         });
+
+        // Send PIX confirmation email
+        if (isPix) {
+          const { data: buyerProfile } = await adminClient
+            .from("profiles")
+            .select("email, full_name")
+            .eq("id", order.buyer_user_id)
+            .single();
+
+          if (buyerProfile?.email) {
+            // Get first ticket type name
+            let ticketTypeName = "";
+            if (order.order_items?.length > 0) {
+              const { data: tt } = await adminClient
+                .from("ticket_types")
+                .select("name")
+                .eq("id", order.order_items[0].ticket_type_id)
+                .single();
+              ticketTypeName = tt?.name || "";
+            }
+
+            const eventDate = event?.start_at
+              ? new Date(event.start_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })
+              : "";
+
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+                },
+                body: JSON.stringify({
+                  type: "pix_confirmed",
+                  to: buyerProfile.email,
+                  data: {
+                    userName: buyerProfile.full_name || "",
+                    eventTitle: event?.title || "Evento",
+                    eventDate,
+                    eventVenue: event?.venue_name || "",
+                    ticketType: ticketTypeName,
+                    ticketQuantity: ticketsToCreate.length,
+                    totalAmount: `R$ ${totalReais}`,
+                    orderId: orderId,
+                  },
+                }),
+              });
+              console.log(`PIX confirmation email sent to ${buyerProfile.email}`);
+            } catch (emailErr) {
+              console.error("Error sending PIX confirmation email:", emailErr);
+            }
+          }
+        }
 
         // Notify organizer about the payment
         if (event?.organizer_accounts) {
