@@ -11,7 +11,8 @@ import {
   ChevronRight,
   Menu,
   Plus,
-  BarChart3
+  BarChart3,
+  Crown
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useQuery } from "@tanstack/react-query";
@@ -31,6 +32,7 @@ const navItems = [
   { href: "/organizador/painel/cupons", label: "Cupons", icon: Tag },
   { href: "/organizador/painel/check-in", label: "Check-in", icon: QrCode },
   { href: "/organizador/painel/relatorios", label: "Relatórios", icon: BarChart3 },
+  { href: "/organizador/painel/assinaturas", label: "Planos", icon: Crown },
   { href: "/organizador/painel/configuracoes", label: "Configurações", icon: Settings },
 ];
 

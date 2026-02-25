@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.mp-get-public-key]
 verify_jwt = false
+
+[functions.mp-subscribe]
+verify_jwt = false
