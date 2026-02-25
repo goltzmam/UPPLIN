@@ -382,8 +382,8 @@ export function DesktopTikTokFeed({
   return (
     <div
       ref={containerRef}
-      className="h-full w-full overflow-y-scroll snap-y snap-mandatory bg-background"
-      style={{ scrollSnapType: "y mandatory" }}
+      className="h-full w-full overflow-y-scroll snap-y snap-mandatory bg-background scrollbar-hide"
+      style={{ scrollSnapType: "y mandatory", scrollbarWidth: "none", msOverflowStyle: "none" }}
     >
       {items.map((item, index) => (
         <div
