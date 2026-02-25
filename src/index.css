@@ -587,3 +587,45 @@
   }
   
 }
+
+/* ── Leaflet map overrides ──────────────────────────────────────────── */
+.custom-marker-icon {
+  background: none !important;
+  border: none !important;
+}
+
+.user-marker-icon {
+  background: none !important;
+  border: none !important;
+}
+
+.user-location-pulse {
+  position: relative;
+}
+
+.user-location-pulse::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: hsl(var(--primary) / 0.2);
+  animation: pulse-ring 2s ease-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;
+}
+
+.leaflet-popup-tip {
+  box-shadow: none !important;
+}

@@ -1,43 +1,357 @@
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { Link } from "react-router-dom";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { format, isToday, isThisWeek } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { MapPin, Navigation, Calendar, Ticket, Gift, Loader2, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
-import { MapPin, Construction } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+
+// ── Custom marker icons ──────────────────────────────────────────────
+function createMarkerIcon(color: string) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="40" viewBox="0 0 28 40">
+    <path d="M14 0C6.27 0 0 6.27 0 14c0 10.5 14 26 14 26s14-15.5 14-26C28 6.27 21.73 0 14 0z" fill="${color}" stroke="white" stroke-width="2"/>
+    <circle cx="14" cy="14" r="6" fill="white"/>
+  </svg>`;
+  return L.divIcon({
+    html: svg,
+    className: "custom-marker-icon",
+    iconSize: [28, 40],
+    iconAnchor: [14, 40],
+    popupAnchor: [0, -40],
+  });
+}
+
+function createUserIcon() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+    <circle cx="12" cy="12" r="10" fill="hsl(var(--primary))" stroke="white" stroke-width="3" opacity="0.9"/>
+    <circle cx="12" cy="12" r="4" fill="white"/>
+  </svg>`;
+  return L.divIcon({
+    html: `<div class="user-location-pulse">${svg}</div>`,
+    className: "user-marker-icon",
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+}
+
+const greenIcon = createMarkerIcon("#22c55e");
+const blueIcon = createMarkerIcon("#3b82f6");
+const grayIcon = createMarkerIcon("#94a3b8");
+
+// ── Fly to user position ─────────────────────────────────────────────
+function FlyToUser({ position }: { position: [number, number] | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (position) {
+      map.flyTo(position, 13, { duration: 1.5 });
+    }
+  }, [position, map]);
+  return null;
+}
+
+// ── Types ────────────────────────────────────────────────────────────
+interface NearbyEvent {
+  id: string;
+  slug: string | null;
+  title: string;
+  cover_image_url: string | null;
+  start_at: string;
+  end_at: string | null;
+  venue_name: string | null;
+  address_text: string | null;
+  lat: number;
+  lng: number;
+  category: string | null;
+  organizer_id: string;
+  min_price?: number;
+}
+
+type GeoState = "idle" | "loading" | "granted" | "denied" | "unavailable";
 
 export default function PorPerto() {
-  const navigate = useNavigate();
+  const [userPos, setUserPos] = useState<[number, number] | null>(null);
+  const [geoState, setGeoState] = useState<GeoState>("idle");
+  const [selectedEvent, setSelectedEvent] = useState<NearbyEvent | null>(null);
+
+  // ── Request geolocation ──────────────────────────────────────────
+  const requestLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      setGeoState("unavailable");
+      return;
+    }
+    setGeoState("loading");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserPos([pos.coords.latitude, pos.coords.longitude]);
+        setGeoState("granted");
+      },
+      () => setGeoState("denied"),
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }, []);
+
+  useEffect(() => {
+    requestLocation();
+  }, [requestLocation]);
+
+  // ── Fetch events with coordinates ────────────────────────────────
+  const { data: events = [], isLoading: eventsLoading } = useQuery({
+    queryKey: ["nearby-events"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select(`
+          id, slug, title, cover_image_url, start_at, end_at,
+          venue_name, address_text, lat, lng, category, organizer_id
+        `)
+        .eq("status", "published")
+        .not("lat", "is", null)
+        .not("lng", "is", null)
+        .gte("start_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+        .order("start_at", { ascending: true })
+        .limit(200);
+
+      if (error) throw error;
+
+      // Fetch min prices
+      const ids = (data || []).map((e) => e.id);
+      if (ids.length === 0) return [];
+
+      const { data: tickets } = await supabase
+        .from("ticket_types")
+        .select("event_id, price_cents")
+        .in("event_id", ids)
+        .eq("status", "active");
+
+      const priceMap = new Map<string, number>();
+      tickets?.forEach((t) => {
+        const current = priceMap.get(t.event_id);
+        if (current === undefined || (t.price_cents ?? 0) < current) {
+          priceMap.set(t.event_id, t.price_cents ?? 0);
+        }
+      });
+
+      return (data || []).map((e) => ({
+        ...e,
+        lat: Number(e.lat),
+        lng: Number(e.lng),
+        min_price: priceMap.get(e.id) ?? 0,
+      })) as NearbyEvent[];
+    },
+    staleTime: 60000,
+  });
+
+  // ── Marker icon selection ────────────────────────────────────────
+  const getMarkerIcon = useCallback((startAt: string) => {
+    const date = new Date(startAt);
+    if (isToday(date)) return greenIcon;
+    if (isThisWeek(date, { weekStartsOn: 1 })) return blueIcon;
+    return grayIcon;
+  }, []);
+
+  // ── Default map center ───────────────────────────────────────────
+  const defaultCenter: [number, number] = useMemo(() => {
+    if (userPos) return userPos;
+    if (events.length > 0) return [events[0].lat, events[0].lng];
+    return [-23.5505, -46.6333]; // São Paulo fallback
+  }, [userPos, events]);
+
+  const formatPrice = (cents: number) =>
+    cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">
       <TikTokDesktopSidebar />
-      
-      <main className="flex-1 pb-24 lg:pb-8 lg:ml-[72px]">
-        <div className="max-w-2xl mx-auto py-16 px-4 text-center">
-          <div className="relative inline-flex items-center justify-center w-20 h-20 rounded-full bg-muted mb-6">
-            <MapPin className="h-10 w-10 text-primary" />
-            <Construction className="h-5 w-5 text-muted-foreground absolute -bottom-1 -right-1 bg-background rounded-full p-0.5" />
-          </div>
-          
-          <h1 className="text-2xl font-bold mb-2">Por Perto</h1>
-          <p className="text-muted-foreground mb-2">
-            Eventos próximos a você no mapa
-          </p>
-          <p className="text-sm text-muted-foreground/70 mb-8">
-            🚧 Em breve — mapa interativo com geolocalização automática.
-            <br />
-            <span className="text-xs">
-              🟢 Eventos hoje &nbsp;·&nbsp; 🔵 Eventos na semana
-            </span>
-          </p>
-          
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => navigate("/eventos")}
+
+      <main className="flex-1 lg:ml-[72px] relative">
+        {/* Map container - full viewport */}
+        <div className="fixed inset-0 lg:left-[72px] z-0">
+          <MapContainer
+            center={defaultCenter}
+            zoom={userPos ? 13 : 11}
+            className="h-full w-full"
+            zoomControl={false}
+            attributionControl={false}
           >
-            Explorar Eventos
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+            />
+
+            <FlyToUser position={userPos} />
+
+            {/* User position */}
+            {userPos && (
+              <Marker position={userPos} icon={createUserIcon()}>
+                <Popup className="custom-popup">
+                  <span className="text-sm font-medium">Você está aqui</span>
+                </Popup>
+              </Marker>
+            )}
+
+            {/* Event markers */}
+            {events.map((event) => (
+              <Marker
+                key={event.id}
+                position={[event.lat, event.lng]}
+                icon={getMarkerIcon(event.start_at)}
+                eventHandlers={{
+                  click: () => setSelectedEvent(event),
+                }}
+              />
+            ))}
+          </MapContainer>
+        </div>
+
+        {/* Top overlay - legend + recenter */}
+        <div className="fixed top-4 left-4 right-4 lg:left-[88px] z-[1000] flex items-start justify-between pointer-events-none">
+          {/* Legend */}
+          <div className="bg-background/80 backdrop-blur-md rounded-xl px-4 py-3 shadow-lg pointer-events-auto border border-border">
+            <h2 className="text-sm font-bold mb-2 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-primary" />
+              Por Perto
+            </h2>
+            <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-green-500" />
+                Hoje
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-blue-500" />
+                Esta semana
+              </span>
+              <span className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-slate-400" />
+                Próximos
+              </span>
+            </div>
+          </div>
+
+          {/* Recenter button */}
+          <Button
+            size="icon"
+            variant="secondary"
+            className="rounded-full shadow-lg pointer-events-auto"
+            onClick={requestLocation}
+            disabled={geoState === "loading"}
+          >
+            {geoState === "loading" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Navigation className="h-4 w-4" />
+            )}
           </Button>
         </div>
+
+        {/* Geo denied state */}
+        {geoState === "denied" && (
+          <div className="fixed bottom-28 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto">
+            <div className="bg-destructive/10 border border-destructive/30 backdrop-blur-md rounded-xl px-4 py-3 flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-destructive">Localização negada</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Permita acesso à localização nas configurações do navegador para ver eventos próximos.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state */}
+        {!eventsLoading && events.length === 0 && (
+          <div className="fixed bottom-28 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto">
+            <div className="bg-background/80 backdrop-blur-md rounded-xl px-4 py-4 text-center border border-border shadow-lg">
+              <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm font-medium">Nenhum evento com localização</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Ainda não há eventos com coordenadas cadastradas.
+              </p>
+              <Link to="/eventos" className="text-xs text-primary mt-2 inline-block hover:underline">
+                Explorar todos os eventos →
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Selected event card */}
+        {selectedEvent && (
+          <div className="fixed bottom-24 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto animate-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-background/95 backdrop-blur-md rounded-2xl shadow-2xl border border-border overflow-hidden">
+              {/* Close */}
+              <button
+                onClick={() => setSelectedEvent(null)}
+                className="absolute top-2 right-2 z-10 h-7 w-7 rounded-full bg-background/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+              >
+                ✕
+              </button>
+
+              <div className="flex gap-3 p-3">
+                {/* Image */}
+                {selectedEvent.cover_image_url ? (
+                  <img
+                    src={selectedEvent.cover_image_url}
+                    alt={selectedEvent.title}
+                    className="w-20 h-20 rounded-xl object-cover shrink-0"
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                    <Calendar className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
+
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-bold text-sm leading-tight line-clamp-2 mb-1">
+                    {selectedEvent.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mb-1">
+                    <Calendar className="h-3 w-3 shrink-0" />
+                    {format(new Date(selectedEvent.start_at), "d MMM · HH:mm", { locale: ptBR })}
+                  </p>
+                  {selectedEvent.venue_name && (
+                    <p className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+                      <MapPin className="h-3 w-3 shrink-0" />
+                      {selectedEvent.venue_name}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Action */}
+              <Link
+                to={`/evento/${selectedEvent.slug || selectedEvent.id}`}
+                className={cn(
+                  "flex items-center justify-center gap-2 py-3 text-sm font-bold transition-colors",
+                  (selectedEvent.min_price ?? 0) === 0
+                    ? "bg-green-500/10 text-green-600 hover:bg-green-500/20"
+                    : "text-white hover:opacity-90"
+                )}
+                style={
+                  (selectedEvent.min_price ?? 0) > 0
+                    ? { background: "linear-gradient(135deg, #FF6A00 0%, #FF2D2D 50%, #FF007A 100%)" }
+                    : undefined
+                }
+              >
+                {(selectedEvent.min_price ?? 0) === 0 ? (
+                  <Gift className="h-4 w-4" />
+                ) : (
+                  <Ticket className="h-4 w-4" />
+                )}
+                {(selectedEvent.min_price ?? 0) === 0
+                  ? "Participar — Grátis"
+                  : `Comprar — ${formatPrice(selectedEvent.min_price ?? 0)}`}
+              </Link>
+            </div>
+          </div>
+        )}
       </main>
 
       <BottomNav />
