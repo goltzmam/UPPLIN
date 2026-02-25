@@ -212,6 +212,17 @@ serve(async (req) => {
       await handleApprovedPayment(adminClient, order, order_id, mpData, commissionCents);
     } else if (mpData.status === "rejected") {
       await handleRejectedPayment(adminClient, order, order_id);
+    } else if (isPixPayment && (mpData.status === "pending" || mpData.status === "in_process")) {
+      // Save pending PIX payment so user can retrieve QR code later
+      await adminClient.from("payments").insert({
+        order_id: order_id,
+        provider: "mercadopago",
+        provider_payment_id: mpData.id.toString(),
+        amount_cents: Math.round(mpData.transaction_amount * 100),
+        status: "pending",
+        method: "pix",
+        raw: mpData,
+      });
     }
 
     return new Response(

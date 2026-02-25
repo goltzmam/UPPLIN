@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -58,24 +58,68 @@ serve(async (req) => {
       });
     }
 
-    // Fetch payment details from Mercado Pago
-    const mpAccessToken = Deno.env.get("MP_ACCESS_TOKEN")!;
-    const paymentResponse = await fetch(
-      `https://api.mercadopago.com/v1/payments/${data.id}`,
-      {
-        headers: { Authorization: `Bearer ${mpAccessToken}` },
+    // First try to find the order by the payment's external_reference
+    // We need to fetch the payment details - try with platform token first, then organizer token
+    let payment: any = null;
+    
+    // Try with platform MP_ACCESS_TOKEN first
+    const mpAccessToken = Deno.env.get("MP_ACCESS_TOKEN");
+    if (mpAccessToken) {
+      const paymentResponse = await fetch(
+        `https://api.mercadopago.com/v1/payments/${data.id}`,
+        { headers: { Authorization: `Bearer ${mpAccessToken}` } }
+      );
+      if (paymentResponse.ok) {
+        payment = await paymentResponse.json();
+      } else {
+        await paymentResponse.text(); // consume body
       }
-    );
+    }
 
-    if (!paymentResponse.ok) {
-      console.error("Failed to fetch MP payment:", paymentResponse.status);
+    // If platform token didn't work, try finding via order -> organizer -> mp_account
+    if (!payment) {
+      // Look for order with this mp_payment_id
+      const { data: orderByPayment } = await adminClient
+        .from("orders")
+        .select("event_id, events(organizer_id)")
+        .eq("mp_payment_id", data.id.toString())
+        .maybeSingle();
+
+      let organizerToken: string | null = null;
+      if (orderByPayment) {
+        const orgId = (orderByPayment.events as any)?.organizer_id;
+        if (orgId) {
+          const { data: mpAcc } = await adminClient
+            .from("organizer_mp_accounts")
+            .select("mp_access_token")
+            .eq("organizer_id", orgId)
+            .single();
+          organizerToken = mpAcc?.mp_access_token || null;
+        }
+      }
+
+      if (organizerToken) {
+        const paymentResponse = await fetch(
+          `https://api.mercadopago.com/v1/payments/${data.id}`,
+          { headers: { Authorization: `Bearer ${organizerToken}` } }
+        );
+        if (paymentResponse.ok) {
+          payment = await paymentResponse.json();
+        } else {
+          console.error("Failed to fetch MP payment with organizer token:", paymentResponse.status);
+          await paymentResponse.text();
+        }
+      }
+    }
+
+    if (!payment) {
+      console.error("Failed to fetch MP payment with any token:", data.id);
       return new Response(JSON.stringify({ error: "Failed to fetch payment" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const payment = await paymentResponse.json();
     console.log("MP Payment details:", JSON.stringify({
       id: payment.id,
       status: payment.status,
