@@ -265,7 +265,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                   >
                     UP
                   </span>
-                  <Sparkles className="h-5 w-5 text-[#FF007A]" />
+                  
                 </h2>
                 <p className="text-sm text-white/50">O que você quer fazer?</p>
               </div>
