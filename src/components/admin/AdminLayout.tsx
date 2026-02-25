@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3, Menu, X } from "lucide-react";
+import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3, Menu, X, Crown } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ const navItems = [
   { href: "/admin/users", label: "Usuários", icon: Users },
   { href: "/admin/events", label: "Eventos", icon: Calendar },
   { href: "/admin/orders", label: "Pedidos", icon: CreditCard },
+  { href: "/admin/subscriptions", label: "Assinaturas", icon: Crown },
   { href: "/admin/cpf", label: "Solicitações CPF", icon: FileText },
   { href: "/admin/settings", label: "Configurações", icon: Settings },
 ];

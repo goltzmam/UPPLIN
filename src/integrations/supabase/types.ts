@@ -755,6 +755,57 @@ export type Database = {
           },
         ]
       }
+      organizer_subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string
+          id: string
+          mp_subscription_id: string | null
+          organizer_id: string
+          plan_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          id?: string
+          mp_subscription_id?: string | null
+          organizer_id: string
+          plan_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string
+          id?: string
+          mp_subscription_id?: string | null
+          organizer_id?: string
+          plan_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizer_subscriptions_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: true
+            referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizer_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount_cents: number
@@ -946,6 +997,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      subscription_plans: {
+        Row: {
+          commission_percent: number
+          created_at: string
+          features: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          price_cents: number
+          sort_order: number
+        }
+        Insert: {
+          commission_percent?: number
+          created_at?: string
+          features?: Json | null
+          id: string
+          is_active?: boolean
+          name: string
+          price_cents?: number
+          sort_order?: number
+        }
+        Update: {
+          commission_percent?: number
+          created_at?: string
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price_cents?: number
+          sort_order?: number
+        }
+        Relationships: []
       }
       ticket_types: {
         Row: {
@@ -1235,6 +1319,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_organizer_commission: {
+        Args: { p_organizer_id: string }
+        Returns: number
+      }
       get_user_organizer_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {

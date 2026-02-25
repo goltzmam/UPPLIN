@@ -47,6 +47,7 @@ import AdminEvents from "./pages/admin/AdminEvents";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminCpf from "./pages/admin/AdminCpf";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 
 // Other imports
@@ -55,6 +56,7 @@ import Organizadores from "./pages/Organizadores";
 import ExplorarOrganizadores from "./pages/ExplorarOrganizadores";
 import EventosSalvos from "./pages/EventosSalvos";
 import PorPerto from "./pages/PorPerto";
+import PagamentoSucesso from "./pages/PagamentoSucesso";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -122,6 +124,7 @@ function AnimatedRoutes() {
           <Route path="/meus-ingressos" element={<ProtectedRoute><MeusIngressos /></ProtectedRoute>} />
           <Route path="/mensagens" element={<ProtectedRoute><Mensagens /></ProtectedRoute>} />
           <Route path="/checkout/:orderId" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+          <Route path="/pagamento-sucesso" element={<ProtectedRoute><PagamentoSucesso /></ProtectedRoute>} />
           <Route path="/eventos-salvos" element={<ProtectedRoute><EventosSalvos /></ProtectedRoute>} />
 
           {/* ============================================ */}
@@ -166,6 +169,7 @@ function AnimatedRoutes() {
             <Route path="orders" element={<AdminOrders />} />
             <Route path="cpf" element={<AdminCpf />} />
             <Route path="analytics" element={<AdminAnalytics />} />
+            <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="settings" element={<AdminSettings />} />
           </Route>
 
