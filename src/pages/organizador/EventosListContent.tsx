@@ -50,6 +50,8 @@ export default function EventosListContent() {
       case "published": return "default";
       case "draft": return "secondary";
       case "cancelled": return "destructive";
+      case "pending_review": return "outline";
+      case "paused": return "outline";
       default: return "outline";
     }
   };
@@ -59,6 +61,8 @@ export default function EventosListContent() {
       case "published": return "Publicado";
       case "draft": return "Rascunho";
       case "cancelled": return "Cancelado";
+      case "pending_review": return "Aguardando Aprovação";
+      case "paused": return "Pausado";
       default: return status;
     }
   };
@@ -104,6 +108,7 @@ export default function EventosListContent() {
             <SelectItem value="all">Todos</SelectItem>
             <SelectItem value="published">Publicados</SelectItem>
             <SelectItem value="draft">Rascunhos</SelectItem>
+            <SelectItem value="pending_review">Aguardando Aprovação</SelectItem>
             <SelectItem value="cancelled">Cancelados</SelectItem>
           </SelectContent>
         </Select>
