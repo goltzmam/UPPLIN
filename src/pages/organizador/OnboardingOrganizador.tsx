@@ -44,10 +44,9 @@ export default function OnboardingOrganizador() {
   });
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/organizador/login");
-    }
-  }, [authLoading, user, navigate]);
+    // Redirect to dashboard - onboarding data is now collected during registration
+    navigate("/organizador/painel", { replace: true });
+  }, [navigate]);
 
   useEffect(() => {
     if (organizer) {
