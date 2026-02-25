@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Crown, Check, Loader2, Zap, Sparkles, ArrowRight, AlertTriangle, MessageCircle, Phone } from "lucide-react";
+import { Crown, Check, Loader2, Zap, Sparkles, ArrowRight, AlertTriangle, MessageCircle, Phone, Receipt, Calendar, CheckCircle2, Clock, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,21 @@ export default function AssinaturasContent() {
         .select("*, subscription_plans(*)")
         .eq("organizer_id", organizer.id)
         .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!organizer?.id,
+  });
+
+  const { data: invoices, isLoading: loadingInvoices } = useQuery({
+    queryKey: ["subscription-invoices", organizer?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("subscription_invoices")
+        .select("*")
+        .eq("organizer_id", organizer.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
       if (error) throw error;
       return data;
     },
@@ -252,6 +268,76 @@ export default function AssinaturasContent() {
           </AlertDialog>
         </div>
       )}
+
+      {/* Invoice History */}
+      <div className="bg-card border border-border rounded-2xl p-4 sm:p-6 space-y-4">
+        <div className="flex items-center gap-2">
+          <Receipt className="h-5 w-5 text-primary" />
+          <h3 className="font-display text-lg font-bold">Histórico de Faturas</h3>
+        </div>
+
+        {loadingInvoices ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        ) : !invoices || invoices.length === 0 ? (
+          <div className="text-center py-8">
+            <Receipt className="h-10 w-10 text-muted-foreground/40 mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">Nenhuma fatura encontrada</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto -mx-4 sm:mx-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Período</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden sm:table-cell">Data</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invoices.map((inv) => {
+                  const statusConfig: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+                    paid: { label: "Pago", icon: <CheckCircle2 className="h-3.5 w-3.5" />, className: "text-green-600 bg-green-50 dark:bg-green-950/30 dark:text-green-400" },
+                    pending: { label: "Pendente", icon: <Clock className="h-3.5 w-3.5" />, className: "text-yellow-600 bg-yellow-50 dark:bg-yellow-950/30 dark:text-yellow-400" },
+                    failed: { label: "Falhou", icon: <XCircle className="h-3.5 w-3.5" />, className: "text-destructive bg-destructive/10" },
+                    refunded: { label: "Reembolsado", icon: <ArrowRight className="h-3.5 w-3.5" />, className: "text-muted-foreground bg-muted" },
+                  };
+                  const st = statusConfig[inv.status] || statusConfig.pending;
+                  const periodStart = new Date(inv.period_start).toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+                  const periodEnd = inv.period_end ? new Date(inv.period_end).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "2-digit" }) : "—";
+
+                  return (
+                    <TableRow key={inv.id}>
+                      <TableCell className="text-sm font-medium">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground hidden sm:block" />
+                          {periodStart} — {periodEnd}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-sm font-semibold">
+                        {formatPrice(inv.amount_cents)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={`gap-1 text-xs ${st.className}`}>
+                          {st.icon}
+                          {st.label}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground hidden sm:table-cell">
+                        {inv.paid_at
+                          ? new Date(inv.paid_at).toLocaleDateString("pt-BR")
+                          : new Date(inv.created_at).toLocaleDateString("pt-BR")}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </div>
 
       {/* Support Section */}
       <div className="bg-card border border-border rounded-2xl p-4 sm:p-6">
