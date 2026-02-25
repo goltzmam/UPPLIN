@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PageLoading } from "@/components/ui/loading";
 import { MultiMediaUpload } from "@/components/events/MultiMediaUpload";
+import { LocationPicker } from "@/components/events/LocationPicker";
 import { VideoUpload } from "@/components/events/VideoUpload";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +45,8 @@ export default function EventoForm() {
   const [endAt, setEndAt] = useState("");
   const [venueName, setVenueName] = useState("");
   const [addressText, setAddressText] = useState("");
+  const [lat, setLat] = useState<number | null>(null);
+  const [lng, setLng] = useState<number | null>(null);
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [feedVideoUrl, setFeedVideoUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"draft" | "pending_review">("draft");
@@ -86,6 +89,8 @@ export default function EventoForm() {
       setEndAt(event.end_at?.slice(0, 16) || "");
       setVenueName(event.venue_name || "");
       setAddressText(event.address_text || "");
+      setLat(event.lat ? Number(event.lat) : null);
+      setLng(event.lng ? Number(event.lng) : null);
       setStatus(event.status === "published" || event.status === "pending_review" ? "pending_review" : "draft");
       setTicketTypes(
         event.ticket_types?.map((t: any) => ({
@@ -168,6 +173,8 @@ export default function EventoForm() {
             end_at: endAt || null,
             venue_name: venueName || null,
             address_text: addressText || null,
+            lat: lat,
+            lng: lng,
             cover_image_url: coverImageUrl,
             status,
           })
@@ -187,6 +194,8 @@ export default function EventoForm() {
             end_at: endAt || null,
             venue_name: venueName || null,
             address_text: addressText || null,
+            lat: lat,
+            lng: lng,
             cover_image_url: coverImageUrl,
             status,
           })
@@ -409,6 +418,21 @@ export default function EventoForm() {
           <div className="space-y-2">
             <Label htmlFor="addressText">Endereço</Label>
             <Input id="addressText" value={addressText} onChange={(e) => setAddressText(e.target.value)} placeholder="Rua, número, cidade..." />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Localização no Mapa</Label>
+            <p className="text-xs text-muted-foreground">
+              Defina a localização para que seu evento apareça no mapa "Por Perto".
+            </p>
+            <LocationPicker
+              lat={lat}
+              lng={lng}
+              onLocationChange={(newLat, newLng) => {
+                setLat(newLat);
+                setLng(newLng);
+              }}
+            />
           </div>
         </div>
 

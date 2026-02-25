@@ -12,6 +12,8 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MapSearch } from "@/components/map/MapSearch";
+import { MarkerCluster } from "@/components/map/MarkerCluster";
 
 // ── Custom marker icons ──────────────────────────────────────────────
 function createMarkerIcon(color: string) {
@@ -120,7 +122,6 @@ export default function PorPerto() {
 
       if (error) throw error;
 
-      // Fetch min prices
       const ids = (data || []).map((e) => e.id);
       if (ids.length === 0) return [];
 
@@ -160,8 +161,20 @@ export default function PorPerto() {
   const defaultCenter: [number, number] = useMemo(() => {
     if (userPos) return userPos;
     if (events.length > 0) return [events[0].lat, events[0].lng];
-    return [-23.5505, -46.6333]; // São Paulo fallback
+    return [-23.5505, -46.6333];
   }, [userPos, events]);
+
+  // ── Cluster markers data ─────────────────────────────────────────
+  const clusterMarkers = useMemo(
+    () =>
+      events.map((event) => ({
+        id: event.id,
+        position: [event.lat, event.lng] as [number, number],
+        icon: getMarkerIcon(event.start_at),
+        onClick: () => setSelectedEvent(event),
+      })),
+    [events, getMarkerIcon]
+  );
 
   const formatPrice = (cents: number) =>
     cents === 0 ? "Grátis" : `R$ ${(cents / 100).toFixed(0)}`;
@@ -186,6 +199,7 @@ export default function PorPerto() {
             />
 
             <FlyToUser position={userPos} />
+            <MapSearch />
 
             {/* User position */}
             {userPos && (
@@ -196,22 +210,13 @@ export default function PorPerto() {
               </Marker>
             )}
 
-            {/* Event markers */}
-            {events.map((event) => (
-              <Marker
-                key={event.id}
-                position={[event.lat, event.lng]}
-                icon={getMarkerIcon(event.start_at)}
-                eventHandlers={{
-                  click: () => setSelectedEvent(event),
-                }}
-              />
-            ))}
+            {/* Clustered event markers */}
+            <MarkerCluster markers={clusterMarkers} />
           </MapContainer>
         </div>
 
-        {/* Top overlay - legend + recenter */}
-        <div className="fixed top-4 left-4 right-4 lg:left-[88px] z-[1000] flex items-start justify-between pointer-events-none">
+        {/* Top overlay - legend + search + recenter */}
+        <div className="fixed top-4 left-4 right-4 lg:left-[88px] z-[1000] flex items-start justify-between gap-2 pointer-events-none">
           {/* Legend */}
           <div className="bg-background/80 backdrop-blur-md rounded-xl px-4 py-3 shadow-lg pointer-events-auto border border-border">
             <h2 className="text-sm font-bold mb-2 flex items-center gap-2">
@@ -294,7 +299,6 @@ export default function PorPerto() {
               </button>
 
               <div className="flex gap-3 p-3">
-                {/* Image */}
                 {selectedEvent.cover_image_url ? (
                   <img
                     src={selectedEvent.cover_image_url}
@@ -307,7 +311,6 @@ export default function PorPerto() {
                   </div>
                 )}
 
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <h3 className="font-bold text-sm leading-tight line-clamp-2 mb-1">
                     {selectedEvent.title}
@@ -325,7 +328,6 @@ export default function PorPerto() {
                 </div>
               </div>
 
-              {/* Action */}
               <Link
                 to={`/evento/${selectedEvent.slug || selectedEvent.id}`}
                 className={cn(
