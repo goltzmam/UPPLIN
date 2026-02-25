@@ -182,7 +182,7 @@ export default function OrganizadorCadastro() {
       });
 
       setTimeout(() => {
-        navigate("/organizador/onboarding");
+        navigate("/organizador/painel");
       }, 2500);
     } catch (err: any) {
       toast({ 
