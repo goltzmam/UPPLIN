@@ -22,6 +22,8 @@ import { QRScanner } from "@/components/checkin/QRScanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { triggerFeedback } from "@/lib/feedback";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import confetti from "canvas-confetti";
 
 interface CheckInResult {
   success: boolean;
@@ -74,7 +76,7 @@ export default function CheckInContent() {
     mutationFn: async (ticketId: string) => {
       const { data: ticket, error: findError } = await supabase
         .from("tickets")
-        .select(`*, ticket_types(name), events(title, organizer_id)`)
+        .select(`*, ticket_types(name), events(title, organizer_id), profiles:buyer_user_id(full_name, photo_url, email)`)
         .eq("id", ticketId)
         .maybeSingle();
 
@@ -108,7 +110,14 @@ export default function CheckInContent() {
       refetchTickets();
       triggerFeedback({ sound: "success", haptic: "success" });
       toast({ title: "✅ Check-in realizado!", description: ticket.ticket_types?.name });
-      setTimeout(() => setCheckInResult(null), 4000);
+      // Fire confetti 🎉
+      confetti({
+        particleCount: 120,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ["#f59e0b", "#8b5cf6", "#ec4899", "#10b981", "#3b82f6"],
+      });
+      setTimeout(() => setCheckInResult(null), 5000);
     },
     onError: (error: any) => {
       setCheckInResult({ success: false, message: error.message });
@@ -227,7 +236,22 @@ export default function CheckInContent() {
                 <div className="flex-1 min-w-0">
                   <p className="font-display font-bold text-lg">{checkInResult.success ? "Entrada liberada!" : "Não autorizado"}</p>
                   <p className="text-sm text-muted-foreground">{checkInResult.message}</p>
-                  {checkInResult.ticket && (
+                  {checkInResult.success && checkInResult.ticket && (
+                    <div className="flex items-center gap-3 mt-3 p-3 rounded-xl bg-background/60 border border-border/50">
+                      <Avatar className="h-12 w-12 border-2 border-primary/30">
+                        <AvatarImage src={checkInResult.ticket.profiles?.photo_url} />
+                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
+                          {(checkInResult.ticket.profiles?.full_name || "?").charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm truncate">{checkInResult.ticket.profiles?.full_name || "Participante"}</p>
+                        <p className="text-xs text-muted-foreground truncate">{checkInResult.ticket.profiles?.email}</p>
+                        <p className="text-xs font-medium text-primary mt-0.5">{checkInResult.ticket.ticket_types?.name}</p>
+                      </div>
+                    </div>
+                  )}
+                  {!checkInResult.success && checkInResult.ticket && (
                     <p className="text-sm font-medium mt-1">{checkInResult.ticket.ticket_types?.name}</p>
                   )}
                 </div>
