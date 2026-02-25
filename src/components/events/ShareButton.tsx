@@ -91,7 +91,11 @@ export function ShareButton({
   if (canNativeShare && iconOnly) {
     return (
       <button
-        onClick={handleNativeShare}
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          handleNativeShare();
+        }}
         className={className}
         aria-label="Compartilhar evento"
       >
@@ -104,7 +108,14 @@ export function ShareButton({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         {iconOnly ? (
-          <button className={className} aria-label="Compartilhar evento">
+          <button
+            className={className}
+            aria-label="Compartilhar evento"
+            onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+            }}
+          >
             <Share2 className="h-6 w-6" strokeWidth={strokeWidth} />
           </button>
         ) : (
