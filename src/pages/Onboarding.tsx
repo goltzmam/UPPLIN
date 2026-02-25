@@ -145,14 +145,7 @@ export default function Onboarding() {
                 className="mb-4"
               >
                 <h2 
-                  className="font-display text-3xl font-bold tracking-tight"
-                  style={{ 
-                    background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
-                    WebkitBackgroundClip: "text",
-                    WebkitTextFillColor: "transparent",
-                    backgroundClip: "text",
-                    filter: "brightness(1.5)",
-                  }}
+                  className="font-display text-3xl font-bold tracking-tight text-white"
                 >
                   UPPLIN
                 </h2>
