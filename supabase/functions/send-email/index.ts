@@ -12,7 +12,7 @@ const FROM_EMAIL = "UPPLIN <onboarding@resend.dev>";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://upplin.lovable.app";
 
 interface EmailRequest {
-  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer" | "pix_pending";
+  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer" | "pix_pending" | "collaborator_invite";
   to: string;
   data: {
     userName?: string;
@@ -29,6 +29,9 @@ interface EmailRequest {
     pixCopyPaste?: string;
     pixExpiration?: string;
     paymentLink?: string;
+    organizerName?: string;
+    scannerLink?: string;
+    collaboratorName?: string;
   };
 }
 
@@ -410,6 +413,61 @@ const emailTemplates = {
             
             <p style="color: #64748b; font-size: 14px; text-align: center; margin-top: 16px;">
               Valor: <strong>${data.totalAmount}</strong> · Pedido #${data.orderId?.slice(0, 8).toUpperCase() || ""}
+            </p>
+          </div>
+          <div class="footer">
+            <p><strong>UPPLIN</strong> — A melhor experiência em eventos</p>
+            <p>Este é um email automático, por favor não responda.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `,
+  }),
+
+  collaborator_invite: (data: EmailRequest["data"]) => ({
+    subject: `📱 Você foi convidado para fazer check-in - ${data.eventTitle || "UPPLIN"}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+          .header { background: linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A); padding: 40px 30px; text-align: center; }
+          .content { padding: 30px; }
+          .info-card { background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #FF6A00; }
+          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
+          .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -1px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 16px 36px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">UPPLIN</div>
+            <h1 style="color: white; margin-top: 12px;">📱 Convite de Check-in</h1>
+          </div>
+          <div class="content">
+            <p>Olá <strong>${data.collaboratorName || data.userName || ""}</strong>,</p>
+            <p>Você foi convidado por <strong>${data.organizerName || "um organizador"}</strong> para ajudar no check-in de participantes.</p>
+            
+            <div class="info-card">
+              <h3 style="margin-top: 0; color: #1e293b;">${data.eventTitle || "Evento"}</h3>
+              ${data.eventDate ? `<p style="color: #64748b; margin: 4px 0;">📅 ${data.eventDate}</p>` : ""}
+              ${data.eventVenue ? `<p style="color: #64748b; margin: 4px 0;">📍 ${data.eventVenue}</p>` : ""}
+            </div>
+            
+            <p>Use o link abaixo no seu celular para acessar o scanner de QR Code e validar ingressos na entrada:</p>
+            
+            <p style="text-align: center; margin-top: 24px;">
+              <a href="${data.scannerLink || SITE_URL}" class="btn">Abrir Scanner</a>
+            </p>
+            
+            <p style="color: #64748b; font-size: 13px; margin-top: 20px;">
+              💡 <strong>Dica:</strong> Salve esse link nos favoritos do celular para acesso rápido no dia do evento.
             </p>
           </div>
           <div class="footer">

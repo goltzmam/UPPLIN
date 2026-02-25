@@ -106,13 +106,38 @@ export function CollaboratorManager({ organizerId, events, selectedEventId }: Co
         throw error;
       }
 
+      // Send email notification to collaborator
+      const eventForScope = eventScope !== "all" ? events.find(e => e.id === eventScope) : null;
+      const scannerLink = eventForScope
+        ? `${window.location.origin}/scan/${eventForScope.id}`
+        : selectedEventId
+          ? `${window.location.origin}/scan/${selectedEventId}`
+          : window.location.origin;
+
+      try {
+        await supabase.functions.invoke("send-email", {
+          body: {
+            type: "collaborator_invite",
+            to: email.trim().toLowerCase(),
+            data: {
+              collaboratorName: profile.full_name || name.trim() || email,
+              organizerName: undefined, // filled below if needed
+              eventTitle: eventForScope?.title || "Todos os eventos",
+              scannerLink,
+            },
+          },
+        });
+      } catch (emailErr) {
+        console.warn("Failed to send collaborator invite email:", emailErr);
+      }
+
       return profile;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["checkin-collaborators", organizerId] });
       setEmail("");
       setName("");
-      toast({ title: "✅ Colaborador adicionado!", description: "Ele já pode acessar o scanner." });
+      toast({ title: "✅ Colaborador adicionado!", description: "Ele já pode acessar o scanner e recebeu um email com o link." });
     },
     onError: (err: any) => {
       toast({ title: "Erro", description: err.message, variant: "destructive" });

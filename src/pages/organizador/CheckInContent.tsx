@@ -26,6 +26,7 @@ import { useAuth } from "@/lib/auth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import confetti from "canvas-confetti";
 import { CollaboratorManager } from "@/components/checkin/CollaboratorManager";
+import { CheckInReport } from "@/components/checkin/CheckInReport";
 
 interface CheckInResult {
   success: boolean;
@@ -406,7 +407,14 @@ export default function CheckInContent() {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         {ticket.status === "used" ? (
-                          <Badge variant="secondary" className="text-xs">Validado</Badge>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <Badge variant="secondary" className="text-xs">Validado</Badge>
+                            {ticket.used_at && (
+                              <span className="text-[10px] text-muted-foreground">
+                                {format(new Date(ticket.used_at), "HH:mm", { locale: ptBR })}
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <Button
                             size="sm"
@@ -425,6 +433,12 @@ export default function CheckInContent() {
               </div>
             </CardContent>
           </Card>
+          {/* Check-in Report */}
+          <CheckInReport
+            eventId={selectedEvent}
+            eventTitle={events.find(e => e.id === selectedEvent)?.title || ""}
+            organizerId={organizer.id}
+          />
           {/* Collaborator Manager */}
           <CollaboratorManager
             organizerId={organizer.id}
