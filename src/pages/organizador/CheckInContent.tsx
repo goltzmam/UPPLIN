@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { QrCode, CheckCircle, XCircle, Search, Ticket, User, Calendar, Keyboard } from "lucide-react";
@@ -38,6 +38,7 @@ export default function CheckInContent() {
   const [selectedEvent, setSelectedEvent] = useState<string>("");
   const [manualCode, setManualCode] = useState("");
   const [checkInResult, setCheckInResult] = useState<CheckInResult | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: events = [] } = useQuery({
     queryKey: ["organizer-events-checkin", organizer?.id],
@@ -143,6 +144,43 @@ export default function CheckInContent() {
     processCode(manualCode);
     setManualCode("");
   };
+
+  // Realtime subscription for ticket updates
+  useEffect(() => {
+    if (!selectedEvent) return;
+
+    const channel = supabase
+      .channel(`checkin-tickets-${selectedEvent}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tickets",
+          filter: `event_id=eq.${selectedEvent}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["event-tickets", selectedEvent] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedEvent, queryClient]);
+
+  const filteredTickets = useMemo(() => {
+    if (!searchQuery.trim()) return eventTickets;
+    const q = searchQuery.toLowerCase();
+    return eventTickets.filter((t: any) => {
+      const name = (t.profiles?.full_name || "").toLowerCase();
+      const email = (t.profiles?.email || "").toLowerCase();
+      const id = t.id.toLowerCase();
+      const typeName = (t.ticket_types?.name || "").toLowerCase();
+      return name.includes(q) || email.includes(q) || id.includes(q) || typeName.includes(q);
+    });
+  }, [eventTickets, searchQuery]);
 
   const checkedIn = eventTickets.filter(t => t.status === "used").length;
   const total = eventTickets.length;
@@ -314,6 +352,15 @@ export default function CheckInContent() {
                 <Ticket className="h-5 w-5" />
                 Lista de Ingressos ({total})
               </CardTitle>
+              <div className="relative mt-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar por nome, email ou código..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
@@ -321,8 +368,12 @@ export default function CheckInContent() {
                   <p className="text-center py-8 text-muted-foreground">
                     Nenhum ingresso vendido para este evento
                   </p>
+                ) : filteredTickets.length === 0 ? (
+                  <p className="text-center py-8 text-muted-foreground">
+                    Nenhum resultado para "{searchQuery}"
+                  </p>
                 ) : (
-                  eventTickets.map((ticket: any) => (
+                  filteredTickets.map((ticket: any) => (
                     <div
                       key={ticket.id}
                       className={cn(
