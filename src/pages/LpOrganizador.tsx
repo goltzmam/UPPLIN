@@ -170,7 +170,7 @@ export default function LpOrganizador() {
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* ── URGENCY BANNER ── */}
       <div className="fixed top-0 left-0 right-0 z-[60] bg-gradient-to-r from-[#FF6A00] via-[#FF2D2D] to-[#FF007A] text-white text-center py-2 px-4">
-        <p className="text-xs sm:text-sm font-medium flex items-center justify-center gap-2 flex-wrap">
+        <p className="text-xs sm:text-sm font-medium flex items-center justify-center gap-2">
           <span className="inline-flex items-center gap-1.5">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
@@ -178,8 +178,6 @@ export default function LpOrganizador() {
             </span>
             <strong>127+ organizadores</strong> já estão vendendo na UPPLIN
           </span>
-          <span className="hidden sm:inline">•</span>
-          <span>Comece grátis agora — vagas limitadas para o plano beta!</span>
         </p>
       </div>
 
