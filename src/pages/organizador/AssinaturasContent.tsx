@@ -1,10 +1,21 @@
 import { useState } from "react";
-import { useOutletContext, useNavigate } from "react-router-dom";
+import { useOutletContext } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Crown, Check, Loader2, Zap, Sparkles, ArrowRight } from "lucide-react";
+import { Crown, Check, Loader2, Zap, Sparkles, ArrowRight, AlertTriangle, MessageCircle, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,7 +37,6 @@ export default function AssinaturasContent() {
   const queryClient = useQueryClient();
   const [subscribingPlan, setSubscribingPlan] = useState<string | null>(null);
 
-  // Fetch available plans
   const { data: plans, isLoading: loadingPlans } = useQuery({
     queryKey: ["subscription-plans"],
     queryFn: async () => {
@@ -40,7 +50,6 @@ export default function AssinaturasContent() {
     },
   });
 
-  // Fetch current subscription
   const { data: currentSub, isLoading: loadingSub } = useQuery({
     queryKey: ["organizer-subscription", organizer?.id],
     queryFn: async () => {
@@ -66,19 +75,30 @@ export default function AssinaturasContent() {
     },
     onSuccess: (data) => {
       if (data.status === "active") {
-        // Free plan activated directly
         toast({ title: "Plano ativado! ✅", description: "Seu plano foi atualizado com sucesso." });
         queryClient.invalidateQueries({ queryKey: ["organizer-subscription"] });
       } else if (data.init_point) {
-        // Redirect to MP for payment
         window.location.href = data.init_point;
       }
     },
     onError: (err: any) => {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
     },
-    onSettled: () => {
-      setSubscribingPlan(null);
+    onSettled: () => setSubscribingPlan(null),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke("mp-cancel-subscription");
+      if (error) throw new Error(error.message);
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Assinatura cancelada", description: "Você foi migrado para o plano Free." });
+      queryClient.invalidateQueries({ queryKey: ["organizer-subscription"] });
+    },
+    onError: (err: any) => {
+      toast({ title: "Erro ao cancelar", description: err.message, variant: "destructive" });
     },
   });
 
@@ -89,6 +109,7 @@ export default function AssinaturasContent() {
 
   const currentPlanId = currentSub?.plan_id;
   const isActive = currentSub?.status === "active";
+  const hasPaidPlan = isActive && currentPlanId && currentPlanId !== "free";
 
   if (loadingPlans || loadingSub) {
     return (
@@ -113,13 +134,11 @@ export default function AssinaturasContent() {
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${planColors[currentPlanId || "free"]}`}>
             {planIcons[currentPlanId || "free"]}
           </div>
-          <div>
+          <div className="flex-1">
             <p className="font-medium text-sm">Plano atual</p>
             <p className="text-lg font-bold font-display">{currentSub.subscription_plans?.name || "Free"}</p>
           </div>
-          <Badge variant="outline" className="ml-auto text-primary border-primary">
-            Ativo
-          </Badge>
+          <Badge variant="outline" className="text-primary border-primary">Ativo</Badge>
         </div>
       )}
 
@@ -133,9 +152,7 @@ export default function AssinaturasContent() {
             <Card
               key={plan.id}
               className={`relative overflow-hidden transition-all ${
-                isCurrent
-                  ? "border-primary ring-2 ring-primary/20"
-                  : "hover:border-primary/40"
+                isCurrent ? "border-primary ring-2 ring-primary/20" : "hover:border-primary/40"
               }`}
             >
               {plan.id === "pro" && (
@@ -153,22 +170,16 @@ export default function AssinaturasContent() {
                   <span className="text-2xl font-bold text-foreground font-display">
                     {formatPrice(plan.price_cents)}
                   </span>
-                  {plan.price_cents > 0 && (
-                    <span className="text-muted-foreground">/mês</span>
-                  )}
+                  {plan.price_cents > 0 && <span className="text-muted-foreground">/mês</span>}
                 </CardDescription>
               </CardHeader>
 
               <CardContent className="space-y-4">
-                {/* Commission rate */}
                 <div className="bg-muted/50 rounded-xl p-3 text-center">
                   <p className="text-xs text-muted-foreground">Comissão por venda</p>
-                  <p className="text-2xl font-bold font-display text-primary">
-                    {plan.commission_percent}%
-                  </p>
+                  <p className="text-2xl font-bold font-display text-primary">{plan.commission_percent}%</p>
                 </div>
 
-                {/* Features */}
                 <ul className="space-y-2">
                   {features.map((feature, i) => (
                     <li key={i} className="flex items-start gap-2 text-sm">
@@ -178,7 +189,6 @@ export default function AssinaturasContent() {
                   ))}
                 </ul>
 
-                {/* CTA */}
                 <Button
                   className="w-full"
                   variant={isCurrent ? "outline" : plan.id === "pro" ? "default" : "outline"}
@@ -198,6 +208,76 @@ export default function AssinaturasContent() {
             </Card>
           );
         })}
+      </div>
+
+      {/* Cancellation Section */}
+      {hasPaidPlan && (
+        <div className="bg-card border border-border rounded-2xl p-4 sm:p-6 space-y-4">
+          <h3 className="font-display text-lg font-bold">Cancelar assinatura</h3>
+          <p className="text-sm text-muted-foreground">
+            Ao cancelar, você será migrado para o plano Free com comissão de 10% por venda.
+            O cancelamento é imediato.
+          </p>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" size="sm" disabled={cancelMutation.isPending}>
+                {cancelMutation.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                )}
+                Cancelar Assinatura
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Confirmar cancelamento?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Sua assinatura do plano <strong>{currentSub?.subscription_plans?.name}</strong> será cancelada imediatamente.
+                  Você será migrado para o plano <strong>Free</strong> com comissão de <strong>10%</strong> por venda.
+                  Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Manter plano</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => cancelMutation.mutate()}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Sim, cancelar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      )}
+
+      {/* Support Section */}
+      <div className="bg-card border border-border rounded-2xl p-4 sm:p-6">
+        <h3 className="font-display text-lg font-bold mb-2">Precisa de ajuda?</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Fale com nosso suporte para tirar dúvidas sobre planos, pagamentos ou funcionalidades.
+        </p>
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" size="sm" asChild>
+            <a href="https://wa.me/558520103399?text=Olá! Preciso de ajuda com minha assinatura UPPLIN." target="_blank" rel="noopener noreferrer">
+              <MessageCircle className="h-4 w-4 mr-2" />
+              WhatsApp
+            </a>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href="tel:+558520103399">
+              <Phone className="h-4 w-4 mr-2" />
+              (85) 2010-3399
+            </a>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <a href="mailto:contato@upplin.com">
+              Enviar e-mail
+            </a>
+          </Button>
+        </div>
       </div>
 
       <p className="text-xs text-center text-muted-foreground">

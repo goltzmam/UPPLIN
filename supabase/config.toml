@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.mp-subscribe]
 verify_jwt = false
+
+[functions.mp-cancel-subscription]
+verify_jwt = false
