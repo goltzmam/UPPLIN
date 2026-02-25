@@ -119,7 +119,7 @@ export function TikTokDesktopSidebar() {
 
   return (
     <>
-      <aside className="desktop-sidebar-only fixed left-0 top-0 h-dvh w-[72px] z-40 bg-sidebar border-r border-sidebar-border flex flex-col">
+      <aside className="desktop-sidebar-only fixed left-0 top-0 h-dvh w-[72px] z-40 bg-sidebar border-r border-sidebar-border flex flex-col overflow-y-auto overflow-x-hidden">
         {/* Logo - "UP" matching mobile branding */}
         <div className="flex-shrink-0 flex items-center justify-center py-5">
           <Link to="/">
