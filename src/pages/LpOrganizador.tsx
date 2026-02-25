@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import {
   Zap, BarChart3, QrCode, Tag, Shield, Smartphone,
   Users, TrendingUp, ArrowRight, Check, Star, ChevronDown,
@@ -8,6 +9,11 @@ import {
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import type { Easing } from "framer-motion";
+
+// Images
+import dashboardImg from "@/assets/lp/dashboard-preview.jpg";
+import checkinImg from "@/assets/lp/checkin-mobile.jpg";
+import heroEventImg from "@/assets/lp/hero-event.jpg";
 
 const easeOut: Easing = [0, 0, 0.2, 1];
 
@@ -106,6 +112,57 @@ export default function LpOrganizador() {
   const goRegister = () => navigate("/organizador/cadastro");
   const goLogin = () => navigate("/organizador/login");
 
+  // SEO: dynamic meta tags
+  useEffect(() => {
+    document.title = "Venda Ingressos Online | UPPLIN para Organizadores";
+    
+    const setMeta = (name: string, content: string, property = false) => {
+      const attr = property ? "property" : "name";
+      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement;
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, name);
+        document.head.appendChild(el);
+      }
+      el.content = content;
+    };
+
+    setMeta("description", "Plataforma completa para venda de ingressos online. Crie eventos, venda com PIX e cartão, check-in QR Code. Comece grátis!");
+    setMeta("keywords", "venda ingressos online, plataforma eventos, check-in QR code, organizador de eventos, ingressos PIX");
+    setMeta("og:title", "Venda Ingressos Online | UPPLIN para Organizadores", true);
+    setMeta("og:description", "Plataforma completa para venda de ingressos online. Crie eventos, venda com PIX e cartão, check-in QR Code.", true);
+    setMeta("og:image", window.location.origin + "/og-organizador.jpg", true);
+    setMeta("og:url", window.location.href, true);
+    setMeta("og:type", "website", true);
+    setMeta("twitter:title", "Venda Ingressos Online | UPPLIN para Organizadores");
+    setMeta("twitter:description", "Plataforma completa para venda de ingressos. Comece grátis!");
+    setMeta("twitter:image", window.location.origin + "/og-organizador.jpg");
+
+    // JSON-LD
+    const jsonLd = document.createElement("script");
+    jsonLd.type = "application/ld+json";
+    jsonLd.id = "lp-jsonld";
+    jsonLd.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "UPPLIN",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "description": "Plataforma completa para organizadores de eventos. Venda ingressos online com PIX, cartão, check-in QR Code e dashboard analítico.",
+      "offers": [
+        { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "BRL" },
+        { "@type": "Offer", "name": "Pro", "price": "49", "priceCurrency": "BRL" },
+        { "@type": "Offer", "name": "Enterprise", "price": "199", "priceCurrency": "BRL" }
+      ],
+      "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "reviewCount": "500" }
+    });
+    document.head.appendChild(jsonLd);
+
+    return () => {
+      document.getElementById("lp-jsonld")?.remove();
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* ── NAVBAR ── */}
@@ -186,6 +243,24 @@ export default function LpOrganizador() {
               Ver Planos
             </Button>
           </motion.div>
+
+          {/* Hero image */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.4 }}
+            className="mt-12 sm:mt-16"
+          >
+            <div className="relative rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-[#FF2D2D]/10">
+              <img
+                src={heroEventImg}
+                alt="Evento vibrante com público animado"
+                className="w-full h-auto object-cover"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -251,6 +326,72 @@ export default function LpOrganizador() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── DASHBOARD SHOWCASE ── */}
+      <section className="py-20 sm:py-28 px-4 bg-card/30 border-y border-border/40">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}>
+              <h2 className="text-3xl sm:text-4xl font-black mb-4">
+                Dashboard completo para{" "}
+                <span className="bg-gradient-to-r from-[#FF6A00] to-[#FF007A] bg-clip-text text-transparent">
+                  controlar tudo
+                </span>
+              </h2>
+              <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+                Acompanhe vendas em tempo real, veja gráficos de receita, monitore check-ins e gerencie 
+                todos os seus eventos em um painel intuitivo e profissional.
+              </p>
+              <ul className="space-y-3">
+                {["Vendas e receita em tempo real", "Gráficos e relatórios exportáveis", "Gestão de ingressos e cupons", "Visão geral de todos os eventos"].map(item => (
+                  <li key={item} className="flex items-center gap-2.5 text-sm">
+                    <Check className="w-4 h-4 text-[#FF2D2D] shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}>
+              <div className="rounded-2xl overflow-hidden border border-border/30 shadow-xl shadow-[#FF2D2D]/5">
+                <img src={dashboardImg} alt="Dashboard do organizador UPPLIN com gráficos de vendas" className="w-full h-auto" loading="lazy" />
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── CHECK-IN SHOWCASE ── */}
+      <section className="py-20 sm:py-28 px-4">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="order-2 lg:order-1">
+              <div className="max-w-sm mx-auto rounded-2xl overflow-hidden border border-border/30 shadow-xl shadow-[#FF2D2D]/5">
+                <img src={checkinImg} alt="Check-in por QR Code no celular na entrada do evento" className="w-full h-auto" loading="lazy" />
+              </div>
+            </motion.div>
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1} className="order-1 lg:order-2">
+              <h2 className="text-3xl sm:text-4xl font-black mb-4">
+                Check-in{" "}
+                <span className="bg-gradient-to-r from-[#FF6A00] to-[#FF007A] bg-clip-text text-transparent">
+                  instantâneo
+                </span>{" "}pelo celular
+              </h2>
+              <p className="text-muted-foreground text-base mb-6 leading-relaxed">
+                Esqueça listas de papel e filas intermináveis. Com o QR Code da UPPLIN, 
+                seus colaboradores fazem check-in em segundos direto do celular.
+              </p>
+              <ul className="space-y-3">
+                {["QR Code único por ingresso", "Validação offline disponível", "Múltiplos colaboradores simultâneos", "Relatório de check-in em tempo real"].map(item => (
+                  <li key={item} className="flex items-center gap-2.5 text-sm">
+                    <Check className="w-4 h-4 text-[#FF2D2D] shrink-0" />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </motion.div>
           </div>
         </div>
       </section>
