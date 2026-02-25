@@ -1,8 +1,8 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
-import { Download, BarChart3, Clock, CalendarIcon } from "lucide-react";
-import { format, isSameDay, startOfDay, endOfDay } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
+import { Download, BarChart3, Clock, CalendarIcon, TrendingUp, Trophy, Zap } from "lucide-react";
+import { format, isSameDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -92,6 +92,37 @@ export function CheckInReport({ eventId, eventTitle, organizerId }: CheckInRepor
       return { name: collab?.display_name || "Organizador", count };
     }).sort((a, b) => b.count - a.count);
   }, [filteredTickets, collaborators]);
+
+  // Day comparison data (only for multi-day events)
+  const dayComparisonData = useMemo(() => {
+    if (availableDates.length <= 1) return null;
+
+    const days = availableDates.map((d) => {
+      const date = new Date(d + "T12:00:00");
+      const dayTickets = tickets.filter((t: any) => t.used_at && isSameDay(new Date(t.used_at), date));
+
+      // Find peak hour
+      const hourCounts: Record<string, number> = {};
+      dayTickets.forEach((t: any) => {
+        const hour = format(new Date(t.used_at), "HH:00");
+        hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+      });
+      const peakEntry = Object.entries(hourCounts).sort((a, b) => b[1] - a[1])[0];
+
+      return {
+        date: d,
+        label: format(date, "EEE dd/MM", { locale: ptBR }),
+        shortLabel: format(date, "dd/MM"),
+        count: dayTickets.length,
+        peakHour: peakEntry?.[0] || "—",
+        peakCount: peakEntry?.[1] || 0,
+      };
+    });
+
+    const maxDay = days.reduce((a, b) => (a.count > b.count ? a : b));
+
+    return { days, maxDay };
+  }, [tickets, availableDates]);
 
   const exportCSV = () => {
     const header = "Nome,Email,Tipo Ingresso,Horário Check-in,Validado por\n";
@@ -195,6 +226,87 @@ export function CheckInReport({ eventId, eventTitle, organizerId }: CheckInRepor
         )}
       </CardHeader>
       <CardContent className="space-y-5">
+        {/* Day comparison section - only when viewing all days */}
+        {dayComparisonData && !selectedDate && (
+          <div className="space-y-3">
+            <p className="text-sm font-medium flex items-center gap-1.5">
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              Comparativo entre dias
+            </p>
+
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-lg border bg-emerald-500/10 border-emerald-500/20 p-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Trophy className="h-3.5 w-3.5 text-emerald-600" />
+                  <span className="text-[11px] font-medium text-emerald-700 dark:text-emerald-400">Dia com mais check-ins</span>
+                </div>
+                <p className="text-lg font-bold">{dayComparisonData.maxDay.count}</p>
+                <p className="text-xs text-muted-foreground">{dayComparisonData.maxDay.label}</p>
+              </div>
+              <div className="rounded-lg border bg-orange-500/10 border-orange-500/20 p-3">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Zap className="h-3.5 w-3.5 text-orange-600" />
+                  <span className="text-[11px] font-medium text-orange-700 dark:text-orange-400">Horário de pico geral</span>
+                </div>
+                <p className="text-lg font-bold">{dayComparisonData.maxDay.peakHour}</p>
+                <p className="text-xs text-muted-foreground">{dayComparisonData.maxDay.peakCount} check-ins nesse horário</p>
+              </div>
+            </div>
+
+            {/* Bar chart comparing days */}
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={dayComparisonData.days}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
+                  <XAxis dataKey="shortLabel" tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <YAxis allowDecimals={false} tick={{ fontSize: 11 }} className="fill-muted-foreground" />
+                  <Tooltip
+                    contentStyle={{ borderRadius: 12, fontSize: 13, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))" }}
+                    labelFormatter={(_: any, payload: any) => payload?.[0]?.payload?.label || ""}
+                    formatter={(v: number, _name: string, entry: any) => [
+                      `${v} check-ins · Pico: ${entry.payload.peakHour} (${entry.payload.peakCount})`,
+                      "",
+                    ]}
+                  />
+                  <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    {dayComparisonData.days.map((d, i) => (
+                      <Cell
+                        key={i}
+                        fill={d.date === dayComparisonData.maxDay.date ? "hsl(var(--primary))" : "hsl(var(--primary) / 0.4)"}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Peak hour per day table */}
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-muted/50">
+                    <th className="text-left py-1.5 px-3 font-medium">Dia</th>
+                    <th className="text-right py-1.5 px-3 font-medium">Check-ins</th>
+                    <th className="text-right py-1.5 px-3 font-medium">Pico</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {dayComparisonData.days.map((d) => (
+                    <tr key={d.date} className="border-t border-border/50">
+                      <td className="py-1.5 px-3">{d.label}</td>
+                      <td className="py-1.5 px-3 text-right font-medium">{d.count}</td>
+                      <td className="py-1.5 px-3 text-right text-muted-foreground">
+                        {d.peakHour} ({d.peakCount})
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
         {filteredTickets.length === 0 ? (
           <p className="text-center py-6 text-sm text-muted-foreground">
             Nenhum check-in nesta data
@@ -206,6 +318,7 @@ export function CheckInReport({ eventId, eventTitle, organizerId }: CheckInRepor
               <p className="text-sm font-medium mb-2 flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-muted-foreground" />
                 Check-ins por horário
+                {selectedDate && <span className="text-muted-foreground font-normal text-xs">({format(selectedDate, "dd/MM", { locale: ptBR })})</span>}
                 <span className="text-muted-foreground font-normal">({filteredTickets.length})</span>
               </p>
               <div className="h-48">
