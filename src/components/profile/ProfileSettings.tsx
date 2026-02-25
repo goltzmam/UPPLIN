@@ -1,15 +1,13 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { User, Mail, CreditCard, Loader2, AlertCircle, Bell, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
-import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
@@ -32,7 +30,7 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { isSupported, isSubscribed, subscribe, unsubscribe, loading: pushLoading } = usePushNotifications();
+  
   
   const [fullName, setFullName] = useState(profile.full_name || "");
   const [cpf, setCpf] = useState(profile.cpf || "");
@@ -151,13 +149,6 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
     }
   };
 
-  const handleNotificationToggle = async () => {
-    if (isSubscribed) {
-      await unsubscribe();
-    } else {
-      await subscribe();
-    }
-  };
 
   const cpfLocked = !!profile.cpf && profile.cpf_locked;
 
@@ -326,31 +317,6 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
         </Button>
       </div>
 
-      {/* Notifications Card */}
-      {isSupported && (
-        <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
-          <h3 className="font-display font-semibold text-lg">Notificações</h3>
-          
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                <Bell className="h-5 w-5 text-muted-foreground" />
-              </div>
-              <div>
-                <p className="font-medium text-sm">Notificações Push</p>
-                <p className="text-xs text-muted-foreground">
-                  Receba alertas de eventos salvos
-                </p>
-              </div>
-            </div>
-            <Switch
-              checked={isSubscribed}
-              onCheckedChange={handleNotificationToggle}
-              disabled={pushLoading}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Account Actions */}
       <div className="flex flex-col gap-3">
