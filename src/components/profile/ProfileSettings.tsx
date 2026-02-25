@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useUserRoles } from "@/hooks/use-user-roles";
 
 interface Profile {
   id: string;
@@ -30,7 +31,7 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
   const { signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+  const { isOrganizer, isLoading: rolesLoading } = useUserRoles();
   
   const [fullName, setFullName] = useState(profile.full_name || "");
   const [cpf, setCpf] = useState(profile.cpf || "");
@@ -157,6 +158,8 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
     { icon: Ticket, label: "Meus Ingressos", path: "/meus-ingressos", description: "Ver todos os ingressos" },
     { icon: Bookmark, label: "Eventos Salvos", path: "/eventos-salvos", description: "Eventos que você salvou" },
     { icon: Search, label: "Explorar Eventos", path: "/eventos", description: "Descobrir novos eventos" },
+    ...(!rolesLoading && !isOrganizer ? [{ icon: CalendarPlus, label: "Quero ser organizador", path: "/organizador/cadastro", description: "Crie e promova seus eventos" }] : []),
+    ...(!rolesLoading && isOrganizer ? [{ icon: CalendarPlus, label: "Painel do organizador", path: "/organizador/painel", description: "Gerencie seus eventos" }] : []),
   ];
 
   const getInitials = (name: string | null) => {
