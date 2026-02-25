@@ -6,6 +6,13 @@ import { Users, Compass, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import avatar1 from "@/assets/avatars/avatar-1.jpg";
+import avatar2 from "@/assets/avatars/avatar-2.jpg";
+import avatar3 from "@/assets/avatars/avatar-3.jpg";
+import avatar4 from "@/assets/avatars/avatar-4.jpg";
+import avatar5 from "@/assets/avatars/avatar-5.jpg";
+
+const socialProofAvatars = [avatar1, avatar2, avatar3, avatar4, avatar5];
 
 interface EventWithOrganizer {
   id: string;
@@ -178,13 +185,15 @@ export function FollowingFeed() {
         >
           {/* Stacked avatars */}
           <div className="flex justify-center -space-x-2 mb-3">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <motion.div
+            {socialProofAvatars.map((src, i) => (
+              <motion.img
                 key={i}
+                src={src}
+                alt=""
                 initial={{ scale: 0, x: -10 }}
                 animate={{ scale: 1, x: 0 }}
                 transition={{ delay: 0.55 + i * 0.06, type: "spring", stiffness: 300 }}
-                className="h-10 w-10 rounded-full bg-muted border-2 border-background"
+                className="h-10 w-10 rounded-full border-2 border-background object-cover"
               />
             ))}
           </div>
