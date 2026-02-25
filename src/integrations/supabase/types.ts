@@ -998,6 +998,66 @@ export type Database = {
           },
         ]
       }
+      subscription_invoices: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          mp_payment_id: string | null
+          organizer_id: string
+          paid_at: string | null
+          period_end: string | null
+          period_start: string
+          plan_id: string
+          status: string
+          subscription_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          mp_payment_id?: string | null
+          organizer_id: string
+          paid_at?: string | null
+          period_end?: string | null
+          period_start: string
+          plan_id: string
+          status?: string
+          subscription_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          mp_payment_id?: string | null
+          organizer_id?: string
+          paid_at?: string | null
+          period_end?: string | null
+          period_start?: string
+          plan_id?: string
+          status?: string
+          subscription_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscription_invoices_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_plans: {
         Row: {
           commission_percent: number
