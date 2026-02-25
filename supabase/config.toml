@@ -1,1 +1,7 @@
 project_id = "pyhlsgfsunjcjbaqjcwn"
+
+[functions.mp-webhook]
+verify_jwt = false
+
+[functions.mp-connect]
+verify_jwt = false

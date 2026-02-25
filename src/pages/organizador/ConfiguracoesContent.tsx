@@ -1,7 +1,7 @@
-import { useState, useCallback } from "react";
-import { useOutletContext } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Upload, Loader2, Instagram, Globe, Facebook, MapPin } from "lucide-react";
+import { useState, useCallback, useEffect } from "react";
+import { useOutletContext, useSearchParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Save, Upload, Loader2, Instagram, Globe, Facebook, MapPin, CreditCard, CheckCircle2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -452,6 +452,9 @@ export default function ConfiguracoesContent() {
         </CardContent>
       </Card>
 
+      {/* Mercado Pago Integration */}
+      <MercadoPagoCard />
+
       {/* Save Button (mobile) */}
       <div className="sm:hidden">
         <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="w-full">
@@ -464,5 +467,114 @@ export default function ConfiguracoesContent() {
         </Button>
       </div>
     </div>
+  );
+}
+
+function MercadoPagoCard() {
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  const [connecting, setConnecting] = useState(false);
+
+  const { data: mpStatus, isLoading } = useQuery({
+    queryKey: ["mp-status"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("mp-connect", {
+        body: {},
+        headers: {},
+      });
+      // Use query params approach
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mp-connect?action=status`,
+        {
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Failed to check status");
+      return res.json();
+    },
+  });
+
+  useEffect(() => {
+    if (searchParams.get("mp") === "connected") {
+      toast({ title: "Mercado Pago conectado com sucesso! ✅" });
+    }
+  }, [searchParams, toast]);
+
+  const handleConnect = async () => {
+    setConnecting(true);
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mp-connect?action=auth-url`,
+        {
+          headers: {
+            Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Erro ao gerar link");
+      const { auth_url } = await res.json();
+      window.location.href = auth_url;
+    } catch (err: any) {
+      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } finally {
+      setConnecting(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <CreditCard className="h-5 w-5" />
+          Mercado Pago
+        </CardTitle>
+        <CardDescription>
+          Conecte sua conta do Mercado Pago para receber pagamentos dos ingressos
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Verificando conexão...
+          </div>
+        ) : mpStatus?.connected ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-xl">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <div>
+                <p className="font-medium text-sm text-primary">Conta conectada</p>
+                {mpStatus.email && (
+                  <p className="text-xs text-muted-foreground">{mpStatus.email}</p>
+                )}
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleConnect}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Reconectar
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Para vender ingressos e receber pagamentos, você precisa conectar sua conta do Mercado Pago. 
+              A UPPLIN cobra uma comissão de <strong>10%</strong> por ingresso vendido.
+            </p>
+            <Button onClick={handleConnect} disabled={connecting}>
+              {connecting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <CreditCard className="h-4 w-4 mr-2" />
+              )}
+              Conectar Mercado Pago
+            </Button>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
