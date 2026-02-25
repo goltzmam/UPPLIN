@@ -430,7 +430,18 @@
   .stagger-4 { animation-delay: 0.2s; }
   .stagger-5 { animation-delay: 0.25s; }
 
-  /* Hide scrollbar */
+  /* Hide scrollbar globally — app-native UX */
+  *,
+  *::before,
+  *::after {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Legacy class kept for compatibility */
   .scrollbar-hide {
     -ms-overflow-style: none;
     scrollbar-width: none;
