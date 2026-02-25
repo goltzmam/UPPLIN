@@ -61,10 +61,10 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
     enabled: !!user && showPostDialog,
   });
 
-  const handleAction = (action: () => void) => {
+  const handleAction = async (action: () => void | Promise<void>) => {
     triggerHaptic('selection');
+    await action();
     onClose();
-    action();
   };
 
   const handlePostSubmit = async () => {
