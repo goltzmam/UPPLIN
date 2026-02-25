@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
   Music, 
@@ -34,16 +35,42 @@ const categories: Category[] = [
 ];
 
 export function CategoryPills() {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (el) el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      if (el) el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, []);
+
   return (
-    <section className="py-6 border-b border-border bg-background sticky top-16 z-40">
+    <section className="py-6 border-b border-border bg-background sticky top-16 z-40 relative">
       <div className="container">
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto pb-2 scroll-smooth snap-x"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
+        >
           {categories.map((category) => (
             <Link
               key={category.id}
               to={`/eventos?categoria=${category.id}`}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap font-medium text-sm transition-all",
+                "flex items-center gap-2 px-4 py-2.5 rounded-full whitespace-nowrap font-medium text-sm transition-all snap-start active:scale-[0.95]",
                 category.color
               )}
             >
@@ -53,6 +80,16 @@ export function CategoryPills() {
           ))}
         </div>
       </div>
+
+      {/* Fade edges */}
+      <div className={cn(
+        "absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-background to-transparent pointer-events-none transition-opacity duration-200",
+        canScrollLeft ? "opacity-100" : "opacity-0"
+      )} />
+      <div className={cn(
+        "absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background to-transparent pointer-events-none transition-opacity duration-200",
+        canScrollRight ? "opacity-100" : "opacity-0"
+      )} />
     </section>
   );
 }

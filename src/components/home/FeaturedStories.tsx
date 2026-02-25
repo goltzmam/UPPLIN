@@ -1,10 +1,10 @@
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Sparkles, Play } from "lucide-react";
-import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { motion } from "framer-motion";
 
 interface FeaturedEvent {
   id: string;
@@ -17,8 +17,27 @@ interface FeaturedEvent {
 }
 
 export function FeaturedStories() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const x = useMotionValue(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  const checkScroll = () => {
+    if (!scrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+    setCanScrollLeft(scrollLeft > 2);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 2);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (el) el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => {
+      if (el) el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+    };
+  }, []);
 
   const { data: featuredEvents, isLoading } = useQuery({
     queryKey: ["featured-events"],
@@ -59,7 +78,6 @@ export function FeaturedStories() {
     );
   }
 
-  // If no featured events, show placeholder stories
   const displayEvents = featuredEvents?.length ? featuredEvents : [
     { id: "placeholder-1", title: "Em breve", cover_image_url: null, organizer: null },
     { id: "placeholder-2", title: "Destaque", cover_image_url: null, organizer: null },
@@ -67,7 +85,7 @@ export function FeaturedStories() {
   ];
 
   return (
-    <div className="py-4 md:py-2">
+    <div className="py-4 md:py-2 relative">
       {/* Section header */}
       <div className="flex items-center gap-2 px-4 md:px-0 mb-4">
         <div className="relative">
@@ -84,14 +102,11 @@ export function FeaturedStories() {
         </h2>
       </div>
 
-      {/* Draggable stories container */}
-      <motion.div
-        ref={containerRef}
-        className="flex gap-3 md:gap-4 px-4 md:px-0 cursor-grab active:cursor-grabbing overflow-hidden"
-        drag="x"
-        dragConstraints={containerRef}
-        dragElastic={0.1}
-        style={{ x }}
+      {/* Native scrollable stories container */}
+      <div
+        ref={scrollRef}
+        className="flex gap-3 md:gap-4 px-4 md:px-0 overflow-x-auto scroll-smooth snap-x"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none", WebkitOverflowScrolling: "touch" }}
       >
         {displayEvents.map((event, index) => {
           const isPlaceholder = event.id.startsWith("placeholder");
@@ -99,10 +114,10 @@ export function FeaturedStories() {
           return (
             <motion.div
               key={event.id}
-              className="flex flex-col items-center gap-2 flex-shrink-0"
-              initial={{ opacity: 0, scale: 0.8 }}
+              className="flex flex-col items-center gap-2 flex-shrink-0 snap-start"
+              initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.05 }}
+              transition={{ delay: index * 0.04, duration: 0.3 }}
             >
               {isPlaceholder ? (
                 <div className="relative group">
@@ -112,21 +127,23 @@ export function FeaturedStories() {
                   </div>
                 </div>
               ) : (
-                <Link to={`/evento/${event.id}`} className="relative group block">
-                  {/* Gradient ring effect */}
-                  <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 rounded-2xl md:rounded-3xl opacity-100 group-hover:opacity-100 transition-opacity" />
+                <Link to={`/evento/${event.id}`} className="relative group block active:scale-[0.95] transition-transform duration-150">
+                  {/* Gradient ring */}
+                  <div className="absolute -inset-[3px] bg-gradient-to-r from-pink-500 via-purple-500 to-orange-400 rounded-2xl md:rounded-3xl" />
                   <div className="relative w-20 h-20 md:w-24 md:h-24 rounded-xl md:rounded-2xl overflow-hidden ring-2 ring-background">
                     {event.cover_image_url ? (
                       <img
                         src={event.cover_image_url}
                         alt={event.title}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        loading="lazy"
                       />
                     ) : event.organizer?.logo_url ? (
                       <img
                         src={event.organizer.logo_url}
                         alt={event.organizer.display_name}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-110"
+                        loading="lazy"
                       />
                     ) : (
                       <div className="h-full w-full bg-gradient-to-br from-accent to-pink-500 flex items-center justify-center text-white font-bold text-lg md:text-xl">
@@ -149,7 +166,18 @@ export function FeaturedStories() {
             </motion.div>
           );
         })}
-      </motion.div>
+      </div>
+
+      {/* Left fade */}
+      <div className={cn(
+        "absolute left-0 top-12 bottom-0 w-8 bg-gradient-to-r from-background to-transparent pointer-events-none transition-opacity duration-200 md:hidden",
+        canScrollLeft ? "opacity-100" : "opacity-0"
+      )} />
+      {/* Right fade */}
+      <div className={cn(
+        "absolute right-0 top-12 bottom-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none transition-opacity duration-200 md:hidden",
+        canScrollRight ? "opacity-100" : "opacity-0"
+      )} />
     </div>
   );
 }
