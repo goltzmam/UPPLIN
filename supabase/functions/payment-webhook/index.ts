@@ -26,12 +26,52 @@ serve(async (req) => {
   }
 
   try {
+    // Verify webhook signature (HMAC-SHA256)
+    const webhookSecret = Deno.env.get("WEBHOOK_SECRET");
+    if (webhookSecret) {
+      const signature = req.headers.get("X-Webhook-Signature");
+      const body = await req.text();
+      
+      if (!signature) {
+        console.error("Missing webhook signature");
+        return new Response(
+          JSON.stringify({ error: "Missing signature" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const encoder = new TextEncoder();
+      const key = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(webhookSecret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["sign"]
+      );
+      const expectedSig = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+      const expectedHex = Array.from(new Uint8Array(expectedSig))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+
+      if (signature !== expectedHex) {
+        console.error("Invalid webhook signature");
+        return new Response(
+          JSON.stringify({ error: "Invalid signature" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // Parse body from already-read text
+      var payload: WebhookPayload = JSON.parse(body);
+    } else {
+      // Fallback: no secret configured, parse normally but log warning
+      console.warn("WEBHOOK_SECRET not configured — webhook signature verification disabled");
+      var payload: WebhookPayload = await req.json();
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-
-    // Parse webhook payload
-    const payload: WebhookPayload = await req.json();
     const { 
       provider, 
       event_type, 

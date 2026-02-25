@@ -183,14 +183,33 @@ serve(async (req) => {
       );
     }
 
-    // Update ticket types sold count (reserve tickets)
+    // Update ticket types sold count atomically (prevents race conditions)
     for (const item of validatedItems) {
-      await adminClient
-        .from("ticket_types")
-        .update({ 
-          quantity_sold: (item.ticket_type.quantity_sold || 0) + item.qty 
-        })
-        .eq("id", item.ticket_type_id);
+      const { data: success, error: rpcError } = await adminClient
+        .rpc("increment_quantity_sold", {
+          p_ticket_type_id: item.ticket_type_id,
+          p_increment_by: item.qty,
+        });
+
+      if (rpcError || !success) {
+        // Rollback: delete order and order items
+        await adminClient.from("order_items").delete().eq("order_id", order.id);
+        await adminClient.from("orders").delete().eq("id", order.id);
+        
+        // Rollback already incremented ticket types
+        for (const prev of validatedItems) {
+          if (prev.ticket_type_id === item.ticket_type_id) break;
+          await adminClient.rpc("increment_quantity_sold", {
+            p_ticket_type_id: prev.ticket_type_id,
+            p_increment_by: -prev.qty,
+          });
+        }
+        
+        return new Response(
+          JSON.stringify({ error: `Ingressos esgotados para ${item.ticket_type.name}` }),
+          { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Return order details for payment processing
