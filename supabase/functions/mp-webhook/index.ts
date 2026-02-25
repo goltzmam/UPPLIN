@@ -202,7 +202,7 @@ serve(async (req) => {
         }
       }
 
-      // Notify organizer about the payment
+      // Notify buyer about confirmed payment
       try {
         const { data: event } = await adminClient
           .from("events")
@@ -210,9 +210,27 @@ serve(async (req) => {
           .eq("id", order.event_id)
           .single();
 
+        const totalReais = (payment.transaction_amount || 0).toFixed(2).replace(".", ",");
+        const paymentMethod = payment.payment_method_id || payment.payment_type_id || "";
+        const isPix = paymentMethod === "pix" || payment.payment_type_id === "bank_transfer";
+
+        // Notify buyer
+        await adminClient.from("notifications").insert({
+          user_id: order.buyer_user_id,
+          title: isPix ? "✅ PIX confirmado!" : "✅ Pagamento confirmado!",
+          body: `Seu pagamento de R$ ${totalReais} para "${event?.title || "evento"}" foi confirmado. Seus ingressos já estão disponíveis!`,
+          type: "payment_confirmed",
+          data: {
+            order_id: orderId,
+            event_id: order.event_id,
+            total_cents: Math.round((payment.transaction_amount || 0) * 100),
+            tickets_count: ticketsToCreate.length,
+          },
+        });
+
+        // Notify organizer about the payment
         if (event?.organizer_accounts) {
           const organizer = event.organizer_accounts as any;
-          const totalReais = (payment.transaction_amount || 0).toFixed(2).replace(".", ",");
           const commissionCents = order.commission_cents || 0;
           const commissionReais = (commissionCents / 100).toFixed(2).replace(".", ",");
           const netCents = Math.round((payment.transaction_amount || 0) * 100) - commissionCents;
@@ -233,7 +251,7 @@ serve(async (req) => {
           });
         }
       } catch (notifErr) {
-        console.error("Error creating organizer notification:", notifErr);
+        console.error("Error creating notifications:", notifErr);
       }
 
       console.log(`Order ${orderId} paid, ${ticketsToCreate.length} tickets issued`);
