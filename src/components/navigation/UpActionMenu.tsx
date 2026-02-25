@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, MapPin, X, Users, Compass, Loader2, Upload, Video, Image, ChevronDown } from "lucide-react";
+import { Camera, MapPin, X, Users, Loader2, Upload, Video, Image, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -168,13 +168,6 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
       description: isOnEventPage ? "Compartilhe este evento com a galera" : "Compartilhe o app com a galera",
       gradient: "from-[#FF007A] to-[#FF6A00]",
       onClick: () => handleShareApp(),
-    },
-    {
-      icon: Compass,
-      label: "Eventos por perto",
-      description: "Descubra rolês na sua região",
-      gradient: "from-[#FF2D2D] to-[#FF007A]",
-      onClick: () => navigate("/por-perto"),
     },
   ];
 
