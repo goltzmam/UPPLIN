@@ -175,16 +175,19 @@
     width: 100%;
     min-height: 100%;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto !important;
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
 
   body {
     width: 100%;
     min-height: 100%;
     overflow-x: hidden;
+    overflow-y: auto !important;
     overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -197,6 +200,8 @@
     min-height: 100dvh;
     width: 100%;
     overflow-x: hidden;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   img, video {
@@ -431,22 +436,9 @@
   .stagger-4 { animation-delay: 0.2s; }
   .stagger-5 { animation-delay: 0.25s; }
 
-  /* Hide scrollbar globally — app-native UX
-     Applied to html so all scrollable areas inherit hidden scrollbars
-     while keeping scroll functionality intact */
-  html,
-  body,
-  main,
-  [class*="overflow-"] {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-  html::-webkit-scrollbar,
-  body::-webkit-scrollbar,
-  main::-webkit-scrollbar,
-  [class*="overflow-"]::-webkit-scrollbar {
-    display: none;
-  }
+  /* Hide scrollbar visually — app-native UX
+     Uses .scrollbar-hide class for opt-in hiding.
+     Global hiding removed to prevent scroll blocking in some browsers. */
 
   /* Legacy class kept for compatibility */
   .scrollbar-hide {
