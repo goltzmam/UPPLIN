@@ -1449,6 +1449,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_quantity_sold: {
+        Args: { p_increment_by: number; p_ticket_type_id: string }
+        Returns: boolean
+      }
       is_organizer_owner: {
         Args: { _organizer_id: string; _user_id: string }
         Returns: boolean

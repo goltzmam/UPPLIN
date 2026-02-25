@@ -48,9 +48,11 @@ export default function OrganizerPublicProfile() {
     queryKey: ["organizer-public", identifier],
     queryFn: async () => {
       // First try by slug
+      const publicColumns = 'id, owner_user_id, display_name, slug, description, logo_url, email, phone, social_instagram, social_facebook, social_website, status, city, state, created_at, updated_at';
+      
       let { data, error } = await supabase
         .from("organizer_accounts")
-        .select("*")
+        .select(publicColumns)
         .eq("slug", identifier)
         .eq("status", "active")
         .maybeSingle();
@@ -59,7 +61,7 @@ export default function OrganizerPublicProfile() {
       if (!data && !error) {
         const result = await supabase
           .from("organizer_accounts")
-          .select("*")
+          .select(publicColumns)
           .eq("id", identifier)
           .eq("status", "active")
           .maybeSingle();
