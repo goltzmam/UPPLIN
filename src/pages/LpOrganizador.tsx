@@ -354,10 +354,20 @@ export default function LpOrganizador() {
                 ))}
               </ul>
             </motion.div>
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}>
-              <div className="rounded-2xl overflow-hidden border border-border/30 shadow-xl shadow-[#FF2D2D]/5">
+            <motion.div
+              initial={{ opacity: 0, y: 60, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <motion.div
+                className="rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-[#FF2D2D]/10"
+                whileInView={{ y: [0, -8, 0] }}
+                viewport={{ once: false }}
+                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+              >
                 <img src={dashboardImg} alt="Dashboard do organizador UPPLIN com gráficos de vendas" className="w-full h-auto" loading="lazy" />
-              </div>
+              </motion.div>
             </motion.div>
           </div>
         </div>
@@ -367,10 +377,21 @@ export default function LpOrganizador() {
       <section className="py-20 sm:py-28 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0} className="order-2 lg:order-1">
-              <div className="max-w-sm mx-auto rounded-2xl overflow-hidden border border-border/30 shadow-xl shadow-[#FF2D2D]/5">
+            <motion.div
+              initial={{ opacity: 0, y: 60, scale: 0.9, rotateX: 10 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+              viewport={{ once: true, margin: "-100px" }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              className="order-2 lg:order-1"
+            >
+              <motion.div
+                className="max-w-sm mx-auto rounded-2xl overflow-hidden border border-border/30 shadow-2xl shadow-[#FF2D2D]/10"
+                whileInView={{ y: [0, -10, 0] }}
+                viewport={{ once: false }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
+              >
                 <img src={checkinImg} alt="Check-in por QR Code no celular na entrada do evento" className="w-full h-auto" loading="lazy" />
-              </div>
+              </motion.div>
             </motion.div>
             <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1} className="order-1 lg:order-2">
               <h2 className="text-3xl sm:text-4xl font-black mb-4">
