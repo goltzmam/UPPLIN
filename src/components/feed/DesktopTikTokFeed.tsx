@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Plus, Ticket } from "lucide-react";
+import { Calendar, MapPin, Heart, MessageCircle, Bookmark, Play, X, Plus, Ticket, ChevronLeft } from "lucide-react";
 import { format, isWithinInterval, addHours } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -209,6 +209,21 @@ const FeedCard = React.memo(function FeedCard({
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Swipe hint - only on first card */}
+        {index === 0 && item.organizerId && (
+          <motion.div
+            initial={{ opacity: 0, x: 0 }}
+            animate={{ opacity: [0, 0.9, 0.9, 0], x: [0, -24, -24, -40] }}
+            transition={{ duration: 2.5, delay: 1.5, ease: "easeInOut" }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-[15] pointer-events-none flex items-center gap-1"
+          >
+            <div className="flex items-center gap-1 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+              <ChevronLeft className="h-4 w-4 text-white" />
+              <span className="text-white text-xs font-medium whitespace-nowrap">Ver organizador</span>
+            </div>
+          </motion.div>
+        )}
 
         {/* Live badge */}
         {isLive && (
