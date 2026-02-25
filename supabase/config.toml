@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.mp-connect]
 verify_jwt = false
+
+[functions.mp-process-payment]
+verify_jwt = false
+
+[functions.mp-get-public-key]
+verify_jwt = false
