@@ -1,4 +1,4 @@
-import { Heart, Settings, Camera, CheckCircle, Users, History, Newspaper } from "lucide-react";
+import { Heart, Bookmark, Settings, Camera, CheckCircle, Users, History, Newspaper } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProfileSettings } from "./ProfileSettings";
 import { UserPostsTab } from "./UserPostsTab";
@@ -7,6 +7,7 @@ import { EventHistoryTab } from "./EventHistoryTab";
 import { FollowingTab } from "./FollowingTab";
 import { SavedEventsTab } from "./SavedEventsTab";
 import { SocialFeedTab } from "./SocialFeedTab";
+import { LikedEventsTab } from "./LikedEventsTab";
 
 interface Profile {
   id: string;
@@ -63,10 +64,17 @@ export function ProfileTabs({
               <span className="text-[9px]">Check-ins</span>
             </TabsTrigger>
             <TabsTrigger 
-              value="salvos" 
+              value="curtidas" 
               className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <Heart className="h-4 w-4" />
+              <span className="text-[9px]">Curtidas</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="salvos" 
+              className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
+            >
+              <Bookmark className="h-4 w-4" />
               <span className="text-[9px]">Salvos</span>
             </TabsTrigger>
             <TabsTrigger 
@@ -105,6 +113,11 @@ export function ProfileTabs({
         {/* Check-ins Tab */}
         <TabsContent value="checkins" className="animate-fade-in">
           <CheckInsTab />
+        </TabsContent>
+
+        {/* Curtidas Tab */}
+        <TabsContent value="curtidas" className="animate-fade-in">
+          <LikedEventsTab />
         </TabsContent>
 
         {/* Salvos Tab */}
