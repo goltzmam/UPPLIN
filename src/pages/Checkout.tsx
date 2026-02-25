@@ -1,7 +1,7 @@
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { CreditCard, Clock, ShieldCheck, Loader2, Tag, Check, X, AlertCircle } from "lucide-react";
-import { useEffect, useState, useCallback } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CreditCard, Clock, ShieldCheck, Loader2, Tag, Check, X, AlertCircle, QrCode, Copy } from "lucide-react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { initMercadoPago, CardPayment } from "@mercadopago/sdk-react";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { PageLoading } from "@/components/ui/loading";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -17,14 +18,28 @@ import { useToast } from "@/hooks/use-toast";
 export default function Checkout() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const queryClient = useQueryClient();
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const [processing, setProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [mpInitialized, setMpInitialized] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentTab, setPaymentTab] = useState("card");
 
+  // PIX state
+  const [pixData, setPixData] = useState<{
+    qr_code: string;
+    qr_code_base64: string;
+    payment_id: number;
+    expiration?: string;
+  } | null>(null);
+  const [pixProcessing, setPixProcessing] = useState(false);
+
+  // Polling
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Coupon state
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
     id: string;
@@ -36,22 +51,13 @@ export default function Checkout() {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate("/login");
-    }
+    if (!authLoading && !user) navigate("/login");
   }, [authLoading, user, navigate]);
 
-  // Fetch MP public key and initialize SDK
+  // Fetch MP public key
   const { data: mpPublicKey } = useQuery({
     queryKey: ["mp-public-key", orderId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("mp-get-public-key", {
-        body: null,
-        method: "GET",
-        headers: {},
-      });
-      // Workaround: invoke doesn't support query params natively, use direct fetch
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
       const resp = await fetch(
@@ -77,25 +83,58 @@ export default function Checkout() {
     }
   }, [mpPublicKey, mpInitialized]);
 
+  // Fetch order
   const { data: order, isLoading } = useQuery({
     queryKey: ["order", orderId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select(`
-          *,
-          events(title, start_at, venue_name),
-          order_items(*, ticket_types(name))
-        `)
+        .select(`*, events(title, start_at, venue_name), order_items(*, ticket_types(name))`)
         .eq("id", orderId)
         .eq("buyer_user_id", user!.id)
         .maybeSingle();
-
       if (error) throw error;
       return data;
     },
     enabled: !!orderId && !!user,
   });
+
+  // Payment status polling
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, []);
+
+  const startPolling = useCallback((ordId: string) => {
+    if (pollingRef.current) clearInterval(pollingRef.current);
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from("orders")
+          .select("status")
+          .eq("id", ordId)
+          .single();
+
+        if (error) return;
+
+        if (data?.status === "paid") {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          setPaymentSuccess(true);
+          toast({ title: "Pagamento aprovado! 🎉", description: "Seus ingressos foram emitidos." });
+          queryClient.invalidateQueries({ queryKey: ["order", ordId] });
+          setTimeout(() => navigate("/pagamento-sucesso?status=approved"), 1500);
+        } else if (data?.status === "failed") {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          setPaymentError("Pagamento foi recusado.");
+          setPixData(null);
+        }
+      } catch {
+        // ignore polling errors
+      }
+    }, 5000);
+  }, [navigate, toast, queryClient]);
 
   const formatPrice = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
 
@@ -103,9 +142,8 @@ export default function Checkout() {
     if (!appliedCoupon || !order) return 0;
     if (appliedCoupon.discount_type === "percentage") {
       return Math.floor(order.total_cents * (appliedCoupon.discount_value / 100));
-    } else {
-      return appliedCoupon.discount_value;
     }
+    return appliedCoupon.discount_value;
   };
 
   const discountAmount = calculateDiscount();
@@ -151,6 +189,7 @@ export default function Checkout() {
     setCouponError(null);
   };
 
+  // Card payment handler
   const onCardPaymentSubmit = useCallback(async (formData: any) => {
     if (processing) return;
     setProcessing(true);
@@ -160,6 +199,7 @@ export default function Checkout() {
       const { data, error } = await supabase.functions.invoke("mp-process-payment", {
         body: {
           order_id: orderId,
+          payment_type: "card",
           token: formData.token,
           payment_method_id: formData.payment_method_id,
           installments: formData.installments,
@@ -181,28 +221,73 @@ export default function Checkout() {
         setPaymentError(detail);
         toast({ title: "Pagamento recusado", description: detail, variant: "destructive" });
       } else if (data.status === "in_process" || data.status === "pending") {
-        toast({ title: "Pagamento pendente", description: "Seu pagamento está sendo processado. Você receberá uma confirmação em breve." });
-        setTimeout(() => navigate("/meus-ingressos"), 2000);
+        toast({ title: "Pagamento pendente", description: "Seu pagamento está sendo processado." });
+        startPolling(orderId!);
       }
     } catch (err: any) {
-      console.error("Erro no pagamento:", err.message);
       setPaymentError(err.message || "Erro ao processar pagamento");
       toast({ title: "Erro no pagamento", description: err.message, variant: "destructive" });
     } finally {
       setProcessing(false);
     }
-  }, [orderId, navigate, toast, processing]);
+  }, [orderId, navigate, toast, processing, startPolling]);
 
   const onCardPaymentError = useCallback((error: any) => {
     console.error("Card Payment Brick error:", error);
   }, []);
 
+  // PIX payment handler
+  const handlePixPayment = async () => {
+    if (pixProcessing || !orderId) return;
+    setPixProcessing(true);
+    setPaymentError(null);
+
+    try {
+      const { data, error } = await supabase.functions.invoke("mp-process-payment", {
+        body: {
+          order_id: orderId,
+          payment_type: "pix",
+          payer_email: user?.email,
+        },
+      });
+
+      if (error) throw new Error(error.message);
+
+      if (data.status === "approved") {
+        setPaymentSuccess(true);
+        toast({ title: "Pagamento aprovado! 🎉", description: "Seus ingressos foram emitidos." });
+        setTimeout(() => navigate("/pagamento-sucesso?status=approved"), 1500);
+      } else if (data.pix_qr_code) {
+        setPixData({
+          qr_code: data.pix_qr_code,
+          qr_code_base64: data.pix_qr_code_base64,
+          payment_id: data.payment_id,
+          expiration: data.pix_expiration,
+        });
+        toast({ title: "PIX gerado!", description: "Escaneie o QR Code ou copie o código para pagar." });
+        startPolling(orderId);
+      } else {
+        setPaymentError("Erro ao gerar PIX. Tente novamente.");
+      }
+    } catch (err: any) {
+      setPaymentError(err.message || "Erro ao gerar PIX");
+      toast({ title: "Erro no pagamento", description: err.message, variant: "destructive" });
+    } finally {
+      setPixProcessing(false);
+    }
+  };
+
+  const copyPixCode = () => {
+    if (pixData?.qr_code) {
+      navigator.clipboard.writeText(pixData.qr_code);
+      toast({ title: "Código copiado!", description: "Cole no app do seu banco para pagar." });
+    }
+  };
+
   if (authLoading || isLoading) return (
     <div className="min-h-screen bg-background">
       <TikTokDesktopSidebar />
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
-        <PageLoading />
-      </main>
+      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0"><PageLoading /></main>
       <BottomNav />
     </div>
   );
@@ -266,7 +351,6 @@ export default function Checkout() {
               <div className="md:col-span-1 space-y-4">
                 <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up">
                   <h2 className="font-display text-lg font-bold mb-4">{order.events?.title}</h2>
-
                   <div className="divide-y divide-border">
                     {order.order_items?.map((item: any) => (
                       <div key={item.id} className="py-3 flex justify-between gap-4">
@@ -279,7 +363,7 @@ export default function Checkout() {
                     ))}
                   </div>
 
-                  {/* Coupon Section */}
+                  {/* Coupon */}
                   <div className="border-t border-border pt-4 mt-4 space-y-3">
                     <p className="text-sm font-medium">Cupom de desconto</p>
                     {appliedCoupon ? (
@@ -332,7 +416,6 @@ export default function Checkout() {
                   </div>
                 </div>
 
-                {/* Timer */}
                 {expiresAt && (
                   <div className="bg-accent/20 rounded-xl p-3 flex items-center gap-3">
                     <Clock className="h-4 w-4 text-accent shrink-0" />
@@ -349,13 +432,10 @@ export default function Checkout() {
                 </div>
               </div>
 
-              {/* Payment Form - CardPayment Brick */}
+              {/* Payment Form */}
               <div className="md:col-span-2 space-y-4">
                 <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-1">
-                  <h2 className="font-display text-lg font-bold mb-4 flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Pagamento
-                  </h2>
+                  <h2 className="font-display text-lg font-bold mb-4">Pagamento</h2>
 
                   {paymentError && (
                     <div className="flex items-center gap-2 text-sm text-destructive bg-destructive/10 p-3 rounded-xl mb-4">
@@ -364,34 +444,11 @@ export default function Checkout() {
                     </div>
                   )}
 
-                  {mpInitialized && finalTotal > 0 ? (
-                    <div id="card-payment-brick">
-                      <CardPayment
-                        initialization={{
-                          amount: finalTotal / 100,
-                        }}
-                        onSubmit={onCardPaymentSubmit}
-                        onError={onCardPaymentError}
-                        customization={{
-                          visual: {
-                            style: {
-                              theme: "dark" as any,
-                            },
-                            hideFormTitle: true,
-                            hidePaymentButton: false,
-                          },
-                          paymentMethods: {
-                            maxInstallments: 12,
-                          },
-                        }}
-                      />
-                    </div>
-                  ) : finalTotal === 0 ? (
+                  {finalTotal === 0 ? (
                     <div className="text-center py-8">
                       <p className="text-muted-foreground mb-4">Seu pedido é gratuito com o cupom aplicado!</p>
                       <Button
                         onClick={() => {
-                          // Handle free order
                           toast({ title: "Ingressos emitidos!", description: "Seus ingressos gratuitos foram gerados." });
                           navigate("/pagamento-sucesso?status=approved");
                         }}
@@ -401,10 +458,79 @@ export default function Checkout() {
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                      <span className="ml-2 text-sm text-muted-foreground">Carregando formulário de pagamento...</span>
-                    </div>
+                    <Tabs value={paymentTab} onValueChange={setPaymentTab}>
+                      <TabsList className="w-full mb-4">
+                        <TabsTrigger value="card" className="flex-1 gap-2">
+                          <CreditCard className="h-4 w-4" />
+                          Cartão
+                        </TabsTrigger>
+                        <TabsTrigger value="pix" className="flex-1 gap-2">
+                          <QrCode className="h-4 w-4" />
+                          PIX
+                        </TabsTrigger>
+                      </TabsList>
+
+                      <TabsContent value="card">
+                        {mpInitialized ? (
+                          <div id="card-payment-brick">
+                            <CardPayment
+                              initialization={{ amount: finalTotal / 100 }}
+                              onSubmit={onCardPaymentSubmit}
+                              onError={onCardPaymentError}
+                              customization={{
+                                visual: {
+                                  style: { theme: "dark" as any },
+                                  hideFormTitle: true,
+                                  hidePaymentButton: false,
+                                },
+                                paymentMethods: { maxInstallments: 12 },
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center py-12">
+                            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                            <span className="ml-2 text-sm text-muted-foreground">Carregando formulário...</span>
+                          </div>
+                        )}
+                      </TabsContent>
+
+                      <TabsContent value="pix">
+                        {pixData ? (
+                          <PixDisplay
+                            pixData={pixData}
+                            amount={formatPrice(finalTotal)}
+                            onCopy={copyPixCode}
+                          />
+                        ) : (
+                          <div className="text-center py-8 space-y-4">
+                            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                              <QrCode className="h-8 w-8 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium">Pague com PIX</p>
+                              <p className="text-sm text-muted-foreground mt-1">
+                                Pagamento instantâneo. Aprovação em segundos.
+                              </p>
+                            </div>
+                            <Button
+                              onClick={handlePixPayment}
+                              disabled={pixProcessing}
+                              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8"
+                            >
+                              {pixProcessing ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                                  Gerando PIX...
+                                </>
+                              ) : (
+                                "Gerar QR Code PIX"
+                              )}
+                            </Button>
+                          </div>
+                        )}
+                      </TabsContent>
+                    </Tabs>
                   )}
                 </div>
 
@@ -418,6 +544,61 @@ export default function Checkout() {
       </main>
 
       <BottomNav />
+    </div>
+  );
+}
+
+// PIX QR Code display component
+function PixDisplay({ pixData, amount, onCopy }: {
+  pixData: { qr_code: string; qr_code_base64: string; expiration?: string };
+  amount: string;
+  onCopy: () => void;
+}) {
+  return (
+    <div className="text-center space-y-4 py-4">
+      <div className="bg-background rounded-xl p-4 inline-block mx-auto border border-border">
+        {pixData.qr_code_base64 ? (
+          <img
+            src={`data:image/png;base64,${pixData.qr_code_base64}`}
+            alt="QR Code PIX"
+            className="w-48 h-48 mx-auto"
+          />
+        ) : (
+          <div className="w-48 h-48 flex items-center justify-center">
+            <QrCode className="h-24 w-24 text-muted-foreground" />
+          </div>
+        )}
+      </div>
+
+      <div>
+        <p className="font-display text-lg font-bold text-primary">{amount}</p>
+        <p className="text-sm text-muted-foreground mt-1">Escaneie o QR Code com o app do seu banco</p>
+      </div>
+
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">Ou copie o código PIX:</p>
+        <div className="flex items-center gap-2 max-w-md mx-auto">
+          <Input
+            readOnly
+            value={pixData.qr_code}
+            className="text-xs font-mono"
+          />
+          <Button variant="outline" size="icon" onClick={onCopy}>
+            <Copy className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground bg-muted/50 rounded-xl p-3">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        <span>Aguardando confirmação do pagamento...</span>
+      </div>
+
+      {pixData.expiration && (
+        <p className="text-xs text-muted-foreground">
+          Expira em: {new Date(pixData.expiration).toLocaleString("pt-BR")}
+        </p>
+      )}
     </div>
   );
 }

@@ -35,8 +35,11 @@ serve(async (req) => {
       );
     }
 
+    const body = await req.json();
     const {
       order_id,
+      payment_type, // "card" or "pix"
+      // Card fields
       token,
       payment_method_id,
       installments,
@@ -44,11 +47,20 @@ serve(async (req) => {
       payer_email,
       identification_type,
       identification_number,
-    } = await req.json();
+    } = body;
 
-    if (!order_id || !token || !payment_method_id) {
+    if (!order_id) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: order_id, token, payment_method_id" }),
+        JSON.stringify({ error: "Missing order_id" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const isPixPayment = payment_type === "pix";
+
+    if (!isPixPayment && (!token || !payment_method_id)) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields for card payment: token, payment_method_id" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -76,7 +88,6 @@ serve(async (req) => {
       );
     }
 
-    // Check expiry
     if (order.expires_at && new Date(order.expires_at) < new Date()) {
       return new Response(
         JSON.stringify({ error: "Order expired" }),
@@ -86,13 +97,11 @@ serve(async (req) => {
 
     const organizer = order.events?.organizer_accounts;
 
-    // Get dynamic commission
     const { data: commissionResult } = await adminClient.rpc("get_organizer_commission", {
       p_organizer_id: organizer?.id,
     });
     const commissionPercent = commissionResult ?? organizer?.commission_percent ?? 10;
 
-    // Fetch organizer's MP account
     const { data: mpAccount } = await adminClient
       .from("organizer_mp_accounts")
       .select("mp_access_token, mp_user_id")
@@ -106,21 +115,18 @@ serve(async (req) => {
       );
     }
 
-    // Calculate split
     const transactionAmount = order.total_cents / 100;
     const commissionCents = Math.ceil(order.total_cents * (commissionPercent / 100));
     const applicationFee = commissionCents / 100;
 
-    // Create payment via MP API using seller's access token (marketplace split)
+    // Build payment payload
     const paymentPayload: Record<string, unknown> = {
       transaction_amount: transactionAmount,
-      token,
       description: order.events?.title || "Ingresso UPPLIN",
-      installments: installments || 1,
-      payment_method_id,
       statement_descriptor: "UPPLIN",
       external_reference: order_id,
       application_fee: applicationFee,
+      notification_url: `${supabaseUrl}/functions/v1/mp-webhook`,
       payer: {
         email: payer_email || user.email,
         ...(identification_type && identification_number
@@ -132,18 +138,21 @@ serve(async (req) => {
             }
           : {}),
       },
-      notification_url: `${supabaseUrl}/functions/v1/mp-webhook`,
     };
 
-    if (issuer_id) {
-      paymentPayload.issuer_id = issuer_id;
+    if (isPixPayment) {
+      paymentPayload.payment_method_id = "pix";
+    } else {
+      paymentPayload.token = token;
+      paymentPayload.payment_method_id = payment_method_id;
+      paymentPayload.installments = installments || 1;
+      if (issuer_id) paymentPayload.issuer_id = issuer_id;
     }
 
-    console.log("Creating MP payment with payload:", JSON.stringify({
+    console.log("Creating MP payment:", JSON.stringify({
+      type: isPixPayment ? "pix" : "card",
       transaction_amount: transactionAmount,
       application_fee: applicationFee,
-      payment_method_id,
-      installments,
       order_id,
     }));
 
@@ -152,7 +161,7 @@ serve(async (req) => {
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${mpAccount.mp_access_token}`,
-        "X-Idempotency-Key": `order-${order_id}-${Date.now()}`,
+        "X-Idempotency-Key": `order-${order_id}-${isPixPayment ? "pix" : "card"}-${Date.now()}`,
       },
       body: JSON.stringify(paymentPayload),
     });
@@ -172,9 +181,10 @@ serve(async (req) => {
       id: mpData.id,
       status: mpData.status,
       status_detail: mpData.status_detail,
+      payment_method: mpData.payment_method_id,
     }));
 
-    // Update order with payment info and commission
+    // Update order with payment info
     await adminClient
       .from("orders")
       .update({
@@ -183,76 +193,29 @@ serve(async (req) => {
       })
       .eq("id", order_id);
 
-    // If payment approved immediately, process it
-    if (mpData.status === "approved") {
-      // Create payment record
-      await adminClient.from("payments").insert({
-        order_id,
-        provider: "mercadopago",
-        provider_payment_id: mpData.id.toString(),
-        amount_cents: Math.round(mpData.transaction_amount * 100),
-        status: "paid",
-        method: mpData.payment_method_id || mpData.payment_type_id,
-        raw: mpData,
-      });
+    // Build response
+    const response: Record<string, unknown> = {
+      status: mpData.status,
+      status_detail: mpData.status_detail,
+      payment_id: mpData.id,
+    };
 
-      // Update order status
-      await adminClient
-        .from("orders")
-        .update({ status: "paid" })
-        .eq("id", order_id);
-
-      // Issue tickets
-      const ticketsToCreate = [];
-      for (const item of order.order_items || []) {
-        for (let i = 0; i < (item as any).qty; i++) {
-          ticketsToCreate.push({
-            order_id: order.id,
-            event_id: order.event_id,
-            buyer_user_id: order.buyer_user_id,
-            ticket_type_id: (item as any).ticket_type_id,
-            status: "issued",
-          });
-        }
-      }
-
-      if (ticketsToCreate.length > 0) {
-        await adminClient.from("tickets").insert(ticketsToCreate);
-      }
-
-      console.log(`Order ${order_id} paid inline, ${ticketsToCreate.length} tickets issued`);
-    } else if (mpData.status === "rejected") {
-      await adminClient
-        .from("orders")
-        .update({ status: "failed" })
-        .eq("id", order_id);
-
-      // Release reserved tickets
-      for (const item of order.order_items || []) {
-        const { data: ticketType } = await adminClient
-          .from("ticket_types")
-          .select("quantity_sold")
-          .eq("id", (item as any).ticket_type_id)
-          .single();
-
-        if (ticketType) {
-          await adminClient
-            .from("ticket_types")
-            .update({
-              quantity_sold: Math.max(0, (ticketType.quantity_sold || 0) - (item as any).qty),
-            })
-            .eq("id", (item as any).ticket_type_id);
-        }
-      }
+    // For PIX, include QR code data
+    if (isPixPayment && mpData.point_of_interaction?.transaction_data) {
+      response.pix_qr_code = mpData.point_of_interaction.transaction_data.qr_code;
+      response.pix_qr_code_base64 = mpData.point_of_interaction.transaction_data.qr_code_base64;
+      response.pix_expiration = mpData.date_of_expiration;
     }
-    // "pending" / "in_process" - order stays pending, webhook will handle it
+
+    // Handle approved payments inline
+    if (mpData.status === "approved") {
+      await handleApprovedPayment(adminClient, order, order_id, mpData, commissionCents);
+    } else if (mpData.status === "rejected") {
+      await handleRejectedPayment(adminClient, order, order_id);
+    }
 
     return new Response(
-      JSON.stringify({
-        status: mpData.status,
-        status_detail: mpData.status_detail,
-        payment_id: mpData.id,
-      }),
+      JSON.stringify(response),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
@@ -263,3 +226,57 @@ serve(async (req) => {
     );
   }
 });
+
+async function handleApprovedPayment(adminClient: any, order: any, orderId: string, mpData: any, commissionCents: number) {
+  await adminClient.from("payments").insert({
+    order_id: orderId,
+    provider: "mercadopago",
+    provider_payment_id: mpData.id.toString(),
+    amount_cents: Math.round(mpData.transaction_amount * 100),
+    status: "paid",
+    method: mpData.payment_method_id || mpData.payment_type_id,
+    raw: mpData,
+  });
+
+  await adminClient.from("orders").update({ status: "paid" }).eq("id", orderId);
+
+  const ticketsToCreate = [];
+  for (const item of order.order_items || []) {
+    for (let i = 0; i < (item as any).qty; i++) {
+      ticketsToCreate.push({
+        order_id: order.id,
+        event_id: order.event_id,
+        buyer_user_id: order.buyer_user_id,
+        ticket_type_id: (item as any).ticket_type_id,
+        status: "issued",
+      });
+    }
+  }
+
+  if (ticketsToCreate.length > 0) {
+    await adminClient.from("tickets").insert(ticketsToCreate);
+  }
+
+  console.log(`Order ${orderId} paid inline, ${ticketsToCreate.length} tickets issued`);
+}
+
+async function handleRejectedPayment(adminClient: any, order: any, orderId: string) {
+  await adminClient.from("orders").update({ status: "failed" }).eq("id", orderId);
+
+  for (const item of order.order_items || []) {
+    const { data: ticketType } = await adminClient
+      .from("ticket_types")
+      .select("quantity_sold")
+      .eq("id", (item as any).ticket_type_id)
+      .single();
+
+    if (ticketType) {
+      await adminClient
+        .from("ticket_types")
+        .update({
+          quantity_sold: Math.max(0, (ticketType.quantity_sold || 0) - (item as any).qty),
+        })
+        .eq("id", (item as any).ticket_type_id);
+    }
+  }
+}
