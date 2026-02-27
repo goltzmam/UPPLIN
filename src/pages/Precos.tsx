@@ -38,10 +38,10 @@ const plans = [
     ctaVariant: "outline" as const,
   },
   {
-    name: "Professional",
+    name: "Pro",
     description: "Para organizadores sérios",
-    price: "4,9",
-    priceLabel: "por ingresso vendido",
+    price: "49",
+    priceLabel: "/mês",
     featured: true,
     commission: "8,49%",
     features: [
@@ -49,30 +49,27 @@ const plans = [
       "Eventos ilimitados",
       "Check-in via QR Code",
       "Analytics avançado",
-      "Pagamento em 24h",
       "Múltiplos tipos de ingresso",
       "Cupons de desconto",
       "Suporte prioritário",
     ],
-    cta: "Escolher Professional",
+    cta: "Escolher Pro",
     ctaVariant: "default" as const,
   },
   {
     name: "Enterprise",
     description: "Para grandes operações",
-    price: "Sob consulta",
-    priceLabel: "Plano personalizado",
+    price: "149",
+    priceLabel: "/mês",
     featured: false,
     commission: "6,99%",
     features: [
-      "Tudo do Professional",
-      "Taxa negociável",
-      "API completa",
-      "Integrações customizadas",
+      "Tudo do Pro",
+      "Menor comissão da plataforma",
+      "Gerente de conta dedicado",
       "Suporte dedicado 24/7",
       "SLA garantido",
-      "White-label disponível",
-      "Treinamento da equipe",
+      "Personalização de marca",
     ],
     cta: "Falar com vendas",
     ctaVariant: "outline" as const,
@@ -95,7 +92,7 @@ const allFeatures = [
 const faqs = [
   {
     question: "Como funciona a cobrança?",
-    answer: "Cobramos uma taxa por ingresso vendido. Você só paga quando vende. Não há mensalidade ou taxa de setup."
+    answer: "Cobramos uma comissão por ingresso vendido, que varia de acordo com o plano. Planos pagos possuem mensalidade fixa. Eventos gratuitos não têm nenhuma taxa."
   },
   {
     question: "Quando recebo o dinheiro das vendas?",
@@ -103,11 +100,11 @@ const faqs = [
   },
   {
     question: "Posso criar eventos gratuitos?",
-    answer: "Sim! Eventos gratuitos não têm nenhuma taxa. Você pode criar quantos quiser no plano Professional."
+    answer: "Sim! Eventos gratuitos não têm nenhuma taxa. Você pode criar quantos quiser."
   },
   {
-    question: "Qual a taxa do plano Professional?",
-    answer: "A taxa é de 4,9% + R$ 0,99 por ingresso vendido. Para eventos de grande porte, entre em contato para condições especiais."
+    question: "Qual a diferença entre os planos?",
+    answer: "O plano Standart é gratuito com 10% de comissão. O Pro custa R$ 49/mês com 8,49% de comissão. O Enterprise custa R$ 149/mês com 6,99% de comissão."
   },
   {
     question: "Posso usar minha própria conta do Mercado Pago?",
@@ -182,7 +179,7 @@ export default function Precos() {
 
                   <div className="mb-8">
                     <div className="flex items-baseline gap-1">
-                      {plan.price !== "Sob consulta" && (
+                      {plan.price !== "0" && (
                         <span className={cn(
                           "text-sm",
                           plan.featured ? "text-secondary-foreground/70" : "text-muted-foreground"
@@ -190,15 +187,7 @@ export default function Precos() {
                           R$
                         </span>
                       )}
-                      <span className="font-display text-4xl font-bold">{plan.price}</span>
-                      {plan.price !== "Sob consulta" && plan.price !== "0" && (
-                        <span className={cn(
-                          "text-sm",
-                          plan.featured ? "text-secondary-foreground/70" : "text-muted-foreground"
-                        )}>
-                          %
-                        </span>
-                      )}
+                      <span className="font-display text-4xl font-bold">{plan.price === "0" ? "Grátis" : plan.price}</span>
                     </div>
                     <p className={cn(
                       "text-sm mt-1",
