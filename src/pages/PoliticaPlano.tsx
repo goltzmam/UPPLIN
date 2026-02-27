@@ -35,7 +35,7 @@ const plansData: Record<string, {
   pro: {
     name: "Pro",
     commission: "8,49%",
-    monthlyFee: "R$ 49,90/mês",
+    monthlyFee: "R$ 49/mês",
     color: "from-primary to-primary/60",
     features: [
       "Tudo do Standart",
@@ -49,7 +49,7 @@ const plansData: Record<string, {
       "A comissão de 8,49% é aplicada sobre o valor de cada ingresso vendido.",
       "A tarifa vigente no momento da criação do evento será mantida durante toda a vida útil daquele evento, mesmo que o organizador altere seu plano posteriormente.",
       "O repasse dos valores ocorre conforme as políticas do Mercado Pago, descontada a comissão da UPPLIN.",
-      "O plano Pro possui uma taxa mensal de R$ 49,90, cobrada via Mercado Pago.",
+      "O plano Pro possui uma taxa mensal de R$ 49, cobrada via Mercado Pago.",
       "O organizador pode cancelar ou trocar de plano a qualquer momento, sem multas. Porém, a nova tarifa só será aplicada a eventos criados após a mudança.",
       "A UPPLIN reserva-se o direito de alterar as condições comerciais mediante aviso prévio de 30 dias.",
       "Eventos com vendas de ingressos vigentes mantêm a tarifa original do plano ativo no momento da criação do evento.",
@@ -58,7 +58,7 @@ const plansData: Record<string, {
   enterprise: {
     name: "Enterprise",
     commission: "6,99%",
-    monthlyFee: "R$ 149,90/mês",
+    monthlyFee: "R$ 149/mês",
     color: "from-accent to-accent/60",
     features: [
       "Tudo do Pro",
@@ -72,7 +72,7 @@ const plansData: Record<string, {
       "A comissão de 6,99% é aplicada sobre o valor de cada ingresso vendido.",
       "A tarifa vigente no momento da criação do evento será mantida durante toda a vida útil daquele evento, mesmo que o organizador altere seu plano posteriormente.",
       "O repasse dos valores ocorre conforme as políticas do Mercado Pago, descontada a comissão da UPPLIN.",
-      "O plano Enterprise possui uma taxa mensal de R$ 149,90, cobrada via Mercado Pago.",
+      "O plano Enterprise possui uma taxa mensal de R$ 149, cobrada via Mercado Pago.",
       "O organizador pode cancelar ou trocar de plano a qualquer momento, sem multas. Porém, a nova tarifa só será aplicada a eventos criados após a mudança.",
       "A UPPLIN reserva-se o direito de alterar as condições comerciais mediante aviso prévio de 30 dias.",
       "Eventos com vendas de ingressos vigentes mantêm a tarifa original do plano ativo no momento da criação do evento.",
