@@ -265,9 +265,9 @@ export default function LpOrganizador() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight mb-6"
           >
-            Venda ingressos.{" "}
+            Venda ingressos{" "}
             <span className="bg-gradient-to-r from-[#FF6A00] via-[#FF2D2D] to-[#FF007A] bg-clip-text text-transparent">
-              Sem complicação.
+              sem complicação
             </span>
           </motion.h1>
 
