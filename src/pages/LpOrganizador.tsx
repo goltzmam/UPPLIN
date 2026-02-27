@@ -78,7 +78,7 @@ const plans = [
   {
     id: "enterprise",
     name: "Enterprise",
-    price: "R$ 149",
+    price: "R$ 199",
     period: "/mês",
     commission: "6,99%",
     highlight: false,
@@ -155,7 +155,7 @@ export default function LpOrganizador() {
       "offers": [
         { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "BRL" },
         { "@type": "Offer", "name": "Pro", "price": "49", "priceCurrency": "BRL" },
-        { "@type": "Offer", "name": "Enterprise", "price": "149", "priceCurrency": "BRL" }
+        { "@type": "Offer", "name": "Enterprise", "price": "199", "priceCurrency": "BRL" }
       ],
       "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "reviewCount": "500" }
     });

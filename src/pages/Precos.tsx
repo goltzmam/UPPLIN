@@ -59,7 +59,7 @@ const plans = [
   {
     name: "Enterprise",
     description: "Para grandes operações",
-    price: "149",
+    price: "199",
     priceLabel: "/mês",
     featured: false,
     commission: "6,99%",
@@ -104,7 +104,7 @@ const faqs = [
   },
   {
     question: "Qual a diferença entre os planos?",
-    answer: "O plano Standart é gratuito com 10% de comissão. O Pro custa R$ 49/mês com 8,49% de comissão. O Enterprise custa R$ 149/mês com 6,99% de comissão."
+    answer: "O plano Standart é gratuito com 10% de comissão. O Pro custa R$ 49/mês com 8,49% de comissão. O Enterprise custa R$ 199/mês com 6,99% de comissão."
   },
   {
     question: "Posso usar minha própria conta do Mercado Pago?",
