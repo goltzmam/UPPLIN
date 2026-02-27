@@ -62,6 +62,7 @@ import PagamentoPendente from "./pages/PagamentoPendente";
 import CollaboratorScanner from "./pages/CollaboratorScanner";
 import NotFound from "./pages/NotFound";
 import LpOrganizador from "./pages/LpOrganizador";
+import PoliticaPlano from "./pages/PoliticaPlano";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,6 +121,7 @@ function AnimatedRoutes() {
           <Route path="/explorar-organizadores" element={<ExplorarOrganizadores />} />
           <Route path="/por-perto" element={<PorPerto />} />
           <Route path="/planos/organizador" element={<LpOrganizador />} />
+          <Route path="/politica/:slug" element={<PoliticaPlano />} />
           
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}

@@ -38,6 +38,8 @@ export default function AssinaturasContent() {
   const queryClient = useQueryClient();
   const [subscribingPlan, setSubscribingPlan] = useState<string | null>(null);
   const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
+  const [pendingPlanChange, setPendingPlanChange] = useState<string | null>(null);
+  const [showPlanChangeWarning, setShowPlanChangeWarning] = useState(false);
   const { data: plans, isLoading: loadingPlans } = useQuery({
     queryKey: ["subscription-plans"],
     queryFn: async () => {
@@ -79,6 +81,38 @@ export default function AssinaturasContent() {
     },
     enabled: !!organizer?.id,
   });
+
+  // Check for active events (published with ticket sales)
+  const { data: activeEvents } = useQuery({
+    queryKey: ["organizer-active-events", organizer?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("id, title, status")
+        .eq("organizer_id", organizer.id)
+        .eq("status", "published");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!organizer?.id,
+  });
+
+  const handlePlanClick = (planId: string) => {
+    if (activeEvents && activeEvents.length > 0 && currentPlanId !== planId) {
+      setPendingPlanChange(planId);
+      setShowPlanChangeWarning(true);
+    } else {
+      subscribeMutation.mutate(planId);
+    }
+  };
+
+  const confirmPlanChange = () => {
+    if (pendingPlanChange) {
+      subscribeMutation.mutate(pendingPlanChange);
+    }
+    setShowPlanChangeWarning(false);
+    setPendingPlanChange(null);
+  };
 
   const subscribeMutation = useMutation({
     mutationFn: async (planId: string) => {
@@ -232,7 +266,7 @@ export default function AssinaturasContent() {
                   className="w-full"
                   variant={isCurrent ? "outline" : plan.id === "pro" ? "default" : "outline"}
                   disabled={isCurrent || subscribeMutation.isPending}
-                  onClick={() => subscribeMutation.mutate(plan.id)}
+                  onClick={() => handlePlanClick(plan.id)}
                 >
                   {subscribingPlan === plan.id ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -409,6 +443,36 @@ export default function AssinaturasContent() {
       <p className="text-xs text-center text-muted-foreground">
         Ao assinar, você concorda com os termos de uso. Cancelamento disponível a qualquer momento.
       </p>
+
+      {/* Plan Change Warning Dialog */}
+      <AlertDialog open={showPlanChangeWarning} onOpenChange={setShowPlanChangeWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Atenção: Eventos ativos
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2 text-left">
+              <p>
+                Você possui <strong>{activeEvents?.length || 0} evento(s) ativo(s)</strong> no momento.
+              </p>
+              <p>
+                A mudança de plano <strong>não será aplicada</strong> aos eventos com vendas de ingressos vigentes. 
+                Eles manterão a tarifa de comissão original.
+              </p>
+              <p>
+                A nova tarifa será aplicada apenas aos <strong>próximos eventos</strong> que você criar.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingPlanChange(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmPlanChange}>
+              Entendi, continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
