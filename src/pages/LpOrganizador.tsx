@@ -86,7 +86,7 @@ const plans = [
       "Tudo do Pro",
       "Menor comissão (6,99%)",
       "Dashboard financeiro completo",
-      "API de integração",
+      
       "Gerente de conta dedicado",
       "Suporte 24/7",
     ],

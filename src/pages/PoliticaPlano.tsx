@@ -64,7 +64,7 @@ const plansData: Record<string, {
       "Tudo do Pro",
       "Menor comissão da plataforma",
       "Gerente de conta dedicado",
-      "API de integração",
+      
       "SLA de suporte 24h",
       "Personalização de marca",
     ],
