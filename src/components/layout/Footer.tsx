@@ -110,6 +110,21 @@ export function Footer() {
                   Cookies
                 </Link>
               </li>
+              <li>
+                <Link to="/politica/standart" className="text-foreground/80 hover:text-foreground transition-colors">
+                  Termos Standart
+                </Link>
+              </li>
+              <li>
+                <Link to="/politica/pro" className="text-foreground/80 hover:text-foreground transition-colors">
+                  Termos Pro
+                </Link>
+              </li>
+              <li>
+                <Link to="/politica/enterprise" className="text-foreground/80 hover:text-foreground transition-colors">
+                  Termos Enterprise
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
