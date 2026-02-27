@@ -21,11 +21,12 @@ import { cn } from "@/lib/utils";
 
 const plans = [
   {
-    name: "Starter",
+    name: "Standart",
     description: "Perfeito para começar",
     price: "0",
     priceLabel: "Grátis para sempre",
     featured: false,
+    commission: "10%",
     features: [
       "Até 100 ingressos/mês",
       "1 evento ativo",
@@ -42,6 +43,7 @@ const plans = [
     price: "4,9",
     priceLabel: "por ingresso vendido",
     featured: true,
+    commission: "8,49%",
     features: [
       "Ingressos ilimitados",
       "Eventos ilimitados",
@@ -61,6 +63,7 @@ const plans = [
     price: "Sob consulta",
     priceLabel: "Plano personalizado",
     featured: false,
+    commission: "6,99%",
     features: [
       "Tudo do Professional",
       "Taxa negociável",
@@ -96,7 +99,7 @@ const faqs = [
   },
   {
     question: "Quando recebo o dinheiro das vendas?",
-    answer: "O repasse é feito em até 24 horas úteis após a realização do evento, diretamente na sua conta bancária."
+    answer: "FAQ_REPASSE"
   },
   {
     question: "Posso criar eventos gratuitos?",
@@ -107,8 +110,12 @@ const faqs = [
     answer: "A taxa é de 4,9% + R$ 0,99 por ingresso vendido. Para eventos de grande porte, entre em contato para condições especiais."
   },
   {
-    question: "Posso cancelar a qualquer momento?",
-    answer: "Sim, não há fidelidade. Você pode parar de usar a plataforma quando quiser, sem multas ou taxas."
+    question: "Posso usar minha própria conta do Mercado Pago?",
+    answer: "Sim! Conecte sua conta do Mercado Pago e receba diretamente. A UPPLIN cobrará apenas a comissão referente ao seu plano conosco pela venda dos ingressos."
+  },
+  {
+    question: "Existe contrato de fidelidade?",
+    answer: "Não! Você pode cancelar ou trocar de plano a qualquer momento, sem multas."
   },
 ];
 
@@ -301,7 +308,16 @@ export default function Precos() {
                   className="p-6 rounded-2xl bg-card border border-border"
                 >
                   <h3 className="font-semibold mb-2">{faq.question}</h3>
-                  <p className="text-muted-foreground">{faq.answer}</p>
+                  {faq.answer === "FAQ_REPASSE" ? (
+                    <p className="text-muted-foreground">
+                      Variam de acordo com o plano aderido. Veja as condições dos planos{" "}
+                      <a href="/politica/standart" className="text-primary underline font-medium">Standart</a>,{" "}
+                      <a href="/politica/pro" className="text-primary underline font-medium">Pro</a> e{" "}
+                      <a href="/politica/enterprise" className="text-primary underline font-medium">Enterprise</a>.
+                    </p>
+                  ) : (
+                    <p className="text-muted-foreground">{faq.answer}</p>
+                  )}
                 </motion.div>
               ))}
             </div>

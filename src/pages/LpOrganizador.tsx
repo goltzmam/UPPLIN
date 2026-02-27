@@ -29,24 +29,24 @@ const fadeUp = {
 };
 
 const features = [
-  { icon: Ticket, title: "Eventos Ilimitados", desc: "Crie quantos eventos quiser, sem limites. De festas íntimas a festivais." },
+  { icon: Ticket, title: "Eventos Ilimitados", desc: "Crie quantos eventos quiser. Sem limites. De festas íntimas a festivais." },
   { icon: QrCode, title: "Check-in QR Code", desc: "Validação instantânea na entrada. Sem filas, sem papelada." },
   { icon: BarChart3, title: "Dashboard Analítico", desc: "Acompanhe vendas, público e receita em tempo real." },
   { icon: Tag, title: "Cupons de Desconto", desc: "Crie promoções e cupons personalizados para impulsionar vendas." },
-  { icon: CreditCard, title: "Checkout Transparente", desc: "Pix e cartão direto no app. Sem redirecionamentos." },
+  { icon: CreditCard, title: "Checkout Transparente", desc: "Pagamentos por Pix e cartão direto na plataforma. Sem redirecionamentos." },
   { icon: Shield, title: "Segurança Total", desc: "Dados criptografados, antifraude e ingressos únicos com QR." },
   { icon: Smartphone, title: "Mobile First", desc: "Plataforma otimizada para celular. Seus clientes compram em segundos." },
-  { icon: Users, title: "Gestão de Equipe", desc: "Adicione colaboradores para check-in sem compartilhar sua conta." },
+  { icon: Users, title: "Gestão de Equipe", desc: "Adicione colaboradores ao evento e gerencie seus acessos de produção." },
   { icon: Globe, title: "Perfil Público", desc: "Página exclusiva do organizador com todos seus eventos e avaliações." },
   { icon: Clock, title: "PIX Instantâneo", desc: "Receba pagamentos via PIX em tempo real, sem esperar dias." },
-  { icon: MessageSquare, title: "Chat Direto", desc: "Converse com participantes diretamente pela plataforma." },
+  { icon: MessageSquare, title: "Chat Direto", desc: "Converse com participantes diretamente pela plataforma. Única com integração social." },
   { icon: TrendingUp, title: "Relatórios Avançados", desc: "Exportação de dados, funil de vendas e análise de público." },
 ];
 
 const plans = [
   {
-    id: "free",
-    name: "Grátis",
+    id: "standart",
+    name: "Standart",
     price: "R$ 0",
     period: "/mês",
     commission: "10%",
@@ -64,11 +64,11 @@ const plans = [
     name: "Pro",
     price: "R$ 49",
     period: "/mês",
-    commission: "7%",
+    commission: "8,49%",
     highlight: true,
     features: [
-      "Tudo do Grátis",
-      "Comissão reduzida (7%)",
+      "Tudo do Standart",
+      "Comissão reduzida (8,49%)",
       "Relatórios avançados",
       "Suporte prioritário",
       "Cupons ilimitados",
@@ -80,11 +80,11 @@ const plans = [
     name: "Enterprise",
     price: "R$ 199",
     period: "/mês",
-    commission: "5%",
+    commission: "6,99%",
     highlight: false,
     features: [
       "Tudo do Pro",
-      "Menor comissão (5%)",
+      "Menor comissão (6,99%)",
       "Dashboard financeiro completo",
       "API de integração",
       "Gerente de conta dedicado",
@@ -95,8 +95,8 @@ const plans = [
 
 const faqs = [
   { q: "Quanto tempo leva para começar a vender?", a: "Menos de 5 minutos. Crie sua conta, cadastre seu evento e já pode vender ingressos imediatamente." },
-  { q: "Quando recebo o dinheiro das vendas?", a: "Os pagamentos via PIX são instantâneos. Para cartão de crédito, o prazo segue as condições do Mercado Pago." },
-  { q: "Posso usar minha própria conta do Mercado Pago?", a: "Sim! Conecte sua conta do Mercado Pago e receba diretamente. A UPPLIN cobra apenas a comissão do plano." },
+  { q: "Quando recebo o dinheiro das vendas?", a: "FAQ_REPASSE" },
+  { q: "Posso usar minha própria conta do Mercado Pago?", a: "Sim! Conecte sua conta do Mercado Pago e receba diretamente. A UPPLIN cobrará apenas a comissão referente ao seu plano conosco pela venda dos ingressos." },
   { q: "Existe contrato de fidelidade?", a: "Não! Você pode cancelar ou trocar de plano a qualquer momento, sem multas." },
   { q: "Como funciona o check-in?", a: "Cada ingresso tem um QR Code único. Você ou seus colaboradores escaneiam na entrada com o celular." },
 ];
@@ -263,7 +263,7 @@ export default function LpOrganizador() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black leading-[1.05] tracking-tight mb-6"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-[1.05] tracking-tight mb-6"
           >
             Venda ingressos{" "}
             <span className="bg-gradient-to-r from-[#FF6A00] via-[#FF2D2D] to-[#FF007A] bg-clip-text text-transparent">
@@ -358,9 +358,9 @@ export default function LpOrganizador() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl sm:text-4xl font-black mb-4">
-              Tudo que você precisa,{" "}
+              Tudo que você precisa em um só{" "}
               <span className="bg-gradient-to-r from-[#FF6A00] to-[#FF007A] bg-clip-text text-transparent">
-                em um só lugar
+                lugar
               </span>
             </h2>
             <p className="text-muted-foreground text-lg max-w-xl mx-auto">
@@ -640,7 +640,7 @@ export default function LpOrganizador() {
                       : "bg-secondary text-foreground hover:bg-secondary/80"
                   }`}
                 >
-                  {plan.price === "R$ 0" ? "Começar Grátis" : "Assinar Agora"}
+                  {plan.id === "standart" ? "Começar Grátis" : "Assinar Agora"}
                 </Button>
               </motion.div>
             ))}
@@ -693,9 +693,16 @@ export default function LpOrganizador() {
                   <span>{faq.q}</span>
                   <ChevronDown className={`w-4 h-4 text-muted-foreground shrink-0 ml-4 transition-transform ${openFaq === i ? "rotate-180" : ""}`} />
                 </button>
-                {openFaq === i && (
+              {openFaq === i && (
                   <div className="px-4 sm:px-5 pb-4 sm:pb-5 text-sm text-muted-foreground leading-relaxed -mt-1">
-                    {faq.a}
+                    {faq.a === "FAQ_REPASSE" ? (
+                      <span>
+                        Variam de acordo com o plano aderido. Veja as condições dos planos{" "}
+                        <a href="/politica/standart" className="text-[#FF2D2D] underline font-medium">Standart</a>,{" "}
+                        <a href="/politica/pro" className="text-[#FF2D2D] underline font-medium">Pro</a> e{" "}
+                        <a href="/politica/enterprise" className="text-[#FF2D2D] underline font-medium">Enterprise</a>.
+                      </span>
+                    ) : faq.a}
                   </div>
                 )}
               </motion.div>
