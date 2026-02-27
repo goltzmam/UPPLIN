@@ -119,7 +119,7 @@ function AnimatedRoutes() {
           <Route path="/organizadores" element={<Organizadores />} />
           <Route path="/explorar-organizadores" element={<ExplorarOrganizadores />} />
           <Route path="/por-perto" element={<PorPerto />} />
-          <Route path="/lp/organizador" element={<LpOrganizador />} />
+          <Route path="/planos/organizador" element={<LpOrganizador />} />
           
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}
