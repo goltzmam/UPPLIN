@@ -119,6 +119,16 @@ serve(async (req) => {
     const commissionCents = Math.ceil(order.total_cents * (commissionPercent / 100));
     const applicationFee = commissionCents / 100;
 
+    // Validate qty limits (max 10 per ticket type per order to prevent abuse)
+    for (const item of order.order_items || []) {
+      if ((item as any).qty > 10) {
+        return new Response(
+          JSON.stringify({ error: "Maximum 10 tickets per type per order" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     // Build payment payload
     const paymentPayload: Record<string, unknown> = {
       transaction_amount: transactionAmount,
@@ -183,6 +193,15 @@ serve(async (req) => {
       status_detail: mpData.status_detail,
       payment_method: mpData.payment_method_id,
     }));
+
+    // Validate payment amount matches order total (prevent amount manipulation)
+    if (mpData.transaction_amount && Math.round(mpData.transaction_amount * 100) !== order.total_cents) {
+      console.error(`Amount mismatch: MP=${mpData.transaction_amount * 100}, order=${order.total_cents}`);
+      return new Response(
+        JSON.stringify({ error: "Payment amount does not match order total" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // Update order with payment info
     await adminClient
