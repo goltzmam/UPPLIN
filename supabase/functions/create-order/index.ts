@@ -53,11 +53,21 @@ serve(async (req) => {
     const body: CreateOrderRequest = await req.json();
     const { event_id, items } = body;
 
-    if (!event_id || !items || items.length === 0) {
+    if (!event_id || !items || !Array.isArray(items) || items.length === 0) {
       return new Response(
         JSON.stringify({ error: "Missing event_id or items" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Validate per-item quantity limits (max 10 per ticket type)
+    for (const item of items) {
+      if (!item.ticket_type_id || typeof item.qty !== "number" || item.qty < 1 || item.qty > 10) {
+        return new Response(
+          JSON.stringify({ error: "Invalid item: qty must be between 1 and 10" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Use service role for admin operations

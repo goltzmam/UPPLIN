@@ -7,18 +7,121 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Mercado Pago webhook signature verification
+async function verifyMPSignature(req: Request, rawBody: string): Promise<boolean> {
+  const webhookSecret = Deno.env.get("WEBHOOK_SECRET");
+  if (!webhookSecret) {
+    console.warn("WEBHOOK_SECRET not set, skipping MP signature verification");
+    return true; // Allow if secret not configured (development)
+  }
+
+  const xSignature = req.headers.get("x-signature");
+  const xRequestId = req.headers.get("x-request-id");
+
+  if (!xSignature || !xRequestId) {
+    console.error("Missing x-signature or x-request-id headers");
+    return false;
+  }
+
+  // Parse x-signature: "ts=TIMESTAMP,v1=HASH"
+  const parts: Record<string, string> = {};
+  for (const part of xSignature.split(",")) {
+    const [key, value] = part.split("=", 2);
+    if (key && value) parts[key.trim()] = value.trim();
+  }
+
+  const ts = parts["ts"];
+  const v1 = parts["v1"];
+  if (!ts || !v1) {
+    console.error("Invalid x-signature format");
+    return false;
+  }
+
+  // Reject signatures older than 5 minutes (replay attack prevention)
+  const signatureAge = Date.now() - parseInt(ts) * 1000;
+  if (signatureAge > 5 * 60 * 1000) {
+    console.error("Webhook signature too old, possible replay attack");
+    return false;
+  }
+
+  // Parse data.id from body for signature template
+  let dataId = "";
+  try {
+    const parsed = JSON.parse(rawBody);
+    dataId = parsed?.data?.id?.toString() || "";
+  } catch {
+    // ignore parse errors
+  }
+
+  // Build the manifest string per MP docs
+  // Template: id:[data.id];request-id:[x-request-id];ts:[ts];
+  const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
+
+  // Compute HMAC-SHA256
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(webhookSecret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(manifest));
+  const computedHash = Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  if (computedHash !== v1) {
+    console.error("Webhook signature mismatch");
+    return false;
+  }
+
+  return true;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    // Read raw body for signature verification
+    const rawBody = await req.text();
+
+    // Verify Mercado Pago webhook signature
+    const isValid = await verifyMPSignature(req, rawBody);
+    if (!isValid) {
+      console.error("Invalid webhook signature - rejecting request");
+      return new Response(JSON.stringify({ error: "Invalid signature" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
-    const body = await req.json();
-    console.log("MP Webhook received:", JSON.stringify(body));
+    // Parse body from raw text (already consumed)
+    let body: any;
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid JSON body" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Validate webhook payload structure
+    if (!body || typeof body !== "object") {
+      return new Response(JSON.stringify({ error: "Invalid payload" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    console.log("MP Webhook received (verified):", JSON.stringify(body));
 
     // Mercado Pago sends different notification types
     const { type, data, action } = body;
