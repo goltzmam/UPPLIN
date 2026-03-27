@@ -108,7 +108,7 @@ export default function Mensagens() {
       if (existing) {
         setSelectedConversation({
           ...existing,
-          other_participant: { id: participantId, full_name: null, photo_url: null, email: "" },
+          other_participant: { id: participantId, full_name: null, photo_url: null },
         });
         setShowNewChat(false);
         return;
@@ -130,7 +130,7 @@ export default function Mensagens() {
 
       setSelectedConversation({
         ...newConv,
-        other_participant: { id: participantId, full_name: null, photo_url: null, email: "" },
+        other_participant: { id: participantId, full_name: null, photo_url: null },
       });
       setShowNewChat(false);
     } catch (err: any) {
@@ -224,8 +224,7 @@ export default function Mensagens() {
                   conversationId={selectedConversation.id}
                   otherParticipant={{
                     id: selectedConversation.other_participant?.id || "",
-                    name: selectedConversation.other_participant?.full_name || 
-                          selectedConversation.other_participant?.email || "Usuário",
+                    name: selectedConversation.other_participant?.full_name || "Usuário",
                     photo_url: selectedConversation.other_participant?.photo_url,
                   }}
                   onClose={() => setSelectedConversation(null)}
