@@ -25,7 +25,6 @@ interface Conversation {
     id: string;
     full_name: string | null;
     photo_url: string | null;
-    email: string;
   };
   last_message?: {
     content: string;
