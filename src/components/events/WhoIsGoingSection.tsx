@@ -25,7 +25,7 @@ export function WhoIsGoingSection({ eventId }: WhoIsGoingSectionProps) {
       if (peopleGoing.length === 0) return [];
       const userIds = peopleGoing.map((r) => r.user_id);
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, full_name, photo_url")
         .in("id", userIds);
       

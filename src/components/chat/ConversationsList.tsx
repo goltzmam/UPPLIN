@@ -77,8 +77,8 @@ export function ConversationsList({ onSelectConversation, selectedId, filter = "
 
           // Get other participant profile
           const { data: participantData } = await supabase
-            .from("profiles")
-            .select("id, full_name, photo_url, email")
+            .from("profiles_public")
+            .select("id, full_name, photo_url")
             .eq("id", otherParticipantId)
             .maybeSingle();
 

@@ -53,7 +53,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
       // Fetch profiles for comments
       const userIds = [...new Set(data.map((c) => c.user_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, full_name, photo_url")
         .in("id", userIds);
 

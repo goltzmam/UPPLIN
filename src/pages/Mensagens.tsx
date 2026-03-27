@@ -72,8 +72,8 @@ export default function Mensagens() {
       if (!data || data.length === 0) return [];
 
       const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, photo_url")
+        .from("profiles_public")
+        .select("id, full_name, photo_url")
         .in("id", data.map(r => r.user_id));
 
       return profiles || [];

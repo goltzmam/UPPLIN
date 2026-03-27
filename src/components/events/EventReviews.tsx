@@ -93,7 +93,7 @@ export function EventReviews({ eventId }: EventReviewsProps) {
       // Fetch profiles
       const userIds = [...new Set(data.map((r) => r.user_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, full_name, photo_url")
         .in("id", userIds);
 
