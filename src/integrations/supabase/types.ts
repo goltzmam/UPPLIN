@@ -1430,7 +1430,27 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_public: {
+        Row: {
+          cover_photo_url: string | null
+          full_name: string | null
+          id: string | null
+          photo_url: string | null
+        }
+        Insert: {
+          cover_photo_url?: string | null
+          full_name?: string | null
+          id?: string | null
+          photo_url?: string | null
+        }
+        Update: {
+          cover_photo_url?: string | null
+          full_name?: string | null
+          id?: string | null
+          photo_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       find_user_by_email: {
