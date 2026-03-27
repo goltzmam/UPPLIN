@@ -1,98 +1,85 @@
 
 
-# Checkup Completo da Plataforma UPPLIN
+# Status Completo do Projeto UPPLIN
 
 ---
 
-## 1. INCONSISTÊNCIA CRÍTICA: Comissões no Banco vs UI
+## ✅ O QUE ESTÁ CORRETO E FUNCIONANDO
 
-| Plano | UI (Precos/LP) | Banco de Dados |
-|-------|---------------|----------------|
-| Free | 10% | 10% ✅ |
-| Pro | **8,49%** | **7%** ❌ |
-| Enterprise | **6,99%** | **5%** ❌ |
+### Banco de Dados — Planos Alinhados
+| Plano | Preço | Comissão (banco) | UI |
+|-------|-------|-------------------|-----|
+| Free | R$ 0 | 10% | 10% ✅ |
+| Pro | R$ 49 | 8,49% | 8,49% ✅ |
+| Enterprise | R$ 199 | 6,99% | 6,99% ✅ |
 
-O banco de dados tem 7% e 5%, mas a UI mostra 8,49% e 6,99%. A Edge Function `get_organizer_commission` puxa do banco, então **o valor real cobrado é 7% e 5%**, diferente do que o organizador vê na tela. Precisa decidir qual é o correto e alinhar.
-
----
-
-## 2. O QUE FUNCIONA (Completo)
-
-- **Feed TikTok-style** (mobile + desktop) com scroll infinito
-- **Cadastro/Login** participante e organizador (email + Google OAuth)
-- **Onboarding organizador** em 3 passos (CNPJ, dados, redes sociais)
-- **CRUD de eventos** com slug amigável, mídia, categorias
-- **Sistema de ingressos** com tipos, quantidades, preços
-- **Checkout completo** com Cartão + PIX via Mercado Pago Split
-- **QR Code check-in** + colaboradores de check-in
-- **Cupons de desconto** (percentual e fixo)
-- **Sistema de assinaturas** (Free/Pro/Enterprise) via Mercado Pago
-- **Perfil público do organizador** com follow
-- **Comentários e avaliações** em eventos
-- **Posts sociais** (feed social com likes/comentários)
-- **Mensagens** entre usuários
-- **Notificações** (push + in-app)
-- **RSVP** ("Quem vai")
-- **Eventos salvos**
-- **Painel admin** completo (users, events, orders, CPF, analytics, subscriptions)
-- **Painel organizador** (dashboard, relatórios, cupons, configurações)
-- **Recuperação de senha**
-- **Expiração automática** de pedidos PIX pendentes (CRON)
-- **Emails transacionais** (confirmação, PIX, convite colaborador)
-- **Políticas por plano** (/politica/standart, /pro, /enterprise)
-- **SEO** com JSON-LD estruturado
-- **RLS** em todas as tabelas (segurança OK)
+### Funcionalidades Completas
+- Feed TikTok-style, CRUD eventos, ingressos, checkout (Cartão + PIX)
+- QR check-in + colaboradores, cupons, assinaturas
+- Chat, notificações, RSVP, posts sociais, follow
+- Painéis admin e organizador completos
+- RLS em todas as tabelas, webhook HMAC verificado
+- Snapshot de comissão por evento
 
 ---
 
-## 3. BUGS E PROBLEMAS ENCONTRADOS
+## 🔴 ERROS DE BUILD (precisa corrigir agora)
 
-### Críticos
-1. **Comissões desalinhadas** (banco vs UI) — descrito acima. Isso afeta diretamente o faturamento.
-2. **Email de envio usando domínio de teste** — `send-email` usa `onboarding@resend.dev`. Emails vão cair em spam ou nem chegar. Precisa configurar domínio próprio (ex: `noreply@upplin.com.br`).
-3. **Nenhum organizador conectou Mercado Pago** (0 registros em `organizer_mp_accounts`) — sem isso, nenhuma venda real funciona.
+Dois arquivos têm erro de TypeScript que impede o build:
 
-### Médios
-4. **Console warning: `Function components cannot be given refs`** em `AnimatedRoutes` — não quebra nada, mas poluí o console e pode causar bugs futuros.
-5. **Nenhum ticket emitido** e **todas as 11 orders canceladas** — indica que o fluxo de compra ainda não foi testado end-to-end com sucesso.
-6. **Leaked password protection desabilitada** — risco de segurança para senhas fracas.
+1. **`src/components/events/LocationPicker.tsx`** — `NodeJS.Timeout` não encontrado
+2. **`src/components/map/MapSearch.tsx`** — `NodeJS.Timeout` não encontrado
 
-### Baixos
-7. **React Router v6 deprecation warnings** — precisa adicionar future flags (`v7_startTransition`, `v7_relativeSplatPath`) antes de migrar para v7.
+**Correção:** Trocar `useRef<NodeJS.Timeout>()` por `useRef<ReturnType<typeof setTimeout>>()` nos dois arquivos.
 
 ---
 
-## 4. O QUE FALTA CONCLUIR
+## 🟡 SEGURANÇA — 1 Issue "Error" Pendente
 
-| Item | Status | Prioridade |
-|------|--------|------------|
-| Corrigir comissões no banco (7%→8.49%, 5%→6.99% ou vice-versa) | Pendente | **ALTA** |
-| Configurar domínio de email no Resend | Pendente | **ALTA** |
-| Testar fluxo completo de compra (cartão + PIX) em produção | Pendente | **ALTA** |
-| Conectar conta Mercado Pago de pelo menos 1 organizador | Pendente | **ALTA** |
-| Habilitar leaked password protection | Pendente | Média |
-| Corrigir warning de refs no AnimatedRoutes | Pendente | Baixa |
-| Adicionar future flags do React Router | Pendente | Baixa |
+**Exposição de dados sensíveis na tabela profiles** (nível: error)
+- A policy "Authenticated users can view basic profiles" permite que qualquer usuário autenticado veja TODOS os campos do perfil, incluindo **CPF** e **email**.
+- **Correção:** Criar uma view restrita ou trocar a policy para limitar o acesso apenas a campos seguros (id, full_name, photo_url).
 
 ---
 
-## 5. PODE LANÇAR?
+## 🟡 SEGURANÇA — Warnings (prioridade média)
 
-**Ainda não.** As 4 pendências de alta prioridade precisam ser resolvidas antes:
-
-1. **Alinhar comissões** — você precisa decidir: o correto é 8,49%/6,99% (como mostra a UI) ou 7%/5% (como está no banco)?
-2. **Configurar email** — sem domínio verificado, emails de confirmação de compra, PIX e boas-vindas não funcionarão em produção.
-3. **Testar compra real** — nenhuma compra foi concluída com sucesso ainda (0 tickets, 11 orders canceladas).
-4. **Conectar Mercado Pago** — pelo menos o organizador principal precisa ter conta MP conectada.
-
-Uma vez resolvidos esses 4 pontos, a plataforma tem todas as funcionalidades necessárias para lançar.
+1. **Leaked password protection desabilitada** — senhas fracas permitidas
+2. **Enumeração de email** via `find_user_by_email` — qualquer usuário pode verificar emails
+3. **Storage event-images** — qualquer organizador pode modificar imagens de outros
+4. **Admin auto-assign** via email hardcoded — risco se verificação de email for desabilitada
 
 ---
 
-## Plano de Implementação
+## 🔴 INFRAESTRUTURA — Email NÃO configurado
 
-1. Corrigir `subscription_plans` no banco para alinhar `commission_percent` com o que a UI exibe (8.49 e 6.99)
-2. Atualizar `send-email` com domínio de email verificado
-3. Habilitar leaked password protection
-4. Corrigir warning de refs no AnimatedRoutes
+- **Nenhum domínio de email configurado.** Os emails transacionais (confirmação de compra, PIX, boas-vindas) **NÃO estão sendo enviados** em produção.
+- É necessário configurar um domínio de email para que os emails funcionem.
+
+---
+
+## 📋 PLANO DE AÇÃO (em ordem de prioridade)
+
+### Passo 1 — Corrigir erros de build
+- Trocar `NodeJS.Timeout` por `ReturnType<typeof setTimeout>` em `LocationPicker.tsx` e `MapSearch.tsx`
+
+### Passo 2 — Corrigir exposição de CPF/email (security error)
+- Criar uma view `profiles_public` com apenas campos seguros, ou restringir a policy existente para que só retorne campos não-sensíveis via RPC
+
+### Passo 3 — Configurar domínio de email
+- Configurar domínio de email para emails transacionais funcionarem em produção
+
+### Passo 4 — Habilitar leaked password protection
+- Ativar proteção contra senhas vazadas na autenticação
+
+---
+
+## PODE LANÇAR?
+
+**Ainda não.** Os passos 1-3 são obrigatórios antes do lançamento:
+1. Build quebrado (erros TypeScript)
+2. CPF exposto para qualquer usuário logado
+3. Emails não funcionam sem domínio configurado
+
+Após resolver esses 3 pontos + conectar pelo menos 1 conta Mercado Pago de organizador, a plataforma está pronta para lançar.
 
