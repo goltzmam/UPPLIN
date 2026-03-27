@@ -14,7 +14,7 @@ export function MapSearch() {
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<GeoResult[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const timeout = useRef<NodeJS.Timeout>();
+  const timeout = useRef<ReturnType<typeof setTimeout>>();
 
   const search = useCallback(async (q: string) => {
     if (q.length < 3) {
