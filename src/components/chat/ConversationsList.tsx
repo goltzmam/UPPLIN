@@ -179,7 +179,7 @@ export function ConversationsList({ onSelectConversation, selectedId, filter = "
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-semibold truncate">
-                  {conv.other_participant?.full_name || conv.other_participant?.email || "Usuário"}
+                  {conv.other_participant?.full_name || "Usuário"}
                 </p>
                 {conv.last_message && (
                   <span className="text-xs text-muted-foreground shrink-0">
