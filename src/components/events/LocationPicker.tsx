@@ -58,7 +58,7 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
   const [searching, setSearching] = useState(false);
   const [results, setResults] = useState<GeoResult[]>([]);
   const [showResults, setShowResults] = useState(false);
-  const searchTimeout = useRef<NodeJS.Timeout>();
+  const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
   const position: [number, number] | null = lat && lng ? [lat, lng] : null;
   const defaultCenter: [number, number] = position || [-23.5505, -46.6333];

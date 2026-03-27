@@ -41,7 +41,6 @@ interface Conversation {
     id: string;
     full_name: string | null;
     photo_url: string | null;
-    email: string;
   };
 }
 
@@ -72,8 +71,8 @@ export default function Mensagens() {
       if (!data || data.length === 0) return [];
 
       const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, photo_url")
+        .from("profiles_public")
+        .select("id, full_name, photo_url")
         .in("id", data.map(r => r.user_id));
 
       return profiles || [];
@@ -109,7 +108,7 @@ export default function Mensagens() {
       if (existing) {
         setSelectedConversation({
           ...existing,
-          other_participant: { id: participantId, full_name: null, photo_url: null, email: "" },
+          other_participant: { id: participantId, full_name: null, photo_url: null },
         });
         setShowNewChat(false);
         return;
@@ -131,7 +130,7 @@ export default function Mensagens() {
 
       setSelectedConversation({
         ...newConv,
-        other_participant: { id: participantId, full_name: null, photo_url: null, email: "" },
+        other_participant: { id: participantId, full_name: null, photo_url: null },
       });
       setShowNewChat(false);
     } catch (err: any) {
@@ -225,8 +224,7 @@ export default function Mensagens() {
                   conversationId={selectedConversation.id}
                   otherParticipant={{
                     id: selectedConversation.other_participant?.id || "",
-                    name: selectedConversation.other_participant?.full_name || 
-                          selectedConversation.other_participant?.email || "Usuário",
+                    name: selectedConversation.other_participant?.full_name || "Usuário",
                     photo_url: selectedConversation.other_participant?.photo_url,
                   }}
                   onClose={() => setSelectedConversation(null)}

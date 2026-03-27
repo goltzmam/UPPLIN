@@ -25,7 +25,6 @@ interface Conversation {
     id: string;
     full_name: string | null;
     photo_url: string | null;
-    email: string;
   };
   last_message?: {
     content: string;
@@ -77,8 +76,8 @@ export function ConversationsList({ onSelectConversation, selectedId, filter = "
 
           // Get other participant profile
           const { data: participantData } = await supabase
-            .from("profiles")
-            .select("id, full_name, photo_url, email")
+            .from("profiles_public")
+            .select("id, full_name, photo_url")
             .eq("id", otherParticipantId)
             .maybeSingle();
 
@@ -180,7 +179,7 @@ export function ConversationsList({ onSelectConversation, selectedId, filter = "
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-semibold truncate">
-                  {conv.other_participant?.full_name || conv.other_participant?.email || "Usuário"}
+                  {conv.other_participant?.full_name || "Usuário"}
                 </p>
                 {conv.last_message && (
                   <span className="text-xs text-muted-foreground shrink-0">

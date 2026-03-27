@@ -61,7 +61,7 @@ export function EventComments({ eventId }: EventCommentsProps) {
       // Fetch profiles for all users
       const userIds = [...new Set(data.map((c) => c.user_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, full_name, photo_url")
         .in("id", userIds);
 
@@ -79,7 +79,7 @@ export function EventComments({ eventId }: EventCommentsProps) {
     queryKey: ["users-for-mentions"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, full_name, photo_url")
         .not("full_name", "is", null)
         .limit(100);
