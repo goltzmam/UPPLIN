@@ -203,6 +203,37 @@ export default function OrganizadorLogin() {
             </div>
           </div>
 
+          {/* Active session banner */}
+          {user && (
+            <div className="mb-4 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-start gap-3">
+              <User className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-foreground">
+                  Você já está logado como{" "}
+                  <span className="font-semibold break-all">{user.email}</span>
+                </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                  Para entrar com outra conta, saia primeiro.
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 h-8 text-xs gap-1.5"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                >
+                  {signingOut ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <LogOut className="h-3.5 w-3.5" />
+                  )}
+                  Sair da conta
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="space-y-1.5 sm:space-y-2">
