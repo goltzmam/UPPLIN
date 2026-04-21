@@ -110,7 +110,11 @@ serve(async (req) => {
 
     if (!mpAccount) {
       return new Response(
-        JSON.stringify({ error: "Organizer has not connected Mercado Pago" }),
+        JSON.stringify({
+          error: "O organizador deste evento ainda não conectou a conta Mercado Pago. Pagamentos estarão disponíveis assim que a conexão for feita.",
+          code: "ORGANIZER_MP_NOT_CONNECTED",
+          organizer_name: organizer?.display_name ?? null,
+        }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }

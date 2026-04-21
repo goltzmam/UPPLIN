@@ -210,7 +210,23 @@ export default function Checkout() {
         },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        let friendly = error.message || "Erro ao processar pagamento";
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.json();
+            if (body?.error) friendly = body.error;
+          } else if (ctx && typeof ctx.text === "function") {
+            const text = await ctx.text();
+            try {
+              const parsed = JSON.parse(text);
+              if (parsed?.error) friendly = parsed.error;
+            } catch { /* ignore */ }
+          }
+        } catch { /* ignore */ }
+        throw new Error(friendly);
+      }
 
       if (data.status === "approved") {
         setPaymentSuccess(true);
@@ -251,13 +267,30 @@ export default function Checkout() {
         },
       });
 
-      if (error) throw new Error(error.message);
+      // Supabase wraps non-2xx responses in FunctionsHttpError; read the JSON body to get our friendly message
+      if (error) {
+        let friendly = error.message || "Erro ao gerar PIX";
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.json();
+            if (body?.error) friendly = body.error;
+          } else if (ctx && typeof ctx.text === "function") {
+            const text = await ctx.text();
+            try {
+              const parsed = JSON.parse(text);
+              if (parsed?.error) friendly = parsed.error;
+            } catch { /* ignore */ }
+          }
+        } catch { /* ignore */ }
+        throw new Error(friendly);
+      }
 
-      if (data.status === "approved") {
+      if (data?.status === "approved") {
         setPaymentSuccess(true);
         toast({ title: "Pagamento aprovado! 🎉", description: "Seus ingressos foram emitidos." });
         setTimeout(() => navigate("/pagamento-sucesso?status=approved"), 1500);
-      } else if (data.pix_qr_code) {
+      } else if (data?.pix_qr_code) {
         setPixData({
           qr_code: data.pix_qr_code,
           qr_code_base64: data.pix_qr_code_base64,
@@ -271,7 +304,7 @@ export default function Checkout() {
       }
     } catch (err: any) {
       setPaymentError(err.message || "Erro ao gerar PIX");
-      toast({ title: "Erro no pagamento", description: err.message, variant: "destructive" });
+      toast({ title: "Não foi possível gerar o PIX", description: err.message, variant: "destructive" });
     } finally {
       setPixProcessing(false);
     }
