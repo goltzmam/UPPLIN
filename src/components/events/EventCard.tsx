@@ -1,9 +1,13 @@
-import { Link } from "react-router-dom";
-import { Calendar, MapPin, Play } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Calendar, MapPin, Play, Bookmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { OrganizerPreviewTooltip } from "./OrganizerPreviewTooltip";
+import { useEventEngagement } from "@/hooks/use-event-engagement";
+import { useAuth } from "@/lib/auth";
+import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 interface EventCardProps {
   id: string;
@@ -37,15 +41,24 @@ export function EventCard({
   organizerName,
   organizerUsername,
 }: EventCardProps) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isSaved, toggleSave, isSaveLoading } = useEventEngagement(id);
+
   const eventUrl = `/evento/${slug || id}`;
   const eventDate = new Date(startAt);
   const formattedDate = format(eventDate, "d 'de' MMM", { locale: ptBR });
   const formattedDay = format(eventDate, "EEEE", { locale: ptBR });
   const formattedTime = format(eventDate, "HH:mm");
 
-  const formatPrice = (cents: number) => {
-    if (cents === 0) return "Gratuito";
-    return `A partir de R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    toggleSave();
   };
 
   const displayUsername = organizerUsername || (organizerName ? organizerName.toLowerCase().replace(/\s+/g, '') : null);
