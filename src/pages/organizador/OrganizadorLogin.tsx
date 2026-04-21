@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Loader2, Building2, ArrowLeft, LogOut } from "lucide-react";
+import { Mail, Lock, Loader2, Building2, ArrowLeft, LogOut, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,9 +27,22 @@ export default function OrganizadorLogin() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [conflictEmail, setConflictEmail] = useState<string | null>(null);
-  const { signIn, signOut } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
+  const { user, signIn, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      toast({ title: "Você saiu da conta", description: "Sessão encerrada com sucesso." });
+    } catch (err: any) {
+      toast({ title: "Erro ao sair", description: err.message, variant: "destructive" });
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   const emailRules = useMemo(() => [{ test: isValidEmail }], []);
   const passwordRules = useMemo(() => [{ test: (v: string) => v.length >= 6 }], []);
@@ -84,7 +97,7 @@ export default function OrganizadorLogin() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 py-8 sm:p-6 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-background flex items-start sm:items-center justify-center px-4 py-8 sm:p-6 relative">
       {/* Conflict Dialog */}
       <AlertDialog open={!!conflictEmail} onOpenChange={(open) => { if (!open) setConflictEmail(null); }}>
         <AlertDialogContent>
