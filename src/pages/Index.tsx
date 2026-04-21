@@ -372,6 +372,28 @@ export default function Index() {
       <MobileFeed />
       <DesktopLayout />
       <BottomNav />
+
+      {/* Location prompts — non-blocking, dismissible */}
+      <LocationPrompt
+        visible={shouldShowPermissionPrompt && !isSearchOpen}
+        requesting={requesting}
+        onAllow={() => requestLocation()}
+        onDismiss={dismissPrompt}
+      />
+      <CityChangePrompt
+        detectedCity={pendingCity?.city ?? null}
+        onConfirm={acceptPendingCity}
+        onDismiss={dismissPendingCity}
+      />
+      <ProfileCityBanner
+        visible={
+          profileBannerVisible &&
+          !shouldShowPermissionPrompt &&
+          !pendingCity &&
+          !isSearchOpen
+        }
+        onDismiss={dismissProfileBanner}
+      />
     </>
   );
 }
