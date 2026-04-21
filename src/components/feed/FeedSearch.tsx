@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { normalizeText } from "@/lib/categories";
 
 interface FeedSearchProps {
   isOpen: boolean;
