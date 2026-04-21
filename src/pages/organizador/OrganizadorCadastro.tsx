@@ -176,41 +176,67 @@ export default function OrganizadorCadastro() {
     setLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: { full_name: fullName },
-        },
-      });
-      
-      if (authError) throw authError;
+      // Determine the user we will attach the organizer account to.
+      let ownerUserId: string | null = null;
+      let ownerEmail: string = email;
 
-      if (authData?.user) {
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({ user_id: authData.user.id, role: "organizer" });
-        
-        if (roleError && !roleError.message.includes("duplicate")) {
-          console.error("Role error:", roleError);
-        }
+      if (useExistingAccount && user) {
+        // Reuse the currently logged-in user — DO NOT call signUp.
+        ownerUserId = user.id;
+        ownerEmail = user.email || email;
+      } else {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { full_name: fullName },
+          },
+        });
 
-        const { error: orgError } = await supabase
-          .from("organizer_accounts")
-          .insert({
-            owner_user_id: authData.user.id,
-            display_name: companyName,
-            cnpj: cnpj.replace(/\D/g, ""),
-            phone: phone.replace(/\D/g, ""),
-            email: email,
-            description,
-            social_instagram: instagram,
-            social_facebook: facebook,
-            social_website: website,
+        if (authError) throw authError;
+        ownerUserId = authData?.user?.id ?? null;
+      }
+
+      if (!ownerUserId) {
+        throw new Error("Não foi possível identificar o usuário. Tente novamente.");
+      }
+
+      // Add organizer role (idempotent — ignore duplicate).
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: ownerUserId, role: "organizer" });
+
+      if (roleError && !/duplicate|unique/i.test(roleError.message)) {
+        console.error("Role error:", roleError);
+      }
+
+      // Create the organizer account.
+      const { error: orgError } = await supabase
+        .from("organizer_accounts")
+        .insert({
+          owner_user_id: ownerUserId,
+          display_name: companyName,
+          cnpj: cnpj.replace(/\D/g, ""),
+          phone: phone.replace(/\D/g, ""),
+          email: ownerEmail,
+          description,
+          social_instagram: instagram,
+          social_facebook: facebook,
+          social_website: website,
+        });
+
+      if (orgError) {
+        // Friendlier message if the user already has an org account.
+        if (/duplicate|unique/i.test(orgError.message)) {
+          toast({
+            title: "Você já tem uma conta de organizador",
+            description: "Redirecionando para o painel...",
           });
-
-        if (orgError) throw orgError;
+          setTimeout(() => navigate("/organizador/painel"), 1200);
+          return;
+        }
+        throw orgError;
       }
 
       // Send welcome email for organizer (best-effort)
@@ -218,7 +244,7 @@ export default function OrganizadorCadastro() {
         await supabase.functions.invoke("send-email", {
           body: {
             type: "welcome_organizer",
-            to: email,
+            to: ownerEmail,
             data: { userName: fullName, companyName },
           },
         });
@@ -229,19 +255,19 @@ export default function OrganizadorCadastro() {
       setShowSuccess(true);
       triggerConfetti();
 
-      toast({ 
-        title: "Conta criada com sucesso!", 
-        description: "Vamos configurar seu perfil." 
+      toast({
+        title: useExistingAccount ? "Conta atualizada!" : "Conta criada com sucesso!",
+        description: "Vamos configurar seu perfil.",
       });
 
       setTimeout(() => {
         navigate("/organizador/painel");
       }, 2500);
     } catch (err: any) {
-      toast({ 
-        title: "Erro ao criar conta", 
-        description: err.message, 
-        variant: "destructive" 
+      toast({
+        title: "Erro ao criar conta",
+        description: err.message,
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
