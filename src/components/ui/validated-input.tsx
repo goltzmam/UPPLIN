@@ -1,4 +1,4 @@
-import { forwardRef, useMemo, useState } from "react";
+import { forwardRef, useEffect, useId, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,26 @@ interface ValidatedInputProps extends React.InputHTMLAttributes<HTMLInputElement
   showPasswordToggle?: boolean;
 }
 
+const STORAGE_PREFIX = "upplin:pwd-revealed:";
+
+const readRevealed = (key: string | null): boolean => {
+  if (!key || typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(STORAGE_PREFIX + key) === "1";
+  } catch {
+    return false;
+  }
+};
+
+const writeRevealed = (key: string | null, value: boolean) => {
+  if (!key || typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(STORAGE_PREFIX + key, value ? "1" : "0");
+  } catch {
+    /* ignore */
+  }
+};
+
 const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
   ({
     value,
@@ -29,13 +49,32 @@ const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
     showPasswordToggle = true,
     className,
     type,
+    id,
+    name,
     ...props
   }, ref) => {
-    const [revealed, setRevealed] = useState(false);
+    const reactId = useId();
+    // Stable per-field key so toggles for "password" and "confirmPassword" don't share state.
+    const storageKey = useMemo(() => id || name || reactId, [id, name, reactId]);
+
+    const [revealed, setRevealed] = useState<boolean>(() => readRevealed(storageKey));
+
+    // Sync if storageKey changes (rare, but keeps state consistent).
+    useEffect(() => {
+      setRevealed(readRevealed(storageKey));
+    }, [storageKey]);
 
     const isPassword = type === "password";
     const effectiveType = isPassword && revealed ? "text" : type;
     const hasPasswordToggle = isPassword && showPasswordToggle;
+
+    const toggleRevealed = () => {
+      setRevealed((prev) => {
+        const next = !prev;
+        writeRevealed(storageKey, next);
+        return next;
+      });
+    };
 
     const validationState = useMemo(() => {
       if (!value || value.length === 0) return "empty";
@@ -46,13 +85,14 @@ const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
 
     const shouldShowIcon = showValidation && validateOnChange && value.length > 0;
 
-    // When password toggle is visible, push validation icon further left to avoid overlap
-    const validationIconPositionClass = hasPasswordToggle ? "right-10" : "right-3";
-    // Reserve right padding for whatever icons are visible
+    // When password toggle is visible, push validation icon further left to avoid overlap.
+    // Use slightly tighter spacing on mobile so the three icons (lock | check | eye) fit.
+    const validationIconPositionClass = hasPasswordToggle ? "right-9 sm:right-10" : "right-3";
+    // Reserve right padding for whatever icons are visible.
     const rightPaddingClass = hasPasswordToggle && shouldShowIcon
-      ? "pr-16"
+      ? "pr-14 sm:pr-16"
       : hasPasswordToggle || shouldShowIcon
-        ? "pr-10"
+        ? "pr-9 sm:pr-10"
         : "";
 
     return (
@@ -64,6 +104,8 @@ const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
         )}
         <Input
           ref={ref}
+          id={id}
+          name={name}
           type={effectiveType}
           value={value}
           className={cn(
@@ -81,10 +123,10 @@ const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
           <button
             type="button"
             tabIndex={-1}
-            onClick={() => setRevealed(v => !v)}
+            onClick={toggleRevealed}
             aria-label={revealed ? "Ocultar senha" : "Mostrar senha"}
             aria-pressed={revealed}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -103,12 +145,12 @@ const ValidatedInput = forwardRef<HTMLInputElement, ValidatedInputProps>(
               )}
             >
               {validationState === "valid" ? (
-                <div className="h-5 w-5 rounded-full bg-green-500 flex items-center justify-center">
-                  <Check className="h-3 w-3 text-white" />
+                <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-green-500 flex items-center justify-center">
+                  <Check className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-white" />
                 </div>
               ) : (
-                <div className="h-5 w-5 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <AlertCircle className="h-4 w-4 text-destructive" />
+                <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertCircle className="h-3 w-3 sm:h-4 sm:w-4 text-destructive" />
                 </div>
               )}
             </motion.div>

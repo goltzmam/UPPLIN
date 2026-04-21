@@ -20,15 +20,38 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { checkSessionConflict } from "@/lib/session-guard";
 
+const ADMIN_PWD_REVEAL_KEY = "upplin:pwd-revealed:admin-password";
+
+const readInitialReveal = () => {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(ADMIN_PWD_REVEAL_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(readInitialReveal);
   const [conflictEmail, setConflictEmail] = useState<string | null>(null);
   const { signIn, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const togglePassword = () => {
+    setShowPassword((prev) => {
+      const next = !prev;
+      try {
+        window.sessionStorage.setItem(ADMIN_PWD_REVEAL_KEY, next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
 
   const doAdminSignIn = async () => {
     setLoading(true);
@@ -200,7 +223,7 @@ export default function AdminLogin() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pl-10 pr-10 h-11 sm:h-12 text-sm"
+                  className="pl-10 pr-9 sm:pr-10 h-11 sm:h-12 text-sm"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -208,10 +231,10 @@ export default function AdminLogin() {
                 <button
                   type="button"
                   tabIndex={-1}
-                  onClick={() => setShowPassword((v) => !v)}
+                  onClick={togglePassword}
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   aria-pressed={showPassword}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
