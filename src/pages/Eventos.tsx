@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryPillsSlider } from "@/components/events/CategoryPillsSlider";
-import { categoriesMatch } from "@/lib/categories";
+import { textIncludes, categoriesMatch } from "@/lib/categories";
 
 const CATEGORIES = [
   { id: "all", label: "Todos", icon: "🎉" },
@@ -26,14 +26,11 @@ const CATEGORIES = [
   { id: "show", label: "Shows", icon: "🎸" },
   { id: "teatro", label: "Teatro", icon: "🎭" },
   { id: "workshop", label: "Workshops", icon: "📚" },
-  { id: "curso", label: "Cursos", icon: "🎓" },
   { id: "esporte", label: "Esportes", icon: "⚽" },
   { id: "gastronomia", label: "Gastronomia", icon: "🍽️" },
   { id: "tecnologia", label: "Tecnologia", icon: "💻" },
   { id: "arte", label: "Arte", icon: "🎨" },
-  { id: "negocio", label: "Negócios", icon: "💼" },
-  { id: "conferencia", label: "Conferências", icon: "🎤" },
-  { id: "outro", label: "Outros", icon: "✨" },
+  { id: "negocios", label: "Negócios", icon: "💼" },
 ];
 
 export default function Eventos() {
@@ -65,14 +62,14 @@ export default function Eventos() {
   });
 
   const filteredEvents = events?.filter(event => {
-    const term = search.trim().toLowerCase();
     const matchesSearch =
-      !term ||
-      event.title?.toLowerCase().includes(term) ||
-      event.venue_name?.toLowerCase().includes(term) ||
-      event.address_text?.toLowerCase().includes(term) ||
-      event.description?.toLowerCase().includes(term) ||
-      event.category?.toLowerCase().includes(term);
+      !search ||
+      textIncludes(event.title, search) ||
+      textIncludes(event.venue_name, search) ||
+      textIncludes(event.address_text, search) ||
+      textIncludes(event.description, search) ||
+      textIncludes(event.category, search) ||
+      textIncludes(event.organizer?.display_name, search);
 
     const matchesCategory =
       selectedCategory === "all" ||

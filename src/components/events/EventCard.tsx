@@ -1,13 +1,9 @@
-import { Link, useNavigate } from "react-router-dom";
-import { Calendar, MapPin, Play, Bookmark } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Calendar, MapPin, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { OrganizerPreviewTooltip } from "./OrganizerPreviewTooltip";
-import { useEventEngagement } from "@/hooks/use-event-engagement";
-import { useAuth } from "@/lib/auth";
-import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
 
 interface EventCardProps {
   id: string;
@@ -41,51 +37,21 @@ export function EventCard({
   organizerName,
   organizerUsername,
 }: EventCardProps) {
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { isSaved, toggleSave, isSaveLoading } = useEventEngagement(id);
-
   const eventUrl = `/evento/${slug || id}`;
   const eventDate = new Date(startAt);
   const formattedDate = format(eventDate, "d 'de' MMM", { locale: ptBR });
   const formattedDay = format(eventDate, "EEEE", { locale: ptBR });
   const formattedTime = format(eventDate, "HH:mm");
 
-  const handleSaveClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-    toggleSave();
+  const formatPrice = (cents: number) => {
+    if (cents === 0) return "Gratuito";
+    return `A partir de R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
   };
 
   const displayUsername = organizerUsername || (organizerName ? organizerName.toLowerCase().replace(/\s+/g, '') : null);
 
   return (
-    <div className="group relative block bg-card rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-border hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10 transition-all duration-300 w-full min-w-0">
-      {/* Save button - posicionado fora do Link para evitar navegação */}
-      <motion.button
-        type="button"
-        onClick={handleSaveClick}
-        whileTap={{ scale: 0.85 }}
-        disabled={isSaveLoading}
-        aria-label={isSaved ? "Remover dos salvos" : "Salvar evento"}
-        className={cn(
-          "absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4 z-20",
-          "h-8 w-8 sm:h-9 sm:w-9 rounded-full backdrop-blur-md flex items-center justify-center",
-          "border border-white/15 shadow-lg transition-colors",
-          isSaved
-            ? "bg-primary text-primary-foreground border-primary/30"
-            : "bg-black/55 text-white hover:bg-black/75"
-        )}
-      >
-        <Bookmark
-          className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px]", isSaved && "fill-current")}
-          strokeWidth={2}
-        />
-      </motion.button>
+    <div className="group block bg-card rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-border hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10 transition-all duration-300 w-full min-w-0">
       {/* Cover Image - Clickable */}
       <Link to={eventUrl} className="block">
         <div className="relative aspect-[4/3] overflow-hidden">
@@ -131,7 +97,7 @@ export function EventCard({
 
           {/* Sold out badge */}
           {soldOut && (
-            <div className="absolute top-12 right-2 sm:top-14 sm:right-3 lg:top-16 lg:right-4">
+            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4">
               <Badge variant="destructive" className="shadow-lg text-[10px] sm:text-xs font-semibold">Esgotado</Badge>
             </div>
           )}
