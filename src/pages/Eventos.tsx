@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { CategoryPillsSlider } from "@/components/events/CategoryPillsSlider";
+import { textIncludes, categoriesMatch } from "@/lib/categories";
 
 const CATEGORIES = [
   { id: "all", label: "Todos", icon: "🎉" },
