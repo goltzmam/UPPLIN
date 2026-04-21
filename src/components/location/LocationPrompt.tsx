@@ -26,7 +26,7 @@ export function LocationPrompt({
           initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 20, opacity: 0 }}
-          className="fixed left-1/2 -translate-x-1/2 z-40 w-[calc(100vw-16px)] max-w-[420px] lg:bottom-6 lg:left-auto lg:right-6 lg:translate-x-0"
+          className="fixed inset-x-2 z-40 mx-auto max-w-[420px] lg:inset-x-auto lg:right-6 lg:bottom-6 lg:mx-0"
           style={{ bottom: "calc(var(--app-bottom-offset, 100px) + 12px)" }}
         >
           <div className="relative rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl p-3 sm:px-4 sm:py-3">
