@@ -1,331 +1,290 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { reverseGeocode } from "@/lib/reverse-geocode";
+import { normalizeCity } from "@/lib/geo";
 
-export type LocationStatus =
-  | "idle"
-  | "prompt"
-  | "loading"
-  | "granted"
-  | "denied"
-  | "unavailable";
+/**
+ * Centralized hook for the user's active location.
+ *
+ * Source priority (highest → lowest):
+ *   1. Manual: city the user explicitly chose ("Mudar cidade")
+ *   2. GPS: live coordinates from the browser (with reverse geocoding)
+ *   3. Profile: city saved in the user's profile
+ *   4. Default: null (caller decides fallback)
+ *
+ * Persistence:
+ *   - GPS coords cached for 6h (`upplin_user_coords`)
+ *   - Manual city kept until user clears it (`upplin_manual_city`)
+ *   - "Don't ask again" dismissal of the GPS prompt (`upplin_loc_prompt_dismissed`)
+ *   - Per-city dismissal of the change prompt for 12h (`upplin_city_change_skip_*`)
+ */
+
+const COORDS_KEY = "upplin_user_coords";
+const COORDS_TTL_MS = 6 * 60 * 60 * 1000; // 6h
+const MANUAL_CITY_KEY = "upplin_manual_city";
+const ACTIVE_CITY_KEY = "upplin_active_city";
+const PROMPT_DISMISSED_KEY = "upplin_loc_prompt_dismissed";
+const PROMPT_DISMISSED_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const CITY_SKIP_PREFIX = "upplin_city_change_skip_";
+const CITY_SKIP_TTL_MS = 12 * 60 * 60 * 1000; // 12h
 
 export interface UserCoords {
   lat: number;
   lng: number;
-  accuracy?: number;
-  updatedAt: number;
+  ts: number;
 }
 
 export interface UserCity {
-  name: string;
-  state: string | null;
-  countryCode: string | null;
-  /** Última confirmação (manual ou automática) */
-  confirmedAt: number;
-  /** Coordenadas em que foi resolvida */
-  lat: number;
-  lng: number;
+  city: string;
+  state?: string | null;
+  source: "manual" | "gps" | "profile";
 }
 
-const STORAGE_KEY = "upplin:user-location:v1";
-const DECISION_KEY = "upplin:location-decision:v1"; // "granted" | "dismissed" | "denied"
-const PROMPT_SHOWN_KEY = "upplin:location-prompt-shown:v1";
-const ACTIVE_CITY_KEY = "upplin:active-city:v1";
-const PENDING_CITY_KEY = "upplin:pending-city:v1";
-const CITY_DISMISS_KEY = "upplin:city-change-dismissed:v1";
-const MAX_AGE_MS = 1000 * 60 * 60 * 6; // 6 hours
+interface UseUserLocationOptions {
+  /** City stored in the user's profile (lowest-priority fallback). */
+  profileCity?: string | null;
+  profileState?: string | null;
+}
 
-function readStoredCoords(): UserCoords | null {
+function readCoords(): UserCoords | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(COORDS_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as UserCoords;
-    if (!parsed?.lat || !parsed?.lng) return null;
-    if (Date.now() - parsed.updatedAt > MAX_AGE_MS) return null;
+    const parsed: UserCoords = JSON.parse(raw);
+    if (Date.now() - parsed.ts > COORDS_TTL_MS) return null;
     return parsed;
   } catch {
     return null;
   }
 }
 
-function writeStoredCoords(coords: UserCoords | null) {
+function writeCoords(coords: UserCoords) {
   try {
-    if (!coords) localStorage.removeItem(STORAGE_KEY);
-    else localStorage.setItem(STORAGE_KEY, JSON.stringify(coords));
+    localStorage.setItem(COORDS_KEY, JSON.stringify(coords));
   } catch {
     /* ignore */
   }
 }
 
-function readDecision(): "granted" | "dismissed" | "denied" | null {
+function readManualCity(): { city: string; state?: string | null } | null {
   try {
-    return (localStorage.getItem(DECISION_KEY) as any) || null;
+    const raw = localStorage.getItem(MANUAL_CITY_KEY);
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-function writeDecision(value: "granted" | "dismissed" | "denied") {
-  try {
-    localStorage.setItem(DECISION_KEY, value);
-    localStorage.setItem(PROMPT_SHOWN_KEY, "1");
-  } catch {
-    /* ignore */
-  }
-}
-
-function readActiveCity(): UserCity | null {
+function readActiveCity(): { city: string; state?: string | null } | null {
   try {
     const raw = localStorage.getItem(ACTIVE_CITY_KEY);
-    return raw ? (JSON.parse(raw) as UserCity) : null;
+    return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-function writeActiveCity(city: UserCity | null) {
+function writeActiveCity(value: { city: string; state?: string | null }) {
   try {
-    if (!city) localStorage.removeItem(ACTIVE_CITY_KEY);
-    else localStorage.setItem(ACTIVE_CITY_KEY, JSON.stringify(city));
+    localStorage.setItem(ACTIVE_CITY_KEY, JSON.stringify(value));
   } catch {
     /* ignore */
   }
 }
 
-function readPendingCity(): UserCity | null {
+function isPromptDismissed(): boolean {
   try {
-    const raw = localStorage.getItem(PENDING_CITY_KEY);
-    return raw ? (JSON.parse(raw) as UserCity) : null;
+    const raw = localStorage.getItem(PROMPT_DISMISSED_KEY);
+    if (!raw) return false;
+    const ts = Number(raw);
+    return Number.isFinite(ts) && Date.now() - ts < PROMPT_DISMISSED_TTL_MS;
   } catch {
+    return false;
+  }
+}
+
+function isCitySkipped(city: string): boolean {
+  try {
+    const raw = localStorage.getItem(
+      `${CITY_SKIP_PREFIX}${normalizeCity(city)}`
+    );
+    if (!raw) return false;
+    const ts = Number(raw);
+    return Number.isFinite(ts) && Date.now() - ts < CITY_SKIP_TTL_MS;
+  } catch {
+    return false;
+  }
+}
+
+export function useUserLocation(options: UseUserLocationOptions = {}) {
+  const { profileCity, profileState } = options;
+
+  const [coords, setCoords] = useState<UserCoords | null>(() => readCoords());
+  const [activeCity, setActiveCityState] = useState<UserCity | null>(() => {
+    const manual = readManualCity();
+    if (manual?.city) {
+      return { city: manual.city, state: manual.state, source: "manual" };
+    }
+    const active = readActiveCity();
+    if (active?.city) {
+      return { city: active.city, state: active.state, source: "gps" };
+    }
     return null;
-  }
-}
-
-function writePendingCity(city: UserCity | null) {
-  try {
-    if (!city) localStorage.removeItem(PENDING_CITY_KEY);
-    else localStorage.setItem(PENDING_CITY_KEY, JSON.stringify(city));
-  } catch {
-    /* ignore */
-  }
-}
-
-function normalizeCityName(name: string | null | undefined): string {
-  if (!name) return "";
-  return name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim();
-}
-
-/**
- * Hook unificado de localização do usuário.
- *
- * - Persiste a última posição válida (6h) em localStorage.
- * - Persiste a decisão do usuário (concedido / dispensado / negado).
- * - Resolve a cidade via reverse-geocode (Nominatim) e detecta
- *   mudança de cidade (ex.: usuário viajou de Fortaleza para Recife).
- * - Quando detecta mudança, expõe `pendingCity` + `confirmCity()` /
- *   `rejectCity()` para o componente de UI perguntar ao usuário.
- */
-export function useUserLocation() {
-  const [coords, setCoords] = useState<UserCoords | null>(() => readStoredCoords());
-  const [status, setStatus] = useState<LocationStatus>(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) return "unavailable";
-    if (readStoredCoords()) return "granted";
-    const decision = readDecision();
-    if (decision === "denied") return "denied";
-    if (decision === "dismissed") return "idle";
-    return "prompt";
   });
-  const [error, setError] = useState<string | null>(null);
-  const [activeCity, setActiveCity] = useState<UserCity | null>(() => readActiveCity());
-  const [pendingCity, setPendingCity] = useState<UserCity | null>(() => readPendingCity());
+  const [pendingCity, setPendingCity] = useState<UserCity | null>(null);
+  const [permission, setPermission] = useState<
+    "granted" | "denied" | "prompt" | "unknown"
+  >("unknown");
+  const [requesting, setRequesting] = useState(false);
+  const promptDismissedRef = useRef<boolean>(isPromptDismissed());
 
-  // Sync com Permissions API quando disponível
+  // Initialize permission state
   useEffect(() => {
     if (typeof navigator === "undefined" || !navigator.permissions) return;
-    let cancelled = false;
     navigator.permissions
       .query({ name: "geolocation" as PermissionName })
-      .then((result) => {
-        if (cancelled) return;
-        if (result.state === "granted" && !coords) {
-          requestLocation();
-        } else if (result.state === "denied") {
-          setStatus("denied");
-        }
-        result.onchange = () => {
-          if (result.state === "denied") {
-            setStatus("denied");
-            writeDecision("denied");
-          }
-        };
+      .then((status) => {
+        setPermission(status.state as typeof permission);
+        status.onchange = () => setPermission(status.state as typeof permission);
       })
       .catch(() => {
-        /* ignore */
+        setPermission("unknown");
       });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Resolve cidade e detecta mudança sempre que coords mudarem
+  // If we have GPS coords but no active city, reverse geocode now.
   useEffect(() => {
     if (!coords) return;
+    if (activeCity?.source === "manual") return;
     let cancelled = false;
     reverseGeocode(coords.lat, coords.lng).then((res) => {
       if (cancelled || !res?.city) return;
-
       const detected: UserCity = {
-        name: res.city,
+        city: res.city,
         state: res.state,
-        countryCode: res.countryCode,
-        confirmedAt: Date.now(),
-        lat: coords.lat,
-        lng: coords.lng,
+        source: "gps",
       };
-
-      const current = readActiveCity();
-
-      // Primeira vez: assumimos automaticamente, sem perguntar.
-      if (!current) {
-        writeActiveCity(detected);
-        setActiveCity(detected);
-        writePendingCity(null);
-        setPendingCity(null);
-        try {
-          localStorage.removeItem(CITY_DISMISS_KEY);
-        } catch {
-          /* ignore */
-        }
+      // First time: assume it
+      if (!activeCity) {
+        writeActiveCity({ city: detected.city, state: detected.state });
+        setActiveCityState(detected);
         return;
       }
-
-      // Mesma cidade — apenas atualiza timestamp/coords (silencioso).
-      if (normalizeCityName(current.name) === normalizeCityName(detected.name)) {
-        const refreshed: UserCity = { ...current, ...detected, name: current.name };
-        writeActiveCity(refreshed);
-        setActiveCity(refreshed);
-        writePendingCity(null);
-        setPendingCity(null);
-        return;
+      // City changed → set as pending (user confirms)
+      const sameCity =
+        normalizeCity(detected.city) === normalizeCity(activeCity.city);
+      if (!sameCity && !isCitySkipped(detected.city)) {
+        setPendingCity(detected);
       }
-
-      // Cidade mudou — não sobrescreve direto; pergunta ao usuário.
-      // Evita perguntar de novo se ele acabou de dispensar a mesma cidade.
-      try {
-        const dismissedRaw = localStorage.getItem(CITY_DISMISS_KEY);
-        if (dismissedRaw) {
-          const d = JSON.parse(dismissedRaw) as { name: string; at: number };
-          const fresh = Date.now() - d.at < 1000 * 60 * 60 * 12; // 12h
-          if (fresh && normalizeCityName(d.name) === normalizeCityName(detected.name)) {
-            return;
-          }
-        }
-      } catch {
-        /* ignore */
-      }
-
-      writePendingCity(detected);
-      setPendingCity(detected);
     });
     return () => {
       cancelled = true;
     };
   }, [coords?.lat, coords?.lng]);
 
+  // Profile fallback: if no manual + no active, use profile city
+  useEffect(() => {
+    if (activeCity) return;
+    if (!profileCity) return;
+    setActiveCityState({
+      city: profileCity,
+      state: profileState ?? null,
+      source: "profile",
+    });
+  }, [activeCity, profileCity, profileState]);
+
   const requestLocation = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setStatus("unavailable");
-      return;
+      return Promise.resolve(null as UserCoords | null);
     }
-    setStatus("loading");
-    setError(null);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const next: UserCoords = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-          updatedAt: Date.now(),
-        };
-        setCoords(next);
-        writeStoredCoords(next);
-        setStatus("granted");
-        writeDecision("granted");
-      },
-      (err) => {
-        if (err.code === err.PERMISSION_DENIED) {
-          setStatus("denied");
-          writeDecision("denied");
-        } else {
-          setStatus("idle");
-        }
-        setError(err.message || "Não foi possível obter sua localização");
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 * 60 * 5 },
-    );
+    setRequesting(true);
+    return new Promise<UserCoords | null>((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const next: UserCoords = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            ts: Date.now(),
+          };
+          writeCoords(next);
+          setCoords(next);
+          setPermission("granted");
+          setRequesting(false);
+          resolve(next);
+        },
+        (err) => {
+          console.warn("[useUserLocation] geolocation error:", err.message);
+          if (err.code === err.PERMISSION_DENIED) setPermission("denied");
+          setRequesting(false);
+          resolve(null);
+        },
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60_000 }
+      );
+    });
   }, []);
 
   const dismissPrompt = useCallback(() => {
-    writeDecision("dismissed");
-    setStatus((prev) => (prev === "prompt" ? "idle" : prev));
-  }, []);
-
-  const clearLocation = useCallback(() => {
-    writeStoredCoords(null);
-    setCoords(null);
-  }, []);
-
-  /** Aceita a nova cidade detectada como cidade ativa. */
-  const confirmCity = useCallback((city?: UserCity) => {
-    const target = city || readPendingCity();
-    if (!target) return;
-    const confirmed: UserCity = { ...target, confirmedAt: Date.now() };
-    writeActiveCity(confirmed);
-    setActiveCity(confirmed);
-    writePendingCity(null);
-    setPendingCity(null);
     try {
-      localStorage.removeItem(CITY_DISMISS_KEY);
+      localStorage.setItem(PROMPT_DISMISSED_KEY, String(Date.now()));
     } catch {
       /* ignore */
     }
+    promptDismissedRef.current = true;
   }, []);
 
-  /** Rejeita a sugestão de mudança de cidade — mantém a atual. */
-  const rejectCity = useCallback(() => {
-    const target = readPendingCity();
-    if (target) {
+  const setManualCity = useCallback(
+    (city: string, state?: string | null) => {
       try {
         localStorage.setItem(
-          CITY_DISMISS_KEY,
-          JSON.stringify({ name: target.name, at: Date.now() }),
+          MANUAL_CITY_KEY,
+          JSON.stringify({ city, state: state ?? null })
         );
       } catch {
         /* ignore */
       }
-    }
-    writePendingCity(null);
-    setPendingCity(null);
-  }, []);
+      writeActiveCity({ city, state: state ?? null });
+      setActiveCityState({ city, state: state ?? null, source: "manual" });
+      setPendingCity(null);
+    },
+    []
+  );
 
-  const shouldPrompt = status === "prompt";
+  const acceptPendingCity = useCallback(() => {
+    if (!pendingCity) return;
+    writeActiveCity({ city: pendingCity.city, state: pendingCity.state });
+    setActiveCityState(pendingCity);
+    setPendingCity(null);
+  }, [pendingCity]);
+
+  const dismissPendingCity = useCallback(() => {
+    if (!pendingCity) return;
+    try {
+      localStorage.setItem(
+        `${CITY_SKIP_PREFIX}${normalizeCity(pendingCity.city)}`,
+        String(Date.now())
+      );
+    } catch {
+      /* ignore */
+    }
+    setPendingCity(null);
+  }, [pendingCity]);
+
+  const shouldShowPermissionPrompt =
+    permission !== "granted" &&
+    permission !== "denied" &&
+    !coords &&
+    !promptDismissedRef.current;
 
   return {
     coords,
-    status,
-    error,
-    shouldPrompt,
-    requestLocation,
-    dismissPrompt,
-    clearLocation,
     activeCity,
     pendingCity,
-    confirmCity,
-    rejectCity,
+    permission,
+    requesting,
+    shouldShowPermissionPrompt,
+    requestLocation,
+    dismissPrompt,
+    setManualCity,
+    acceptPendingCity,
+    dismissPendingCity,
   };
 }

@@ -1,88 +1,75 @@
 /**
- * Reverse-geocoding utilitário usando Nominatim (OpenStreetMap).
- *
- * - Gratuito, sem API key.
- * - Cache em localStorage por coordenada arredondada (~1km).
- * - Respeita rate-limit suave: 1 req/coord cacheada.
- *
- * Caso o serviço falhe, retorna null silenciosamente — o app continua
- * funcionando apenas com lat/lng.
+ * Reverse geocoding via Nominatim (OpenStreetMap).
+ * Caches results in localStorage for 7 days, keyed by rounded coords (~1km).
  */
 
-export interface ReverseGeoResult {
+const CACHE_KEY_PREFIX = "upplin_reverse_geocode_";
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export interface GeocodeResult {
   city: string | null;
   state: string | null;
-  countryCode: string | null;
 }
 
-const CACHE_KEY = "upplin:revgeo:v1";
-const CACHE_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 dias
-
-interface CacheEntry extends ReverseGeoResult {
-  at: number;
+interface CachedEntry {
+  result: GeocodeResult;
+  ts: number;
 }
 
-function roundCoord(n: number) {
-  // ~1.1 km de precisão em latitudes médias
-  return Math.round(n * 100) / 100;
+function cacheKey(lat: number, lng: number) {
+  // Round to ~1km precision (2 decimal places ≈ 1.1km).
+  return `${CACHE_KEY_PREFIX}${lat.toFixed(2)}_${lng.toFixed(2)}`;
 }
 
-function readCache(): Record<string, CacheEntry> {
+function readCache(lat: number, lng: number): GeocodeResult | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const raw = localStorage.getItem(cacheKey(lat, lng));
+    if (!raw) return null;
+    const parsed: CachedEntry = JSON.parse(raw);
+    if (Date.now() - parsed.ts > CACHE_TTL_MS) return null;
+    return parsed.result;
   } catch {
-    return {};
+    return null;
   }
 }
 
-function writeCache(cache: Record<string, CacheEntry>) {
+function writeCache(lat: number, lng: number, result: GeocodeResult) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+    const entry: CachedEntry = { result, ts: Date.now() };
+    localStorage.setItem(cacheKey(lat, lng), JSON.stringify(entry));
   } catch {
-    /* ignore */
+    /* ignore storage errors */
   }
 }
 
 export async function reverseGeocode(
   lat: number,
-  lng: number,
-): Promise<ReverseGeoResult | null> {
-  const key = `${roundCoord(lat)},${roundCoord(lng)}`;
-  const cache = readCache();
-  const cached = cache[key];
-  if (cached && Date.now() - cached.at < CACHE_TTL_MS) {
-    return { city: cached.city, state: cached.state, countryCode: cached.countryCode };
-  }
+  lng: number
+): Promise<GeocodeResult | null> {
+  const cached = readCache(lat, lng);
+  if (cached) return cached;
 
   try {
-    const url =
-      `https://nominatim.openstreetmap.org/reverse?format=jsonv2` +
-      `&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lng)}` +
-      `&zoom=10&addressdetails=1&accept-language=pt-BR`;
-
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=pt-BR&zoom=10`;
     const res = await fetch(url, {
       headers: { Accept: "application/json" },
     });
     if (!res.ok) return null;
     const data = await res.json();
-    const addr = data?.address || {};
-
+    const addr = data?.address ?? {};
     const city =
       addr.city ||
       addr.town ||
-      addr.municipality ||
       addr.village ||
+      addr.municipality ||
       addr.county ||
       null;
-    const state = addr.state || addr.region || null;
-    const countryCode = (addr.country_code || "").toUpperCase() || null;
-
-    const result: ReverseGeoResult = { city, state, countryCode };
-    cache[key] = { ...result, at: Date.now() };
-    writeCache(cache);
+    const state = addr.state || null;
+    const result: GeocodeResult = { city, state };
+    writeCache(lat, lng, result);
     return result;
-  } catch {
+  } catch (err) {
+    console.warn("[reverseGeocode] failed:", err);
     return null;
   }
 }

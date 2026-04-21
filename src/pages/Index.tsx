@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,14 +9,18 @@ import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { DesktopTikTokFeed } from "@/components/feed/DesktopTikTokFeed";
 import { FeedSearch } from "@/components/feed/FeedSearch";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
+import { LocationPrompt } from "@/components/location/LocationPrompt";
+import { CityChangePrompt } from "@/components/location/CityChangePrompt";
+import { ProfileCityBanner } from "@/components/location/ProfileCityBanner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { stopAllMediaPipelines } from "@/lib/media";
 import { prioritizeUnseenEvents, markEventsSeen } from "@/lib/seen-events";
-import { prioritizeNearbyItems } from "@/lib/geo";
 import { useUserLocation } from "@/hooks/use-user-location";
-import { LocationPrompt } from "@/components/location/LocationPrompt";
-import { CityChangePrompt } from "@/components/location/CityChangePrompt";
+import { haversineKm, normalizeCity } from "@/lib/geo";
+
+const PROFILE_BANNER_DISMISS_KEY = "upplin_profile_city_banner_dismissed";
+const PROFILE_BANNER_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 
 const PAGE_SIZE = 12;
 
@@ -26,8 +30,44 @@ export default function Index() {
   const scrollPosRef = useRef(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { coords: userCoords } = useUserLocation();
+  const { user, profile } = useAuth();
+
+  // ─── Location: priority Manual > GPS > Profile > Default ─────────────
+  const {
+    coords,
+    activeCity,
+    pendingCity,
+    shouldShowPermissionPrompt,
+    requesting,
+    requestLocation,
+    dismissPrompt,
+    acceptPendingCity,
+    dismissPendingCity,
+  } = useUserLocation({
+    profileCity: profile?.city ?? null,
+    profileState: profile?.state ?? null,
+  });
+
+  // Profile-city banner: only for logged-in users with no city set
+  const [profileBannerVisible, setProfileBannerVisible] = useState(false);
+  useEffect(() => {
+    if (!user) return setProfileBannerVisible(false);
+    if (profile?.city) return setProfileBannerVisible(false);
+    try {
+      const raw = localStorage.getItem(PROFILE_BANNER_DISMISS_KEY);
+      if (raw && Date.now() - Number(raw) < PROFILE_BANNER_TTL_MS) return;
+    } catch { /* ignore */ }
+    // small delay so it doesn't appear at the same time as GPS prompt
+    const t = setTimeout(() => setProfileBannerVisible(true), 4000);
+    return () => clearTimeout(t);
+  }, [user, profile?.city]);
+
+  const dismissProfileBanner = useCallback(() => {
+    try {
+      localStorage.setItem(PROFILE_BANNER_DISMISS_KEY, String(Date.now()));
+    } catch { /* ignore */ }
+    setProfileBannerVisible(false);
+  }, []);
 
   const {
     data,
@@ -99,16 +139,52 @@ export default function Index() {
       organizerSlug: event.organizer?.slug,
       organizerAvatar: event.organizer?.logo_url,
       organizerId: event.organizer_id,
-      lat: event.lat,
-      lng: event.lng,
-      minPrice
+      minPrice,
+      // location data used for proximity sorting (not rendered)
+      _lat: typeof event.lat === "number" ? event.lat : null,
+      _lng: typeof event.lng === "number" ? event.lng : null,
     };
   });
 
-  // 1) Prioriza eventos próximos (se houver localização do usuário)
-  // 2) Depois empurra eventos já vistos para o final
-  const nearbyFirst = prioritizeNearbyItems(rawFeedItems, userCoords, 80);
-  const feedItems = prioritizeUnseenEvents(nearbyFirst);
+  // Step 1: prioritize unseen events
+  const baseFeedItems = prioritizeUnseenEvents(rawFeedItems);
+
+  // Step 2: re-rank by proximity to the user.
+  // Priority: events near GPS coords (≤80km) > events whose address mentions
+  // the active city > everything else (preserves the unseen-first order).
+  const feedItems = useMemo(() => {
+    if (!baseFeedItems.length) return baseFeedItems;
+    const cityNeedle = activeCity?.city ? normalizeCity(activeCity.city) : "";
+    const hasGps = !!coords;
+    if (!hasGps && !cityNeedle) return baseFeedItems;
+
+    const near: typeof baseFeedItems = [];
+    const cityMatch: typeof baseFeedItems = [];
+    const rest: typeof baseFeedItems = [];
+
+    for (const item of baseFeedItems) {
+      let matchedNear = false;
+      if (hasGps && item._lat != null && item._lng != null) {
+        const dist = haversineKm(coords!.lat, coords!.lng, item._lat, item._lng);
+        if (dist <= 80) {
+          near.push(item);
+          matchedNear = true;
+        }
+      }
+      if (matchedNear) continue;
+      if (cityNeedle) {
+        const haystack = normalizeCity(
+          `${item.addressText ?? ""} ${item.venueName ?? ""}`
+        );
+        if (haystack && haystack.includes(cityNeedle)) {
+          cityMatch.push(item);
+          continue;
+        }
+      }
+      rest.push(item);
+    }
+    return [...near, ...cityMatch, ...rest];
+  }, [baseFeedItems, coords?.lat, coords?.lng, activeCity?.city]);
 
   // Mark the first few visible events as seen after data loads
   useEffect(() => {
@@ -296,8 +372,28 @@ export default function Index() {
       <MobileFeed />
       <DesktopLayout />
       <BottomNav />
-      <LocationPrompt />
-      <CityChangePrompt />
+
+      {/* Location prompts — non-blocking, dismissible */}
+      <LocationPrompt
+        visible={shouldShowPermissionPrompt && !isSearchOpen}
+        requesting={requesting}
+        onAllow={() => requestLocation()}
+        onDismiss={dismissPrompt}
+      />
+      <CityChangePrompt
+        detectedCity={pendingCity?.city ?? null}
+        onConfirm={acceptPendingCity}
+        onDismiss={dismissPendingCity}
+      />
+      <ProfileCityBanner
+        visible={
+          profileBannerVisible &&
+          !shouldShowPermissionPrompt &&
+          !pendingCity &&
+          !isSearchOpen
+        }
+        onDismiss={dismissProfileBanner}
+      />
     </>
   );
 }

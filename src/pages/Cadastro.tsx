@@ -1,9 +1,10 @@
 import { useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, User, Loader2, Ticket, PartyPopper, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, Loader2, Ticket, PartyPopper, ArrowLeft, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ValidatedInput } from "@/components/ui/validated-input";
 import { useAuth } from "@/lib/auth";
@@ -15,6 +16,8 @@ export default function Cadastro() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
@@ -59,32 +62,56 @@ export default function Cadastro() {
 
     setLoading(true);
     const { error } = await signUp(email, password, fullName);
-    setLoading(false);
-    
-    if (error) {
-      toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
-    } else {
-      // Send welcome email via Resend (best-effort)
-      try {
-        await supabase.functions.invoke("send-email", {
-          body: {
-            type: "welcome",
-            to: email,
-            data: { userName: fullName },
-          },
-        });
-      } catch (err) {
-        console.warn("Welcome email failed (non-critical):", err);
-      }
 
-      setShowSuccess(true);
-      triggerConfetti();
-      toast({ title: "Conta criada!", description: "Complete seu cadastro para continuar." });
-      
-      setTimeout(() => {
-        navigate("/onboarding");
-      }, 2000);
+    if (error) {
+      setLoading(false);
+      toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
+      return;
     }
+
+    // Best-effort: save optional city/state on the freshly-created profile.
+    // Runs after signUp so the auth session exists; ignored on failure.
+    const cleanCity = city.trim();
+    const cleanState = state.trim().toUpperCase().slice(0, 2);
+    if (cleanCity || cleanState) {
+      try {
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        if (newUser) {
+          await supabase
+            .from("profiles")
+            .update({
+              city: cleanCity || null,
+              state: cleanState || null,
+            })
+            .eq("id", newUser.id);
+        }
+      } catch (err) {
+        console.warn("Optional city/state not saved (non-critical):", err);
+      }
+    }
+
+    setLoading(false);
+
+    // Send welcome email via Resend (best-effort)
+    try {
+      await supabase.functions.invoke("send-email", {
+        body: {
+          type: "welcome",
+          to: email,
+          data: { userName: fullName },
+        },
+      });
+    } catch (err) {
+      console.warn("Welcome email failed (non-critical):", err);
+    }
+
+    setShowSuccess(true);
+    triggerConfetti();
+    toast({ title: "Conta criada!", description: "Complete seu cadastro para continuar." });
+
+    setTimeout(() => {
+      navigate("/onboarding");
+    }, 2000);
   };
 
   const handleGoogleSignIn = async () => {
@@ -265,6 +292,40 @@ export default function Cadastro() {
                 validationRules={passwordRules}
               />
             </div>
+
+            {/* Optional: city + state for location-aware feed */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1.5 sm:space-y-2 col-span-2">
+                <Label htmlFor="city" className="text-xs sm:text-sm font-medium">
+                  Cidade <span className="text-muted-foreground font-normal">(opcional)</span>
+                </Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    id="city"
+                    placeholder="Ex: Fortaleza"
+                    className="h-11 sm:h-12 text-sm pl-10"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="state" className="text-xs sm:text-sm font-medium">UF</Label>
+                <Input
+                  id="state"
+                  placeholder="CE"
+                  className="h-11 sm:h-12 text-sm uppercase"
+                  value={state}
+                  onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))}
+                  maxLength={2}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground -mt-1">
+              Usamos sua cidade para mostrar eventos da sua região.
+            </p>
+
             <Button 
               type="submit" 
               className="w-full h-11 sm:h-12 text-xs sm:text-sm font-medium btn-gradient" 

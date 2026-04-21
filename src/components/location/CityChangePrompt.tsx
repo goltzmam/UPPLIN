@@ -1,108 +1,60 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, X, Check } from "lucide-react";
-import { useUserLocation } from "@/hooks/use-user-location";
-import { cn } from "@/lib/utils";
+import { MapPin, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface CityChangePromptProps {
+  /** The newly detected city (e.g. user traveled to another town). */
+  detectedCity: string | null;
+  onConfirm: () => void;
+  onDismiss: () => void;
+}
 
 /**
- * Banner de detecção automática de mudança de cidade.
- *
- * Aparece quando o reverse-geocode detecta que o usuário está em uma
- * cidade diferente da última cidade ativa (ex.: viajou de Fortaleza
- * para Recife). Mostra abaixo do header, com gradiente UPPLIN.
+ * Banner shown when GPS detects the user is in a different city
+ * than the previously confirmed one. Asks: "Você está em [City]?"
  */
-export function CityChangePrompt() {
-  const { pendingCity, activeCity, confirmCity, rejectCity } = useUserLocation();
-
-  const visible = !!pendingCity;
-  const cityLabel = pendingCity
-    ? [pendingCity.name, pendingCity.state].filter(Boolean).join(" - ")
-    : "";
-
+export function CityChangePrompt({
+  detectedCity,
+  onConfirm,
+  onDismiss,
+}: CityChangePromptProps) {
   return (
     <AnimatePresence>
-      {visible && pendingCity && (
+      {detectedCity && (
         <motion.div
-          initial={{ y: -60, opacity: 0 }}
+          initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          exit={{ y: -60, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 320, damping: 32 }}
-          className={cn(
-            "fixed left-0 right-0 z-[55] pointer-events-none",
-            // posicionado abaixo do LocationPrompt (que tem z-60)
-            "top-[calc(env(safe-area-inset-top,0px)+8px)] lg:top-[calc(env(safe-area-inset-top,0px)+12px)]",
-          )}
+          exit={{ y: -20, opacity: 0 }}
+          className="fixed left-1/2 -translate-x-1/2 z-40 w-[min(92vw,460px)] top-[calc(env(safe-area-inset-top,0px)+64px)]"
         >
-          <div className="px-3 lg:px-4 pointer-events-auto">
-            <div
-              className="mx-auto max-w-md rounded-2xl border border-white/10 bg-background/85 backdrop-blur-xl shadow-2xl overflow-hidden"
-              role="dialog"
-              aria-live="polite"
-              aria-label="Confirmar cidade atual"
-            >
-              <div
-                className="h-[3px] w-full"
-                style={{
-                  background:
-                    "linear-gradient(90deg, #FF6A00, #FF2D2D, #FF007A)",
-                }}
-              />
-              <div className="p-3 sm:p-4 flex items-start gap-3">
-                <div
-                  className="shrink-0 h-10 w-10 rounded-xl flex items-center justify-center"
-                  style={{
-                    background:
-                      "linear-gradient(135deg, rgba(255,106,0,0.18), rgba(255,0,122,0.18))",
-                  }}
-                >
-                  <MapPin className="h-5 w-5 text-foreground" />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground leading-tight">
-                    Você está em {cityLabel}?
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
-                    {activeCity?.name
-                      ? `Detectamos uma mudança de ${activeCity.name}. Atualizar para ver eventos em ${pendingCity.name}.`
-                      : `Atualize para ver eventos em ${pendingCity.name}.`}
-                  </p>
-
-                  <div className="flex items-center gap-2 mt-3">
-                    <button
-                      type="button"
-                      onClick={() => confirmCity()}
-                      className={cn(
-                        "inline-flex items-center justify-center gap-1.5",
-                        "h-8 px-3 rounded-full text-xs font-semibold",
-                        "text-white shadow-md transition-transform active:scale-95",
-                      )}
-                      style={{
-                        background:
-                          "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
-                      }}
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                      Sim, atualizar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={rejectCity}
-                      className="h-8 px-3 rounded-full text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
-                    >
-                      Não, manter
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={rejectCity}
-                  aria-label="Fechar"
-                  className="shrink-0 h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
+          <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl px-4 py-3 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+              <MapPin className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground leading-tight">
+                Você está em {detectedCity}?
+              </p>
+              <p className="text-xs text-muted-foreground leading-snug mt-0.5">
+                Atualize sua cidade para ver eventos por aqui.
+              </p>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Button
+                size="sm"
+                onClick={onConfirm}
+                className="h-8 px-3 text-xs btn-gradient"
+              >
+                <Check className="h-3.5 w-3.5 mr-1" />
+                Sim
+              </Button>
+              <button
+                onClick={onDismiss}
+                aria-label="Manter cidade atual"
+                className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
           </div>
         </motion.div>

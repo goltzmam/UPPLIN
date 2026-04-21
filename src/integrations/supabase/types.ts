@@ -906,6 +906,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          city: string | null
           cover_photo_url: string | null
           cpf: string | null
           cpf_locked: boolean | null
@@ -914,6 +915,7 @@ export type Database = {
           full_name: string | null
           id: string
           photo_url: string | null
+          state: string | null
           status: string | null
           suspended_at: string | null
           suspended_by: string | null
@@ -921,6 +923,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          city?: string | null
           cover_photo_url?: string | null
           cpf?: string | null
           cpf_locked?: boolean | null
@@ -929,6 +932,7 @@ export type Database = {
           full_name?: string | null
           id: string
           photo_url?: string | null
+          state?: string | null
           status?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
@@ -936,6 +940,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          city?: string | null
           cover_photo_url?: string | null
           cpf?: string | null
           cpf_locked?: boolean | null
@@ -944,6 +949,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           photo_url?: string | null
+          state?: string | null
           status?: string | null
           suspended_at?: string | null
           suspended_by?: string | null
