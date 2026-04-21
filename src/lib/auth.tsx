@@ -159,28 +159,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    // Optimistically clear local state FIRST so the UI updates instantly,
-    // even if the network call to Supabase is slow or fails.
+    // 1. Optimistically clear local React state FIRST so the UI updates instantly,
+    //    even if the network call to Supabase is slow or fails.
     setUser(null);
     setSession(null);
     setProfile(null);
-    try {
-      localStorage.removeItem(AUTH_USER_KEY);
-    } catch {
-      /* ignore storage errors */
-    }
 
-    try {
-      // scope: 'local' avoids waiting on a global revoke round-trip,
-      // which is what most users perceive as "logout is stuck/slow".
-      const { error } = await supabase.auth.signOut({ scope: "local" });
-      if (error && !/session.*not.*found/i.test(error.message)) {
-        // Non-fatal: state is already cleared. Log for debugging.
-        console.warn("Supabase signOut returned an error:", error.message);
+    // 2. Hard-purge ALL Supabase auth keys from localStorage + sessionStorage.
+    //    Safety net for when supabase.auth.signOut() fails silently and leaves the
+    //    "sb-<ref>-auth-token" entry behind, which would cause the SDK to
+    //    rehydrate the session on the next reload — the exact bug users hit.
+    const purgeAuthStorage = () => {
+      try {
+        for (const storage of [localStorage, sessionStorage]) {
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < storage.length; i++) {
+            const key = storage.key(i);
+            if (!key) continue;
+            if (
+              key.startsWith("sb-") ||
+              key.includes("supabase.auth") ||
+              key === AUTH_USER_KEY
+            ) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach((k) => storage.removeItem(k));
+        }
+      } catch {
+        /* ignore storage errors */
       }
+    };
+    purgeAuthStorage();
+
+    // 3. Tell Supabase to revoke the session globally, but don't let a slow
+    //    network call hang the UI. Race against a 2s timeout.
+    try {
+      await Promise.race([
+        supabase.auth.signOut({ scope: "global" }),
+        new Promise((resolve) => setTimeout(resolve, 2000)),
+      ]);
     } catch (err) {
       console.warn("signOut threw, but local state was cleared:", err);
     }
+
+    // 4. Final defensive purge in case the SDK wrote anything back during signOut.
+    purgeAuthStorage();
   };
 
   const updateProfile = async (data: Partial<Profile>) => {
