@@ -3,6 +3,7 @@ import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3, Menu, X, Crown } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { Button } from "@/components/ui/button";
 import { PageLoading } from "@/components/ui/loading";
@@ -23,8 +24,9 @@ const navItems = [
 ];
 
 export function AdminLayout() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { isAdmin, isLoading: rolesLoading } = useUserRoles();
+  const { logout, loggingOut } = useLogout({ redirectTo: "/admin/login" });
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,10 +41,7 @@ export function AdminLayout() {
     }
   }, [authLoading, rolesLoading, user, isAdmin, navigate]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/admin/login");
-  };
+  const handleSignOut = () => logout();
 
   if (authLoading || rolesLoading) {
     return <PageLoading />;

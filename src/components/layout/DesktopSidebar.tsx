@@ -91,7 +91,8 @@ const NavItem = ({ to, icon, label, isActive, isCollapsed, isCreate }: NavItemPr
 export function DesktopSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const { logout } = useLogout({ redirectTo: "/" });
   
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -109,10 +110,7 @@ export function DesktopSidebar() {
     return location.pathname.startsWith(path);
   };
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-  };
+  const handleLogout = () => logout();
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
@@ -26,7 +27,8 @@ export function Header({ minimal = false }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, profile, signOut } = useAuth();
+  const { user, profile } = useAuth();
+  const { logout, loggingOut } = useLogout({ redirectTo: "/" });
   const navigate = useNavigate();
   const location = useLocation();
   const isHome = location.pathname === "/";
@@ -41,10 +43,8 @@ export function Header({ minimal = false }: HeaderProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
+  const handleSignOut = () => logout({ redirectTo: "/" });
+  const handleSwitchAccount = () => logout({ redirectTo: "/login", showToast: false });
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -191,10 +191,8 @@ export function Header({ minimal = false }: HeaderProps) {
                     {/* Switch Account & Logout */}
                     <div className="p-1.5">
                       <DropdownMenuItem 
-                        onClick={async () => {
-                          await signOut();
-                          navigate("/login");
-                        }} 
+                        onClick={handleSwitchAccount} 
+                        disabled={loggingOut}
                         className="rounded-lg py-2.5 cursor-pointer"
                       >
                         <RefreshCw className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -202,10 +200,11 @@ export function Header({ minimal = false }: HeaderProps) {
                       </DropdownMenuItem>
                       <DropdownMenuItem 
                         onClick={handleSignOut} 
+                        disabled={loggingOut}
                         className="rounded-lg py-2.5 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
                       >
                         <LogOut className="mr-2 h-4 w-4" />
-                        Sair
+                        {loggingOut ? "Saindo..." : "Sair"}
                       </DropdownMenuItem>
                     </div>
                   </DropdownMenuContent>

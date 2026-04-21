@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserRoles } from "@/hooks/use-user-roles";
@@ -28,7 +29,7 @@ interface ProfileSettingsProps {
 }
 
 export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsProps) {
-  const { signOut } = useAuth();
+  const { logout, loggingOut } = useLogout({ redirectTo: "/" });
   const navigate = useNavigate();
   const { toast } = useToast();
   const { isOrganizer, isLoading: rolesLoading } = useUserRoles();
@@ -326,10 +327,8 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
         <Button
           variant="outline"
           className="w-full"
-          onClick={async () => {
-            await signOut();
-            navigate("/login");
-          }}
+          disabled={loggingOut}
+          onClick={() => logout({ redirectTo: "/login", showToast: false })}
         >
           <RefreshCw className="h-4 w-4 mr-2" />
           Trocar Conta
@@ -338,10 +337,15 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
         <Button
           variant="outline"
           className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/20"
-          onClick={signOut}
+          disabled={loggingOut}
+          onClick={() => logout({ redirectTo: "/" })}
         >
-          <LogOut className="h-4 w-4 mr-2" />
-          Sair da conta
+          {loggingOut ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <LogOut className="h-4 w-4 mr-2" />
+          )}
+          {loggingOut ? "Saindo..." : "Sair da conta"}
         </Button>
       </div>
     </div>
