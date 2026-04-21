@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 
 const SIDEBAR_COLLAPSED_KEY = "upplin_sidebar_collapsed";
 
@@ -91,7 +92,8 @@ const NavItem = ({ to, icon, label, isActive, isCollapsed, isCreate }: NavItemPr
 export function DesktopSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
+  const { logout } = useLogout({ redirectTo: "/" });
   
   const [isCollapsed, setIsCollapsed] = useState(() => {
     if (typeof window !== "undefined") {
@@ -109,10 +111,7 @@ export function DesktopSidebar() {
     return location.pathname.startsWith(path);
   };
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/");
-  };
+  const handleLogout = () => logout();
 
   const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 

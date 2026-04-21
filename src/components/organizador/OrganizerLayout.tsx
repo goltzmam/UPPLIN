@@ -15,6 +15,7 @@ import {
   Crown
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,8 @@ const navItems = [
 ];
 
 export function OrganizerLayout() {
-  const { user, loading: authLoading, signOut } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const { logout, loggingOut } = useLogout({ redirectTo: "/organizador/login" });
   const navigate = useNavigate();
   const location = useLocation();
   const [checking, setChecking] = useState(true);
@@ -97,10 +99,7 @@ export function OrganizerLayout() {
     setChecking(false);
   }, [user, authLoading, orgLoading, organizer, navigate, location.pathname]);
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/organizador/login");
-  };
+  const handleSignOut = () => logout();
 
   const isActive = (path: string, exact?: boolean) => {
     if (exact) return location.pathname === path;
