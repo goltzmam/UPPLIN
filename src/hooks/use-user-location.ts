@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { reverseGeocode } from "@/lib/reverse-geocode";
 
 export type LocationStatus =
   | "idle"
@@ -15,9 +16,23 @@ export interface UserCoords {
   updatedAt: number;
 }
 
+export interface UserCity {
+  name: string;
+  state: string | null;
+  countryCode: string | null;
+  /** Última confirmação (manual ou automática) */
+  confirmedAt: number;
+  /** Coordenadas em que foi resolvida */
+  lat: number;
+  lng: number;
+}
+
 const STORAGE_KEY = "upplin:user-location:v1";
 const DECISION_KEY = "upplin:location-decision:v1"; // "granted" | "dismissed" | "denied"
 const PROMPT_SHOWN_KEY = "upplin:location-prompt-shown:v1";
+const ACTIVE_CITY_KEY = "upplin:active-city:v1";
+const PENDING_CITY_KEY = "upplin:pending-city:v1";
+const CITY_DISMISS_KEY = "upplin:city-change-dismissed:v1";
 const MAX_AGE_MS = 1000 * 60 * 60 * 6; // 6 hours
 
 function readStoredCoords(): UserCoords | null {
@@ -59,14 +74,60 @@ function writeDecision(value: "granted" | "dismissed" | "denied") {
   }
 }
 
+function readActiveCity(): UserCity | null {
+  try {
+    const raw = localStorage.getItem(ACTIVE_CITY_KEY);
+    return raw ? (JSON.parse(raw) as UserCity) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeActiveCity(city: UserCity | null) {
+  try {
+    if (!city) localStorage.removeItem(ACTIVE_CITY_KEY);
+    else localStorage.setItem(ACTIVE_CITY_KEY, JSON.stringify(city));
+  } catch {
+    /* ignore */
+  }
+}
+
+function readPendingCity(): UserCity | null {
+  try {
+    const raw = localStorage.getItem(PENDING_CITY_KEY);
+    return raw ? (JSON.parse(raw) as UserCity) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writePendingCity(city: UserCity | null) {
+  try {
+    if (!city) localStorage.removeItem(PENDING_CITY_KEY);
+    else localStorage.setItem(PENDING_CITY_KEY, JSON.stringify(city));
+  } catch {
+    /* ignore */
+  }
+}
+
+function normalizeCityName(name: string | null | undefined): string {
+  if (!name) return "";
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+}
+
 /**
  * Hook unificado de localização do usuário.
  *
  * - Persiste a última posição válida (6h) em localStorage.
- * - Persiste a decisão do usuário (concedido / dispensado / negado)
- *   para evitar perguntar de novo na mesma sessão / dispositivo.
- * - Exibe `shouldPrompt = true` quando ainda não há decisão e o
- *   browser suporta geolocalização.
+ * - Persiste a decisão do usuário (concedido / dispensado / negado).
+ * - Resolve a cidade via reverse-geocode (Nominatim) e detecta
+ *   mudança de cidade (ex.: usuário viajou de Fortaleza para Recife).
+ * - Quando detecta mudança, expõe `pendingCity` + `confirmCity()` /
+ *   `rejectCity()` para o componente de UI perguntar ao usuário.
  */
 export function useUserLocation() {
   const [coords, setCoords] = useState<UserCoords | null>(() => readStoredCoords());
@@ -79,6 +140,8 @@ export function useUserLocation() {
     return "prompt";
   });
   const [error, setError] = useState<string | null>(null);
+  const [activeCity, setActiveCity] = useState<UserCity | null>(() => readActiveCity());
+  const [pendingCity, setPendingCity] = useState<UserCity | null>(() => readPendingCity());
 
   // Sync com Permissions API quando disponível
   useEffect(() => {
@@ -89,7 +152,6 @@ export function useUserLocation() {
       .then((result) => {
         if (cancelled) return;
         if (result.state === "granted" && !coords) {
-          // Já permitido pelo navegador — buscar silenciosamente
           requestLocation();
         } else if (result.state === "denied") {
           setStatus("denied");
@@ -109,6 +171,71 @@ export function useUserLocation() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Resolve cidade e detecta mudança sempre que coords mudarem
+  useEffect(() => {
+    if (!coords) return;
+    let cancelled = false;
+    reverseGeocode(coords.lat, coords.lng).then((res) => {
+      if (cancelled || !res?.city) return;
+
+      const detected: UserCity = {
+        name: res.city,
+        state: res.state,
+        countryCode: res.countryCode,
+        confirmedAt: Date.now(),
+        lat: coords.lat,
+        lng: coords.lng,
+      };
+
+      const current = readActiveCity();
+
+      // Primeira vez: assumimos automaticamente, sem perguntar.
+      if (!current) {
+        writeActiveCity(detected);
+        setActiveCity(detected);
+        writePendingCity(null);
+        setPendingCity(null);
+        try {
+          localStorage.removeItem(CITY_DISMISS_KEY);
+        } catch {
+          /* ignore */
+        }
+        return;
+      }
+
+      // Mesma cidade — apenas atualiza timestamp/coords (silencioso).
+      if (normalizeCityName(current.name) === normalizeCityName(detected.name)) {
+        const refreshed: UserCity = { ...current, ...detected, name: current.name };
+        writeActiveCity(refreshed);
+        setActiveCity(refreshed);
+        writePendingCity(null);
+        setPendingCity(null);
+        return;
+      }
+
+      // Cidade mudou — não sobrescreve direto; pergunta ao usuário.
+      // Evita perguntar de novo se ele acabou de dispensar a mesma cidade.
+      try {
+        const dismissedRaw = localStorage.getItem(CITY_DISMISS_KEY);
+        if (dismissedRaw) {
+          const d = JSON.parse(dismissedRaw) as { name: string; at: number };
+          const fresh = Date.now() - d.at < 1000 * 60 * 60 * 12; // 12h
+          if (fresh && normalizeCityName(d.name) === normalizeCityName(detected.name)) {
+            return;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+
+      writePendingCity(detected);
+      setPendingCity(detected);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [coords?.lat, coords?.lng]);
 
   const requestLocation = useCallback(() => {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
@@ -139,7 +266,7 @@ export function useUserLocation() {
         }
         setError(err.message || "Não foi possível obter sua localização");
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 * 60 * 5 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000 * 60 * 5 },
     );
   }, []);
 
@@ -153,6 +280,39 @@ export function useUserLocation() {
     setCoords(null);
   }, []);
 
+  /** Aceita a nova cidade detectada como cidade ativa. */
+  const confirmCity = useCallback((city?: UserCity) => {
+    const target = city || readPendingCity();
+    if (!target) return;
+    const confirmed: UserCity = { ...target, confirmedAt: Date.now() };
+    writeActiveCity(confirmed);
+    setActiveCity(confirmed);
+    writePendingCity(null);
+    setPendingCity(null);
+    try {
+      localStorage.removeItem(CITY_DISMISS_KEY);
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  /** Rejeita a sugestão de mudança de cidade — mantém a atual. */
+  const rejectCity = useCallback(() => {
+    const target = readPendingCity();
+    if (target) {
+      try {
+        localStorage.setItem(
+          CITY_DISMISS_KEY,
+          JSON.stringify({ name: target.name, at: Date.now() }),
+        );
+      } catch {
+        /* ignore */
+      }
+    }
+    writePendingCity(null);
+    setPendingCity(null);
+  }, []);
+
   const shouldPrompt = status === "prompt";
 
   return {
@@ -163,5 +323,9 @@ export function useUserLocation() {
     requestLocation,
     dismissPrompt,
     clearLocation,
+    activeCity,
+    pendingCity,
+    confirmCity,
+    rejectCity,
   };
 }

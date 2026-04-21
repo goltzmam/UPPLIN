@@ -16,6 +16,7 @@ import { prioritizeUnseenEvents, markEventsSeen } from "@/lib/seen-events";
 import { prioritizeNearbyItems } from "@/lib/geo";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { LocationPrompt } from "@/components/location/LocationPrompt";
+import { CityChangePrompt } from "@/components/location/CityChangePrompt";
 
 const PAGE_SIZE = 12;
 
@@ -296,6 +297,7 @@ export default function Index() {
       <DesktopLayout />
       <BottomNav />
       <LocationPrompt />
+      <CityChangePrompt />
     </>
   );
 }
