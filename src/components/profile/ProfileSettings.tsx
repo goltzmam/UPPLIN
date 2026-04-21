@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,8 @@ interface Profile {
   cover_photo_url?: string | null;
   cpf?: string | null;
   cpf_locked?: boolean;
+  city?: string | null;
+  state?: string | null;
 }
 
 interface ProfileSettingsProps {
@@ -36,6 +38,8 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
   
   const [fullName, setFullName] = useState(profile.full_name || "");
   const [cpf, setCpf] = useState(profile.cpf || "");
+  const [city, setCity] = useState(profile.city || "");
+  const [state, setState] = useState(profile.state || "");
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -57,7 +61,11 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
   const handleSave = async () => {
     setSaving(true);
     
-    const updates: any = { full_name: fullName };
+    const updates: any = {
+      full_name: fullName,
+      city: city.trim() || null,
+      state: state.trim().toUpperCase().slice(0, 2) || null,
+    };
     
     if (!profile.cpf && cpf) {
       updates.cpf = cpf.replace(/\D/g, "");
