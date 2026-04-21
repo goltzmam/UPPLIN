@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper, ArrowLeft, LogOut, UserCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { ValidatedInput } from "@/components/ui/validated-input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useAuth } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 import { 
   isValidEmail, 
   isValidName, 
