@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,12 +14,13 @@ interface UseLogoutOptions {
  *
  * - Prevents double-clicks while the request is in flight.
  * - Always clears local auth state (even if the network call fails).
- * - Navigates the user to a safe destination at the end.
- * - Surfaces a toast so the user gets immediate feedback.
+ * - Performs a HARD navigation (window.location.replace) so React state,
+ *   React-Query caches, listeners and any rehydrated Supabase session are
+ *   wiped clean. This fixes the "logout doesn't actually log me out" bug
+ *   that some users hit even after clearing the cache.
  */
 export function useLogout(defaultOptions: UseLogoutOptions = {}) {
   const { signOut } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [loggingOut, setLoggingOut] = useState(false);
   const inFlight = useRef(false);
@@ -43,16 +43,19 @@ export function useLogout(defaultOptions: UseLogoutOptions = {}) {
           });
         }
       } catch (err: any) {
-        // signOut already handles errors internally, but just in case:
         console.warn("Logout error:", err);
       } finally {
-        // Always navigate, even on error — local state is already cleared.
-        navigate(redirectTo, { replace: true });
-        inFlight.current = false;
-        setLoggingOut(false);
+        // Hard reload — drops in-memory React state, React Query caches,
+        // and any rehydrated Supabase session. Only reliable way to guarantee
+        // the user is fully logged out across all tabs/components.
+        try {
+          window.location.replace(redirectTo);
+        } catch {
+          window.location.href = redirectTo;
+        }
       }
     },
-    [signOut, navigate, toast, defaultOptions.redirectTo, defaultOptions.showToast]
+    [signOut, toast, defaultOptions.redirectTo, defaultOptions.showToast]
   );
 
   return { logout, loggingOut };
