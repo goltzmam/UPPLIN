@@ -125,7 +125,7 @@ export default function OrganizadorLogin() {
       </AlertDialog>
 
       {/* Animated background gradient orbs - GREEN/TEAL for Organizer */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-1/4 -right-10 w-40 h-40 sm:w-80 sm:h-80 rounded-full opacity-15 blur-3xl"
           style={{ background: "linear-gradient(135deg, #10B981, #14B8A6)" }}
