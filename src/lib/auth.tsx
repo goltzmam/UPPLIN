@@ -9,6 +9,8 @@ interface Profile {
   photo_url: string | null;
   cpf: string | null;
   cpf_locked: boolean | null;
+  city: string | null;
+  state: string | null;
 }
 
 interface AuthContextType {
