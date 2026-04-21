@@ -63,30 +63,47 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
     enabled: isOpen,
   });
 
-  // Real-time search with debounce
+  // Real-time search with debounce — accent-insensitive
   const { data: searchResults, isLoading, isFetching } = useQuery({
     queryKey: ["feed-search", debouncedQuery],
     queryFn: async () => {
       if (debouncedQuery.length < 2) return [];
       const results: SearchResult[] = [];
+      const normalized = normalizeText(debouncedQuery);
 
+      // Buscamos uma janela ampla (sem depender de match exato no Postgres)
+      // e filtramos no cliente ignorando acentos/caracteres especiais.
       const [{ data: events }, { data: organizers }] = await Promise.all([
         supabase
           .from("events")
-          .select("id, title, slug, venue_name, cover_image_url")
+          .select("id, title, slug, venue_name, address_text, cover_image_url")
           .eq("status", "published")
-          .or(`title.ilike.%${debouncedQuery}%,venue_name.ilike.%${debouncedQuery}%,address_text.ilike.%${debouncedQuery}%`)
+          .gte("start_at", new Date().toISOString())
           .order("start_at", { ascending: true })
-          .limit(5),
+          .limit(50),
         supabase
           .from("organizer_accounts")
           .select("id, display_name, slug, logo_url")
           .eq("status", "active")
-          .or(`display_name.ilike.%${debouncedQuery}%,slug.ilike.%${debouncedQuery}%`)
-          .limit(3),
+          .limit(50),
       ]);
 
-      events?.forEach((event) => {
+      const matchedEvents = (events || []).filter((e) => {
+        return (
+          normalizeText(e.title).includes(normalized) ||
+          normalizeText(e.venue_name).includes(normalized) ||
+          normalizeText(e.address_text).includes(normalized)
+        );
+      }).slice(0, 5);
+
+      const matchedOrganizers = (organizers || []).filter((o) => {
+        return (
+          normalizeText(o.display_name).includes(normalized) ||
+          normalizeText(o.slug).includes(normalized)
+        );
+      }).slice(0, 3);
+
+      matchedEvents.forEach((event) => {
         results.push({
           type: "event",
           id: event.id,
@@ -97,7 +114,7 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
         });
       });
 
-      organizers?.forEach((org) => {
+      matchedOrganizers.forEach((org) => {
         results.push({
           type: "organizer",
           id: org.id,
