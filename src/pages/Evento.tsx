@@ -1,6 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MapPin, Clock, Share2, Heart, Minus, Plus, Ticket, Instagram, Facebook, Globe, Building2, Play, Pause, ChevronLeft, ChevronRight, ImageIcon, Users } from "lucide-react";
+import { Calendar, MapPin, Clock, Heart, Minus, Plus, Ticket, Instagram, Facebook, Globe, Building2, Play, Pause, ChevronLeft, ChevronRight, ImageIcon, Users } from "lucide-react";
+import { ShareButton } from "@/components/events/ShareButton";
 import { useState, useCallback } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -121,18 +122,6 @@ export default function Evento() {
     return `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
   };
 
-  const handleShare = async () => {
-    const url = window.location.href;
-    const text = `Confira este evento: ${event?.title}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: event?.title, text, url });
-      } catch (err) {}
-    } else {
-      await navigator.clipboard.writeText(url);
-    }
-  };
 
   const handleSave = async () => {
     if (!user) {
@@ -365,10 +354,13 @@ export default function Evento() {
 
                   {/* Actions */}
                   <div className="flex gap-3 pt-1">
-                    <Button variant="outline" size="sm" className="rounded-full h-9 px-4" onClick={handleShare}>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Compartilhar
-                    </Button>
+                    <ShareButton
+                      eventId={event.id}
+                      eventTitle={event.title}
+                      eventDate={format(eventDate, "dd/MM/yyyy 'às' HH:mm")}
+                      eventImage={event.cover_image_url}
+                      className="rounded-full h-9 px-4"
+                    />
                     <Button 
                       variant={isSaved ? "default" : "outline"} 
                       size="sm"
@@ -788,10 +780,13 @@ export default function Evento() {
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="rounded-full" onClick={handleShare}>
-            <Share2 className="h-4 w-4 mr-2" />
-            Compartilhar
-          </Button>
+          <ShareButton
+            eventId={event.id}
+            eventTitle={event.title}
+            eventDate={format(eventDate, "dd/MM/yyyy 'às' HH:mm")}
+            eventImage={event.cover_image_url}
+            className="rounded-full"
+          />
           <Button 
             variant={isSaved ? "default" : "outline"} 
             size="sm"
