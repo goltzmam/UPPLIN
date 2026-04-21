@@ -496,6 +496,35 @@
     padding-bottom: env(safe-area-inset-bottom, 0);
   }
 
+  /* =========================================================================
+     Dynamic bottom-nav safe spacing.
+     BottomNav writes its measured height (incl. safe-area inset) into the
+     CSS variable --app-bottom-offset (default fallback 100px). Pages with
+     scrollable content should use these utilities instead of fixed pb-20/pb-24
+     so content is never covered by the nav OR the floating prompts above it.
+     ========================================================================= */
+  .pb-app-bottom {
+    padding-bottom: var(--app-bottom-offset, 100px);
+  }
+  /* Adds extra room (~80px) to clear the floating LocationPrompt /
+     ProfileCityBanner / CityChangePrompt cards that sit above the nav. */
+  .pb-app-bottom-safe {
+    padding-bottom: calc(var(--app-bottom-offset, 100px) + 16px);
+  }
+  @media (min-width: 1024px) {
+    /* On desktop the BottomNav is hidden — collapse the spacing. */
+    .pb-app-bottom,
+    .pb-app-bottom-safe {
+      padding-bottom: 2rem;
+    }
+  }
+  .mb-app-bottom {
+    margin-bottom: var(--app-bottom-offset, 100px);
+  }
+  @media (min-width: 1024px) {
+    .mb-app-bottom { margin-bottom: 0; }
+  }
+
   /* Gradient animations */
   @keyframes gradient {
     0% { background-position: 0% 50%; }
