@@ -223,7 +223,7 @@ export default function AdminLogin() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
-                  className="pl-10 pr-10 h-11 sm:h-12 text-sm"
+                  className="pl-10 pr-9 sm:pr-10 h-11 sm:h-12 text-sm"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -231,10 +231,10 @@ export default function AdminLogin() {
                 <button
                   type="button"
                   tabIndex={-1}
-                  onClick={() => setShowPassword((v) => !v)}
+                  onClick={togglePassword}
                   aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
                   aria-pressed={showPassword}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-0.5 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
