@@ -84,8 +84,8 @@ export default function Perfil() {
       <TikTokDesktopSidebar />
 
       {/* Main Content */}
-      <main className="pb-20 md:pb-0 lg:ml-[72px] w-full">
-        <div className="max-w-2xl mx-auto px-2 sm:px-4">
+      <main className="pb-app-bottom-safe lg:ml-[72px] w-full">
+        <div className="max-w-2xl mx-auto px-3 sm:px-4">
           <ProfileHeader
             profile={profile}
             stats={{

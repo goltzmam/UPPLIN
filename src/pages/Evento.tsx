@@ -237,7 +237,7 @@ export default function Evento() {
     <div className="min-h-screen bg-background">
       <TikTokDesktopSidebar />
 
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe">
         {/* Breadcrumb */}
         <div className="container py-3 pt-4 hidden lg:block">
           <Breadcrumb 

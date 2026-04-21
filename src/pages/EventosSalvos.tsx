@@ -47,8 +47,8 @@ export default function EventosSalvos() {
     return (
       <div className="min-h-screen flex bg-background text-foreground">
         <TikTokDesktopSidebar />
-        <main className="flex-1 pb-24 lg:pb-8 lg:ml-[72px]">
-          <div className="max-w-2xl mx-auto py-16 px-3 sm:px-4 text-center">
+      <main className="flex-1 pb-app-bottom-safe lg:ml-[72px]">
+        <div className="max-w-2xl mx-auto py-16 px-3 sm:px-4 text-center">
             <Bookmark className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
             <h1 className="text-2xl font-bold mb-2 text-foreground">Eventos Salvos</h1>
             <p className="text-muted-foreground mb-6">
@@ -68,8 +68,8 @@ export default function EventosSalvos() {
     <div className="min-h-screen flex bg-background text-foreground">
       <TikTokDesktopSidebar />
       
-      <main className="flex-1 pb-24 lg:pb-8 lg:ml-[72px]">
-        <div className="max-w-4xl mx-auto py-6 px-3 sm:px-4">
+      <main className="flex-1 pb-app-bottom-safe lg:ml-[72px]">
+        <div className="max-w-4xl mx-auto py-4 px-3 sm:px-4">
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
             <Button
