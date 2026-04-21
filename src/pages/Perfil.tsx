@@ -1,13 +1,35 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { Loader2, LogOut } from "lucide-react";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { PageLoading } from "@/components/ui/loading";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileTabs } from "@/components/profile/ProfileTabs";
+
+function ProfileLoadError() {
+  const { logout, loggingOut } = useLogout({ redirectTo: "/login", showToast: false });
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background gap-4 p-4">
+      <p className="text-muted-foreground text-center">
+        Não foi possível carregar seu perfil. Tente sair e entrar novamente.
+      </p>
+      <Button onClick={() => logout()} disabled={loggingOut}>
+        {loggingOut ? (
+          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+        ) : (
+          <LogOut className="h-4 w-4 mr-2" />
+        )}
+        {loggingOut ? "Saindo..." : "Sair e fazer login novamente"}
+      </Button>
+    </div>
+  );
+}
 
 export default function Perfil() {
   const { user, profile, loading, updateProfile, refreshProfile } = useAuth();
