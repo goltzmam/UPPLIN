@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Shield, Mail, Lock, Loader2, LogOut, ArrowLeft } from "lucide-react";
+import { Shield, Mail, Lock, Loader2, LogOut, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [conflictEmail, setConflictEmail] = useState<string | null>(null);
   const { signIn, signOut } = useAuth();
   const navigate = useNavigate();
