@@ -26,6 +26,17 @@ export default function Checkout() {
   const [mpInitialized, setMpInitialized] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentTab, setPaymentTab] = useState("card");
+  const [cardBrickKey, setCardBrickKey] = useState(0);
+
+  const handleTabChange = useCallback((value: string) => {
+    setPaymentError(null);
+    setPaymentTab(value);
+    // Force remount of MP CardPayment Brick when returning to card tab
+    // (the SDK keeps internal state tied to the DOM node, which breaks on tab switch)
+    if (value === "card") {
+      setCardBrickKey((k) => k + 1);
+    }
+  }, []);
 
   // PIX state
   const [pixData, setPixData] = useState<{
