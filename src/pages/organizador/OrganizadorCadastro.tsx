@@ -50,8 +50,11 @@ export default function OrganizadorCadastro() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [useExistingAccount, setUseExistingAccount] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+  const { logout, loggingOut } = useLogout({ redirectTo: "/organizador/cadastro", showToast: false });
 
   const triggerConfetti = useCallback(() => {
     const duration = 3000;
