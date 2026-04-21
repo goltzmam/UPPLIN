@@ -187,6 +187,19 @@ export function Header({ minimal = false }: HeaderProps) {
                     </div>
                     
                     <DropdownMenuSeparator />
+
+                    {/* Become / access organizer */}
+                    <div className="p-1.5">
+                      <DropdownMenuItem
+                        onClick={() => navigate("/organizador/cadastro")}
+                        className="rounded-lg py-2.5 cursor-pointer"
+                      >
+                        <Building2 className="mr-2 h-4 w-4 text-primary" />
+                        <span className="font-medium">Tornar-se organizador</span>
+                      </DropdownMenuItem>
+                    </div>
+
+                    <DropdownMenuSeparator />
                     
                     {/* Switch Account & Logout */}
                     <div className="p-1.5">
