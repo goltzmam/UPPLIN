@@ -107,8 +107,38 @@ export default function OrganizadorCadastro() {
   const phoneRules = useMemo(() => [{ test: isValidPhone }], []);
 
   // Step validation
-  const isStep1Valid = isValidName(fullName) && isValidEmail(email) && isValidPassword(password);
+  // When using an existing logged-in account, step 1 is bypassed.
+  const isStep1Valid = useExistingAccount
+    ? true
+    : isValidName(fullName) && isValidEmail(email) && isValidPassword(password);
   const isStep2Valid = companyName.trim().length >= 2 && isValidCNPJ(cnpj) && isValidPhone(phone);
+
+  // Pre-fill from current session when user opts to reuse their account.
+  useEffect(() => {
+    if (useExistingAccount && user) {
+      if (!fullName) setFullName(profile?.full_name || user.user_metadata?.full_name || "");
+      if (!email) setEmail(user.email || "");
+    }
+  }, [useExistingAccount, user, profile, fullName, email]);
+
+  // If user already has an organizer account, send them to the dashboard.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("organizer_accounts")
+        .select("id")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (!cancelled && data) {
+        navigate("/organizador/painel", { replace: true });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, navigate]);
 
   const goToStep = (newStep: number) => {
     setDirection(newStep > step ? 1 : -1);
