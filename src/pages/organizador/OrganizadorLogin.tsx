@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Loader2, Building2, ArrowLeft, LogOut } from "lucide-react";
+import { Mail, Lock, Loader2, Building2, ArrowLeft, LogOut, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -27,9 +27,22 @@ export default function OrganizadorLogin() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [conflictEmail, setConflictEmail] = useState<string | null>(null);
-  const { signIn, signOut } = useAuth();
+  const [signingOut, setSigningOut] = useState(false);
+  const { user, signIn, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    try {
+      await signOut();
+      toast({ title: "Você saiu da conta", description: "Sessão encerrada com sucesso." });
+    } catch (err: any) {
+      toast({ title: "Erro ao sair", description: err.message, variant: "destructive" });
+    } finally {
+      setSigningOut(false);
+    }
+  };
 
   const emailRules = useMemo(() => [{ test: isValidEmail }], []);
   const passwordRules = useMemo(() => [{ test: (v: string) => v.length >= 6 }], []);
@@ -84,7 +97,7 @@ export default function OrganizadorLogin() {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 py-8 sm:p-6 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-background flex items-start sm:items-center justify-center px-4 py-8 sm:p-6 relative">
       {/* Conflict Dialog */}
       <AlertDialog open={!!conflictEmail} onOpenChange={(open) => { if (!open) setConflictEmail(null); }}>
         <AlertDialogContent>
@@ -112,7 +125,7 @@ export default function OrganizadorLogin() {
       </AlertDialog>
 
       {/* Animated background gradient orbs - GREEN/TEAL for Organizer */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div
           className="absolute top-1/4 -right-10 w-40 h-40 sm:w-80 sm:h-80 rounded-full opacity-15 blur-3xl"
           style={{ background: "linear-gradient(135deg, #10B981, #14B8A6)" }}
@@ -189,6 +202,40 @@ export default function OrganizadorLogin() {
               <div className="text-[9px] sm:text-[10px] text-muted-foreground">Uptime</div>
             </div>
           </div>
+
+          {/* Active session banner */}
+          {user && (
+            <div
+              className="mb-4 p-3 rounded-xl border flex items-start gap-3"
+              style={{ borderColor: "rgba(245, 158, 11, 0.3)", background: "rgba(245, 158, 11, 0.1)" }}
+            >
+              <User className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#F59E0B" }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs sm:text-sm font-medium text-foreground">
+                  Você já está logado como{" "}
+                  <span className="font-semibold break-all">{user.email}</span>
+                </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                  Para entrar com outra conta, saia primeiro.
+                </p>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 h-8 text-xs gap-1.5"
+                  onClick={handleSignOut}
+                  disabled={signingOut}
+                >
+                  {signingOut ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <LogOut className="h-3.5 w-3.5" />
+                  )}
+                  Sair da conta
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
