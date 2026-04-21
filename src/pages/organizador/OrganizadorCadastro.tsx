@@ -380,13 +380,67 @@ export default function OrganizadorCadastro() {
               Área do Organizador
             </div>
             <div>
-              <h1 className="font-display text-lg sm:text-xl font-bold text-foreground">Criar conta de organizador</h1>
+              <h1 className="font-display text-lg sm:text-xl font-bold text-foreground">
+                {useExistingAccount ? "Tornar-se organizador" : "Criar conta de organizador"}
+              </h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Já tem conta?{" "}
-                <Link to="/organizador/login" className="text-primary hover:underline font-medium">Entrar</Link>
+                {useExistingAccount ? (
+                  "Vamos configurar sua produtora."
+                ) : (
+                  <>
+                    Já tem conta?{" "}
+                    <Link to="/organizador/login" className="text-primary hover:underline font-medium">Entrar</Link>
+                  </>
+                )}
               </p>
             </div>
           </div>
+
+          {/* Active session banner — only when a participant is logged in and hasn't chosen yet */}
+          {user && !useExistingAccount && (
+            <div className="mb-4 sm:mb-5 p-3 rounded-xl border border-primary/30 bg-primary/5">
+              <div className="flex items-start gap-2.5">
+                <UserCheck className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-foreground">
+                    Você já está logado como{" "}
+                    <span className="font-semibold break-all">{user.email}</span>
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                    Quer tornar esta conta um organizador ou criar uma conta separada?
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 text-xs btn-gradient"
+                      onClick={() => {
+                        setUseExistingAccount(true);
+                        goToStep(2);
+                      }}
+                    >
+                      Usar esta conta
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs gap-1.5"
+                      onClick={() => logout()}
+                      disabled={loggingOut}
+                    >
+                      {loggingOut ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <LogOut className="h-3.5 w-3.5" />
+                      )}
+                      Sair e criar outra
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Progress Steps */}
           <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
