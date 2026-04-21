@@ -621,7 +621,15 @@ export default function OrganizadorCadastro() {
                     />
                   </div>
                   <div className="flex gap-2.5 sm:gap-3 pt-1.5 sm:pt-2">
-                    <Button type="button" variant="outline" className="flex-1 h-10 sm:h-11 gap-1.5 sm:gap-2 text-xs sm:text-sm" onClick={() => goToStep(1)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 h-10 sm:h-11 gap-1.5 sm:gap-2 text-xs sm:text-sm"
+                      onClick={() => {
+                        if (useExistingAccount) setUseExistingAccount(false);
+                        goToStep(1);
+                      }}
+                    >
                       <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       Voltar
                     </Button>
