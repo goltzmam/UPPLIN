@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 
 const SIDEBAR_COLLAPSED_KEY = "upplin_sidebar_collapsed";
 
