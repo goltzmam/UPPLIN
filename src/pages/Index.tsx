@@ -26,6 +26,7 @@ export default function Index() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { coords: userCoords } = useUserLocation();
 
   const {
     data,
