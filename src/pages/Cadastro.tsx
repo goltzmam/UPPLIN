@@ -1,9 +1,10 @@
 import { useState, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, User, Loader2, Ticket, PartyPopper, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, Loader2, Ticket, PartyPopper, ArrowLeft, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ValidatedInput } from "@/components/ui/validated-input";
 import { useAuth } from "@/lib/auth";
@@ -15,6 +16,8 @@ export default function Cadastro() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
@@ -59,32 +62,56 @@ export default function Cadastro() {
 
     setLoading(true);
     const { error } = await signUp(email, password, fullName);
-    setLoading(false);
-    
-    if (error) {
-      toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
-    } else {
-      // Send welcome email via Resend (best-effort)
-      try {
-        await supabase.functions.invoke("send-email", {
-          body: {
-            type: "welcome",
-            to: email,
-            data: { userName: fullName },
-          },
-        });
-      } catch (err) {
-        console.warn("Welcome email failed (non-critical):", err);
-      }
 
-      setShowSuccess(true);
-      triggerConfetti();
-      toast({ title: "Conta criada!", description: "Complete seu cadastro para continuar." });
-      
-      setTimeout(() => {
-        navigate("/onboarding");
-      }, 2000);
+    if (error) {
+      setLoading(false);
+      toast({ title: "Erro ao criar conta", description: error.message, variant: "destructive" });
+      return;
     }
+
+    // Best-effort: save optional city/state on the freshly-created profile.
+    // Runs after signUp so the auth session exists; ignored on failure.
+    const cleanCity = city.trim();
+    const cleanState = state.trim().toUpperCase().slice(0, 2);
+    if (cleanCity || cleanState) {
+      try {
+        const { data: { user: newUser } } = await supabase.auth.getUser();
+        if (newUser) {
+          await supabase
+            .from("profiles")
+            .update({
+              city: cleanCity || null,
+              state: cleanState || null,
+            })
+            .eq("id", newUser.id);
+        }
+      } catch (err) {
+        console.warn("Optional city/state not saved (non-critical):", err);
+      }
+    }
+
+    setLoading(false);
+
+    // Send welcome email via Resend (best-effort)
+    try {
+      await supabase.functions.invoke("send-email", {
+        body: {
+          type: "welcome",
+          to: email,
+          data: { userName: fullName },
+        },
+      });
+    } catch (err) {
+      console.warn("Welcome email failed (non-critical):", err);
+    }
+
+    setShowSuccess(true);
+    triggerConfetti();
+    toast({ title: "Conta criada!", description: "Complete seu cadastro para continuar." });
+
+    setTimeout(() => {
+      navigate("/onboarding");
+    }, 2000);
   };
 
   const handleGoogleSignIn = async () => {
