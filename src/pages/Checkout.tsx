@@ -502,7 +502,7 @@ export default function Checkout() {
                       </Button>
                     </div>
                   ) : (
-                    <Tabs value={paymentTab} onValueChange={setPaymentTab}>
+                    <Tabs value={paymentTab} onValueChange={handleTabChange}>
                       <TabsList className="w-full mb-4">
                         <TabsTrigger value="card" className="flex-1 gap-2">
                           <CreditCard className="h-4 w-4" />
@@ -514,10 +514,11 @@ export default function Checkout() {
                         </TabsTrigger>
                       </TabsList>
 
-                      <TabsContent value="card">
-                        {mpInitialized ? (
-                          <div id="card-payment-brick">
+                      <TabsContent value="card" forceMount={paymentTab === "card" ? true : undefined} hidden={paymentTab !== "card"}>
+                        {mpInitialized && paymentTab === "card" ? (
+                          <div id="card-payment-brick" key={cardBrickKey}>
                             <CardPayment
+                              key={cardBrickKey}
                               initialization={{ amount: finalTotal / 100 }}
                               onSubmit={onCardPaymentSubmit}
                               onError={onCardPaymentError}
