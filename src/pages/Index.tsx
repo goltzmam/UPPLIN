@@ -139,12 +139,52 @@ export default function Index() {
       organizerSlug: event.organizer?.slug,
       organizerAvatar: event.organizer?.logo_url,
       organizerId: event.organizer_id,
-      minPrice
+      minPrice,
+      // location data used for proximity sorting (not rendered)
+      _lat: typeof event.lat === "number" ? event.lat : null,
+      _lng: typeof event.lng === "number" ? event.lng : null,
     };
   });
 
-  // Prioritize unseen events — push already-viewed events to the end
-  const feedItems = prioritizeUnseenEvents(rawFeedItems);
+  // Step 1: prioritize unseen events
+  const baseFeedItems = prioritizeUnseenEvents(rawFeedItems);
+
+  // Step 2: re-rank by proximity to the user.
+  // Priority: events near GPS coords (≤80km) > events whose address mentions
+  // the active city > everything else (preserves the unseen-first order).
+  const feedItems = useMemo(() => {
+    if (!baseFeedItems.length) return baseFeedItems;
+    const cityNeedle = activeCity?.city ? normalizeCity(activeCity.city) : "";
+    const hasGps = !!coords;
+    if (!hasGps && !cityNeedle) return baseFeedItems;
+
+    const near: typeof baseFeedItems = [];
+    const cityMatch: typeof baseFeedItems = [];
+    const rest: typeof baseFeedItems = [];
+
+    for (const item of baseFeedItems) {
+      let matchedNear = false;
+      if (hasGps && item._lat != null && item._lng != null) {
+        const dist = haversineKm(coords!.lat, coords!.lng, item._lat, item._lng);
+        if (dist <= 80) {
+          near.push(item);
+          matchedNear = true;
+        }
+      }
+      if (matchedNear) continue;
+      if (cityNeedle) {
+        const haystack = normalizeCity(
+          `${item.addressText ?? ""} ${item.venueName ?? ""}`
+        );
+        if (haystack && haystack.includes(cityNeedle)) {
+          cityMatch.push(item);
+          continue;
+        }
+      }
+      rest.push(item);
+    }
+    return [...near, ...cityMatch, ...rest];
+  }, [baseFeedItems, coords?.lat, coords?.lng, activeCity?.city]);
 
   // Mark the first few visible events as seen after data loads
   useEffect(() => {
