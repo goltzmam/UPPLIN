@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper, ArrowLeft } from "lucide-react";
+import { Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper, ArrowLeft, LogOut, UserCheck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { ValidatedInput } from "@/components/ui/validated-input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { useAuth } from "@/lib/auth";
+import { useLogout } from "@/hooks/use-logout";
 import { 
   isValidEmail, 
   isValidName, 
@@ -48,8 +50,11 @@ export default function OrganizadorCadastro() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [useExistingAccount, setUseExistingAccount] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, profile } = useAuth();
+  const { logout, loggingOut } = useLogout({ redirectTo: "/organizador/cadastro", showToast: false });
 
   const triggerConfetti = useCallback(() => {
     const duration = 3000;
@@ -102,8 +107,38 @@ export default function OrganizadorCadastro() {
   const phoneRules = useMemo(() => [{ test: isValidPhone }], []);
 
   // Step validation
-  const isStep1Valid = isValidName(fullName) && isValidEmail(email) && isValidPassword(password);
+  // When using an existing logged-in account, step 1 is bypassed.
+  const isStep1Valid = useExistingAccount
+    ? true
+    : isValidName(fullName) && isValidEmail(email) && isValidPassword(password);
   const isStep2Valid = companyName.trim().length >= 2 && isValidCNPJ(cnpj) && isValidPhone(phone);
+
+  // Pre-fill from current session when user opts to reuse their account.
+  useEffect(() => {
+    if (useExistingAccount && user) {
+      if (!fullName) setFullName(profile?.full_name || user.user_metadata?.full_name || "");
+      if (!email) setEmail(user.email || "");
+    }
+  }, [useExistingAccount, user, profile, fullName, email]);
+
+  // If user already has an organizer account, send them to the dashboard.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("organizer_accounts")
+        .select("id")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (!cancelled && data) {
+        navigate("/organizador/painel", { replace: true });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, navigate]);
 
   const goToStep = (newStep: number) => {
     setDirection(newStep > step ? 1 : -1);
@@ -141,41 +176,67 @@ export default function OrganizadorCadastro() {
     setLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: window.location.origin,
-          data: { full_name: fullName },
-        },
-      });
-      
-      if (authError) throw authError;
+      // Determine the user we will attach the organizer account to.
+      let ownerUserId: string | null = null;
+      let ownerEmail: string = email;
 
-      if (authData?.user) {
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({ user_id: authData.user.id, role: "organizer" });
-        
-        if (roleError && !roleError.message.includes("duplicate")) {
-          console.error("Role error:", roleError);
-        }
+      if (useExistingAccount && user) {
+        // Reuse the currently logged-in user — DO NOT call signUp.
+        ownerUserId = user.id;
+        ownerEmail = user.email || email;
+      } else {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { full_name: fullName },
+          },
+        });
 
-        const { error: orgError } = await supabase
-          .from("organizer_accounts")
-          .insert({
-            owner_user_id: authData.user.id,
-            display_name: companyName,
-            cnpj: cnpj.replace(/\D/g, ""),
-            phone: phone.replace(/\D/g, ""),
-            email: email,
-            description,
-            social_instagram: instagram,
-            social_facebook: facebook,
-            social_website: website,
+        if (authError) throw authError;
+        ownerUserId = authData?.user?.id ?? null;
+      }
+
+      if (!ownerUserId) {
+        throw new Error("Não foi possível identificar o usuário. Tente novamente.");
+      }
+
+      // Add organizer role (idempotent — ignore duplicate).
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert({ user_id: ownerUserId, role: "organizer" });
+
+      if (roleError && !/duplicate|unique/i.test(roleError.message)) {
+        console.error("Role error:", roleError);
+      }
+
+      // Create the organizer account.
+      const { error: orgError } = await supabase
+        .from("organizer_accounts")
+        .insert({
+          owner_user_id: ownerUserId,
+          display_name: companyName,
+          cnpj: cnpj.replace(/\D/g, ""),
+          phone: phone.replace(/\D/g, ""),
+          email: ownerEmail,
+          description,
+          social_instagram: instagram,
+          social_facebook: facebook,
+          social_website: website,
+        });
+
+      if (orgError) {
+        // Friendlier message if the user already has an org account.
+        if (/duplicate|unique/i.test(orgError.message)) {
+          toast({
+            title: "Você já tem uma conta de organizador",
+            description: "Redirecionando para o painel...",
           });
-
-        if (orgError) throw orgError;
+          setTimeout(() => navigate("/organizador/painel"), 1200);
+          return;
+        }
+        throw orgError;
       }
 
       // Send welcome email for organizer (best-effort)
@@ -183,7 +244,7 @@ export default function OrganizadorCadastro() {
         await supabase.functions.invoke("send-email", {
           body: {
             type: "welcome_organizer",
-            to: email,
+            to: ownerEmail,
             data: { userName: fullName, companyName },
           },
         });
@@ -194,19 +255,19 @@ export default function OrganizadorCadastro() {
       setShowSuccess(true);
       triggerConfetti();
 
-      toast({ 
-        title: "Conta criada com sucesso!", 
-        description: "Vamos configurar seu perfil." 
+      toast({
+        title: useExistingAccount ? "Conta atualizada!" : "Conta criada com sucesso!",
+        description: "Vamos configurar seu perfil.",
       });
 
       setTimeout(() => {
         navigate("/organizador/painel");
       }, 2500);
     } catch (err: any) {
-      toast({ 
-        title: "Erro ao criar conta", 
-        description: err.message, 
-        variant: "destructive" 
+      toast({
+        title: "Erro ao criar conta",
+        description: err.message,
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -257,9 +318,9 @@ export default function OrganizadorCadastro() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 py-8 sm:p-6 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-background flex items-start sm:items-center justify-center px-4 pt-14 pb-16 sm:p-6 relative">
       {/* Animated background gradient orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div 
           className="absolute top-0 left-1/4 w-40 h-40 sm:w-80 sm:h-80 rounded-full opacity-15 blur-3xl"
           style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D)" }}
@@ -319,13 +380,67 @@ export default function OrganizadorCadastro() {
               Área do Organizador
             </div>
             <div>
-              <h1 className="font-display text-lg sm:text-xl font-bold text-foreground">Criar conta de organizador</h1>
+              <h1 className="font-display text-lg sm:text-xl font-bold text-foreground">
+                {useExistingAccount ? "Tornar-se organizador" : "Criar conta de organizador"}
+              </h1>
               <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                Já tem conta?{" "}
-                <Link to="/organizador/login" className="text-primary hover:underline font-medium">Entrar</Link>
+                {useExistingAccount ? (
+                  "Vamos configurar sua produtora."
+                ) : (
+                  <>
+                    Já tem conta?{" "}
+                    <Link to="/organizador/login" className="text-primary hover:underline font-medium">Entrar</Link>
+                  </>
+                )}
               </p>
             </div>
           </div>
+
+          {/* Active session banner — only when a participant is logged in and hasn't chosen yet */}
+          {user && !useExistingAccount && (
+            <div className="mb-4 sm:mb-5 p-3 rounded-xl border border-primary/30 bg-primary/5">
+              <div className="flex items-start gap-2.5">
+                <UserCheck className="h-4 w-4 mt-0.5 shrink-0 text-primary" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-foreground">
+                    Você já está logado como{" "}
+                    <span className="font-semibold break-all">{user.email}</span>
+                  </p>
+                  <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">
+                    Quer tornar esta conta um organizador ou criar uma conta separada?
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2.5">
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 text-xs btn-gradient"
+                      onClick={() => {
+                        setUseExistingAccount(true);
+                        goToStep(2);
+                      }}
+                    >
+                      Usar esta conta
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-8 text-xs gap-1.5"
+                      onClick={() => logout()}
+                      disabled={loggingOut}
+                    >
+                      {loggingOut ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <LogOut className="h-3.5 w-3.5" />
+                      )}
+                      Sair e criar outra
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Progress Steps */}
           <div className="flex items-center justify-center gap-1.5 sm:gap-2 mb-4 sm:mb-6">
@@ -506,7 +621,15 @@ export default function OrganizadorCadastro() {
                     />
                   </div>
                   <div className="flex gap-2.5 sm:gap-3 pt-1.5 sm:pt-2">
-                    <Button type="button" variant="outline" className="flex-1 h-10 sm:h-11 gap-1.5 sm:gap-2 text-xs sm:text-sm" onClick={() => goToStep(1)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="flex-1 h-10 sm:h-11 gap-1.5 sm:gap-2 text-xs sm:text-sm"
+                      onClick={() => {
+                        if (useExistingAccount) setUseExistingAccount(false);
+                        goToStep(1);
+                      }}
+                    >
                       <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       Voltar
                     </Button>
