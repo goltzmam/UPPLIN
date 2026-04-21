@@ -318,7 +318,7 @@ export default function OrganizadorCadastro() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 py-8 sm:p-6 relative overflow-hidden">
+    <div className="min-h-[100dvh] bg-background flex items-start sm:items-center justify-center px-4 pt-14 pb-16 sm:p-6 relative">
       {/* Animated background gradient orbs */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 
