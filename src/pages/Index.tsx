@@ -13,6 +13,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { stopAllMediaPipelines } from "@/lib/media";
 import { prioritizeUnseenEvents, markEventsSeen } from "@/lib/seen-events";
+import { prioritizeNearbyItems } from "@/lib/geo";
+import { useUserLocation } from "@/hooks/use-user-location";
+import { LocationPrompt } from "@/components/location/LocationPrompt";
 
 const PAGE_SIZE = 12;
 
@@ -23,6 +26,7 @@ export default function Index() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { coords: userCoords } = useUserLocation();
 
   const {
     data,
@@ -94,12 +98,16 @@ export default function Index() {
       organizerSlug: event.organizer?.slug,
       organizerAvatar: event.organizer?.logo_url,
       organizerId: event.organizer_id,
+      lat: event.lat,
+      lng: event.lng,
       minPrice
     };
   });
 
-  // Prioritize unseen events — push already-viewed events to the end
-  const feedItems = prioritizeUnseenEvents(rawFeedItems);
+  // 1) Prioriza eventos próximos (se houver localização do usuário)
+  // 2) Depois empurra eventos já vistos para o final
+  const nearbyFirst = prioritizeNearbyItems(rawFeedItems, userCoords, 80);
+  const feedItems = prioritizeUnseenEvents(nearbyFirst);
 
   // Mark the first few visible events as seen after data loads
   useEffect(() => {
@@ -287,6 +295,7 @@ export default function Index() {
       <MobileFeed />
       <DesktopLayout />
       <BottomNav />
+      <LocationPrompt />
     </>
   );
 }
