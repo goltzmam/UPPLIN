@@ -157,11 +157,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    localStorage.removeItem(AUTH_USER_KEY);
-    await supabase.auth.signOut();
+    // Optimistically clear local state FIRST so the UI updates instantly,
+    // even if the network call to Supabase is slow or fails.
     setUser(null);
     setSession(null);
     setProfile(null);
+    try {
+      localStorage.removeItem(AUTH_USER_KEY);
+    } catch {
+      /* ignore storage errors */
+    }
+
+    try {
+      // scope: 'local' avoids waiting on a global revoke round-trip,
+      // which is what most users perceive as "logout is stuck/slow".
+      const { error } = await supabase.auth.signOut({ scope: "local" });
+      if (error && !/session.*not.*found/i.test(error.message)) {
+        // Non-fatal: state is already cleared. Log for debugging.
+        console.warn("Supabase signOut returned an error:", error.message);
+      }
+    } catch (err) {
+      console.warn("signOut threw, but local state was cleared:", err);
+    }
   };
 
   const updateProfile = async (data: Partial<Profile>) => {
