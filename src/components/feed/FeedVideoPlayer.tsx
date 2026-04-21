@@ -218,14 +218,17 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         <img src={coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" loading="eager" aria-hidden="true" />
       )}
 
-      {/* Cover image */}
+      {/* Cover image — visible only until the video has its first frame ready.
+          When the user pauses, we keep the current video frame visible (do NOT
+          re-show the cover) to avoid the "corrupted image" effect caused by
+          stacking the static cover over the paused video frame. */}
       {coverUrl && (
         <img
           src={coverUrl}
           alt=""
           className={cn(
             "absolute inset-0 w-full h-full object-contain z-[1] transition-opacity duration-200",
-            videoLoaded && !isBuffering && !isPaused ? "opacity-0" : "opacity-100"
+            videoLoaded ? "opacity-0" : "opacity-100"
           )}
           loading="eager"
           aria-hidden="true"
