@@ -323,6 +323,36 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
           )}
         </div>
 
+        {/* City + State */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="space-y-2 col-span-2">
+            <Label htmlFor="city">Cidade <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+            <div className="relative">
+              <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="city"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                className="pl-10"
+                placeholder="Ex: Fortaleza"
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="state">UF</Label>
+            <Input
+              id="state"
+              value={state}
+              onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))}
+              placeholder="CE"
+              maxLength={2}
+            />
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground -mt-2">
+          Usamos sua cidade para mostrar eventos da sua região quando o GPS não estiver disponível.
+        </p>
+
         <Button onClick={handleSave} disabled={saving} className="w-full">
           {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
           Salvar Alterações
