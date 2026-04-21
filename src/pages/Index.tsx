@@ -13,6 +13,9 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { stopAllMediaPipelines } from "@/lib/media";
 import { prioritizeUnseenEvents, markEventsSeen } from "@/lib/seen-events";
+import { prioritizeNearbyItems } from "@/lib/geo";
+import { useUserLocation } from "@/hooks/use-user-location";
+import { LocationPrompt } from "@/components/location/LocationPrompt";
 
 const PAGE_SIZE = 12;
 
