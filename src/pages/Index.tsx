@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,10 +9,18 @@ import { TikTokFeed } from "@/components/feed/TikTokFeed";
 import { DesktopTikTokFeed } from "@/components/feed/DesktopTikTokFeed";
 import { FeedSearch } from "@/components/feed/FeedSearch";
 import { FollowingFeed } from "@/components/home/FollowingFeed";
+import { LocationPrompt } from "@/components/location/LocationPrompt";
+import { CityChangePrompt } from "@/components/location/CityChangePrompt";
+import { ProfileCityBanner } from "@/components/location/ProfileCityBanner";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { stopAllMediaPipelines } from "@/lib/media";
 import { prioritizeUnseenEvents, markEventsSeen } from "@/lib/seen-events";
+import { useUserLocation } from "@/hooks/use-user-location";
+import { haversineKm, normalizeCity } from "@/lib/geo";
+
+const PROFILE_BANNER_DISMISS_KEY = "upplin_profile_city_banner_dismissed";
+const PROFILE_BANNER_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 
 const PAGE_SIZE = 12;
 
@@ -22,7 +30,44 @@ export default function Index() {
   const scrollPosRef = useRef(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+
+  // ─── Location: priority Manual > GPS > Profile > Default ─────────────
+  const {
+    coords,
+    activeCity,
+    pendingCity,
+    shouldShowPermissionPrompt,
+    requesting,
+    requestLocation,
+    dismissPrompt,
+    acceptPendingCity,
+    dismissPendingCity,
+  } = useUserLocation({
+    profileCity: profile?.city ?? null,
+    profileState: profile?.state ?? null,
+  });
+
+  // Profile-city banner: only for logged-in users with no city set
+  const [profileBannerVisible, setProfileBannerVisible] = useState(false);
+  useEffect(() => {
+    if (!user) return setProfileBannerVisible(false);
+    if (profile?.city) return setProfileBannerVisible(false);
+    try {
+      const raw = localStorage.getItem(PROFILE_BANNER_DISMISS_KEY);
+      if (raw && Date.now() - Number(raw) < PROFILE_BANNER_TTL_MS) return;
+    } catch { /* ignore */ }
+    // small delay so it doesn't appear at the same time as GPS prompt
+    const t = setTimeout(() => setProfileBannerVisible(true), 4000);
+    return () => clearTimeout(t);
+  }, [user, profile?.city]);
+
+  const dismissProfileBanner = useCallback(() => {
+    try {
+      localStorage.setItem(PROFILE_BANNER_DISMISS_KEY, String(Date.now()));
+    } catch { /* ignore */ }
+    setProfileBannerVisible(false);
+  }, []);
 
   const {
     data,
