@@ -62,13 +62,18 @@ export default function Eventos() {
   });
 
   const filteredEvents = events?.filter(event => {
-    const matchesSearch = 
-      event.title.toLowerCase().includes(search.toLowerCase()) ||
-      event.venue_name?.toLowerCase().includes(search.toLowerCase());
-    
-    const matchesCategory = 
-      selectedCategory === "all" || 
-      event.category?.toLowerCase() === selectedCategory;
+    const matchesSearch =
+      !search ||
+      textIncludes(event.title, search) ||
+      textIncludes(event.venue_name, search) ||
+      textIncludes(event.address_text, search) ||
+      textIncludes(event.description, search) ||
+      textIncludes(event.category, search) ||
+      textIncludes(event.organizer?.display_name, search);
+
+    const matchesCategory =
+      selectedCategory === "all" ||
+      categoriesMatch(event.category, selectedCategory);
 
     return matchesSearch && matchesCategory;
   });
