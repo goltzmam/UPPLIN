@@ -26,6 +26,17 @@ export default function Checkout() {
   const [mpInitialized, setMpInitialized] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [paymentTab, setPaymentTab] = useState("card");
+  const [cardBrickKey, setCardBrickKey] = useState(0);
+
+  const handleTabChange = useCallback((value: string) => {
+    setPaymentError(null);
+    setPaymentTab(value);
+    // Force remount of MP CardPayment Brick when returning to card tab
+    // (the SDK keeps internal state tied to the DOM node, which breaks on tab switch)
+    if (value === "card") {
+      setCardBrickKey((k) => k + 1);
+    }
+  }, []);
 
   // PIX state
   const [pixData, setPixData] = useState<{
@@ -491,7 +502,7 @@ export default function Checkout() {
                       </Button>
                     </div>
                   ) : (
-                    <Tabs value={paymentTab} onValueChange={setPaymentTab}>
+                    <Tabs value={paymentTab} onValueChange={handleTabChange}>
                       <TabsList className="w-full mb-4">
                         <TabsTrigger value="card" className="flex-1 gap-2">
                           <CreditCard className="h-4 w-4" />
@@ -503,10 +514,11 @@ export default function Checkout() {
                         </TabsTrigger>
                       </TabsList>
 
-                      <TabsContent value="card">
-                        {mpInitialized ? (
-                          <div id="card-payment-brick">
+                      <TabsContent value="card" forceMount={paymentTab === "card" ? true : undefined} hidden={paymentTab !== "card"}>
+                        {mpInitialized && paymentTab === "card" ? (
+                          <div id="card-payment-brick" key={cardBrickKey}>
                             <CardPayment
+                              key={cardBrickKey}
                               initialization={{ amount: finalTotal / 100 }}
                               onSubmit={onCardPaymentSubmit}
                               onError={onCardPaymentError}
