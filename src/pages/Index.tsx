@@ -297,6 +297,7 @@ export default function Index() {
       <DesktopLayout />
       <BottomNav />
       <LocationPrompt />
+      <CityChangePrompt />
     </>
   );
 }
