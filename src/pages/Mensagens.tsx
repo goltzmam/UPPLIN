@@ -141,7 +141,7 @@ export default function Mensagens() {
   if (authLoading) return (
     <div className="min-h-screen bg-background">
       <TikTokDesktopSidebar />
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe">
         <PageLoading />
       </main>
       <BottomNav />
@@ -152,7 +152,7 @@ export default function Mensagens() {
     <div className="min-h-screen bg-background">
       <TikTokDesktopSidebar />
 
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe">
         <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
           {/* Breadcrumb - desktop only */}
           <div className="hidden lg:block">
