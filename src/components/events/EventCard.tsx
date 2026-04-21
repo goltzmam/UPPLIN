@@ -131,7 +131,7 @@ export function EventCard({
 
           {/* Sold out badge */}
           {soldOut && (
-            <div className="absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4">
+            <div className="absolute top-12 right-2 sm:top-14 sm:right-3 lg:top-16 lg:right-4">
               <Badge variant="destructive" className="shadow-lg text-[10px] sm:text-xs font-semibold">Esgotado</Badge>
             </div>
           )}
