@@ -20,15 +20,38 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { checkSessionConflict } from "@/lib/session-guard";
 
+const ADMIN_PWD_REVEAL_KEY = "upplin:pwd-revealed:admin-password";
+
+const readInitialReveal = () => {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(ADMIN_PWD_REVEAL_KEY) === "1";
+  } catch {
+    return false;
+  }
+};
+
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState<boolean>(readInitialReveal);
   const [conflictEmail, setConflictEmail] = useState<string | null>(null);
   const { signIn, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const togglePassword = () => {
+    setShowPassword((prev) => {
+      const next = !prev;
+      try {
+        window.sessionStorage.setItem(ADMIN_PWD_REVEAL_KEY, next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
 
   const doAdminSignIn = async () => {
     setLoading(true);
