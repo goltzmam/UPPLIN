@@ -295,6 +295,7 @@ export default function Index() {
       <MobileFeed />
       <DesktopLayout />
       <BottomNav />
+      <LocationPrompt />
     </>
   );
 }
