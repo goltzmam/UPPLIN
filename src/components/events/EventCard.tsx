@@ -64,7 +64,28 @@ export function EventCard({
   const displayUsername = organizerUsername || (organizerName ? organizerName.toLowerCase().replace(/\s+/g, '') : null);
 
   return (
-    <div className="group block bg-card rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-border hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10 transition-all duration-300 w-full min-w-0">
+    <div className="group relative block bg-card rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden border border-border hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10 transition-all duration-300 w-full min-w-0">
+      {/* Save button - posicionado fora do Link para evitar navegação */}
+      <motion.button
+        type="button"
+        onClick={handleSaveClick}
+        whileTap={{ scale: 0.85 }}
+        disabled={isSaveLoading}
+        aria-label={isSaved ? "Remover dos salvos" : "Salvar evento"}
+        className={cn(
+          "absolute top-2 right-2 sm:top-3 sm:right-3 lg:top-4 lg:right-4 z-20",
+          "h-8 w-8 sm:h-9 sm:w-9 rounded-full backdrop-blur-md flex items-center justify-center",
+          "border border-white/15 shadow-lg transition-colors",
+          isSaved
+            ? "bg-primary text-primary-foreground border-primary/30"
+            : "bg-black/55 text-white hover:bg-black/75"
+        )}
+      >
+        <Bookmark
+          className={cn("h-4 w-4 sm:h-[18px] sm:w-[18px]", isSaved && "fill-current")}
+          strokeWidth={2}
+        />
+      </motion.button>
       {/* Cover Image - Clickable */}
       <Link to={eventUrl} className="block">
         <div className="relative aspect-[4/3] overflow-hidden">
