@@ -327,17 +327,6 @@ export default function OnboardingOrganizador() {
               </Button>
             )}
           </div>
-
-          {/* Skip */}
-          <div className="text-center mt-4">
-            <Button
-              variant="ghost"
-              className="text-muted-foreground"
-              onClick={() => navigate("/organizador/painel")}
-            >
-              Pular por agora
-            </Button>
-          </div>
         </div>
       </div>
     </div>
