@@ -1,5 +1,5 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Menu, X, User, LogOut, Ticket, Bookmark, Users, RefreshCw, Search } from "lucide-react";
+import { Menu, X, User, LogOut, Ticket, Bookmark, Users, RefreshCw, Search, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
