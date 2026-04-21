@@ -320,7 +320,7 @@ export default function OrganizadorCadastro() {
   return (
     <div className="min-h-[100dvh] bg-background flex items-start sm:items-center justify-center px-4 pt-14 pb-16 sm:p-6 relative">
       {/* Animated background gradient orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <motion.div 
           className="absolute top-0 left-1/4 w-40 h-40 sm:w-80 sm:h-80 rounded-full opacity-15 blur-3xl"
           style={{ background: "linear-gradient(135deg, #FF6A00, #FF2D2D)" }}
