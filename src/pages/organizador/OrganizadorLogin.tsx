@@ -205,8 +205,11 @@ export default function OrganizadorLogin() {
 
           {/* Active session banner */}
           {user && (
-            <div className="mb-4 p-3 rounded-xl border border-warning/30 bg-warning/10 flex items-start gap-3">
-              <User className="h-4 w-4 mt-0.5 shrink-0 text-warning" />
+            <div
+              className="mb-4 p-3 rounded-xl border flex items-start gap-3"
+              style={{ borderColor: "rgba(245, 158, 11, 0.3)", background: "rgba(245, 158, 11, 0.1)" }}
+            >
+              <User className="h-4 w-4 mt-0.5 shrink-0" style={{ color: "#F59E0B" }} />
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-foreground">
                   Você já está logado como{" "}
