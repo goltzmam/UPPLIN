@@ -292,6 +292,40 @@ export default function Cadastro() {
                 validationRules={passwordRules}
               />
             </div>
+
+            {/* Optional: city + state for location-aware feed */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1.5 sm:space-y-2 col-span-2">
+                <Label htmlFor="city" className="text-xs sm:text-sm font-medium">
+                  Cidade <span className="text-muted-foreground font-normal">(opcional)</span>
+                </Label>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <Input
+                    id="city"
+                    placeholder="Ex: Fortaleza"
+                    className="h-11 sm:h-12 text-sm pl-10"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="state" className="text-xs sm:text-sm font-medium">UF</Label>
+                <Input
+                  id="state"
+                  placeholder="CE"
+                  className="h-11 sm:h-12 text-sm uppercase"
+                  value={state}
+                  onChange={(e) => setState(e.target.value.toUpperCase().slice(0, 2))}
+                  maxLength={2}
+                />
+              </div>
+            </div>
+            <p className="text-[10px] sm:text-xs text-muted-foreground -mt-1">
+              Usamos sua cidade para mostrar eventos da sua região.
+            </p>
+
             <Button 
               type="submit" 
               className="w-full h-11 sm:h-12 text-xs sm:text-sm font-medium btn-gradient" 
