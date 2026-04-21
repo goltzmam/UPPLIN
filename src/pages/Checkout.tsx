@@ -210,7 +210,23 @@ export default function Checkout() {
         },
       });
 
-      if (error) throw new Error(error.message);
+      if (error) {
+        let friendly = error.message || "Erro ao processar pagamento";
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.json();
+            if (body?.error) friendly = body.error;
+          } else if (ctx && typeof ctx.text === "function") {
+            const text = await ctx.text();
+            try {
+              const parsed = JSON.parse(text);
+              if (parsed?.error) friendly = parsed.error;
+            } catch { /* ignore */ }
+          }
+        } catch { /* ignore */ }
+        throw new Error(friendly);
+      }
 
       if (data.status === "approved") {
         setPaymentSuccess(true);
