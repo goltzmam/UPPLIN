@@ -82,7 +82,7 @@ export default function MeusIngressos() {
   if (loading || isLoading) return (
     <div className="min-h-screen bg-background">
       <TikTokDesktopSidebar />
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe">
         <PageLoading />
       </main>
       <BottomNav />
@@ -281,7 +281,7 @@ export default function MeusIngressos() {
       <TikTokDesktopSidebar />
       <QRCodeModal />
 
-      <main className="pb-24 lg:pb-8 lg:ml-[72px]">
+      <main className="pb-app-bottom-safe lg:ml-[72px]">
         <PullToRefresh onRefresh={handleRefresh} className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
           {/* Breadcrumb - desktop only */}
           <div className="hidden lg:block">

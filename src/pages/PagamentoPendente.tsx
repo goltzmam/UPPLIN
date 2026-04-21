@@ -98,7 +98,7 @@ export default function PagamentoPendente() {
   if (authLoading || isLoading) return (
     <div className="min-h-screen bg-background">
       <TikTokDesktopSidebar />
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0"><PageLoading /></main>
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe"><PageLoading /></main>
       <BottomNav />
     </div>
   );
@@ -107,7 +107,7 @@ export default function PagamentoPendente() {
     return (
       <div className="min-h-screen bg-background">
         <TikTokDesktopSidebar />
-        <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0 flex items-center justify-center">
+        <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe flex items-center justify-center">
           <EmptyState
             icon={<CreditCard className="h-8 w-8 text-accent" />}
             title="Pedido não encontrado"
@@ -129,7 +129,7 @@ export default function PagamentoPendente() {
     <div className="min-h-screen bg-muted/30">
       <TikTokDesktopSidebar />
 
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0 py-6 sm:py-8">
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe py-6 sm:py-8">
         <div className="container max-w-2xl px-4">
           {/* Back button */}
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="mb-4 gap-2">

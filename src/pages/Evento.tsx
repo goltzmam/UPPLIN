@@ -195,7 +195,7 @@ export default function Evento() {
   if (isLoading) return (
     <div className="min-h-screen bg-background">
       <TikTokDesktopSidebar />
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe">
         <PageLoading />
       </main>
       <BottomNav />
@@ -206,7 +206,7 @@ export default function Evento() {
     return (
       <div className="min-h-screen bg-background">
         <TikTokDesktopSidebar />
-        <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0 flex items-center justify-center">
+        <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe flex items-center justify-center">
           <EmptyState
             icon={<Calendar className="h-8 w-8 text-accent" />}
             title="Evento não encontrado"
@@ -237,7 +237,7 @@ export default function Evento() {
     <div className="min-h-screen bg-background">
       <TikTokDesktopSidebar />
 
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe">
         {/* Breadcrumb */}
         <div className="container py-3 pt-4 hidden lg:block">
           <Breadcrumb 

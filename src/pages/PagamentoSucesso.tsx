@@ -76,7 +76,7 @@ export default function PagamentoSucesso() {
     return (
       <div className="min-h-screen bg-background">
         <TikTokDesktopSidebar />
-        <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0">
+        <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe">
           <PageLoading />
         </main>
         <BottomNav />
@@ -88,7 +88,7 @@ export default function PagamentoSucesso() {
     <div className="min-h-screen bg-muted/30">
       <TikTokDesktopSidebar />
 
-      <main className="lg:ml-[72px] min-h-screen pb-20 lg:pb-0 py-8">
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe py-8">
         <div className="container max-w-2xl px-4">
           {/* Success Header */}
           <motion.div
