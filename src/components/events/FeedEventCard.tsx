@@ -115,10 +115,15 @@ export function FeedEventCard({
           </div>
           
           {/* Price badge */}
-          <div className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
+          <div className={cn(
+            "rounded-full border px-3 py-1 shadow-soft backdrop-blur-md",
+            minPrice === 0
+              ? "border-primary/30 bg-primary text-primary-foreground"
+              : "border-border/80 bg-background/90 text-foreground"
+          )}>
             <span className={cn(
-              "text-sm font-bold",
-              minPrice === 0 ? "text-green-600" : "text-foreground"
+              "text-sm font-bold drop-shadow-sm",
+              minPrice === 0 ? "text-primary-foreground" : "text-foreground"
             )}>
               {formatPrice(minPrice)}
             </span>
