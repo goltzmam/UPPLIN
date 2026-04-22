@@ -52,23 +52,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (currentUser: User) => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", userId)
+      .eq("id", currentUser.id)
       .maybeSingle();
 
     if (error) {
       console.error("Error fetching profile:", error);
       return null;
     }
-    return data;
+
+    if (data) {
+      return data;
+    }
+
+    const fallbackProfile = {
+      id: currentUser.id,
+      email: currentUser.email ?? "",
+      full_name:
+        currentUser.user_metadata?.full_name ??
+        currentUser.user_metadata?.name ??
+        null,
+      photo_url: currentUser.user_metadata?.avatar_url ?? null,
+    };
+
+    const { data: createdProfile, error: createError } = await supabase
+      .from("profiles")
+      .upsert(fallbackProfile, { onConflict: "id" })
+      .select("*")
+      .maybeSingle();
+
+    if (createError) {
+      console.error("Error creating missing profile:", createError);
+      return null;
+    }
+
+    return createdProfile;
   };
 
   const refreshProfile = async () => {
     if (user) {
-      const profileData = await fetchProfile(user.id);
+      const profileData = await fetchProfile(user);
       setProfile(profileData);
     }
   };
