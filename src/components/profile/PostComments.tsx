@@ -10,6 +10,7 @@ import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
 import { MentionInput, renderTextWithMentions } from "@/components/ui/mention-input";
+import { invalidateSocialQueries } from "@/lib/social-posts";
 
 interface PostComment {
   id: string;
@@ -84,10 +85,11 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
   });
 
   const refreshComments = async () => {
-    await queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
-    await queryClient.invalidateQueries({ queryKey: ["post-comments-count", postId] });
-    await queryClient.invalidateQueries({ queryKey: ["user-posts"] });
-    await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["post-comments", postId] }),
+      queryClient.invalidateQueries({ queryKey: ["post-comments-count", postId] }),
+      invalidateSocialQueries(queryClient, user?.id),
+    ]);
   };
 
   const handleAddComment = async () => {

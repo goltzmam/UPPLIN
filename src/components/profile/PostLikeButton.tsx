@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Heart, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { invalidateSocialQueries } from "@/lib/social-posts";
 
 interface PostLikeButtonProps {
   postId: string;
@@ -58,9 +59,10 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
         if (error) throw error;
       }
 
-      await queryClient.invalidateQueries({ queryKey: ["post-likes", postId] });
-      await queryClient.invalidateQueries({ queryKey: ["user-posts"] });
-      await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["post-likes", postId] }),
+        invalidateSocialQueries(queryClient, user.id),
+      ]);
     } catch (error) {
       console.error("Erro ao curtir post:", error);
     } finally {

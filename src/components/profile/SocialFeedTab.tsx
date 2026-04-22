@@ -28,6 +28,7 @@ interface FeedPost {
   };
   events?: {
     id: string;
+    slug: string | null;
     title: string;
     cover_image_url: string | null;
   } | null;
@@ -65,6 +66,7 @@ export function SocialFeedTab() {
           *,
           events:event_id (
             id,
+            slug,
             title,
             cover_image_url
           )
@@ -78,7 +80,7 @@ export function SocialFeedTab() {
       // Fetch profiles for posts
       const userIds = [...new Set(postsData.map((p) => p.user_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, full_name, photo_url")
         .in("id", userIds);
 
@@ -159,7 +161,7 @@ export function SocialFeedTab() {
 
             {post.events && (
               <Link
-                to={`/evento/${post.events.id}`}
+                to={`/evento/${post.events.slug || post.events.id}`}
                 className="flex items-center gap-2 p-2 bg-muted rounded-lg hover:bg-muted/80 transition-colors mb-3"
               >
                 {post.events.cover_image_url && (
