@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { AvatarCropDialog } from "@/components/profile/AvatarCropDialog";
 
 interface Profile {
   id: string;
@@ -31,6 +32,8 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
   
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [isCropOpen, setIsCropOpen] = useState(false);
 
   const getInitials = (name: string | null) => {
     if (!name) return "U";
@@ -65,18 +68,14 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
     }
   };
 
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const uploadAvatarFile = async (file: File) => {
     setUploadingAvatar(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}/avatar-${Date.now()}.${fileExt}`;
-      
+      const fileName = `${profile.id}/avatar.jpg`;
+
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { upsert: true, contentType: 'image/jpeg' });
 
       if (uploadError) throw uploadError;
 
@@ -84,13 +83,23 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
         .from('avatars')
         .getPublicUrl(fileName);
 
-      await onProfileUpdate({ photo_url: publicUrl });
+      await onProfileUpdate({ photo_url: `${publicUrl}?t=${Date.now()}` });
       toast({ title: "Foto atualizada!" });
     } catch (error: any) {
       toast({ title: "Erro ao atualizar foto", description: error.message, variant: "destructive" });
+      throw error;
     } finally {
       setUploadingAvatar(false);
     }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPendingAvatarFile(file);
+    setIsCropOpen(true);
+    e.target.value = "";
   };
 
   return (
@@ -135,7 +144,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
           <div className="relative">
             <div className="avatar-ring-gradient p-[3px] rounded-full">
               <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-4 border-background">
-                <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "User"} />
+                <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "User"} className="object-cover object-center" />
                 <AvatarFallback
                   className="text-xl sm:text-2xl font-bold text-accent-foreground"
                   style={{ backgroundImage: "var(--gradient-social)" }}
@@ -185,6 +194,17 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
 
         </div>
       </div>
+
+      <AvatarCropDialog
+        file={pendingAvatarFile}
+        open={isCropOpen}
+        onOpenChange={(open) => {
+          setIsCropOpen(open);
+          if (!open) setPendingAvatarFile(null);
+        }}
+        onConfirm={uploadAvatarFile}
+        isSubmitting={uploadingAvatar}
+      />
     </motion.div>
   );
 }
