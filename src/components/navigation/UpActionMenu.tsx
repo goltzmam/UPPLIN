@@ -142,9 +142,9 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err: any) {
+      } catch (err: unknown) {
         // User cancelled or share failed — fallback to copy
-        if (err?.name !== "AbortError") {
+        if (!(err instanceof DOMException && err.name === "AbortError")) {
           await copyToClipboard();
         }
       }
