@@ -73,7 +73,7 @@ export default function Login() {
   };
 
   const handleGoogleSignIn = async () => {
-    const { error } = await signInWithGoogle();
+    const { error } = await signInWithGoogle(window.location.origin);
     if (error) {
       toast({ title: "Erro ao entrar com Google", description: error.message, variant: "destructive" });
     }

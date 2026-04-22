@@ -194,7 +194,12 @@ export default function OrganizadorCadastro() {
           },
         });
 
-        if (authError) throw authError;
+        if (authError) {
+          if (/weak password|known to be weak|easy to guess|pwned/i.test(authError.message)) {
+            throw new Error("Essa senha é muito fraca ou já foi exposta. Use uma senha mais forte.");
+          }
+          throw authError;
+        }
         ownerUserId = authData?.user?.id ?? null;
       }
 
