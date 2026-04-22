@@ -288,21 +288,21 @@ const emailTemplates = {
         <div class="container">
           <div class="header">
             <div class="logo">UPPLIN</div>
-            <h1 style="color: white; margin-top: 12px;">🔐 Recuperar Senha</h1>
+            <h1 style="color: white; margin-top: 12px;">🔐 Redefinir sua senha</h1>
           </div>
           <div class="content">
             <p>Olá${data.userName ? ` <strong>${data.userName}</strong>` : ""},</p>
-            <p>Recebemos uma solicitação para redefinir a senha da sua conta UPPLIN.</p>
+            <p>Recebemos uma solicitação para redefinir a senha da sua conta na UPPLIN.</p>
             
             <p style="text-align: center;">
-              <a href="${data.resetLink}" class="btn">Redefinir Minha Senha</a>
+              <a href="${data.resetLink}" class="btn">Redefinir minha senha</a>
             </p>
             
             <div class="info-box">
-              ⚠️ Este link é válido por <strong>1 hora</strong>. Se você não solicitou a redefinição de senha, ignore este email — sua conta está segura.
+              ⚠️ Este link é válido por <strong>1 hora</strong>. Se você não pediu essa redefinição, pode ignorar este e-mail com segurança.
             </div>
             
-            <p style="color: #64748b; font-size: 14px;">Se o botão não funcionar, copie e cole o link abaixo no seu navegador:</p>
+            <p style="color: #64748b; font-size: 14px;">Se o botão não abrir corretamente, copie e cole este link no navegador:</p>
             <p class="link-fallback">${data.resetLink}</p>
           </div>
           <div class="footer">
