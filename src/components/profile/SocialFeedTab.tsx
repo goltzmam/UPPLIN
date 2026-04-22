@@ -12,6 +12,7 @@ import { Link } from "react-router-dom";
 import { PostLikeButton } from "./PostLikeButton";
 import { PostComments } from "./PostComments";
 import { useState } from "react";
+import { PostMedia } from "./PostMedia";
 
 interface FeedPost {
   id: string;
@@ -147,16 +148,12 @@ export function SocialFeedTab() {
             )}
 
             {post.media_url && (
-              <div className="rounded-lg overflow-hidden mb-3">
-                {post.media_type === "image" ? (
-                  <img
-                    src={post.media_url}
-                    alt="Post media"
-                    className="w-full object-cover"
-                  />
-                ) : (
-                  <video src={post.media_url} className="w-full" controls />
-                )}
+              <div className="mb-3">
+                <PostMedia
+                  mediaUrl={post.media_url}
+                  mediaType={post.media_type}
+                  alt="Mídia do post"
+                />
               </div>
             )}
 

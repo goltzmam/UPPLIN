@@ -20,6 +20,7 @@ import {
 import { PostLikeButton } from "./PostLikeButton";
 import { PostComments } from "./PostComments";
 import { MentionInput, renderTextWithMentions } from "@/components/ui/mention-input";
+import { PostMedia } from "./PostMedia";
 interface UserPost {
   id: string;
   user_id: string;
@@ -178,19 +179,11 @@ export function UserPostsTab() {
 
               {mediaUrl && (
                 <div className="relative">
-                  {mediaType === "image" ? (
-                    <img
-                      src={mediaUrl}
-                      alt="Preview"
-                      className="w-full max-h-64 object-cover rounded-lg"
-                    />
-                  ) : (
-                    <video
-                      src={mediaUrl}
-                      className="w-full max-h-64 object-cover rounded-lg"
-                      controls
-                    />
-                  )}
+                  <PostMedia
+                    mediaUrl={mediaUrl}
+                    mediaType={mediaType}
+                    alt="Preview"
+                  />
                   <Button
                     size="icon"
                     variant="destructive"
@@ -342,20 +335,12 @@ export function UserPostsTab() {
                 )}
 
                 {post.media_url && (
-                  <div className="rounded-lg overflow-hidden mb-3">
-                    {post.media_type === "image" ? (
-                      <img
-                        src={post.media_url}
-                        alt="Post media"
-                        className="w-full object-cover"
-                      />
-                    ) : (
-                      <video
-                        src={post.media_url}
-                        className="w-full"
-                        controls
-                      />
-                    )}
+                  <div className="mb-3">
+                    <PostMedia
+                      mediaUrl={post.media_url}
+                      mediaType={post.media_type}
+                      alt="Mídia do post"
+                    />
                   </div>
                 )}
 
