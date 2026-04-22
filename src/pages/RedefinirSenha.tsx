@@ -18,6 +18,7 @@ export default function RedefinirSenha() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const { toast } = useToast();
+  const accountLabel = isOrganizer ? "organizador" : "participante";
 
   const passwordRules = useMemo(() => [{ test: isValidPassword }], []);
   const confirmRules = useMemo(() => [{ test: (v: string) => v === password && v.length >= 6 }], [password]);
@@ -40,9 +41,13 @@ export default function RedefinirSenha() {
     setLoading(false);
 
     if (error) {
+      const description = /session|token|expired|invalid/i.test(error.message)
+        ? "Esse link de recuperação expirou ou já foi usado. Solicite um novo e-mail de recuperação para continuar."
+        : "Abra novamente o link recebido por e-mail e tente de novo.";
+
       toast({
         title: "Não foi possível salvar sua nova senha",
-        description: "Abra novamente o link recebido por e-mail e tente de novo.",
+        description,
         variant: "destructive"
       });
     } else {
@@ -77,7 +82,7 @@ export default function RedefinirSenha() {
             transition={{ delay: 0.1 }}
             className="font-display text-2xl sm:text-3xl font-bold mb-3 sm:mb-4"
           >
-            Nova senha
+            Redefinir sua senha
           </motion.h1>
           <motion.p 
             initial={{ y: 20, opacity: 0 }}
@@ -85,7 +90,7 @@ export default function RedefinirSenha() {
             transition={{ delay: 0.2 }}
             className="text-sm sm:text-base text-secondary-foreground/70"
           >
-            Crie uma nova senha para concluir a recuperação com segurança.
+            Crie uma nova senha para concluir a recuperação da sua conta com segurança.
           </motion.p>
         </div>
       </div>
@@ -123,7 +128,7 @@ export default function RedefinirSenha() {
                     Senha redefinida!
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Sua nova senha já está ativa. Agora é só continuar seu acesso normalmente.
+                    Sua nova senha da conta {accountLabel} já está ativa. Agora é só continuar seu acesso normalmente.
                   </p>
                 </div>
               </motion.div>
@@ -140,7 +145,7 @@ export default function RedefinirSenha() {
                     Redefinir sua senha
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Escolha sua nova senha para concluir a recuperação iniciada pelo e-mail enviado pela UPPLIN.
+                    Escolha sua nova senha para concluir a recuperação iniciada pelo e-mail de redefinição enviado pela UPPLIN.
                   </p>
                 </div>
 
