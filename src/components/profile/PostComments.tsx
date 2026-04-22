@@ -137,11 +137,11 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
   };
 
   return (
-    <div className="space-y-3">
+    <div className="flex-1 min-w-0">
       <Button
         variant="ghost"
         size="sm"
-        className="gap-1.5 text-muted-foreground hover:text-primary"
+        className="h-9 min-w-[3.25rem] shrink-0 gap-1.5 rounded-full px-2.5 text-muted-foreground hover:text-primary sm:px-3"
         onClick={onToggle}
       >
         <MessageCircle className="h-4 w-4" />
@@ -149,7 +149,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
       </Button>
 
       {isExpanded && (
-        <div className="space-y-4 pt-2 border-t border-border">
+        <div className="mt-3 space-y-4 rounded-xl border border-border bg-muted/20 p-3 sm:p-4">
           {/* Comments List */}
           {isLoading ? (
             <div className="flex justify-center py-4">
@@ -202,19 +202,19 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
 
           {/* Add Comment Form */}
           {user && (
-            <div className="flex gap-2 pt-2">
+            <div className="flex items-start gap-2 pt-2">
               <Avatar className="h-7 w-7 flex-shrink-0">
                 <AvatarImage src={profile?.photo_url || undefined} />
                 <AvatarFallback className="text-xs bg-primary/20 text-primary">
                   {profile?.full_name?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 flex gap-2">
+              <div className="flex min-w-0 flex-1 items-end gap-2">
                 <MentionInput
                   placeholder="Escreva um comentário... Use @ para marcar"
                   value={newComment}
                   onChange={setNewComment}
-                  className="text-sm bg-muted border-0"
+                  className="min-w-0 text-sm bg-muted border-0"
                   minHeight="36px"
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -225,7 +225,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                 />
                 <Button
                   size="icon"
-                  className="h-9 w-9 flex-shrink-0 btn-gradient"
+                  className="h-9 w-9 flex-shrink-0 self-end btn-gradient"
                   onClick={handleAddComment}
                   disabled={!newComment.trim() || isSubmitting}
                 >
