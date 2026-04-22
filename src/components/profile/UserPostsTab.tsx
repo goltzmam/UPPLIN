@@ -36,6 +36,13 @@ interface UserPost {
   } | null;
 }
 
+interface TaggableEvent {
+  id: string;
+  title: string;
+  venue_name: string | null;
+  start_at: string;
+}
+
 export function UserPostsTab() {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
@@ -46,6 +53,8 @@ export function UserPostsTab() {
   const [isCreating, setIsCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
+  const [selectedEventId, setSelectedEventId] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Navigate to organizer profile when mention is clicked
@@ -75,17 +84,59 @@ export function UserPostsTab() {
     enabled: !!user,
   });
 
+  const { data: taggableEvents = [] } = useQuery({
+    queryKey: ["user-events-for-posting", user?.id],
+    queryFn: async () => {
+      if (!user) return [] as TaggableEvent[];
+
+      const { data, error } = await supabase
+        .from("tickets")
+        .select(`
+          event_id,
+          events:event_id (
+            id,
+            title,
+            venue_name,
+            start_at
+          )
+        `)
+        .eq("buyer_user_id", user.id)
+        .eq("status", "issued");
+
+      if (error) throw error;
+
+      const dedupedEvents = new Map<string, TaggableEvent>();
+
+      for (const ticket of data ?? []) {
+        const event = ticket.events as TaggableEvent | null;
+        if (event && !dedupedEvents.has(event.id)) {
+          dedupedEvents.set(event.id, event);
+        }
+      }
+
+      return Array.from(dedupedEvents.values()).sort(
+        (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime()
+      );
+    },
+    enabled: !!user && isCreating,
+  });
+
   const createPost = useMutation({
     mutationFn: async () => {
+      if (!user) {
+        throw new Error("Faça login para publicar.");
+      }
+
       if (!content.trim() && !mediaUrl) {
         throw new Error("Adicione texto ou mídia ao seu post");
       }
 
       const { error } = await supabase.from("user_posts").insert({
-        user_id: user!.id,
+        user_id: user.id,
         content: content.trim() || null,
         media_url: mediaUrl,
         media_type: mediaType,
+        event_id: selectedEventId || null,
       });
 
       if (error) throw error;
@@ -95,9 +146,12 @@ export function UserPostsTab() {
       setContent("");
       setMediaUrl(null);
       setMediaType(null);
+      setSelectedEventId("");
+      setFormError(null);
       setIsCreating(false);
     },
     onError: (error: Error) => {
+      setFormError(error.message || "Não foi possível publicar agora.");
       console.error("Erro ao criar post:", error.message);
     },
   });
@@ -123,14 +177,28 @@ export function UserPostsTab() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    if (!isImage && !isVideo) {
+      setFormError("Envie uma imagem ou vídeo válido.");
+      e.target.value = "";
       return;
     }
 
-    if (file.size > 10 * 1024 * 1024) {
+    const maxFileSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+
+    if (file.size > maxFileSize) {
+      setFormError(
+        isVideo
+          ? "Vídeos podem ter até 50MB."
+          : "Imagens podem ter até 10MB."
+      );
+      e.target.value = "";
       return;
     }
 
+    setFormError(null);
     setUploading(true);
 
     try {
@@ -151,11 +219,13 @@ export function UserPostsTab() {
         .getPublicUrl(fileName);
 
       setMediaUrl(urlData.publicUrl);
-      setMediaType("image");
+      setMediaType(isVideo ? "video" : "image");
     } catch (error) {
+      setFormError("Não foi possível enviar a mídia agora.");
       console.error("Upload error:", error);
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -171,10 +241,34 @@ export function UserPostsTab() {
               <MentionInput
                 placeholder="O que você está pensando? Use @ para marcar organizadores"
                 value={content}
-                onChange={setContent}
+                onChange={(value) => {
+                  setContent(value);
+                  if (formError) setFormError(null);
+                }}
                 className="bg-background border-border"
                 minHeight="100px"
               />
+
+              {taggableEvents.length > 0 && (
+                <div className="space-y-2">
+                  <label htmlFor="post-event" className="text-sm font-medium text-foreground">
+                    Marcar evento opcionalmente
+                  </label>
+                  <select
+                    id="post-event"
+                    value={selectedEventId}
+                    onChange={(e) => setSelectedEventId(e.target.value)}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    <option value="">Sem evento marcado</option>
+                    {taggableEvents.map((event) => (
+                      <option key={event.id} value={event.id}>
+                        {event.title}{event.venue_name ? ` • ${event.venue_name}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               {mediaUrl && (
                 <div className="relative">
@@ -210,7 +304,7 @@ export function UserPostsTab() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
                     onChange={handleFileUpload}
                     className="hidden"
                     disabled={uploading}
@@ -227,7 +321,7 @@ export function UserPostsTab() {
                     ) : (
                       <Camera className="h-4 w-4" />
                     )}
-                    Foto
+                    Foto ou vídeo
                   </Button>
                 </div>
 
@@ -240,6 +334,8 @@ export function UserPostsTab() {
                       setContent("");
                       setMediaUrl(null);
                       setMediaType(null);
+                      setSelectedEventId("");
+                      setFormError(null);
                     }}
                   >
                     Cancelar
@@ -248,13 +344,17 @@ export function UserPostsTab() {
                     size="sm"
                     className="btn-gradient gap-2"
                     onClick={() => createPost.mutate()}
-                    disabled={createPost.isPending}
+                    disabled={createPost.isPending || uploading || (!content.trim() && !mediaUrl)}
                   >
                     <Send className="h-4 w-4" />
                     Publicar
                   </Button>
                 </div>
               </div>
+
+              {formError && (
+                <p className="text-sm text-destructive">{formError}</p>
+              )}
             </div>
           ) : (
             <div
