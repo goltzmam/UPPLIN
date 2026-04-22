@@ -9,10 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidEmail } from "@/lib/validation";
 
-function buildResetRedirect(origin: string, isOrganizer: boolean) {
-  return `${origin}/redefinir-senha${isOrganizer ? "?tipo=organizador" : ""}`;
-}
-
 export default function RecuperarSenha() {
   const [searchParams] = useSearchParams();
   const isOrganizer = searchParams.get("tipo") === "organizador";
