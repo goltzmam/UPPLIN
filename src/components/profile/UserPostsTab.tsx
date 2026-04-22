@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PostLikeButton } from "./PostLikeButton";
 import { PostComments } from "./PostComments";
+import { PostMedia } from "./PostMedia";
 import { MentionInput, renderTextWithMentions } from "@/components/ui/mention-input";
 interface UserPost {
   id: string;
@@ -442,20 +443,8 @@ export function UserPostsTab() {
                 )}
 
                 {post.media_url && (
-                  <div className="rounded-lg overflow-hidden mb-3">
-                    {post.media_type === "image" ? (
-                      <img
-                        src={post.media_url}
-                        alt="Post media"
-                        className="w-full object-cover"
-                      />
-                    ) : (
-                      <video
-                        src={post.media_url}
-                        className="w-full"
-                        controls
-                      />
-                    )}
+                  <div className="mb-3 overflow-hidden rounded-lg">
+                    <PostMedia mediaUrl={post.media_url} mediaType={post.media_type} className="max-h-[32rem]" />
                   </div>
                 )}
 
