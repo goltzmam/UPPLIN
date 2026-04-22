@@ -142,7 +142,7 @@ export default function RecuperarSenha() {
                     Link enviado
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Se existir uma conta com esse e-mail, você vai receber uma mensagem em português com o botão <strong>Redefinir minha senha</strong>.
+                    Se existir uma conta com esse e-mail, você vai receber uma mensagem em português com o botão “Redefinir minha senha”.
                   </p>
                 </div>
                 <Button asChild variant="outline" className="w-full">
