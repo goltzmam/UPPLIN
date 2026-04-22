@@ -273,41 +273,47 @@ const emailTemplates = {
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <style>
-          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
-          .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-          .header { background: linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A); padding: 40px 30px; text-align: center; }
-          .content { padding: 30px; }
-          .info-box { background: #fef9ec; border: 1px solid #fde68a; border-radius: 12px; padding: 16px; margin: 20px 0; color: #92400e; font-size: 14px; }
-          .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
-          .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -1px; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 16px 36px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; margin: 20px 0; }
-          .link-fallback { word-break: break-all; color: #FF2D2D; font-size: 13px; }
+          body { font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #ffffff; margin: 0; padding: 24px; color: #111111; }
+          .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 18px 48px rgba(0,0,0,0.08); }
+          .header { background: linear-gradient(135deg, #FF6A00, #FF2D2D 52%, #FF007A); padding: 40px 30px 34px; text-align: center; }
+          .content { padding: 32px 30px; }
+          .eyebrow { display: inline-block; background: rgba(255,255,255,0.18); color: #ffffff; padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+          .title { margin: 14px 0 0; color: #ffffff; font-family: 'Space Grotesk', 'Inter', sans-serif; font-size: 30px; line-height: 1.1; }
+          .lead { color: #4b5563; font-size: 16px; line-height: 1.7; margin: 0 0 16px; }
+          .cta-wrap { text-align: center; margin: 30px 0 26px; }
+          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: #ffffff !important; padding: 16px 34px; text-decoration: none; border-radius: 16px; font-weight: 800; font-size: 16px; }
+          .info-box { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 14px; padding: 16px 18px; margin: 0 0 22px; color: #9a3412; font-size: 14px; line-height: 1.6; }
+          .note { color: #6b7280; font-size: 14px; line-height: 1.7; margin: 0 0 10px; }
+          .link-fallback { word-break: break-all; color: #e11d48; font-size: 13px; line-height: 1.7; }
+          .footer { background: #111111; color: #a3a3a3; padding: 18px 24px; text-align: center; font-size: 12px; line-height: 1.6; }
+          .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -0.04em; }
         </style>
       </head>
       <body>
         <div class="container">
           <div class="header">
             <div class="logo">UPPLIN</div>
-            <h1 style="color: white; margin-top: 12px;">🔐 Redefinir sua senha</h1>
+            <div class="eyebrow">Recuperação de senha</div>
+            <h1 class="title">Redefinir sua senha</h1>
           </div>
           <div class="content">
             <p>Olá${data.userName ? ` <strong>${data.userName}</strong>` : ""},</p>
-            <p>Recebemos uma solicitação para redefinir a senha da sua conta na UPPLIN.</p>
+            <p class="lead">Recebemos uma solicitação para redefinir a senha da sua conta na UPPLIN. Para continuar com segurança, clique no botão abaixo.</p>
             
-            <p style="text-align: center;">
+            <div class="cta-wrap">
               <a href="${data.resetLink}" class="btn">Redefinir minha senha</a>
-            </p>
-            
-            <div class="info-box">
-              ⚠️ Este link é válido por <strong>1 hora</strong>. Se você não pediu essa redefinição, pode ignorar este e-mail com segurança.
             </div>
             
-            <p style="color: #64748b; font-size: 14px;">Se o botão não abrir corretamente, copie e cole este link no navegador:</p>
+            <div class="info-box">
+              Este link é válido por <strong>1 hora</strong>. Se você não pediu essa redefinição, pode ignorar este e-mail com segurança — sua senha atual continuará a mesma.
+            </div>
+            
+            <p class="note">Se o botão não abrir corretamente, copie e cole este link no navegador:</p>
             <p class="link-fallback">${data.resetLink}</p>
           </div>
           <div class="footer">
-            <p><strong>UPPLIN</strong> — A melhor experiência em eventos</p>
-            <p>Este é um email automático, por favor não responda.</p>
+            <p><strong>UPPLIN</strong> — recuperação de acesso em português do Brasil.</p>
+            <p>Este é um e-mail automático. Se precisar de ajuda, fale com o suporte oficial da plataforma.</p>
           </div>
         </div>
       </body>
