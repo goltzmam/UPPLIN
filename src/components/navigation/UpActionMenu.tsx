@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, MapPin, X, Users, Loader2, Upload, Video, Image, ChevronDown } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { triggerHaptic } from "@/hooks/use-haptic";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { createUserPost, getPostMediaValidationError, invalidateSocialQueries } from "@/lib/social-posts";
 
 interface UpActionMenuProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const { toast } = useToast();
   const [showPostDialog, setShowPostDialog] = useState(false);
   const [postContent, setPostContent] = useState("");
@@ -72,49 +74,29 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
     
     setIsSubmitting(true);
     try {
-      let mediaUrl: string | null = null;
-      let mediaType: string | null = null;
+      await createUserPost({
+        userId: user.id,
+        content: postContent,
+        file: selectedFile,
+        eventId: selectedEventId || null,
+      });
 
-      if (selectedFile) {
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-        const isVideo = selectedFile.type.startsWith('video/');
-        
-        const { error: uploadError } = await supabase.storage
-          .from("user-posts")
-          .upload(fileName, selectedFile);
-        
-        if (uploadError) throw uploadError;
-        
-        const { data: { publicUrl } } = supabase.storage
-          .from("user-posts")
-          .getPublicUrl(fileName);
-        
-        mediaUrl = publicUrl;
-        mediaType = isVideo ? "video" : "image";
-      }
-
-      const { error } = await supabase
-        .from("user_posts")
-        .insert({
-          user_id: user.id,
-          content: postContent || null,
-          media_url: mediaUrl,
-          media_type: mediaType,
-          event_id: selectedEventId || null,
-        });
-
-      if (error) throw error;
+      await invalidateSocialQueries(queryClient, user.id);
 
       toast({ title: "Momento compartilhado! 🎉" });
       setShowPostDialog(false);
       setPostContent("");
       setSelectedFile(null);
       setSelectedEventId("");
+      setShowEventPicker(false);
       navigate("/perfil?tab=posts");
     } catch (error) {
       console.error("Error creating post:", error);
-      toast({ title: "Erro ao publicar", variant: "destructive" });
+      toast({
+        title: "Erro ao publicar",
+        description: error instanceof Error ? error.message : "Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -292,7 +274,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
         <DialogHeader>
           <DialogTitle>Compartilhar momento</DialogTitle>
           <DialogDescription>
-            Poste uma foto ou vídeo e marque o evento que você está curtindo
+              Publique texto, imagem ou vídeo. Marcar um evento é opcional.
           </DialogDescription>
         </DialogHeader>
         
@@ -334,14 +316,18 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
-                      if (file.size > 50 * 1024 * 1024) return;
+                        const validationError = getPostMediaValidationError(file);
+                        if (validationError) {
+                          toast({ title: "Arquivo inválido", description: validationError, variant: "destructive" });
+                          return;
+                        }
                       setSelectedFile(file);
                     }
                   }}
                 />
                 <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  Clique para selecionar foto ou vídeo
+                  Clique para selecionar imagem ou vídeo vertical
                 </p>
               </label>
             )}
