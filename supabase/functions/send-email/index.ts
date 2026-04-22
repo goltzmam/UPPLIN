@@ -590,28 +590,85 @@ const emailTemplates = {
   }),
 };
 
+function jsonResponse(status: number, payload: Record<string, unknown>) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { "Content-Type": "application/json", ...corsHeaders },
+  });
+}
+
+function isInternalServiceCall(authHeader: string | null) {
+  if (!authHeader?.startsWith("Bearer ") || !SUPABASE_SERVICE_ROLE_KEY) return false;
+  return authHeader.replace("Bearer ", "") === SUPABASE_SERVICE_ROLE_KEY;
+}
+
+function validateResetLink(link: string) {
+  const parsed = new URL(link);
+  const allowedOrigins = new Set([SITE_URL, "https://www.upplin.com", "https://upplin.com", "https://upplin.com.br"]);
+  if (!allowedOrigins.has(parsed.origin)) {
+    throw new Error("Reset link origin is not allowed");
+  }
+
+  const allowedPaths = new Set(["/redefinir-senha"]);
+  if (!allowedPaths.has(parsed.pathname)) {
+    throw new Error("Reset link path is not allowed");
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (!RESEND_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: "RESEND_API_KEY not configured" }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+  if (!RESEND_API_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return jsonResponse(500, { error: "Email service is not configured" });
   }
 
   try {
-    const { type, to, data }: EmailRequest = await req.json();
+    const parsedBody = emailRequestSchema.safeParse(await req.json());
+    if (!parsedBody.success) {
+      return jsonResponse(400, { error: parsedBody.error.flatten().fieldErrors });
+    }
 
-    if (!type || !to || !data) {
-      throw new Error("Missing required fields: type, to, data");
+    const { type, to, data } = parsedBody.data;
+    const authHeader = req.headers.get("Authorization");
+    const internalCall = isInternalServiceCall(authHeader);
+
+    if (!internalCall) {
+      if (!authHeader?.startsWith("Bearer ")) {
+        return jsonResponse(401, { error: "Unauthorized" });
+      }
+
+      const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claimsData, error: claimsError } = await client.auth.getClaims(token);
+      const { data: userData, error: userError } = await client.auth.getUser(token);
+
+      if (claimsError || userError || !claimsData?.claims?.sub || !userData?.user) {
+        return jsonResponse(401, { error: "Unauthorized" });
+      }
+
+      if (!clientAllowedTypes.has(type)) {
+        return jsonResponse(403, { error: "This email type requires a trusted backend call" });
+      }
+
+      if (!userData.user.email || userData.user.email.toLowerCase() !== to.toLowerCase()) {
+        return jsonResponse(403, { error: "You can only send emails to your own address" });
+      }
     }
 
     const template = emailTemplates[type];
     if (!template) {
-      throw new Error(`Unknown email type: ${type}`);
+      return jsonResponse(400, { error: `Unknown email type: ${type}` });
+    }
+
+    if (type === "password_reset") {
+      if (!data.resetLink) {
+        return jsonResponse(400, { error: "Reset link is required" });
+      }
+      validateResetLink(data.resetLink);
     }
 
     const { subject, html } = template(data);
@@ -638,16 +695,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Email [${type}] sent to ${to}:`, result.id);
 
-    return new Response(JSON.stringify({ success: true, id: result.id }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    return jsonResponse(200, { success: true, id: result.id });
   } catch (error: any) {
     console.error("Error sending email:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return jsonResponse(500, { error: error.message });
   }
 };
 
