@@ -51,7 +51,7 @@ export function SocialFeedTab() {
 
       // Get owner user IDs of those organizers
       const { data: organizers } = await supabase
-        .from("organizer_accounts")
+        .from("organizer_accounts_feed")
         .select("owner_user_id")
         .in("id", follows.map((f) => f.organizer_id));
 
