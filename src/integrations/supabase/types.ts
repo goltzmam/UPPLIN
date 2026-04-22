@@ -97,6 +97,13 @@ export type Database = {
             foreignKeyName: "checkin_collaborators_organizer_id_fkey"
             columns: ["organizer_id"]
             isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_collaborators_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
             referencedRelation: "organizer_accounts_public"
             referencedColumns: ["id"]
           },
@@ -208,6 +215,13 @@ export type Database = {
             columns: ["organizer_id"]
             isOneToOne: false
             referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
             referencedColumns: ["id"]
           },
           {
@@ -508,6 +522,13 @@ export type Database = {
             foreignKeyName: "events_organizer_id_fkey"
             columns: ["organizer_id"]
             isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
             referencedRelation: "organizer_accounts_public"
             referencedColumns: ["id"]
           },
@@ -538,6 +559,13 @@ export type Database = {
             columns: ["organizer_id"]
             isOneToOne: false
             referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
             referencedColumns: ["id"]
           },
           {
@@ -836,6 +864,13 @@ export type Database = {
             foreignKeyName: "organizer_mp_accounts_organizer_id_fkey"
             columns: ["organizer_id"]
             isOneToOne: true
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizer_mp_accounts_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: true
             referencedRelation: "organizer_accounts_public"
             referencedColumns: ["id"]
           },
@@ -881,6 +916,13 @@ export type Database = {
             columns: ["organizer_id"]
             isOneToOne: true
             referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizer_subscriptions_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: true
+            referencedRelation: "organizer_accounts_feed"
             referencedColumns: ["id"]
           },
           {
@@ -1146,6 +1188,13 @@ export type Database = {
             columns: ["organizer_id"]
             isOneToOne: false
             referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
             referencedColumns: ["id"]
           },
           {
@@ -1485,6 +1534,24 @@ export type Database = {
       }
     }
     Views: {
+      organizer_accounts_feed: {
+        Row: {
+          id: string | null
+          owner_user_id: string | null
+          status: Database["public"]["Enums"]["organizer_status"] | null
+        }
+        Insert: {
+          id?: string | null
+          owner_user_id?: string | null
+          status?: Database["public"]["Enums"]["organizer_status"] | null
+        }
+        Update: {
+          id?: string | null
+          owner_user_id?: string | null
+          status?: Database["public"]["Enums"]["organizer_status"] | null
+        }
+        Relationships: []
+      }
       organizer_accounts_public: {
         Row: {
           city: string | null
