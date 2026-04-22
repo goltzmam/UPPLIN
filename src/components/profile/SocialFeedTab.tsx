@@ -176,7 +176,7 @@ export function SocialFeedTab() {
             )}
 
             {/* Like and Comment Actions */}
-            <div className="flex items-center gap-2 pt-2 border-t border-border">
+            <div className="flex items-start gap-2 pt-3 border-t border-border">
               <PostLikeButton postId={post.id} />
               <PostComments
                 postId={post.id}
