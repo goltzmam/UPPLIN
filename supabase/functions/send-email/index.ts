@@ -53,13 +53,14 @@ const emailRequestSchema = z.object({
     organizerName: z.string().min(1).max(160).optional(),
     scannerLink: z.string().url().optional(),
     collaboratorName: z.string().min(1).max(120).optional(),
+    organizerId: z.string().uuid().optional(),
+    eventId: z.string().uuid().optional(),
   }),
 });
 
 const clientAllowedTypes = new Set([
   "welcome",
   "welcome_organizer",
-  "collaborator_invite",
 ] as const);
 
 interface EmailRequest {
@@ -83,6 +84,8 @@ interface EmailRequest {
     organizerName?: string;
     scannerLink?: string;
     collaboratorName?: string;
+    organizerId?: string;
+    eventId?: string;
   };
 }
 
