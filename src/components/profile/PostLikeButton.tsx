@@ -76,7 +76,7 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
       size="sm"
       className={cn(
         "h-9 min-w-[3.25rem] shrink-0 gap-1.5 rounded-full px-2.5 text-muted-foreground hover:text-primary sm:px-3",
-        isLiked && "text-red-500 hover:text-red-600"
+        isLiked && "text-destructive hover:text-destructive"
       )}
       onClick={handleToggleLike}
       disabled={isSubmitting}
