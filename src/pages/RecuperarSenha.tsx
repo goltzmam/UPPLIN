@@ -38,20 +38,6 @@ export default function RecuperarSenha() {
       return;
     }
 
-    // 2. Also send branded email via Resend (best-effort, non-blocking)
-    try {
-      await supabase.functions.invoke("send-email", {
-        body: {
-          type: "password_reset",
-          to: email,
-          data: { resetLink: redirectTo },
-        },
-      });
-    } catch (err) {
-      // Resend failure is non-critical; Supabase native email already sent
-      console.warn("Resend email failed (non-critical):", err);
-    }
-
     setLoading(false);
     setSent(true);
   };
