@@ -61,6 +61,8 @@ const emailRequestSchema = z.object({
     totalAmount: z.string().min(1).max(60).optional(),
     orderId: z.string().uuid().optional(),
     resetLink: z.string().url().optional(),
+    resetOrigin: z.string().min(1).max(300).optional(),
+    isOrganizer: z.boolean().optional(),
     companyName: z.string().min(1).max(160).optional(),
     pixQrCodeBase64: z.string().min(1).max(200000).optional(),
     pixCopyPaste: z.string().min(1).max(10000).optional(),
@@ -92,6 +94,8 @@ interface EmailRequest {
     totalAmount?: string;
     orderId?: string;
     resetLink?: string;
+    resetOrigin?: string;
+    isOrganizer?: boolean;
     companyName?: string;
     pixQrCodeBase64?: string;
     pixCopyPaste?: string;
@@ -726,6 +730,11 @@ const handler = async (req: Request): Promise<Response> => {
       if (!data.resetLink) {
         return jsonResponse(400, { error: "Reset link is required" });
       }
+
+      if (data.resetOrigin && !isAllowedAppOrigin(data.resetOrigin)) {
+        return jsonResponse(400, { error: "Reset origin is not allowed" });
+      }
+
       validateResetLink(data.resetLink);
     }
 
