@@ -22,6 +22,22 @@ const ALLOWED_APP_ORIGINS = [
   "https://upplin.com.br",
 ];
 
+function isAllowedAppOrigin(origin: string) {
+  try {
+    const parsed = new URL(origin);
+    if (!["https:", "http:"].includes(parsed.protocol)) return false;
+
+    return (
+      ALLOWED_APP_ORIGINS.includes(parsed.origin) ||
+      parsed.hostname.endsWith(".lovable.app") ||
+      parsed.hostname === "localhost" ||
+      parsed.hostname === "127.0.0.1"
+    );
+  } catch {
+    return false;
+  }
+}
+
 const emailRequestSchema = z.object({
   type: z.enum([
     "purchase_confirmation",
@@ -613,8 +629,7 @@ function isInternalServiceCall(authHeader: string | null) {
 
 function validateResetLink(link: string) {
   const parsed = new URL(link);
-  const allowedOrigins = new Set(ALLOWED_APP_ORIGINS);
-  if (!allowedOrigins.has(parsed.origin)) {
+  if (!isAllowedAppOrigin(parsed.origin)) {
     throw new Error("Reset link origin is not allowed");
   }
 
