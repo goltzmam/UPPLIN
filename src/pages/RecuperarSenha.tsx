@@ -9,10 +9,6 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidEmail } from "@/lib/validation";
 
-function buildResetRedirect(origin: string, isOrganizer: boolean) {
-  return `${origin}/redefinir-senha${isOrganizer ? "?tipo=organizador" : ""}`;
-}
-
 export default function RecuperarSenha() {
   const [searchParams] = useSearchParams();
   const isOrganizer = searchParams.get("tipo") === "organizador";
@@ -22,6 +18,8 @@ export default function RecuperarSenha() {
   const { toast } = useToast();
 
   const emailRules = useMemo(() => [{ test: isValidEmail }], []);
+
+  const accountLabel = isOrganizer ? "organizador" : "participante";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +32,11 @@ export default function RecuperarSenha() {
     
     setLoading(true);
 
-    const redirectTo = buildResetRedirect(window.location.origin, isOrganizer);
     const { error } = await supabase.functions.invoke("request-password-reset", {
       body: {
         email: normalizedEmail,
         isOrganizer,
         redirectOrigin: window.location.origin,
-        redirectTo,
       },
     });
 
@@ -142,7 +138,7 @@ export default function RecuperarSenha() {
                     Link enviado
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Se existir uma conta com esse e-mail, você vai receber uma mensagem em português com o botão “Redefinir minha senha”.
+                    Se existir uma conta {accountLabel} com esse e-mail, você vai receber uma mensagem da UPPLIN em português com o botão “Redefinir minha senha”.
                   </p>
                 </div>
                 <Button asChild variant="outline" className="w-full">
@@ -165,7 +161,7 @@ export default function RecuperarSenha() {
                     Redefinir sua senha
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Informe seu e-mail para receber um link seguro e continuar a redefinição da sua senha.
+                    Informe o e-mail da sua conta {accountLabel} para receber um link seguro e continuar a redefinição da sua senha.
                   </p>
                 </div>
 
@@ -185,7 +181,7 @@ export default function RecuperarSenha() {
                     />
                   </div>
                   <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading}>
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar link para redefinir senha"}
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar e-mail de recuperação"}
                   </Button>
                 </form>
 

@@ -54,6 +54,13 @@ function isUserNotFoundError(message?: string) {
   return normalized.includes("user not found") || normalized.includes("not found");
 }
 
+function isNativeProvisioningError(message?: string) {
+  const normalized = message?.toLowerCase() ?? "";
+  return ["smtp", "email", "domain", "provision", "hook", "template", "send"].some((term) =>
+    normalized.includes(term),
+  );
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -96,7 +103,21 @@ serve(async (req) => {
       });
     }
 
-    console.warn("Native password recovery email failed, using fallback:", nativeAttempt.error.message);
+    console.warn("Native password recovery email failed:", nativeAttempt.error.message);
+
+    if (isUserNotFoundError(nativeAttempt.error.message)) {
+      return jsonResponse(200, {
+        success: true,
+        delivery: "silent",
+        redirectTo,
+      });
+    }
+
+    if (!isNativeProvisioningError(nativeAttempt.error.message)) {
+      throw nativeAttempt.error;
+    }
+
+    console.warn("Using localized fallback password recovery email.");
 
     const linkResult = await adminClient.auth.admin.generateLink({
       type: "recovery",
