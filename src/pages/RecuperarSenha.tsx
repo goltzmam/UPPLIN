@@ -9,6 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidEmail } from "@/lib/validation";
 
+function buildResetRedirect(origin: string, isOrganizer: boolean) {
+  return `${origin}/redefinir-senha${isOrganizer ? "?tipo=organizador" : ""}`;
+}
+
 export default function RecuperarSenha() {
   const [searchParams] = useSearchParams();
   const isOrganizer = searchParams.get("tipo") === "organizador";
@@ -21,19 +25,32 @@ export default function RecuperarSenha() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isValidEmail(email)) {
+    const normalizedEmail = email.trim().toLowerCase();
+
+    if (!isValidEmail(normalizedEmail)) {
       toast({ title: "Email inválido", variant: "destructive" });
       return;
     }
     
     setLoading(true);
 
-    const redirectTo = `${window.location.origin}/redefinir-senha${isOrganizer ? "?tipo=organizador" : ""}`;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    const redirectTo = buildResetRedirect(window.location.origin, isOrganizer);
+    const { error } = await supabase.functions.invoke("request-password-reset", {
+      body: {
+        email: normalizedEmail,
+        isOrganizer,
+        redirectOrigin: window.location.origin,
+        redirectTo,
+      },
+    });
 
     if (error) {
       setLoading(false);
-      toast({ title: "Erro ao enviar email", description: error.message, variant: "destructive" });
+      toast({
+        title: "Não foi possível enviar o link",
+        description: "Tente novamente em instantes. Se o problema continuar, solicite suporte.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -81,7 +98,7 @@ export default function RecuperarSenha() {
             transition={{ delay: 0.2 }}
             className="text-sm sm:text-base text-secondary-foreground/70"
           >
-            Enviaremos um link para você redefinir sua senha de forma segura.
+            Vamos enviar um link seguro para você redefinir sua senha em poucos passos.
           </motion.p>
         </div>
       </div>
@@ -122,10 +139,10 @@ export default function RecuperarSenha() {
                 </div>
                 <div className="space-y-2">
                   <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground">
-                    Email enviado!
+                    Link enviado
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Verifique sua caixa de entrada e clique no botão para criar uma nova senha em português.
+                    Se existir uma conta com esse e-mail, você vai receber uma mensagem em português com o botão <strong>Redefinir minha senha</strong>.
                   </p>
                 </div>
                 <Button asChild variant="outline" className="w-full">
@@ -145,16 +162,16 @@ export default function RecuperarSenha() {
               >
                 <div className="text-center lg:text-left space-y-2">
                   <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground">
-                    Recuperar senha
+                    Redefinir sua senha
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Informe seu e-mail para receber um link seguro de redefinição de senha.
+                    Informe seu e-mail para receber um link seguro e continuar a redefinição da sua senha.
                   </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-sm">Email</Label>
+                    <Label htmlFor="email" className="text-sm">E-mail</Label>
                     <ValidatedInput
                       id="email"
                       type="email"
@@ -168,7 +185,7 @@ export default function RecuperarSenha() {
                     />
                   </div>
                   <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading}>
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar e-mail de recuperação"}
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar link para redefinir senha"}
                   </Button>
                 </form>
 
