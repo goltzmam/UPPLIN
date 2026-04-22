@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { z } from "https://esm.sh/zod@3.25.76";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +15,53 @@ const corsHeaders = {
 // Update this with your verified Resend domain, or keep resend.dev for testing
 const FROM_EMAIL = "UPPLIN <onboarding@resend.dev>";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://upplin.lovable.app";
+const ALLOWED_APP_ORIGINS = [
+  SITE_URL,
+  "https://www.upplin.com",
+  "https://upplin.com",
+  "https://upplin.com.br",
+];
+
+const emailRequestSchema = z.object({
+  type: z.enum([
+    "purchase_confirmation",
+    "event_reminder",
+    "ticket_cancelled",
+    "password_reset",
+    "welcome",
+    "welcome_organizer",
+    "pix_pending",
+    "pix_confirmed",
+    "collaborator_invite",
+  ]),
+  to: z.string().email(),
+  data: z.object({
+    userName: z.string().min(1).max(120).optional(),
+    eventTitle: z.string().min(1).max(160).optional(),
+    eventDate: z.string().min(1).max(120).optional(),
+    eventVenue: z.string().min(1).max(160).optional(),
+    ticketType: z.string().min(1).max(120).optional(),
+    ticketQuantity: z.number().int().min(1).max(50).optional(),
+    totalAmount: z.string().min(1).max(60).optional(),
+    orderId: z.string().uuid().optional(),
+    resetLink: z.string().url().optional(),
+    companyName: z.string().min(1).max(160).optional(),
+    pixQrCodeBase64: z.string().min(1).max(200000).optional(),
+    pixCopyPaste: z.string().min(1).max(10000).optional(),
+    pixExpiration: z.string().min(1).max(120).optional(),
+    paymentLink: z.string().url().optional(),
+    organizerName: z.string().min(1).max(160).optional(),
+    scannerLink: z.string().url().optional(),
+    collaboratorName: z.string().min(1).max(120).optional(),
+    organizerId: z.string().uuid().optional(),
+    eventId: z.string().uuid().optional(),
+  }),
+});
+
+const clientAllowedTypes = new Set([
+  "welcome",
+  "welcome_organizer",
+] as const);
 
 interface EmailRequest {
   type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer" | "pix_pending" | "pix_confirmed" | "collaborator_invite";
@@ -32,6 +84,8 @@ interface EmailRequest {
     organizerName?: string;
     scannerLink?: string;
     collaboratorName?: string;
+    organizerId?: string;
+    eventId?: string;
   };
 }
 
@@ -545,28 +599,119 @@ const emailTemplates = {
   }),
 };
 
+function jsonResponse(status: number, payload: Record<string, unknown>) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: { "Content-Type": "application/json", ...corsHeaders },
+  });
+}
+
+function isInternalServiceCall(authHeader: string | null) {
+  if (!authHeader?.startsWith("Bearer ") || !SUPABASE_SERVICE_ROLE_KEY) return false;
+  return authHeader.replace("Bearer ", "") === SUPABASE_SERVICE_ROLE_KEY;
+}
+
+function validateResetLink(link: string) {
+  const parsed = new URL(link);
+  const allowedOrigins = new Set(ALLOWED_APP_ORIGINS);
+  if (!allowedOrigins.has(parsed.origin)) {
+    throw new Error("Reset link origin is not allowed");
+  }
+
+  const allowedPaths = new Set(["/redefinir-senha"]);
+  if (!allowedPaths.has(parsed.pathname)) {
+    throw new Error("Reset link path is not allowed");
+  }
+}
+
+async function canInviteCollaborator(authHeader: string, organizerId?: string, eventId?: string) {
+  if (!organizerId) return false;
+
+  const adminClient = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const { data: organizer, error: organizerError } = await adminClient
+    .from("organizer_accounts")
+    .select("id")
+    .eq("id", organizerId)
+    .maybeSingle();
+
+  if (organizerError || !organizer) return false;
+
+  if (!eventId) return true;
+
+  const { data: event, error: eventError } = await adminClient
+    .from("events")
+    .select("id")
+    .eq("id", eventId)
+    .eq("organizer_id", organizerId)
+    .maybeSingle();
+
+  return !eventError && !!event;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (!RESEND_API_KEY) {
-    return new Response(
-      JSON.stringify({ error: "RESEND_API_KEY not configured" }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+  if (!RESEND_API_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return jsonResponse(500, { error: "Email service is not configured" });
   }
 
   try {
-    const { type, to, data }: EmailRequest = await req.json();
+    const parsedBody = emailRequestSchema.safeParse(await req.json());
+    if (!parsedBody.success) {
+      return jsonResponse(400, { error: parsedBody.error.flatten().fieldErrors });
+    }
 
-    if (!type || !to || !data) {
-      throw new Error("Missing required fields: type, to, data");
+    const { type, to, data } = parsedBody.data;
+    const authHeader = req.headers.get("Authorization");
+    const internalCall = isInternalServiceCall(authHeader);
+
+    if (!internalCall) {
+      if (!authHeader?.startsWith("Bearer ")) {
+        return jsonResponse(401, { error: "Unauthorized" });
+      }
+
+      const client = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claimsData, error: claimsError } = await client.auth.getClaims(token);
+      const { data: userData, error: userError } = await client.auth.getUser(token);
+
+      if (claimsError || userError || !claimsData?.claims?.sub || !userData?.user) {
+        return jsonResponse(401, { error: "Unauthorized" });
+      }
+
+      if (!clientAllowedTypes.has(type)) {
+        if (type !== "collaborator_invite") {
+          return jsonResponse(403, { error: "This email type requires a trusted backend call" });
+        }
+
+        const inviteAllowed = await canInviteCollaborator(authHeader, data.organizerId, data.eventId);
+        if (!inviteAllowed) {
+          return jsonResponse(403, { error: "You are not allowed to send this invite" });
+        }
+      }
+
+      if (!userData.user.email || userData.user.email.toLowerCase() !== to.toLowerCase()) {
+        return jsonResponse(403, { error: "You can only send emails to your own address" });
+      }
     }
 
     const template = emailTemplates[type];
     if (!template) {
-      throw new Error(`Unknown email type: ${type}`);
+      return jsonResponse(400, { error: `Unknown email type: ${type}` });
+    }
+
+    if (type === "password_reset") {
+      if (!data.resetLink) {
+        return jsonResponse(400, { error: "Reset link is required" });
+      }
+      validateResetLink(data.resetLink);
     }
 
     const { subject, html } = template(data);
@@ -593,16 +738,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`Email [${type}] sent to ${to}:`, result.id);
 
-    return new Response(JSON.stringify({ success: true, id: result.id }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    return jsonResponse(200, { success: true, id: result.id });
   } catch (error: any) {
     console.error("Error sending email:", error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-    );
+    return jsonResponse(500, { error: error.message });
   }
 };
 

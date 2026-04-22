@@ -122,6 +122,8 @@ export function CollaboratorManager({ organizerId, events, selectedEventId }: Co
             data: {
               collaboratorName: profile.full_name || name.trim() || email,
               organizerName: undefined, // filled below if needed
+              organizerId,
+              eventId: eventForScope?.id,
               eventTitle: eventForScope?.title || "Todos os eventos",
               scannerLink,
             },
