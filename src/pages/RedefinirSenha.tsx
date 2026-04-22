@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Calendar, Lock, Loader2, Ticket, Building2, CheckCircle, ArrowLeft } from "lucide-react";
+import { Lock, Loader2, Ticket, Building2, CheckCircle, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -92,7 +92,7 @@ export default function RedefinirSenha() {
           <div className="lg:hidden flex flex-col items-center gap-4">
             <Link to="/" className="flex items-center gap-2.5">
               <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-primary-foreground" />
+                <Lock className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="font-display text-xl font-bold text-foreground">UPPLIN</span>
             </Link>
@@ -119,7 +119,7 @@ export default function RedefinirSenha() {
                     Senha redefinida!
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Você será redirecionado em instantes...
+                    Sua nova senha já está ativa. Você será redirecionado em instantes.
                   </p>
                 </div>
               </motion.div>
@@ -136,7 +136,7 @@ export default function RedefinirSenha() {
                     Redefinir senha
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Digite sua nova senha abaixo.
+                    Escolha uma nova senha para voltar a acessar sua conta com segurança.
                   </p>
                 </div>
 
@@ -154,7 +154,7 @@ export default function RedefinirSenha() {
                       icon={<Lock className="h-4 w-4" />}
                       validationRules={passwordRules}
                     />
-                    <p className="text-xs text-muted-foreground">Mínimo 6 caracteres</p>
+                    <p className="text-xs text-muted-foreground">Use pelo menos 6 caracteres.</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword" className="text-sm">Confirmar senha</Label>
@@ -171,7 +171,7 @@ export default function RedefinirSenha() {
                     />
                   </div>
                   <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading}>
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Redefinir senha"}
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar nova senha"}
                   </Button>
                 </form>
 

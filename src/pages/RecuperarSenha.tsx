@@ -1,13 +1,13 @@
 import { useState, useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Calendar, Mail, Lock, Loader2, Ticket, Building2, CheckCircle, ArrowLeft } from "lucide-react";
+import { Mail, Loader2, Ticket, Building2, CheckCircle, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ValidatedInput } from "@/components/ui/validated-input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { isValidEmail, isValidPassword } from "@/lib/validation";
+import { isValidEmail } from "@/lib/validation";
 
 export default function RecuperarSenha() {
   const [searchParams] = useSearchParams();
@@ -28,7 +28,6 @@ export default function RecuperarSenha() {
     
     setLoading(true);
 
-    // 1. Trigger Supabase native reset (creates the token)
     const redirectTo = `${window.location.origin}/redefinir-senha${isOrganizer ? "?tipo=organizador" : ""}`;
     const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
 
@@ -89,7 +88,6 @@ export default function RecuperarSenha() {
 
       <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="w-full max-w-md space-y-6 sm:space-y-8">
-          {/* Mobile Header */}
           <div className="lg:hidden flex flex-col items-center gap-4">
             <Link to="/" className="flex items-center gap-2.5">
               <span 
@@ -127,7 +125,7 @@ export default function RecuperarSenha() {
                     Email enviado!
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Verifique sua caixa de entrada e siga as instruções para redefinir sua senha.
+                    Verifique sua caixa de entrada e clique no botão para criar uma nova senha em português.
                   </p>
                 </div>
                 <Button asChild variant="outline" className="w-full">
@@ -150,7 +148,7 @@ export default function RecuperarSenha() {
                     Recuperar senha
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Digite seu email para receber o link de recuperação.
+                    Informe seu e-mail para receber um link seguro de redefinição de senha.
                   </p>
                 </div>
 
@@ -170,7 +168,7 @@ export default function RecuperarSenha() {
                     />
                   </div>
                   <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading}>
-                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar link de recuperação"}
+                    {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar e-mail de recuperação"}
                   </Button>
                 </form>
 
