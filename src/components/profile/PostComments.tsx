@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -34,10 +34,26 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
 
   const handleMentionClick = (slug: string) => {
     navigate(`/o/${slug}`);
   };
+
+  const { data: commentCount = 0 } = useQuery({
+    queryKey: ["post-comments-count", postId],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("user_post_comments")
+        .select("id", { count: "exact", head: true })
+        .eq("post_id", postId);
+
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!postId,
+  });
 
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["post-comments", postId],
@@ -67,10 +83,19 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
     enabled: isExpanded,
   });
 
-  const addComment = useMutation({
-    mutationFn: async () => {
-      if (!user || !newComment.trim()) return;
+  const refreshComments = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
+    await queryClient.invalidateQueries({ queryKey: ["post-comments-count", postId] });
+    await queryClient.invalidateQueries({ queryKey: ["user-posts"] });
+    await queryClient.invalidateQueries({ queryKey: ["social-feed"] });
+  };
 
+  const handleAddComment = async () => {
+    if (!user || !newComment.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
       const { error } = await supabase.from("user_post_comments").insert({
         post_id: postId,
         user_id: user.id,
@@ -78,34 +103,36 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
       });
 
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
-      setNewComment("");
-    },
-    onError: (error) => {
-      console.error("Erro ao adicionar comentário:", error);
-    },
-  });
 
-  const deleteComment = useMutation({
-    mutationFn: async (commentId: string) => {
+      setNewComment("");
+      await refreshComments();
+    } catch (error) {
+      console.error("Erro ao adicionar comentário:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (deletingCommentId) return;
+
+    setDeletingCommentId(commentId);
+
+    try {
       const { error } = await supabase
         .from("user_post_comments")
         .delete()
         .eq("id", commentId);
 
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
-    },
-    onError: (error) => {
-      console.error("Erro ao excluir comentário:", error);
-    },
-  });
 
-  const commentCount = comments.length;
+      await refreshComments();
+    } catch (error) {
+      console.error("Erro ao excluir comentário:", error);
+    } finally {
+      setDeletingCommentId(null);
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -158,7 +185,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                       </span>
                       {comment.user_id === user?.id && (
                         <button
-                          onClick={() => deleteComment.mutate(comment.id)}
+                          onClick={() => handleDeleteComment(comment.id)}
                           className="text-xs text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
                         >
                           Excluir
@@ -190,17 +217,17 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
-                      if (newComment.trim()) addComment.mutate();
+                      if (newComment.trim()) handleAddComment();
                     }
                   }}
                 />
                 <Button
                   size="icon"
                   className="h-9 w-9 flex-shrink-0 btn-gradient"
-                  onClick={() => addComment.mutate()}
-                  disabled={!newComment.trim() || addComment.isPending}
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim() || isSubmitting}
                 >
-                  {addComment.isPending ? (
+                  {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Send className="h-4 w-4" />
