@@ -52,23 +52,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId: string) => {
+  const fetchProfile = async (currentUser: User) => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
-      .eq("id", userId)
+      .eq("id", currentUser.id)
       .maybeSingle();
 
     if (error) {
       console.error("Error fetching profile:", error);
       return null;
     }
-    return data;
+
+    if (data) {
+      return data;
+    }
+
+    const fallbackProfile = {
+      id: currentUser.id,
+      email: currentUser.email ?? "",
+      full_name:
+        currentUser.user_metadata?.full_name ??
+        currentUser.user_metadata?.name ??
+        null,
+      photo_url: currentUser.user_metadata?.avatar_url ?? null,
+    };
+
+    const { data: createdProfile, error: createError } = await supabase
+      .from("profiles")
+      .upsert(fallbackProfile, { onConflict: "id" })
+      .select("*")
+      .maybeSingle();
+
+    if (createError) {
+      console.error("Error creating missing profile:", createError);
+      return null;
+    }
+
+    return createdProfile;
   };
 
   const refreshProfile = async () => {
     if (user) {
-      const profileData = await fetchProfile(user.id);
+      const profileData = await fetchProfile(user);
       setProfile(profileData);
     }
   };
@@ -116,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (currentSession?.user) {
           setTimeout(async () => {
-            const profileData = await fetchProfile(currentSession.user.id);
+            const profileData = await fetchProfile(currentSession.user);
             setProfile(profileData);
             setLoading(false);
           }, 0);
@@ -133,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (currentSession?.user) {
         localStorage.setItem(AUTH_USER_KEY, currentSession.user.id);
-        fetchProfile(currentSession.user.id).then((profileData) => {
+        fetchProfile(currentSession.user).then((profileData) => {
           setProfile(profileData);
           setLoading(false);
         });
