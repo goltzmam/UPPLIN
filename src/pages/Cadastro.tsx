@@ -115,7 +115,7 @@ export default function Cadastro() {
   };
 
   const handleGoogleSignIn = async () => {
-    const { error } = await signInWithGoogle();
+    const { error } = await signInWithGoogle(window.location.origin + "/onboarding");
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     }
