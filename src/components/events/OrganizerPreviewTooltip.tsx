@@ -33,7 +33,7 @@ export function OrganizerPreviewTooltip({
     queryFn: async () => {
       // Get organizer info
       const { data: orgData, error: orgError } = await supabase
-        .from("organizer_accounts")
+        .from("organizer_accounts_public")
         .select("id, display_name, logo_url, description")
         .eq("id", organizerId)
         .single();

@@ -93,6 +93,20 @@ export type Database = {
             referencedRelation: "organizer_accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "checkin_collaborators_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_collaborators_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       conversations: {
@@ -201,6 +215,20 @@ export type Database = {
             columns: ["organizer_id"]
             isOneToOne: false
             referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupons_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_public"
             referencedColumns: ["id"]
           },
         ]
@@ -490,6 +518,20 @@ export type Database = {
             referencedRelation: "organizer_accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "events_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       follows: {
@@ -517,6 +559,20 @@ export type Database = {
             columns: ["organizer_id"]
             isOneToOne: false
             referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "follows_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_public"
             referencedColumns: ["id"]
           },
         ]
@@ -804,6 +860,20 @@ export type Database = {
             referencedRelation: "organizer_accounts"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "organizer_mp_accounts_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: true
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizer_mp_accounts_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: true
+            referencedRelation: "organizer_accounts_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       organizer_subscriptions: {
@@ -846,6 +916,20 @@ export type Database = {
             columns: ["organizer_id"]
             isOneToOne: true
             referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizer_subscriptions_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: true
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "organizer_subscriptions_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: true
+            referencedRelation: "organizer_accounts_public"
             referencedColumns: ["id"]
           },
           {
@@ -1104,6 +1188,20 @@ export type Database = {
             columns: ["organizer_id"]
             isOneToOne: false
             referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscription_invoices_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_public"
             referencedColumns: ["id"]
           },
           {
@@ -1436,6 +1534,72 @@ export type Database = {
       }
     }
     Views: {
+      organizer_accounts_feed: {
+        Row: {
+          id: string | null
+          owner_user_id: string | null
+          status: Database["public"]["Enums"]["organizer_status"] | null
+        }
+        Insert: {
+          id?: string | null
+          owner_user_id?: string | null
+          status?: Database["public"]["Enums"]["organizer_status"] | null
+        }
+        Update: {
+          id?: string | null
+          owner_user_id?: string | null
+          status?: Database["public"]["Enums"]["organizer_status"] | null
+        }
+        Relationships: []
+      }
+      organizer_accounts_public: {
+        Row: {
+          city: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          id: string | null
+          logo_url: string | null
+          slug: string | null
+          social_facebook: string | null
+          social_instagram: string | null
+          social_website: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["organizer_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          id?: string | null
+          logo_url?: string | null
+          slug?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_website?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["organizer_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          id?: string | null
+          logo_url?: string | null
+          slug?: string | null
+          social_facebook?: string | null
+          social_instagram?: string | null
+          social_website?: string | null
+          state?: string | null
+          status?: Database["public"]["Enums"]["organizer_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles_public: {
         Row: {
           cover_photo_url: string | null

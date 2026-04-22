@@ -49,10 +49,9 @@ export function MentionInput({
       if (!searchTerm || searchTerm.length < 1) return [];
 
       const { data, error } = await supabase
-        .from("organizer_accounts")
+        .from("organizer_accounts_public")
         .select("id, display_name, logo_url, slug")
         .or(`display_name.ilike.%${searchTerm}%,slug.ilike.%${searchTerm}%`)
-        .eq("status", "active")
         .limit(5);
 
       if (error) throw error;

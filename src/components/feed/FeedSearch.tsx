@@ -82,9 +82,8 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
           .order("start_at", { ascending: true })
           .limit(50),
         supabase
-          .from("organizer_accounts")
+          .from("organizer_accounts_public")
           .select("id, display_name, slug, logo_url")
-          .eq("status", "active")
           .limit(50),
       ]);
 

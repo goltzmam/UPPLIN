@@ -169,14 +169,20 @@ export default function AssinaturasContent() {
       });
       if (error) throw error;
 
-      // Open HTML in a new window for print/save as PDF
-      const win = window.open("", "_blank");
-      if (win) {
-        win.document.write(data.html);
-        win.document.close();
-        // Auto-trigger print dialog for PDF save
-        setTimeout(() => win.print(), 500);
+      const blob = new Blob([data.html], { type: "text/html;charset=utf-8" });
+      const receiptUrl = URL.createObjectURL(blob);
+      const win = window.open(receiptUrl, "_blank", "noopener,noreferrer");
+
+      if (!win) {
+        URL.revokeObjectURL(receiptUrl);
+        throw new Error("Não foi possível abrir o comprovante");
       }
+
+      const cleanup = () => URL.revokeObjectURL(receiptUrl);
+      win.addEventListener("load", () => {
+        win.print();
+        setTimeout(cleanup, 1500);
+      }, { once: true });
     } catch (err: any) {
       toast({ title: "Erro", description: err.message || "Não foi possível gerar o recibo", variant: "destructive" });
     } finally {

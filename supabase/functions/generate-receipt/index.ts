@@ -76,6 +76,13 @@ serve(async (req) => {
       .eq("id", invoice.organizer_id)
       .single();
 
+    const escapeHtml = (value: unknown) => String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+
     const formatCurrency = (cents: number) => {
       return `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
     };
@@ -92,10 +99,27 @@ serve(async (req) => {
       refunded: "Reembolsado",
     };
 
-    const periodStart = formatDate(invoice.period_start);
-    const periodEnd = invoice.period_end ? formatDate(invoice.period_end) : "—";
-    const paidAt = invoice.paid_at ? formatDate(invoice.paid_at) : formatDate(invoice.created_at);
-    const invoiceNum = invoice.id.slice(0, 8).toUpperCase();
+    const periodStart = escapeHtml(formatDate(invoice.period_start));
+    const periodEnd = escapeHtml(invoice.period_end ? formatDate(invoice.period_end) : "—");
+    const paidAt = escapeHtml(invoice.paid_at ? formatDate(invoice.paid_at) : formatDate(invoice.created_at));
+    const invoiceNum = escapeHtml(invoice.id.slice(0, 8).toUpperCase());
+    const organizerName = escapeHtml(organizer?.display_name || "Organizador");
+    const organizerEmail = organizer?.email ? escapeHtml(organizer.email) : "";
+    const organizerDocument = organizer?.cnpj
+      ? `CNPJ: ${escapeHtml(organizer.cnpj)}`
+      : organizer?.cpf
+        ? `CPF: ${escapeHtml(organizer.cpf)}`
+        : "";
+    const organizerLocation = organizer?.city && organizer?.state
+      ? `${escapeHtml(organizer.city)} - ${escapeHtml(organizer.state)}`
+      : "";
+    const safeStatusKey = invoice.status === "paid" || invoice.status === "pending" || invoice.status === "failed" || invoice.status === "refunded"
+      ? invoice.status
+      : "pending";
+    const safeStatusLabel = escapeHtml(statusLabel[invoice.status] || invoice.status);
+    const safePaymentId = invoice.mp_payment_id ? escapeHtml(invoice.mp_payment_id) : "";
+    const safePlanName = escapeHtml(plan?.name || invoice.plan_id);
+    const safeAmount = escapeHtml(formatCurrency(invoice.amount_cents));
 
     // Generate a simple HTML receipt that can be converted to PDF client-side
     const html = `
@@ -103,6 +127,7 @@ serve(async (req) => {
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; font-src data:;">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { font-family: 'Helvetica Neue', Arial, sans-serif; color: #1e293b; padding: 40px; max-width: 700px; margin: 0 auto; }
@@ -141,16 +166,16 @@ serve(async (req) => {
   <div class="info-grid">
     <div class="info-block">
       <h3>Emitido para</h3>
-      <p><strong>${organizer?.display_name || "Organizador"}</strong></p>
-      ${organizer?.email ? `<p>${organizer.email}</p>` : ""}
-      ${organizer?.cnpj ? `<p>CNPJ: ${organizer.cnpj}</p>` : organizer?.cpf ? `<p>CPF: ${organizer.cpf}</p>` : ""}
-      ${organizer?.city && organizer?.state ? `<p>${organizer.city} - ${organizer.state}</p>` : ""}
+      <p><strong>${organizerName}</strong></p>
+      ${organizerEmail ? `<p>${organizerEmail}</p>` : ""}
+      ${organizerDocument ? `<p>${organizerDocument}</p>` : ""}
+      ${organizerLocation ? `<p>${organizerLocation}</p>` : ""}
     </div>
     <div class="info-block">
       <h3>Detalhes</h3>
-      <p><strong>Status:</strong> <span class="status status-${invoice.status}">${statusLabel[invoice.status] || invoice.status}</span></p>
+      <p><strong>Status:</strong> <span class="status status-${safeStatusKey}">${safeStatusLabel}</span></p>
       <p><strong>Período:</strong> ${periodStart} — ${periodEnd}</p>
-      ${invoice.mp_payment_id ? `<p><strong>ID Pagamento:</strong> ${invoice.mp_payment_id}</p>` : ""}
+      ${safePaymentId ? `<p><strong>ID Pagamento:</strong> ${safePaymentId}</p>` : ""}
     </div>
   </div>
 
@@ -163,12 +188,12 @@ serve(async (req) => {
     </thead>
     <tbody>
       <tr>
-        <td>Assinatura Plano ${plan?.name || invoice.plan_id} — ${periodStart} a ${periodEnd}</td>
-        <td style="text-align:right">${formatCurrency(invoice.amount_cents)}</td>
+        <td>Assinatura Plano ${safePlanName} — ${periodStart} a ${periodEnd}</td>
+        <td style="text-align:right">${safeAmount}</td>
       </tr>
       <tr class="total-row">
         <td>Total</td>
-        <td style="text-align:right">${formatCurrency(invoice.amount_cents)}</td>
+        <td style="text-align:right">${safeAmount}</td>
       </tr>
     </tbody>
   </table>

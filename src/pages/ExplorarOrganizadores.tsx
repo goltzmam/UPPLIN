@@ -50,7 +50,7 @@ export default function ExplorarOrganizadores() {
     queryKey: ["explore-organizers", searchQuery],
     queryFn: async () => {
       let query = supabase
-        .from("organizer_accounts")
+        .from("organizer_accounts_public")
         .select(`
           id,
           display_name,
@@ -58,8 +58,7 @@ export default function ExplorarOrganizadores() {
           logo_url,
           slug,
           social_instagram
-        `)
-        .eq("status", "active");
+        `);
 
       if (searchQuery.trim()) {
         query = query.ilike("display_name", `%${searchQuery}%`);
