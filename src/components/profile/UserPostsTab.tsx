@@ -180,9 +180,16 @@ export function UserPostsTab() {
 
     const isImage = file.type.startsWith("image/");
     const isVideo = file.type.startsWith("video/");
+    const isQuickTime = file.type === "video/quicktime" || file.name.toLowerCase().endsWith(".mov");
 
     if (!isImage && !isVideo) {
       setFormError("Envie uma imagem ou vídeo válido.");
+      e.target.value = "";
+      return;
+    }
+
+    if (isQuickTime) {
+      setFormError("Esse vídeo não é compatível aqui. Envie em MP4 ou WebM.");
       e.target.value = "";
       return;
     }
@@ -305,7 +312,7 @@ export function UserPostsTab() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
+                    accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
                     onChange={handleFileUpload}
                     className="hidden"
                     disabled={uploading}
