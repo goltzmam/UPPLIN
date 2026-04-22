@@ -92,7 +92,7 @@ export default function RedefinirSenha() {
           <div className="lg:hidden flex flex-col items-center gap-4">
             <Link to="/" className="flex items-center gap-2.5">
               <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-                <Calendar className="h-5 w-5 text-primary-foreground" />
+                <Lock className="h-5 w-5 text-primary-foreground" />
               </div>
               <span className="font-display text-xl font-bold text-foreground">UPPLIN</span>
             </Link>
