@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { lovable } from "@/integrations/lovable/index";
 
 interface Profile {
   id: string;
@@ -20,7 +21,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signInWithGoogle: () => Promise<{ error: Error | null }>;
+  signInWithGoogle: (redirectUri?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
   refreshProfile: () => Promise<void>;
@@ -33,6 +34,19 @@ const AUTH_USER_KEY = "upplin_active_user_id";
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const normalizeAuthError = (error: { message: string; code?: string | number } | null) => {
+    if (!error) return null;
+
+    if (
+      error.code === "weak_password" ||
+      /weak password|known to be weak|easy to guess|pwned/i.test(error.message)
+    ) {
+      return new Error("Essa senha é muito fraca ou já foi exposta. Use uma senha mais forte.");
+    }
+
+    return new Error(error.message);
+  };
+
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -140,7 +154,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { full_name: fullName },
       },
     });
-    return { error: error ? new Error(error.message) : null };
+    return { error: normalizeAuthError(error) };
   };
 
   const signIn = async (email: string, password: string) => {
@@ -148,14 +162,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error ? new Error(error.message) : null };
   };
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: window.location.origin,
-      },
+  const signInWithGoogle = async (redirectUri?: string) => {
+    const result = await lovable.auth.signInWithOAuth("google", {
+      redirect_uri: redirectUri ?? window.location.origin,
     });
-    return { error: error ? new Error(error.message) : null };
+
+    return {
+      error: result.error ? new Error(String(result.error)) : null,
+    };
   };
 
   const signOut = async () => {
