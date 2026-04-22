@@ -15,41 +15,26 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
   const queryClient = useQueryClient();
   const [optimisticLiked, setOptimisticLiked] = useState<boolean | null>(null);
 
-  const { data: likeCount = 0 } = useQuery({
-    queryKey: ["post-likes-count", postId],
+  const { data: likeData } = useQuery({
+    queryKey: ["post-likes", postId],
     queryFn: async () => {
-      const { count, error } = await supabase
+      const { data: likes, error } = await supabase
         .from("user_post_likes")
-        .select("id", { count: "exact", head: true })
+        .select("id, user_id")
         .eq("post_id", postId);
 
       if (error) throw error;
 
-      return count ?? 0;
+      return {
+        count: likes?.length || 0,
+        isLiked: likes?.some((like) => like.user_id === user?.id) || false,
+      };
     },
     enabled: !!postId,
   });
 
-  const { data: currentLikeId = null } = useQuery({
-    queryKey: ["post-like-status", postId, user?.id],
-    queryFn: async () => {
-      if (!user) return null;
-
-      const { data, error } = await supabase
-        .from("user_post_likes")
-        .select("id")
-        .eq("post_id", postId)
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-
-      return data?.id ?? null;
-    },
-    enabled: !!postId && !!user,
-  });
-
-  const isLiked = optimisticLiked ?? Boolean(currentLikeId);
+  const isLiked = optimisticLiked ?? likeData?.isLiked ?? false;
+  const likeCount = likeData?.count ?? 0;
 
   const toggleLike = useMutation({
     mutationFn: async () => {
@@ -75,8 +60,7 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
       setOptimisticLiked(!isLiked);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["post-likes-count", postId] });
-      queryClient.invalidateQueries({ queryKey: ["post-like-status", postId, user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["post-likes", postId] });
     },
     onError: (error) => {
       setOptimisticLiked(null);
@@ -93,11 +77,10 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
       size="sm"
       className={cn(
         "gap-1.5 text-muted-foreground hover:text-primary",
-        isLiked && "text-primary"
+        isLiked && "text-red-500 hover:text-red-600"
       )}
       onClick={() => toggleLike.mutate()}
       disabled={toggleLike.isPending}
-      aria-pressed={isLiked}
     >
       <Heart
         className={cn("h-4 w-4", isLiked && "fill-current")}

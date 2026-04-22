@@ -34,26 +34,10 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
-  const [commentError, setCommentError] = useState<string | null>(null);
 
   const handleMentionClick = (slug: string) => {
     navigate(`/o/${slug}`);
   };
-
-  const { data: commentCount = 0 } = useQuery({
-    queryKey: ["post-comments-count", postId],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("user_post_comments")
-        .select("id", { count: "exact", head: true })
-        .eq("post_id", postId);
-
-      if (error) throw error;
-
-      return count ?? 0;
-    },
-    enabled: !!postId,
-  });
 
   const { data: comments = [], isLoading } = useQuery({
     queryKey: ["post-comments", postId],
@@ -65,10 +49,6 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-
-      if (!data.length) {
-        return [] as PostComment[];
-      }
 
       // Fetch profiles for comments
       const userIds = [...new Set(data.map((c) => c.user_id))];
@@ -89,13 +69,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
 
   const addComment = useMutation({
     mutationFn: async () => {
-      if (!user) {
-        throw new Error("Faça login para comentar.");
-      }
-
-      if (!newComment.trim()) {
-        throw new Error("Escreva um comentário para publicar.");
-      }
+      if (!user || !newComment.trim()) return;
 
       const { error } = await supabase.from("user_post_comments").insert({
         post_id: postId,
@@ -107,12 +81,9 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
-      queryClient.invalidateQueries({ queryKey: ["post-comments-count", postId] });
       setNewComment("");
-      setCommentError(null);
     },
-    onError: (error: Error) => {
-      setCommentError(error.message || "Não foi possível comentar agora.");
+    onError: (error) => {
       console.error("Erro ao adicionar comentário:", error);
     },
   });
@@ -128,12 +99,13 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["post-comments", postId] });
-      queryClient.invalidateQueries({ queryKey: ["post-comments-count", postId] });
     },
     onError: (error) => {
       console.error("Erro ao excluir comentário:", error);
     },
   });
+
+  const commentCount = comments.length;
 
   return (
     <div className="space-y-3">
@@ -212,10 +184,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                 <MentionInput
                   placeholder="Escreva um comentário... Use @ para marcar"
                   value={newComment}
-                  onChange={(value) => {
-                    setNewComment(value);
-                    if (commentError) setCommentError(null);
-                  }}
+                  onChange={setNewComment}
                   className="text-sm bg-muted border-0"
                   minHeight="36px"
                   onKeyDown={(e) => {
@@ -239,10 +208,6 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                 </Button>
               </div>
             </div>
-          )}
-
-          {commentError && (
-            <p className="text-sm text-destructive">{commentError}</p>
           )}
         </div>
       )}

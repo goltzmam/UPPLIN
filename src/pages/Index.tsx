@@ -32,25 +32,6 @@ export default function Index() {
   const queryClient = useQueryClient();
   const { user, profile } = useAuth();
 
-  useEffect(() => {
-    document.title = "UPPLIN | Eventos, shows e festas no Brasil";
-
-    const upsertMeta = (selector: string, attribute: "content" | "href", value: string) => {
-      const element = document.head.querySelector(selector);
-      if (element) {
-        element.setAttribute(attribute, value);
-      }
-    };
-
-    upsertMeta('meta[name="description"]', "content", "Descubra eventos, shows, festas e conferências em todo o Brasil. Encontre o que fazer perto de você na UPPLIN.");
-    upsertMeta('meta[property="og:title"]', "content", "UPPLIN | Eventos, shows e festas no Brasil");
-    upsertMeta('meta[property="og:description"]', "content", "Descubra eventos, shows, festas e conferências em todo o Brasil. Encontre o que fazer perto de você na UPPLIN.");
-    upsertMeta('meta[property="og:url"]', "content", window.location.origin);
-    upsertMeta('meta[name="twitter:title"]', "content", "UPPLIN | Eventos, shows e festas no Brasil");
-    upsertMeta('meta[name="twitter:description"]', "content", "Descubra eventos, shows, festas e conferências em todo o Brasil. Encontre o que fazer perto de você na UPPLIN.");
-    upsertMeta('link[rel="canonical"]', "href", window.location.origin);
-  }, []);
-
   // ─── Location: priority Manual > GPS > Profile > Default ─────────────
   const {
     coords,

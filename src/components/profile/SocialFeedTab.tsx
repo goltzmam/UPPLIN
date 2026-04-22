@@ -11,8 +11,8 @@ import { ptBR } from "date-fns/locale";
 import { Link } from "react-router-dom";
 import { PostLikeButton } from "./PostLikeButton";
 import { PostComments } from "./PostComments";
-import { PostMedia } from "./PostMedia";
 import { useState } from "react";
+import { PostMedia } from "./PostMedia";
 
 interface FeedPost {
   id: string;
@@ -148,8 +148,12 @@ export function SocialFeedTab() {
             )}
 
             {post.media_url && (
-              <div className="mb-3 overflow-hidden rounded-lg">
-                <PostMedia mediaUrl={post.media_url} mediaType={post.media_type} className="max-h-[32rem]" />
+              <div className="mb-3">
+                <PostMedia
+                  mediaUrl={post.media_url}
+                  mediaType={post.media_type}
+                  alt="Mídia do post"
+                />
               </div>
             )}
 

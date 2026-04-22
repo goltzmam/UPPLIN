@@ -28,7 +28,6 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [showEventPicker, setShowEventPicker] = useState(false);
-  const [postError, setPostError] = useState<string | null>(null);
 
   // Fetch user's upcoming events for tagging
   const { data: userEvents } = useQuery({
@@ -70,15 +69,9 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
 
   const handlePostSubmit = async () => {
     if (!user) return;
-
-    if (selectedFile && (selectedFile.type === "video/quicktime" || selectedFile.name.toLowerCase().endsWith(".mov"))) {
-      setPostError("Esse vídeo não é compatível aqui. Envie em MP4 ou WebM.");
-      return;
-    }
     
     setIsSubmitting(true);
     try {
-      setPostError(null);
       let mediaUrl: string | null = null;
       let mediaType: string | null = null;
 
@@ -118,7 +111,6 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
       setPostContent("");
       setSelectedFile(null);
       setSelectedEventId("");
-      setPostError(null);
       navigate("/perfil?tab=posts");
     } catch (error) {
       console.error("Error creating post:", error);
@@ -337,18 +329,12 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
               <label className="cursor-pointer block">
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
+                  accept="image/*,video/*"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
                       if (file.size > 50 * 1024 * 1024) return;
-                      if (file.type === "video/quicktime" || file.name.toLowerCase().endsWith(".mov")) {
-                        setPostError("Esse vídeo não é compatível aqui. Envie em MP4 ou WebM.");
-                        e.target.value = "";
-                        return;
-                      }
-                      setPostError(null);
                       setSelectedFile(file);
                     }
                   }}
@@ -357,9 +343,6 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                 <p className="text-sm text-muted-foreground">
                   Clique para selecionar foto ou vídeo
                 </p>
-                {postError && (
-                  <p className="mt-2 px-4 text-xs text-destructive">{postError}</p>
-                )}
               </label>
             )}
           </div>
