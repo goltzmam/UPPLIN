@@ -18,6 +18,7 @@ import { stopAllMediaPipelines } from "@/lib/media";
 import { prioritizeUnseenEvents, markEventsSeen } from "@/lib/seen-events";
 import { useUserLocation } from "@/hooks/use-user-location";
 import { haversineKm, normalizeCity } from "@/lib/geo";
+import heroEvents from "@/assets/hero-events.jpg";
 
 const PROFILE_BANNER_DISMISS_KEY = "upplin_profile_city_banner_dismissed";
 const PROFILE_BANNER_TTL_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
@@ -104,18 +105,8 @@ export default function Index() {
 
   const events = data?.pages.flatMap(page => page.data) || [];
 
-  // Demo cover images (fallback when no cover is provided)
-  const DEMO_COVER_URLS = [
-    "https://images.unsplash.com/photo-1521337706264-a414f153a5fc?w=1200&q=80",
-    "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=1200&q=80",
-    "https://images.unsplash.com/photo-1506157786151-b8491531f063?w=1200&q=80",
-    "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=1200&q=80",
-    "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1200&q=80",
-    "https://images.unsplash.com/photo-1533174072545-7a4b6ad7a6c3?w=1200&q=80"
-  ];
-
-  // Demo video URL from public CDN for first event display
-  const DEMO_VIDEO_URL = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4";
+  // Local fallback image for events without uploaded media
+  const DEMO_COVER_URLS = [heroEvents];
 
   const rawFeedItems = events.map((event: any, index: number) => {
     const videoMedia = event.event_media?.find((m: any) => m.type === "video");
@@ -123,7 +114,7 @@ export default function Index() {
       ? Math.min(...event.ticket_types.map((t: any) => t.price_cents))
       : 0;
     const coverImageUrl = event.cover_image_url || DEMO_COVER_URLS[index % DEMO_COVER_URLS.length];
-    const videoUrl = videoMedia?.url || (index === 0 ? DEMO_VIDEO_URL : null);
+    const videoUrl = videoMedia?.url || null;
 
     return {
       id: event.id,
