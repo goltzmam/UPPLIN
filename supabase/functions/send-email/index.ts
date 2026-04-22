@@ -1,6 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
+import { z } from "https://esm.sh/zod@3.25.76";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,6 +15,46 @@ const corsHeaders = {
 // Update this with your verified Resend domain, or keep resend.dev for testing
 const FROM_EMAIL = "UPPLIN <onboarding@resend.dev>";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://upplin.lovable.app";
+
+const emailRequestSchema = z.object({
+  type: z.enum([
+    "purchase_confirmation",
+    "event_reminder",
+    "ticket_cancelled",
+    "password_reset",
+    "welcome",
+    "welcome_organizer",
+    "pix_pending",
+    "pix_confirmed",
+    "collaborator_invite",
+  ]),
+  to: z.string().email(),
+  data: z.object({
+    userName: z.string().min(1).max(120).optional(),
+    eventTitle: z.string().min(1).max(160).optional(),
+    eventDate: z.string().min(1).max(120).optional(),
+    eventVenue: z.string().min(1).max(160).optional(),
+    ticketType: z.string().min(1).max(120).optional(),
+    ticketQuantity: z.number().int().min(1).max(50).optional(),
+    totalAmount: z.string().min(1).max(60).optional(),
+    orderId: z.string().uuid().optional(),
+    resetLink: z.string().url().optional(),
+    companyName: z.string().min(1).max(160).optional(),
+    pixQrCodeBase64: z.string().min(1).max(200000).optional(),
+    pixCopyPaste: z.string().min(1).max(10000).optional(),
+    pixExpiration: z.string().min(1).max(120).optional(),
+    paymentLink: z.string().url().optional(),
+    organizerName: z.string().min(1).max(160).optional(),
+    scannerLink: z.string().url().optional(),
+    collaboratorName: z.string().min(1).max(120).optional(),
+  }),
+});
+
+const clientAllowedTypes = new Set([
+  "welcome",
+  "welcome_organizer",
+  "collaborator_invite",
+] as const);
 
 interface EmailRequest {
   type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer" | "pix_pending" | "pix_confirmed" | "collaborator_invite";
