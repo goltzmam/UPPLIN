@@ -26,12 +26,12 @@ export default function RedefinirSenha() {
     e.preventDefault();
     
     if (!isValidPassword(password)) {
-      toast({ title: "Senha muito fraca", description: "Use no mínimo 6 caracteres", variant: "destructive" });
+      toast({ title: "Senha muito fraca", description: "Crie uma senha com pelo menos 6 caracteres.", variant: "destructive" });
       return;
     }
     
     if (password !== confirmPassword) {
-      toast({ title: "Senhas não conferem", variant: "destructive" });
+      toast({ title: "As senhas não conferem", description: "Confira os campos e tente novamente.", variant: "destructive" });
       return;
     }
 
@@ -40,7 +40,11 @@ export default function RedefinirSenha() {
     setLoading(false);
 
     if (error) {
-      toast({ title: "Erro ao redefinir senha", description: error.message, variant: "destructive" });
+      toast({
+        title: "Não foi possível salvar sua nova senha",
+        description: "Abra novamente o link recebido por e-mail e tente de novo.",
+        variant: "destructive"
+      });
     } else {
       setSuccess(true);
       setTimeout(() => {
@@ -81,7 +85,7 @@ export default function RedefinirSenha() {
             transition={{ delay: 0.2 }}
             className="text-sm sm:text-base text-secondary-foreground/70"
           >
-            Crie uma nova senha segura para sua conta.
+            Crie uma nova senha para concluir a recuperação com segurança.
           </motion.p>
         </div>
       </div>
@@ -119,7 +123,7 @@ export default function RedefinirSenha() {
                     Senha redefinida!
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Sua nova senha já está ativa. Você será redirecionado em instantes.
+                    Sua nova senha já está ativa. Agora é só continuar seu acesso normalmente.
                   </p>
                 </div>
               </motion.div>
@@ -133,10 +137,10 @@ export default function RedefinirSenha() {
               >
                 <div className="text-center lg:text-left space-y-2">
                   <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground">
-                    Redefinir senha
+                    Redefinir sua senha
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Escolha uma nova senha para voltar a acessar sua conta com segurança.
+                    Escolha sua nova senha para concluir a recuperação iniciada pelo e-mail enviado pela UPPLIN.
                   </p>
                 </div>
 
@@ -154,7 +158,7 @@ export default function RedefinirSenha() {
                       icon={<Lock className="h-4 w-4" />}
                       validationRules={passwordRules}
                     />
-                    <p className="text-xs text-muted-foreground">Use pelo menos 6 caracteres.</p>
+                    <p className="text-xs text-muted-foreground">Use pelo menos 6 caracteres para manter sua conta protegida.</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword" className="text-sm">Confirmar senha</Label>
