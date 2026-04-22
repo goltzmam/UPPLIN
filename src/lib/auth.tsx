@@ -142,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (currentSession?.user) {
           setTimeout(async () => {
-            const profileData = await fetchProfile(currentSession.user.id);
+            const profileData = await fetchProfile(currentSession.user);
             setProfile(profileData);
             setLoading(false);
           }, 0);
@@ -159,7 +159,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (currentSession?.user) {
         localStorage.setItem(AUTH_USER_KEY, currentSession.user.id);
-        fetchProfile(currentSession.user.id).then((profileData) => {
+        fetchProfile(currentSession.user).then((profileData) => {
           setProfile(profileData);
           setLoading(false);
         });
