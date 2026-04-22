@@ -78,7 +78,7 @@ export function SocialFeedTab() {
       // Fetch profiles for posts
       const userIds = [...new Set(postsData.map((p) => p.user_id))];
       const { data: profiles } = await supabase
-        .from("profiles")
+        .from("profiles_public")
         .select("id, full_name, photo_url")
         .in("id", userIds);
 
