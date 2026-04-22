@@ -631,33 +631,17 @@ export default function OrganizerPublicProfile() {
                     </div>
                   </div>
 
-                  {/* Contact Info */}
                   <div className="bg-muted/30 rounded-xl p-6">
-                    <h3 className="font-semibold text-lg mb-4">Informações de contato</h3>
+                    <h3 className="font-semibold text-lg mb-4">Informações públicas</h3>
                     <div className="space-y-3">
-                      {organizer.email && (
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                            <MessageCircle className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <p className="text-sm text-muted-foreground">Email</p>
-                            <a href={`mailto:${organizer.email}`} className="font-medium hover:text-accent transition-colors">
-                              {organizer.email}
-                            </a>
-                          </div>
-                        </div>
-                      )}
-                      {organizer.phone && (
+                      {(organizer.city || organizer.state) && (
                         <div className="flex items-center gap-3">
                           <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
                             <MapPin className="h-5 w-5 text-muted-foreground" />
                           </div>
                           <div>
-                            <p className="text-sm text-muted-foreground">Telefone</p>
-                            <a href={`tel:${organizer.phone}`} className="font-medium hover:text-accent transition-colors">
-                              {organizer.phone}
-                            </a>
+                            <p className="text-sm text-muted-foreground">Localização</p>
+                            <p className="font-medium">{[organizer.city, organizer.state].filter(Boolean).join(", ")}</p>
                           </div>
                         </div>
                       )}
@@ -672,6 +656,15 @@ export default function OrganizerPublicProfile() {
                           </div>
                         </div>
                       )}
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
+                          <MessageCircle className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Contato</p>
+                          <p className="font-medium">Use os links sociais públicos para falar com este organizador.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
