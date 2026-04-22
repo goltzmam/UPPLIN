@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { PostLikeButton } from "./PostLikeButton";
 import { PostComments } from "./PostComments";
 import { MentionInput, renderTextWithMentions } from "@/components/ui/mention-input";
 import { PostMedia } from "./PostMedia";
+import { createUserPost, getPostMediaValidationError, invalidateSocialQueries } from "@/lib/social-posts";
 interface UserPost {
   id: string;
   user_id: string;
@@ -44,8 +45,11 @@ export function UserPostsTab() {
   const [content, setContent] = useState("");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [submittingPost, setSubmittingPost] = useState(false);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -76,83 +80,70 @@ export function UserPostsTab() {
     enabled: !!user,
   });
 
-  const createPost = useMutation({
-    mutationFn: async () => {
-      if (!content.trim() && !mediaUrl) {
-        throw new Error("Adicione texto ou mídia ao seu post");
-      }
+  const resetComposer = () => {
+    setContent("");
+    setMediaUrl(null);
+    setMediaType(null);
+    setSelectedFile(null);
+    setIsCreating(false);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
 
-      const { error } = await supabase.from("user_posts").insert({
-        user_id: user!.id,
-        content: content.trim() || null,
-        media_url: mediaUrl,
-        media_type: mediaType,
+  const handleCreatePost = async () => {
+    if (!user || submittingPost) return;
+
+    setSubmittingPost(true);
+
+    try {
+      await createUserPost({
+        userId: user.id,
+        content,
+        file: selectedFile,
       });
 
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-posts", user?.id] });
-      setContent("");
-      setMediaUrl(null);
-      setMediaType(null);
-      setIsCreating(false);
-    },
-    onError: (error: Error) => {
-      console.error("Erro ao criar post:", error.message);
-    },
-  });
+      await invalidateSocialQueries(queryClient, user.id);
+      resetComposer();
+    } catch (error) {
+      console.error("Erro ao criar post:", error);
+    } finally {
+      setSubmittingPost(false);
+    }
+  };
 
-  const deletePost = useMutation({
-    mutationFn: async (postId: string) => {
-      const { error } = await supabase
-        .from("user_posts")
-        .delete()
-        .eq("id", postId);
+  const handleDeletePost = async (postId: string) => {
+    if (!user || deletingPostId) return;
 
+    setDeletingPostId(postId);
+
+    try {
+      const { error } = await supabase.from("user_posts").delete().eq("id", postId);
       if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-posts", user?.id] });
-    },
-    onError: (error) => {
+
+      await invalidateSocialQueries(queryClient, user.id);
+    } catch (error) {
       console.error("Erro ao excluir post:", error);
-    },
-  });
+    } finally {
+      setDeletingPostId(null);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
+    const validationError = getPostMediaValidationError(file);
+    if (validationError) {
+      console.error(validationError);
       return;
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      return;
-    }
-
-    setUploading(true);
 
     try {
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user!.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("user-posts")
-        .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from("user-posts")
-        .getPublicUrl(fileName);
-
-      setMediaUrl(urlData.publicUrl);
-      setMediaType("image");
+      setUploading(true);
+      setSelectedFile(file);
+      setMediaUrl(URL.createObjectURL(file));
+      setMediaType(file.type.startsWith("image/") ? "image" : "video");
     } catch (error) {
       console.error("Upload error:", error);
     } finally {
@@ -191,6 +182,7 @@ export function UserPostsTab() {
                     onClick={() => {
                       setMediaUrl(null);
                       setMediaType(null);
+                      setSelectedFile(null);
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -203,7 +195,7 @@ export function UserPostsTab() {
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/jpeg,image/png,image/webp,image/gif"
+                      accept="image/*,video/mp4,video/webm,video/ogg"
                     onChange={handleFileUpload}
                     className="hidden"
                     disabled={uploading}
@@ -217,10 +209,10 @@ export function UserPostsTab() {
                   >
                     {uploading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4" />
-                    )}
-                    Foto
+                      ) : (
+                        <Camera className="h-4 w-4" />
+                      )}
+                      Mídia
                   </Button>
                 </div>
 
@@ -229,10 +221,7 @@ export function UserPostsTab() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setIsCreating(false);
-                      setContent("");
-                      setMediaUrl(null);
-                      setMediaType(null);
+                      resetComposer();
                     }}
                   >
                     Cancelar
@@ -240,10 +229,10 @@ export function UserPostsTab() {
                   <Button
                     size="sm"
                     className="btn-gradient gap-2"
-                    onClick={() => createPost.mutate()}
-                    disabled={createPost.isPending}
+                    onClick={handleCreatePost}
+                    disabled={submittingPost}
                   >
-                    <Send className="h-4 w-4" />
+                    {submittingPost ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     Publicar
                   </Button>
                 </div>
@@ -319,10 +308,10 @@ export function UserPostsTab() {
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem
                         className="text-destructive"
-                        onClick={() => deletePost.mutate(post.id)}
+                          onClick={() => handleDeletePost(post.id)}
                       >
                         <Trash2 className="h-4 w-4 mr-2" />
-                        Excluir
+                          {deletingPostId === post.id ? "Excluindo..." : "Excluir"}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
