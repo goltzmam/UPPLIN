@@ -6,6 +6,12 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+const ALLOWED_APP_ORIGINS = [
+  SITE_URL,
+  "https://www.upplin.com",
+  "https://upplin.com",
+  "https://upplin.com.br",
+];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -604,7 +610,7 @@ function isInternalServiceCall(authHeader: string | null) {
 
 function validateResetLink(link: string) {
   const parsed = new URL(link);
-  const allowedOrigins = new Set([SITE_URL, "https://www.upplin.com", "https://upplin.com", "https://upplin.com.br"]);
+  const allowedOrigins = new Set(ALLOWED_APP_ORIGINS);
   if (!allowedOrigins.has(parsed.origin)) {
     throw new Error("Reset link origin is not allowed");
   }
