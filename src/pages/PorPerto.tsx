@@ -52,7 +52,7 @@ function FlyToUser({ position }: { position: [number, number] | null }) {
   const map = useMap();
   useEffect(() => {
     if (position) {
-      map.flyTo(position, 13, { duration: 1.5 });
+      map.flyTo(position, 11, { duration: 1.5 });
     }
   }, [position, map]);
   return null;
@@ -81,6 +81,7 @@ export default function PorPerto() {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [geoState, setGeoState] = useState<GeoState>("idle");
   const [selectedEvent, setSelectedEvent] = useState<NearbyEvent | null>(null);
+  const [showMapHint, setShowMapHint] = useState(false);
 
   // ── Request geolocation ──────────────────────────────────────────
   const requestLocation = useCallback(() => {
@@ -102,6 +103,20 @@ export default function PorPerto() {
   useEffect(() => {
     requestLocation();
   }, [requestLocation]);
+
+  useEffect(() => {
+    if (geoState !== "granted" || !userPos) return;
+
+    setShowMapHint(false);
+
+    const showTimer = window.setTimeout(() => setShowMapHint(true), 1700);
+    const hideTimer = window.setTimeout(() => setShowMapHint(false), 4700);
+
+    return () => {
+      window.clearTimeout(showTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [geoState, userPos]);
 
   // ── Fetch events with coordinates ────────────────────────────────
   const { data: events = [], isLoading: eventsLoading } = useQuery({
@@ -188,7 +203,7 @@ export default function PorPerto() {
         <div className="fixed inset-0 lg:left-[72px] z-0">
           <MapContainer
             center={defaultCenter}
-            zoom={userPos ? 13 : 11}
+            zoom={userPos ? 11 : 10}
             className="h-full w-full"
             zoomControl={false}
             attributionControl={false}
@@ -270,19 +285,22 @@ export default function PorPerto() {
           </div>
         )}
 
-        {/* Empty state */}
-        {!eventsLoading && events.length === 0 && (
-          <div className="fixed bottom-28 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto">
-            <div className="bg-background/80 backdrop-blur-md rounded-xl px-4 py-4 text-center border border-border shadow-lg">
-              <MapPin className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-              <p className="text-sm font-medium">Nenhum evento com localização</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Ainda não há eventos com coordenadas cadastradas.
-              </p>
-              <Link to="/eventos" className="text-xs text-primary mt-2 inline-block hover:underline">
-                Explorar todos os eventos →
-              </Link>
+        {showMapHint && !selectedEvent && (
+          <div className="fixed bottom-44 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+            <div className="bg-background/88 backdrop-blur-md rounded-xl px-4 py-3 text-center border border-border shadow-lg">
+              <p className="text-sm font-medium text-foreground">Explore o mapa e descubra eventos pela região</p>
             </div>
+          </div>
+        )}
+
+        {!selectedEvent && (
+          <div className="fixed bottom-28 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto">
+            <Link
+              to="/eventos"
+              className="block rounded-xl border border-border bg-background/80 px-4 py-4 text-center text-sm font-medium text-primary shadow-lg backdrop-blur-md transition-colors hover:bg-background/90"
+            >
+              Explorar todos os eventos →
+            </Link>
           </div>
         )}
 
