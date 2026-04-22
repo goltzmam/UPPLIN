@@ -624,6 +624,33 @@ function validateResetLink(link: string) {
   }
 }
 
+async function canInviteCollaborator(authHeader: string, organizerId?: string, eventId?: string) {
+  if (!organizerId) return false;
+
+  const adminClient = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!, {
+    global: { headers: { Authorization: authHeader } },
+  });
+
+  const { data: organizer, error: organizerError } = await adminClient
+    .from("organizer_accounts")
+    .select("id")
+    .eq("id", organizerId)
+    .maybeSingle();
+
+  if (organizerError || !organizer) return false;
+
+  if (!eventId) return true;
+
+  const { data: event, error: eventError } = await adminClient
+    .from("events")
+    .select("id")
+    .eq("id", eventId)
+    .eq("organizer_id", organizerId)
+    .maybeSingle();
+
+  return !eventError && !!event;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -660,7 +687,14 @@ const handler = async (req: Request): Promise<Response> => {
       }
 
       if (!clientAllowedTypes.has(type)) {
-        return jsonResponse(403, { error: "This email type requires a trusted backend call" });
+        if (type !== "collaborator_invite") {
+          return jsonResponse(403, { error: "This email type requires a trusted backend call" });
+        }
+
+        const inviteAllowed = await canInviteCollaborator(authHeader, data.organizerId, data.eventId);
+        if (!inviteAllowed) {
+          return jsonResponse(403, { error: "You are not allowed to send this invite" });
+        }
       }
 
       if (!userData.user.email || userData.user.email.toLowerCase() !== to.toLowerCase()) {
