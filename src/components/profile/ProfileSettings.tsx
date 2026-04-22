@@ -12,6 +12,7 @@ import { useLogout } from "@/hooks/use-logout";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserRoles } from "@/hooks/use-user-roles";
+import { AvatarCropDialog } from "@/components/profile/AvatarCropDialog";
 
 interface Profile {
   id: string;
@@ -43,6 +44,8 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
   const [saving, setSaving] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
+  const [isCropOpen, setIsCropOpen] = useState(false);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
 
@@ -81,6 +84,32 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
     }
   };
 
+  const uploadAvatarFile = async (file: File) => {
+    setUploadingPhoto(true);
+    try {
+      const fileName = `${profile.id}/avatar.jpg`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, { upsert: true, contentType: 'image/jpeg' });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
+      await onProfileUpdate({ photo_url: photoUrl });
+      toast({ title: "Foto atualizada!" });
+    } catch (error: any) {
+      toast({ title: "Erro ao enviar foto", description: error.message, variant: "destructive" });
+      throw error;
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
   const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -95,29 +124,9 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
       return;
     }
 
-    setUploadingPhoto(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}/avatar.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-
-      const photoUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-      await onProfileUpdate({ photo_url: photoUrl });
-      toast({ title: "Foto atualizada!" });
-    } catch (error: any) {
-      toast({ title: "Erro ao enviar foto", description: error.message, variant: "destructive" });
-    } finally {
-      setUploadingPhoto(false);
-    }
+    setPendingAvatarFile(file);
+    setIsCropOpen(true);
+    e.target.value = "";
   };
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -223,8 +232,8 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
             className="relative cursor-pointer group"
             onClick={() => photoInputRef.current?.click()}
           >
-            <Avatar className="h-24 w-24 ring-4 ring-background">
-              <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "User"} />
+              <Avatar className="h-24 w-24 ring-4 ring-background">
+                <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "User"} className="object-cover object-center" />
               <AvatarFallback className="bg-foreground text-background text-2xl font-semibold">
                 {getInitials(profile.full_name)}
               </AvatarFallback>
@@ -247,6 +256,17 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
           <p className="text-xs text-muted-foreground mt-3">Clique para trocar a foto de perfil</p>
         </div>
       </div>
+
+      <AvatarCropDialog
+        file={pendingAvatarFile}
+        open={isCropOpen}
+        onOpenChange={(open) => {
+          setIsCropOpen(open);
+          if (!open) setPendingAvatarFile(null);
+        }}
+        onConfirm={uploadAvatarFile}
+        isSubmitting={uploadingPhoto}
+      />
 
       {/* Quick Links Card */}
       <div className="bg-card rounded-2xl border border-border overflow-hidden">
