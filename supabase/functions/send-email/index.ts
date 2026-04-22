@@ -6,12 +6,6 @@ const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-const ALLOWED_APP_ORIGINS = [
-  SITE_URL,
-  "https://www.upplin.com",
-  "https://upplin.com",
-  "https://upplin.com.br",
-];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +15,12 @@ const corsHeaders = {
 // Update this with your verified Resend domain, or keep resend.dev for testing
 const FROM_EMAIL = "UPPLIN <onboarding@resend.dev>";
 const SITE_URL = Deno.env.get("SITE_URL") || "https://upplin.lovable.app";
+const ALLOWED_APP_ORIGINS = [
+  SITE_URL,
+  "https://www.upplin.com",
+  "https://upplin.com",
+  "https://upplin.com.br",
+];
 
 const emailRequestSchema = z.object({
   type: z.enum([
