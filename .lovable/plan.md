@@ -1,85 +1,131 @@
 
+Objetivo: fechar uma auditoria completa do app e implementar o que ainda falta para deixar o fluxo social confiável (publicar, curtir, comentar), além de validar o checkout/assinaturas com Mercado Pago.
 
-# Status Completo do Projeto UPPLIN
+1. Estado atual confirmado
+- Publicação social já aceita `event_id` nulo no banco e existem posts recentes sem evento, então a regra “precisa ter ingresso para postar” não existe.
+- Comentários já têm pelo menos um registro recente no banco.
+- Likes ainda não têm registros recentes, então o fluxo de curtir continua suspeito/inconsistente.
+- O app já tem base pronta para:
+  - feed/home e evento público
+  - perfil e abas sociais
+  - ingressos e checkout
+  - pagamentos PIX/cartão
+  - assinaturas do organizador
+  - chat/mensagens
+- O backend de pagamentos está implementado, mas sem logs recentes de execução; precisa de teste funcional real ponta a ponta.
 
----
+2. Problemas ainda visíveis no código
+- Social feed usa `profiles` diretamente em `SocialFeedTab`, mas comentários usam `profiles_public`. Isso pode quebrar exibição de autor em feed por RLS.
+- `PostLikeButton` ainda está em uma versão frágil:
+  - depende de `useMutation` + estado otimista que pode contar errado
+  - não trata usuário sem login com fallback claro
+  - não sincroniza todas as queries relacionadas
+- `PostComments` só carrega comentários quando expandido, então o contador pode aparecer zerado antes de abrir.
+- `UpActionMenu` publica, mas não invalida caches sociais após sucesso; o post pode ser criado e não aparecer imediatamente.
+- `UserPostsTab` ainda permite só imagem no upload local da aba de posts, enquanto a regra desejada é texto, imagem, vídeo ou combinação.
+- O texto do modal de publicação ainda sugere obrigatoriedade/ênfase errada para evento marcado.
+- Há inconsistência de UX entre criação no modal “UP” e criação dentro da aba de posts.
 
-## ✅ O QUE ESTÁ CORRETO E FUNCIONANDO
+3. Implementação proposta para o social funcionar de verdade
+- Unificar o modelo de publicação:
+  - permitir texto-only, imagem-only, vídeo-only ou texto+mídia
+  - manter `event_id` opcional
+  - listar para marcação apenas eventos com ingresso emitido, sem bloquear publicação sem evento
+- Refatorar `UpActionMenu` e `UserPostsTab` para usar a mesma lógica de criação de post:
+  - mesma validação
+  - mesmo uploader
+  - mesmo tratamento de erro
+  - mesma invalidação de cache
+- Corrigir curtidas:
+  - trocar a lógica atual por handler assíncrono simples e previsível
+  - invalidar `post-likes`, `social-feed`, `user-posts` e quaisquer contadores derivados
+  - bloquear duplo clique simultâneo
+- Corrigir comentários:
+  - separar query de contagem e query da lista
+  - garantir atualização imediata do contador mesmo com drawer fechado
+  - invalidar feed, posts do usuário e comentários após inserir/excluir
+- Padronizar perfis públicos:
+  - trocar consultas do feed social para `profiles_public`
+  - manter `profiles` apenas para o próprio usuário autenticado
+- Ajustar UX:
+  - mensagens de erro mais claras no publicar/curtir/comentar
+  - remover qualquer texto que sugira bloqueio por ingresso na publicação
+  - manter mídia de post em formato vertical 9:16 para imagem e vídeo
 
-### Banco de Dados — Planos Alinhados
-| Plano | Preço | Comissão (banco) | UI |
-|-------|-------|-------------------|-----|
-| Free | R$ 0 | 10% | 10% ✅ |
-| Pro | R$ 49 | 8,49% | 8,49% ✅ |
-| Enterprise | R$ 199 | 6,99% | 6,99% ✅ |
+4. Auditoria funcional por seção do app
+- Home/feed:
+  - revisar cards, links para evento, fallback de capa, preço e navegação
+- Evento:
+  - validar compra, save, comentários, reviews, check-in social e contagem de posts
+- Perfil:
+  - validar header, abas, edição de perfil e fluxo completo de posts
+- Mensagens:
+  - revisar abertura de conversa, listagem e seleção
+- Meus ingressos:
+  - validar ingressos emitidos, pedidos pendentes e rota de pagamento pendente
+- Organizador:
+  - revisar configurações, assinatura, relatórios e fluxo de conexão de pagamento
+- Admin:
+  - fazer leitura estrutural das rotas e checar possíveis pontos de risco, sem mexer onde não houver falha real
 
-### Funcionalidades Completas
-- Feed TikTok-style, CRUD eventos, ingressos, checkout (Cartão + PIX)
-- QR check-in + colaboradores, cupons, assinaturas
-- Chat, notificações, RSVP, posts sociais, follow
-- Painéis admin e organizador completos
-- RLS em todas as tabelas, webhook HMAC verificado
-- Snapshot de comissão por evento
+5. Revisão de pagamentos
+- Validar checkout:
+  - criação de pedido
+  - carregamento da chave pública
+  - cartão
+  - PIX
+  - tela de pendência
+  - tela de sucesso
+- Validar assinaturas do organizador:
+  - assinar plano
+  - cancelar plano
+  - histórico de faturas
+- Conferir consistência do pós-pagamento:
+  - tickets emitidos
+  - status do pedido
+  - atualização das telas
+- Se houver falha, corrigir no frontend e nas funções de backend já existentes.
 
----
+6. O que parece corrigido até agora
+- Mídia quebrada de posts recebeu fallback visual.
+- Posts sem evento já existem e provam que `event_id` é opcional.
+- Layout vertical de mídia foi padronizado.
+- Cor do badge de preço já foi melhorada no card do feed.
+- Fluxo base de Mercado Pago já existe para checkout e assinatura.
 
-## 🔴 ERROS DE BUILD (precisa corrigir agora)
+7. O que falta corrigir
+- Garantir publicação confiável com atualização imediata na UI.
+- Corrigir curtidas para persistirem e refletirem na interface.
+- Corrigir comentários para contagem e listagem ficarem consistentes.
+- Unificar criação de posts entre modal UP e aba de posts.
+- Validar Mercado Pago com teste ponta a ponta real.
+- Fazer um smoke test geral nas principais seções.
 
-Dois arquivos têm erro de TypeScript que impede o build:
+Detalhes técnicos
+- Arquivos centrais do social:
+  - `src/components/navigation/UpActionMenu.tsx`
+  - `src/components/profile/UserPostsTab.tsx`
+  - `src/components/profile/PostLikeButton.tsx`
+  - `src/components/profile/PostComments.tsx`
+  - `src/components/profile/SocialFeedTab.tsx`
+  - `src/components/profile/PostMedia.tsx`
+- Arquivos centrais de pagamentos:
+  - `src/pages/Evento.tsx`
+  - `src/pages/Checkout.tsx`
+  - `src/pages/PagamentoPendente.tsx`
+  - `src/pages/PagamentoSucesso.tsx`
+  - `src/pages/organizador/AssinaturasContent.tsx`
+  - `supabase/functions/create-order/index.ts`
+  - `supabase/functions/mp-get-public-key/index.ts`
+  - `supabase/functions/mp-process-payment/index.ts`
+  - `supabase/functions/mp-subscribe/index.ts`
+  - `supabase/functions/mp-cancel-subscription/index.ts`
+  - `supabase/functions/mp-webhook/index.ts`
 
-1. **`src/components/events/LocationPicker.tsx`** — `NodeJS.Timeout` não encontrado
-2. **`src/components/map/MapSearch.tsx`** — `NodeJS.Timeout` não encontrado
-
-**Correção:** Trocar `useRef<NodeJS.Timeout>()` por `useRef<ReturnType<typeof setTimeout>>()` nos dois arquivos.
-
----
-
-## 🟡 SEGURANÇA — 1 Issue "Error" Pendente
-
-**Exposição de dados sensíveis na tabela profiles** (nível: error)
-- A policy "Authenticated users can view basic profiles" permite que qualquer usuário autenticado veja TODOS os campos do perfil, incluindo **CPF** e **email**.
-- **Correção:** Criar uma view restrita ou trocar a policy para limitar o acesso apenas a campos seguros (id, full_name, photo_url).
-
----
-
-## 🟡 SEGURANÇA — Warnings (prioridade média)
-
-1. **Leaked password protection desabilitada** — senhas fracas permitidas
-2. **Enumeração de email** via `find_user_by_email` — qualquer usuário pode verificar emails
-3. **Storage event-images** — qualquer organizador pode modificar imagens de outros
-4. **Admin auto-assign** via email hardcoded — risco se verificação de email for desabilitada
-
----
-
-## 🔴 INFRAESTRUTURA — Email NÃO configurado
-
-- **Nenhum domínio de email configurado.** Os emails transacionais (confirmação de compra, PIX, boas-vindas) **NÃO estão sendo enviados** em produção.
-- É necessário configurar um domínio de email para que os emails funcionem.
-
----
-
-## 📋 PLANO DE AÇÃO (em ordem de prioridade)
-
-### Passo 1 — Corrigir erros de build
-- Trocar `NodeJS.Timeout` por `ReturnType<typeof setTimeout>` em `LocationPicker.tsx` e `MapSearch.tsx`
-
-### Passo 2 — Corrigir exposição de CPF/email (security error)
-- Criar uma view `profiles_public` com apenas campos seguros, ou restringir a policy existente para que só retorne campos não-sensíveis via RPC
-
-### Passo 3 — Configurar domínio de email
-- Configurar domínio de email para emails transacionais funcionarem em produção
-
-### Passo 4 — Habilitar leaked password protection
-- Ativar proteção contra senhas vazadas na autenticação
-
----
-
-## PODE LANÇAR?
-
-**Ainda não.** Os passos 1-3 são obrigatórios antes do lançamento:
-1. Build quebrado (erros TypeScript)
-2. CPF exposto para qualquer usuário logado
-3. Emails não funcionam sem domínio configurado
-
-Após resolver esses 3 pontos + conectar pelo menos 1 conta Mercado Pago de organizador, a plataforma está pronta para lançar.
-
+Resultado esperado após a execução
+- Usuário consegue postar texto, foto, vídeo ou ambos, com ou sem evento.
+- Feed e perfil mostram o post imediatamente.
+- Curtir funciona e persiste.
+- Comentar funciona e o contador atualiza certo.
+- Checkout e assinatura ficam validados com comportamento consistente.
+- Fica um relatório final dizendo o que foi ajustado, o que foi confirmado funcionando e o que ainda depende de credencial/conta externa para teste real.
