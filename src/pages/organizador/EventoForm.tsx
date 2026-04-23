@@ -11,6 +11,7 @@ import { PageLoading } from "@/components/ui/loading";
 import { MultiMediaUpload } from "@/components/events/MultiMediaUpload";
 import { LocationPicker } from "@/components/events/LocationPicker";
 import { VideoUpload } from "@/components/events/VideoUpload";
+import { ImageUpload } from "@/components/ui/image-upload";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -49,6 +50,7 @@ export default function EventoForm() {
   const [lng, setLng] = useState<number | null>(null);
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [feedVideoUrl, setFeedVideoUrl] = useState<string | null>(null);
+  const [checkoutBannerUrl, setCheckoutBannerUrl] = useState<string | null>(null);
   const [status, setStatus] = useState<"draft" | "pending_review">("draft");
   const [ticketTypes, setTicketTypes] = useState<TicketTypeForm[]>([]);
   const [saving, setSaving] = useState(false);
@@ -91,6 +93,7 @@ export default function EventoForm() {
       setAddressText(event.address_text || "");
       setLat(event.lat ? Number(event.lat) : null);
       setLng(event.lng ? Number(event.lng) : null);
+      setCheckoutBannerUrl(event.checkout_banner_url || null);
       setStatus(event.status === "published" || event.status === "pending_review" ? "pending_review" : "draft");
       setTicketTypes(
         event.ticket_types?.map((t: any) => ({
@@ -176,6 +179,7 @@ export default function EventoForm() {
             lat: lat,
             lng: lng,
             cover_image_url: coverImageUrl,
+            checkout_banner_url: checkoutBannerUrl,
             status,
           })
           .eq("id", eventId);
@@ -197,6 +201,7 @@ export default function EventoForm() {
             lat: lat,
             lng: lng,
             cover_image_url: coverImageUrl,
+            checkout_banner_url: checkoutBannerUrl,
             status,
           })
           .select()
@@ -362,6 +367,22 @@ export default function EventoForm() {
               Adicione pelo menos uma imagem ou vídeo para publicar o evento
             </p>
           )}
+        </div>
+
+        <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 space-y-4">
+          <div>
+            <h2 className="font-display text-lg font-bold">Banner do Checkout</h2>
+            <p className="text-sm text-muted-foreground">
+              Opcional. Essa imagem aparece só no checkout e não precisa ser a mesma do feed ou da capa do evento.
+            </p>
+          </div>
+          <ImageUpload
+            bucket="event-images"
+            folder={eventId === "novo" ? organizer?.id || "" : `${organizer?.id || ""}/${eventId}`}
+            value={checkoutBannerUrl}
+            onChange={setCheckoutBannerUrl}
+            aspectRatio="banner"
+          />
         </div>
 
         {/* Basic Info */}
