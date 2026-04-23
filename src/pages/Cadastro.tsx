@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { isValidEmail, isValidName, isValidPassword, strongPasswordRequirements } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
+import { buildPublicAppUrl } from "@/lib/public-origin";
 
 export default function Cadastro() {
   const [fullName, setFullName] = useState("");
@@ -133,7 +134,7 @@ export default function Cadastro() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const { error } = await signInWithGoogle(window.location.origin + "/onboarding");
+    const { error } = await signInWithGoogle(buildPublicAppUrl("/onboarding"));
     if (error) {
       setLoading(false);
       toast({ title: "Erro", description: error.message, variant: "destructive" });

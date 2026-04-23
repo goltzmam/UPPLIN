@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useAuth } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
+import { buildPublicAppUrl } from "@/lib/public-origin";
 import { 
   isValidEmail, 
   isValidName, 
@@ -149,7 +150,7 @@ export default function OrganizadorCadastro() {
     setGoogleLoading(true);
     try {
       const { error } = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: window.location.origin + "/organizador/onboarding",
+        redirect_uri: buildPublicAppUrl("/organizador/onboarding"),
       });
       if (error) {
         toast({ title: "Erro com Google", description: String(error), variant: "destructive" });
@@ -189,7 +190,7 @@ export default function OrganizadorCadastro() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: buildPublicAppUrl("/email-confirmado"),
             data: { full_name: fullName },
           },
         });
