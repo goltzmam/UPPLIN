@@ -1,37 +1,29 @@
 project_id = "pyhlsgfsunjcjbaqjcwn"
 
-[functions.create-order]
-verify_jwt = false
-
-[functions.mp-webhook]
-verify_jwt = false
-
-[functions.mp-connect]
-verify_jwt = false
-
-[functions.mp-process-payment]
-verify_jwt = false
-
-[functions.mp-get-public-key]
-verify_jwt = false
-
-[functions.mp-subscribe]
-verify_jwt = false
-
-[functions.mp-cancel-subscription]
-verify_jwt = false
-
-[functions.mp-create-preference]
-verify_jwt = false
-
-[functions.payment-webhook]
-verify_jwt = false
-
-[functions.send-email]
-verify_jwt = false
-
-[functions.check-subscription-expiry]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
+[functions]
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.check-subscription-expiry]
+    verify_jwt = false
+  [functions.create-order]
+    verify_jwt = false
+  [functions.mp-cancel-subscription]
+    verify_jwt = false
+  [functions.mp-connect]
+    verify_jwt = false
+  [functions.mp-create-preference]
+    verify_jwt = false
+  [functions.mp-get-public-key]
+    verify_jwt = false
+  [functions.mp-process-payment]
+    verify_jwt = false
+  [functions.mp-subscribe]
+    verify_jwt = false
+  [functions.mp-webhook]
+    verify_jwt = false
+  [functions.payment-webhook]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.send-email]
+    verify_jwt = false
