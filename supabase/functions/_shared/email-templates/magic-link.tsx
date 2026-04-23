@@ -47,7 +47,7 @@ export default MagicLinkEmail
 
 const main = {
   backgroundColor: '#ffffff',
-  fontFamily: "Inter, Arial, sans-serif",
+  fontFamily: 'Inter, Arial, sans-serif',
   margin: '0',
   padding: '32px 16px',
 }
@@ -72,6 +72,7 @@ const eyebrow = {
 }
 
 const h1 = {
+  fontFamily: 'Space Grotesk, Inter, Arial, sans-serif',
   fontSize: '28px',
   lineHeight: '1.2',
   fontWeight: '700' as const,

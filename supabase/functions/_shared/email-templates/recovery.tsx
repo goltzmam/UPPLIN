@@ -30,19 +30,16 @@ export const RecoveryEmail = ({
         <Text style={eyebrow}>UPPLIN</Text>
         <Heading style={h1}>Redefinir sua senha</Heading>
         <Text style={text}>
-          Recebemos uma solicitação para redefinir a senha da sua conta na {siteName}.
-          Para continuar com segurança, clique no botão abaixo e escolha uma nova senha.
+          Recebemos uma solicitação para redefinir a senha da sua conta na {siteName}. Para continuar com segurança, clique no botão abaixo e escolha uma nova senha.
         </Text>
         <Button style={button} href={confirmationUrl}>
           Redefinir minha senha
         </Button>
         <Text style={helper}>
-          Por segurança, esse link expira em breve. Se ele não abrir, solicite uma
-          nova recuperação no app.
+          Por segurança, esse link expira em breve. Se ele não abrir, solicite uma nova recuperação no app.
         </Text>
         <Text style={footer}>
-          Se você não pediu a redefinição da senha, pode ignorar este e-mail com
-          tranquilidade. Sua senha atual continuará a mesma.
+          Se você não pediu a redefinição da senha, pode ignorar este e-mail com tranquilidade. Sua senha atual continuará a mesma.
         </Text>
       </Container>
     </Body>
@@ -53,7 +50,7 @@ export default RecoveryEmail
 
 const main = {
   backgroundColor: '#ffffff',
-  fontFamily: "Inter, Arial, sans-serif",
+  fontFamily: 'Inter, Arial, sans-serif',
   margin: '0',
   padding: '32px 16px',
 }
@@ -78,6 +75,7 @@ const eyebrow = {
 }
 
 const h1 = {
+  fontFamily: 'Space Grotesk, Inter, Arial, sans-serif',
   fontSize: '28px',
   lineHeight: '1.2',
   fontWeight: '700' as const,
