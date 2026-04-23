@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Lock, Loader2, Ticket, Building2, CheckCircle, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -17,11 +17,39 @@ export default function RedefinirSenha() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [recoveryReady, setRecoveryReady] = useState(false);
   const { toast } = useToast();
   const accountLabel = isOrganizer ? "organizador" : "participante";
 
   const passwordRules = useMemo(() => [{ test: isValidPassword }], []);
   const confirmRules = useMemo(() => [{ test: (v: string) => v === password && v.length >= 6 }], [password]);
+
+  useEffect(() => {
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const accessToken = hashParams.get("access_token");
+    const refreshToken = hashParams.get("refresh_token");
+    const type = hashParams.get("type");
+
+    if (type !== "recovery" || !accessToken || !refreshToken) {
+      setRecoveryReady(false);
+      return;
+    }
+
+    supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
+      .then(({ error }) => {
+        if (error) {
+          toast({
+            title: "Link inválido ou expirado",
+            description: "Solicite um novo e-mail de recuperação para continuar.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        setRecoveryReady(true);
+        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
+      });
+  }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +61,15 @@ export default function RedefinirSenha() {
     
     if (password !== confirmPassword) {
       toast({ title: "As senhas não conferem", description: "Confira os campos e tente novamente.", variant: "destructive" });
+      return;
+    }
+
+    if (!recoveryReady) {
+      toast({
+        title: "Abra o link do e-mail primeiro",
+        description: "Para redefinir a senha, use o link recebido no seu e-mail.",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -179,7 +216,7 @@ export default function RedefinirSenha() {
                       validationRules={confirmRules}
                     />
                   </div>
-                  <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading}>
+                  <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading || !recoveryReady}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar nova senha"}
                   </Button>
                 </form>
