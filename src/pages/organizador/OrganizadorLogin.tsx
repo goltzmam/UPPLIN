@@ -20,6 +20,23 @@ import { useToast } from "@/hooks/use-toast";
 import { isValidEmail } from "@/lib/validation";
 import { checkSessionConflict } from "@/lib/session-guard";
 import { lovable } from "@/integrations/lovable/index";
+import { supabase } from "@/integrations/supabase/client";
+
+const getOrganizerDestination = async (userId: string) => {
+  const { data, error } = await supabase
+    .from("organizer_accounts")
+    .select("id, cnpj, display_name")
+    .eq("owner_user_id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error loading organizer destination:", error);
+    return "/organizador/onboarding";
+  }
+
+  if (!data) return "/organizador/onboarding";
+  return data.cnpj && data.display_name ? "/organizador/painel" : "/organizador/onboarding";
+};
 
 export default function OrganizadorLogin() {
   const [email, setEmail] = useState("");
@@ -49,13 +66,14 @@ export default function OrganizadorLogin() {
 
   const doSignIn = async () => {
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error, user: signedUser } = await signIn(email, password);
     setLoading(false);
 
     if (error) {
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
     } else {
-      navigate("/organizador/painel");
+      const destination = signedUser ? await getOrganizerDestination(signedUser.id) : "/organizador/onboarding";
+      navigate(destination);
     }
   };
 
