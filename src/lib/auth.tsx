@@ -36,20 +36,41 @@ interface AuthContextType {
 
 const AUTH_USER_KEY = "upplin_active_user_id";
 
+const translateAuthError = (message: string) => {
+  if (/email not confirmed/i.test(message)) {
+    return "Confirme seu e-mail antes de entrar na sua conta.";
+  }
+
+  if (/invalid login credentials|invalid credentials/i.test(message)) {
+    return "E-mail ou senha inválidos.";
+  }
+
+  if (/user already registered|already registered/i.test(message)) {
+    return "Já existe uma conta com esse e-mail.";
+  }
+
+  if (/signup is disabled|signups not allowed/i.test(message)) {
+    return "O cadastro por e-mail está indisponível no momento.";
+  }
+
+  if (/email rate limit exceeded|rate limit/i.test(message)) {
+    return "Muitas tentativas em pouco tempo. Aguarde um instante e tente novamente.";
+  }
+
+  if (/weak password|known to be weak|easy to guess|pwned/i.test(message)) {
+    return "Use uma senha mais forte com letras maiúsculas, minúsculas, números e caractere especial.";
+  }
+
+  return message;
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const normalizeAuthError = (error: { message: string; code?: string | number } | null) => {
     if (!error) return null;
 
-    if (
-      error.code === "weak_password" ||
-      /weak password|known to be weak|easy to guess|pwned/i.test(error.message)
-    ) {
-      return new Error("Use uma senha mais forte com letras maiúsculas, minúsculas, números e caractere especial.");
-    }
-
-    return new Error(error.message);
+    return new Error(translateAuthError(error.message));
   };
 
   const [user, setUser] = useState<User | null>(null);
@@ -224,7 +245,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const normalizedEmail = email.trim().toLowerCase();
     const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
     return {
-      error: error ? new Error(error.message) : null,
+      error: error ? new Error(translateAuthError(error.message)) : null,
       user: data.user ?? null,
     };
   };
