@@ -19,8 +19,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null; user: User | null; needsEmailConfirmation: boolean }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; user: User | null }>;
   signInWithGoogle: (redirectUri?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
@@ -172,20 +172,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signUp({
+      email: normalizedEmail,
       password,
       options: {
         emailRedirectTo: window.location.origin,
         data: { full_name: fullName },
       },
     });
-    return { error: normalizeAuthError(error) };
+    return {
+      error: normalizeAuthError(error),
+      user: data.user ?? null,
+      needsEmailConfirmation: !data.session,
+    };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error ? new Error(error.message) : null };
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    return {
+      error: error ? new Error(error.message) : null,
+      user: data.user ?? null,
+    };
   };
 
   const signInWithGoogle = async (redirectUri?: string) => {
