@@ -100,7 +100,7 @@ export default function Checkout() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
-        .select(`*, events(title, start_at, venue_name), order_items(*, ticket_types(name))`)
+        .select(`*, events(title, start_at, venue_name, cover_image_url, checkout_banner_url), order_items(*, ticket_types(name))`)
         .eq("id", orderId)
         .eq("buyer_user_id", user!.id)
         .maybeSingle();
@@ -372,6 +372,24 @@ export default function Checkout() {
             className="mb-4"
           />
           <h1 className="font-display text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Checkout</h1>
+
+          {(order.events?.checkout_banner_url || order.events?.cover_image_url) && (
+            <div className="mb-6 overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="relative aspect-[21/9] min-h-40 bg-muted">
+                <img
+                  src={order.events?.checkout_banner_url || order.events?.cover_image_url || ""}
+                  alt={order.events?.title ? `Banner do checkout do evento ${order.events.title}` : "Banner do checkout"}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/25 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Resumo do pedido</p>
+                  <p className="font-display text-xl font-bold text-foreground sm:text-2xl">{order.events?.title}</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {isExpired ? (
             <EmptyState

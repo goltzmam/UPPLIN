@@ -36,17 +36,26 @@ export function PostMedia({
     <div className="mx-auto w-full max-w-[22rem]">
       <div className="relative aspect-[9/16] overflow-hidden rounded-lg border border-border bg-muted/30 shadow-soft">
         {mediaType === "image" ? (
-          <img
-            src={mediaUrl}
-            alt={alt}
-            loading="lazy"
-            className={`h-full w-full object-cover ${className}`.trim()}
-            onError={() => setHasError(true)}
-          />
+          <>
+            <img
+              src={mediaUrl}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-105 object-cover blur-2xl opacity-35"
+              onError={() => setHasError(true)}
+            />
+            <img
+              src={mediaUrl}
+              alt={alt}
+              loading="lazy"
+              className={`relative z-10 h-full w-full object-contain ${className}`.trim()}
+              onError={() => setHasError(true)}
+            />
+          </>
         ) : (
           <video
             src={mediaUrl}
-            className={`h-full w-full bg-black object-cover ${className}`.trim()}
+            className={`h-full w-full bg-black object-contain ${className}`.trim()}
             controls
             playsInline
             preload="metadata"
