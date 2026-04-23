@@ -29,7 +29,7 @@ export const SignupEmail = ({
 }: SignupEmailProps) => (
   <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirme seu e-mail para entrar na {siteName}</Preview>
+    <Preview>Confirme seu e-mail para ativar sua conta na {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={eyebrow}>UPPLIN</Text>
@@ -51,6 +51,9 @@ export const SignupEmail = ({
         <Button style={button} href={confirmationUrl}>
           Confirmar meu e-mail
         </Button>
+        <Text style={text}>
+          Depois da confirmação, você verá a tela de boas-vindas e poderá entrar para continuar seu cadastro.
+        </Text>
         <Text style={footer}>
           Se você não criou uma conta, pode ignorar esta mensagem com segurança.
         </Text>

@@ -50,6 +50,7 @@ export default function Login() {
   const { toast } = useToast();
 
   const sessionExpired = searchParams.get("sessao_encerrada") === "1";
+  const emailConfirmed = searchParams.get("confirmado") === "1";
 
   const emailRules = useMemo(() => [{ test: isValidEmail }], []);
   const passwordRules = useMemo(() => [{ test: (v: string) => v.length >= 6 }], []);
@@ -178,6 +179,12 @@ export default function Login() {
           {sessionExpired && (
             <div className="mb-4 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs text-center">
               Sua sessão foi encerrada porque outra conta fez login em outro dispositivo ou aba.
+            </div>
+          )}
+
+          {emailConfirmed && (
+            <div className="mb-4 p-3 rounded-xl bg-success/10 border border-success/20 text-success text-xs text-center">
+              E-mail confirmado com sucesso. Faça login para seguir ao onboarding.
             </div>
           )}
 

@@ -231,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: buildPublicAppUrl("/onboarding"),
+        emailRedirectTo: buildPublicAppUrl("/email-confirmado"),
         data: { full_name: fullName },
       },
     });

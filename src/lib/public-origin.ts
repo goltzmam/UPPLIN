@@ -1,7 +1,4 @@
-const PREVIEW_HOST_PATTERNS = [
-  ".lovableproject.com",
-  ".lovable.app",
-];
+const PREVIEW_HOST_PATTERNS = [".lovableproject.com", ".lovable.app"];
 
 const PUBLIC_APP_ORIGIN = "https://www.upplin.com";
 

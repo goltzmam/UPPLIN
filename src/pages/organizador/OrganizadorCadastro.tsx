@@ -190,7 +190,7 @@ export default function OrganizadorCadastro() {
           email,
           password,
           options: {
-            emailRedirectTo: buildPublicAppUrl("/organizador/onboarding"),
+            emailRedirectTo: buildPublicAppUrl("/email-confirmado"),
             data: { full_name: fullName },
           },
         });
