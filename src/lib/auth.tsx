@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       error.code === "weak_password" ||
       /weak password|known to be weak|easy to guess|pwned/i.test(error.message)
     ) {
-      return new Error("Essa senha é muito fraca ou já foi exposta. Use uma senha mais forte.");
+      return new Error("Use uma senha mais forte com letras maiúsculas, minúsculas, números e caractere especial.");
     }
 
     return new Error(error.message);
