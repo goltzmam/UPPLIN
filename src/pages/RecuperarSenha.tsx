@@ -8,6 +8,7 @@ import { ValidatedInput } from "@/components/ui/validated-input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidEmail } from "@/lib/validation";
+import { getPublicAppOrigin } from "@/lib/public-origin";
 
 export default function RecuperarSenha() {
   const [searchParams] = useSearchParams();
@@ -36,7 +37,7 @@ export default function RecuperarSenha() {
       body: {
         email: normalizedEmail,
         isOrganizer,
-        redirectOrigin: window.location.origin,
+        redirectOrigin: getPublicAppOrigin(),
       },
     });
 

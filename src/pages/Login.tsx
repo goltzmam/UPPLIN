@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { isValidEmail } from "@/lib/validation";
 import { checkSessionConflict } from "@/lib/session-guard";
 import { supabase } from "@/integrations/supabase/client";
+import { getPublicAppOrigin } from "@/lib/public-origin";
 
 const getParticipantDestination = async (userId: string) => {
   const { data, error } = await supabase
@@ -105,7 +106,7 @@ export default function Login() {
 
   const handleGoogleSignIn = async () => {
     setLoading(true);
-    const { error } = await signInWithGoogle(window.location.origin);
+    const { error } = await signInWithGoogle(getPublicAppOrigin());
     if (error) {
       setLoading(false);
       toast({ title: "Erro ao entrar com Google", description: error.message, variant: "destructive" });
