@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
+import { buildPublicAppUrl, getPublicAppOrigin } from "@/lib/public-origin";
 
 interface Profile {
   id: string;
@@ -230,7 +231,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: normalizedEmail,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/onboarding`,
+        emailRedirectTo: buildPublicAppUrl("/email-confirmado"),
         data: { full_name: fullName },
       },
     });
@@ -252,7 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async (redirectUri?: string) => {
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: redirectUri ?? window.location.origin,
+      redirect_uri: redirectUri ?? getPublicAppOrigin(),
     });
 
     return {
