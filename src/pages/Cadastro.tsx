@@ -21,6 +21,7 @@ export default function Cadastro() {
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const { signUp, signInWithGoogle, authReady } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -59,7 +60,16 @@ export default function Cadastro() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isFormValid) return;
+    setSubmitAttempted(true);
+
+    if (!isFormValid) {
+      toast({
+        title: "Revise seus dados",
+        description: "Preencha nome, e-mail e uma senha forte para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoading(true);
     const { error, user, needsEmailConfirmation } = await signUp(email, password, fullName);
@@ -372,10 +382,15 @@ export default function Cadastro() {
               <Button 
                 type="submit" 
                 className="w-full h-11 sm:h-12 text-xs sm:text-sm font-medium btn-gradient" 
-                disabled={submitDisabled}
+                disabled={loading || !authReady}
               >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Conta"}
             </Button>
+            {submitAttempted && !isFormValid ? (
+              <p className="text-xs text-muted-foreground text-center">
+                Confira os campos obrigatórios antes de criar sua conta.
+              </p>
+            ) : null}
           </form>
 
           {/* Footer Links */}

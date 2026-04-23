@@ -40,6 +40,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [conflictEmail, setConflictEmail] = useState<string | null>(null);
   const [pendingSubmit, setPendingSubmit] = useState(false);
   const [searchParams] = useSearchParams();
@@ -51,6 +52,7 @@ export default function Login() {
 
   const emailRules = useMemo(() => [{ test: isValidEmail }], []);
   const passwordRules = useMemo(() => [{ test: (v: string) => v.length >= 6 }], []);
+  const isFormValid = isValidEmail(email) && password.length >= 6;
 
   const doSignIn = async () => {
     setLoading(true);
@@ -68,6 +70,17 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitAttempted(true);
+
+    if (!isFormValid) {
+      toast({
+        title: "Dados incompletos",
+        description: "Informe um e-mail válido e sua senha para entrar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
 
     const { conflict, currentEmail } = await checkSessionConflict(email);
@@ -247,9 +260,14 @@ export default function Login() {
                 validationRules={passwordRules}
               />
             </div>
-            <Button type="submit" className="w-full h-11 sm:h-12 text-xs sm:text-sm font-medium btn-gradient" disabled={submitDisabled}>
+            <Button type="submit" className="w-full h-11 sm:h-12 text-xs sm:text-sm font-medium btn-gradient" disabled={loading || !authReady}>
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
             </Button>
+            {submitAttempted && !isFormValid ? (
+              <p className="text-xs text-muted-foreground text-center">
+                Preencha seu e-mail e senha para continuar.
+              </p>
+            ) : null}
           </form>
 
 
