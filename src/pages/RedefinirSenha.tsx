@@ -18,6 +18,7 @@ export default function RedefinirSenha() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [recoveryReady, setRecoveryReady] = useState(false);
+  const [recoveryChecking, setRecoveryChecking] = useState(true);
   const { toast } = useToast();
   const accountLabel = isOrganizer ? "organizador" : "participante";
 
@@ -25,30 +26,61 @@ export default function RedefinirSenha() {
   const confirmRules = useMemo(() => [{ test: (v: string) => v === password && v.length >= 6 }], [password]);
 
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-    const accessToken = hashParams.get("access_token");
-    const refreshToken = hashParams.get("refresh_token");
-    const type = hashParams.get("type");
+    const clearRecoveryParamsFromUrl = () => {
+      const nextSearchParams = new URLSearchParams(window.location.search);
+      ["access_token", "refresh_token", "expires_in", "token_type", "type", "token_hash"].forEach((key) => {
+        nextSearchParams.delete(key);
+      });
 
-    if (type !== "recovery" || !accessToken || !refreshToken) {
-      setRecoveryReady(false);
-      return;
-    }
+      const nextSearch = nextSearchParams.toString();
+      const nextUrl = `${window.location.pathname}${nextSearch ? `?${nextSearch}` : ""}`;
+      window.history.replaceState({}, document.title, nextUrl);
+    };
 
-    supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-      .then(({ error }) => {
-        if (error) {
-          toast({
-            title: "Link inválido ou expirado",
-            description: "Solicite um novo e-mail de recuperação para continuar.",
-            variant: "destructive"
-          });
+    const initializeRecovery = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const queryParams = new URLSearchParams(window.location.search);
+      const accessToken = hashParams.get("access_token") ?? queryParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token") ?? queryParams.get("refresh_token");
+      const type = hashParams.get("type") ?? queryParams.get("type");
+      const tokenHash = hashParams.get("token_hash") ?? queryParams.get("token_hash");
+
+      try {
+        if (type === "recovery" && accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+
+          if (error) throw error;
+
+          setRecoveryReady(true);
+          clearRecoveryParamsFromUrl();
           return;
         }
 
-        setRecoveryReady(true);
-        window.history.replaceState({}, document.title, window.location.pathname + window.location.search);
-      });
+        if (type === "recovery" && tokenHash) {
+          const { error } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
+
+          if (error) throw error;
+
+          setRecoveryReady(true);
+          clearRecoveryParamsFromUrl();
+          return;
+        }
+
+        const { data: { session } } = await supabase.auth.getSession();
+        setRecoveryReady(Boolean(session));
+      } catch {
+        setRecoveryReady(false);
+        toast({
+          title: "Link inválido ou expirado",
+          description: "Solicite um novo e-mail de recuperação para continuar.",
+          variant: "destructive"
+        });
+      } finally {
+        setRecoveryChecking(false);
+      }
+    };
+
+    void initializeRecovery();
   }, [toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -216,7 +248,12 @@ export default function RedefinirSenha() {
                       validationRules={confirmRules}
                     />
                   </div>
-                  <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading || !recoveryReady}>
+                  {!recoveryReady && !recoveryChecking ? (
+                    <p className="text-xs text-muted-foreground">
+                      Abra o link mais recente enviado para seu e-mail para liberar a troca de senha.
+                    </p>
+                  ) : null}
+                  <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading || recoveryChecking}>
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar nova senha"}
                   </Button>
                 </form>
