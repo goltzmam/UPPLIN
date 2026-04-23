@@ -138,7 +138,7 @@ export default function RecuperarSenha() {
                     Link enviado
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
-                    Se existir uma conta {accountLabel} com esse e-mail, você vai receber uma mensagem da UPPLIN em português com o botão “Redefinir minha senha”.
+                    Se existir uma conta {accountLabel} com esse e-mail, você vai receber uma mensagem da UPPLIN com o botão “Redefinir minha senha”.
                   </p>
                 </div>
                 <Button asChild variant="outline" className="w-full">
