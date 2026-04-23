@@ -99,9 +99,6 @@ export default function Cadastro() {
       return;
     }
 
-    const cleanCity = city.trim();
-    const cleanState = state.trim().toUpperCase().slice(0, 2);
-
     // Send welcome email via Resend (best-effort)
     try {
       await supabase.functions.invoke("send-email", {
