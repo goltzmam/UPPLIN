@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { ValidatedInput } from "@/components/ui/validated-input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { isValidPassword } from "@/lib/validation";
+import { isValidPassword, strongPasswordRequirements } from "@/lib/validation";
 
 export default function RedefinirSenha() {
   const [searchParams] = useSearchParams();
@@ -87,7 +87,7 @@ export default function RedefinirSenha() {
     e.preventDefault();
     
     if (!isValidPassword(password)) {
-      toast({ title: "Senha muito fraca", description: "Crie uma senha com pelo menos 6 caracteres.", variant: "destructive" });
+      toast({ title: "Senha muito fraca", description: "Use uma senha mais forte com letras, números e caractere especial.", variant: "destructive" });
       return;
     }
     
@@ -230,9 +230,16 @@ export default function RedefinirSenha() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       icon={<Lock className="h-4 w-4" />}
-                      validationRules={passwordRules}
+                       validationRules={passwordRules}
                     />
-                    <p className="text-xs text-muted-foreground">Use pelo menos 6 caracteres para manter sua conta protegida.</p>
+                    <div className="rounded-xl border border-border bg-muted/40 px-3 py-3">
+                      <p className="text-xs font-medium text-foreground">Sua senha deve ter:</p>
+                      <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                        {strongPasswordRequirements.map((requirement) => (
+                          <li key={requirement}>• {requirement}</li>
+                        ))}
+                      </ul>
+                    </div>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword" className="text-sm">Confirmar senha</Label>
@@ -245,7 +252,7 @@ export default function RedefinirSenha() {
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
                       icon={<Lock className="h-4 w-4" />}
-                      validationRules={confirmRules}
+                       validationRules={confirmRules}
                     />
                   </div>
                   {!recoveryReady && !recoveryChecking ? (
