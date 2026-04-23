@@ -19,6 +19,22 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { isValidEmail } from "@/lib/validation";
 import { checkSessionConflict } from "@/lib/session-guard";
+import { supabase } from "@/integrations/supabase/client";
+
+const getParticipantDestination = async (userId: string) => {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("cpf")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Error loading participant destination:", error);
+    return "/";
+  }
+
+  return data?.cpf ? "/" : "/onboarding";
+};
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -38,13 +54,14 @@ export default function Login() {
 
   const doSignIn = async () => {
     setLoading(true);
-    const { error } = await signIn(email, password);
+    const { error, user } = await signIn(email, password);
     setLoading(false);
 
     if (error) {
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
     } else {
-      navigate("/");
+      const destination = user ? await getParticipantDestination(user.id) : "/";
+      navigate(destination);
     }
   };
 

@@ -20,6 +20,7 @@ export default function Cadastro() {
   const [state, setState] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
   const { signUp, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -61,7 +62,7 @@ export default function Cadastro() {
     if (!isFormValid) return;
 
     setLoading(true);
-    const { error } = await signUp(email, password, fullName);
+    const { error, user, needsEmailConfirmation } = await signUp(email, password, fullName);
 
     if (error) {
       setLoading(false);
@@ -69,28 +70,34 @@ export default function Cadastro() {
       return;
     }
 
-    // Best-effort: save optional city/state on the freshly-created profile.
-    // Runs after signUp so the auth session exists; ignored on failure.
     const cleanCity = city.trim();
     const cleanState = state.trim().toUpperCase().slice(0, 2);
-    if (cleanCity || cleanState) {
+
+    if (user) {
       try {
-        const { data: { user: newUser } } = await supabase.auth.getUser();
-        if (newUser) {
-          await supabase
-            .from("profiles")
-            .update({
-              city: cleanCity || null,
-              state: cleanState || null,
-            })
-            .eq("id", newUser.id);
-        }
+        await supabase
+          .from("profiles")
+          .update({
+            full_name: fullName.trim(),
+            city: cleanCity || null,
+            state: cleanState || null,
+          })
+          .eq("id", user.id);
       } catch (err) {
-        console.warn("Optional city/state not saved (non-critical):", err);
+        console.warn("Optional profile fields not saved:", err);
       }
     }
 
     setLoading(false);
+
+    if (needsEmailConfirmation) {
+      setAwaitingConfirmation(true);
+      toast({
+        title: "Confirme seu e-mail",
+        description: "Enviamos um link para ativar sua conta. Depois de confirmar, faça login para continuar.",
+      });
+      return;
+    }
 
     // Send welcome email via Resend (best-effort)
     try {
@@ -120,6 +127,38 @@ export default function Cadastro() {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
     }
   };
+
+  // Awaiting confirmation screen
+  if (awaitingConfirmation) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <motion.div
+          initial={{ scale: 0.96, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.3 }}
+          className="max-w-md text-center space-y-5 rounded-3xl border border-border bg-card p-8 shadow-2xl"
+        >
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <Mail className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <h1 className="font-display text-2xl font-bold text-foreground">Confirme seu e-mail</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Enviamos um link de ativação para <span className="font-medium text-foreground">{email}</span>. Depois de confirmar, entre na sua conta para continuar o onboarding.
+            </p>
+          </div>
+          <div className="space-y-3">
+            <Button asChild className="w-full btn-gradient">
+              <Link to="/login">Ir para login</Link>
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Não encontrou o e-mail? Verifique spam, promoções ou tente novamente em instantes.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
 
   // Success Screen
   if (showSuccess) {
