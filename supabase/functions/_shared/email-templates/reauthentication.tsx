@@ -17,17 +17,19 @@ interface ReauthenticationEmailProps {
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>Seu código de verificação da UPPLIN</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
+        <Text style={eyebrow}>UPPLIN</Text>
+        <Heading style={h1}>Confirme sua identidade</Heading>
+        <Text style={text}>
+          Use o código abaixo para concluir esta verificação com segurança.
+        </Text>
         <Text style={codeStyle}>{token}</Text>
         <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+          Esse código expira em breve. Se você não iniciou essa ação, ignore este e-mail.
         </Text>
       </Container>
     </Body>
@@ -36,25 +38,60 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
 export default ReauthenticationEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = {
+  backgroundColor: '#ffffff',
+  fontFamily: 'Inter, Arial, sans-serif',
+  margin: '0',
+  padding: '32px 16px',
+}
+
+const container = {
+  maxWidth: '520px',
+  margin: '0 auto',
+  padding: '32px',
+  borderRadius: '16px',
+  border: '1px solid hsl(0 0% 90%)',
+  borderTop: '6px solid hsl(0 85% 56%)',
+  boxShadow: '0 18px 40px rgba(0, 0, 0, 0.08)',
+}
+
+const eyebrow = {
+  fontSize: '12px',
+  fontWeight: '700' as const,
+  letterSpacing: '1.6px',
+  textTransform: 'uppercase' as const,
+  color: 'hsl(0 85% 56%)',
+  margin: '0 0 16px',
+}
+
 const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+  fontFamily: 'Space Grotesk, Inter, Arial, sans-serif',
+  fontSize: '28px',
+  lineHeight: '1.2',
+  fontWeight: '700' as const,
+  color: 'hsl(0 0% 6%)',
+  margin: '0 0 16px',
 }
+
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: 'hsl(0 0% 22%)',
+  lineHeight: '1.7',
+  margin: '0 0 18px',
 }
+
 const codeStyle = {
   fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
+  fontSize: '28px',
+  fontWeight: '700' as const,
+  color: 'hsl(0 0% 6%)',
+  letterSpacing: '4px',
+  margin: '0 0 24px',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+
+const footer = {
+  fontSize: '13px',
+  color: 'hsl(0 0% 38%)',
+  lineHeight: '1.6',
+  margin: '24px 0 0',
+}

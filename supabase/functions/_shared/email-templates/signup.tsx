@@ -27,31 +27,32 @@ export const SignupEmail = ({
   recipient,
   confirmationUrl,
 }: SignupEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="pt-BR" dir="ltr">
     <Head />
-    <Preview>Confirm your email for {siteName}</Preview>
+    <Preview>Confirme seu e-mail para entrar na {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email</Heading>
+        <Text style={eyebrow}>UPPLIN</Text>
+        <Heading style={h1}>Confirme seu e-mail</Heading>
         <Text style={text}>
-          Thanks for signing up for{' '}
+          Que bom ter você com a gente na{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
-          !
+          .
         </Text>
         <Text style={text}>
-          Please confirm your email address (
+          Para ativar sua conta com o e-mail{' '}
           <Link href={`mailto:${recipient}`} style={link}>
             {recipient}
           </Link>
-          ) by clicking the button below:
+          , confirme o endereço clicando no botão abaixo.
         </Text>
         <Button style={button} href={confirmationUrl}>
-          Verify Email
+          Confirmar meu e-mail
         </Button>
         <Text style={footer}>
-          If you didn't create an account, you can safely ignore this email.
+          Se você não criou uma conta, pode ignorar esta mensagem com segurança.
         </Text>
       </Container>
     </Body>
@@ -60,27 +61,67 @@ export const SignupEmail = ({
 
 export default SignupEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
+const main = {
+  backgroundColor: '#ffffff',
+  fontFamily: 'Inter, Arial, sans-serif',
+  margin: '0',
+  padding: '32px 16px',
+}
+
+const container = {
+  maxWidth: '520px',
+  margin: '0 auto',
+  padding: '32px',
+  borderRadius: '16px',
+  border: '1px solid hsl(0 0% 90%)',
+  borderTop: '6px solid hsl(0 85% 56%)',
+  boxShadow: '0 18px 40px rgba(0, 0, 0, 0.08)',
+}
+
+const eyebrow = {
+  fontSize: '12px',
+  fontWeight: '700' as const,
+  letterSpacing: '1.6px',
+  textTransform: 'uppercase' as const,
+  color: 'hsl(0 85% 56%)',
+  margin: '0 0 16px',
+}
+
 const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
+  fontFamily: 'Space Grotesk, Inter, Arial, sans-serif',
+  fontSize: '28px',
+  lineHeight: '1.2',
+  fontWeight: '700' as const,
+  color: 'hsl(0 0% 6%)',
+  margin: '0 0 16px',
 }
+
 const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontSize: '15px',
+  color: 'hsl(0 0% 22%)',
+  lineHeight: '1.7',
+  margin: '0 0 18px',
 }
-const link = { color: 'inherit', textDecoration: 'underline' }
+
+const link = {
+  color: 'hsl(0 85% 56%)',
+  textDecoration: 'underline',
+}
+
 const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
+  backgroundColor: 'hsl(0 85% 56%)',
+  color: 'hsl(0 0% 100%)',
+  fontSize: '15px',
+  fontWeight: '700' as const,
+  borderRadius: '16px',
+  padding: '14px 24px',
   textDecoration: 'none',
+  display: 'inline-block',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+
+const footer = {
+  fontSize: '13px',
+  color: 'hsl(0 0% 38%)',
+  lineHeight: '1.6',
+  margin: '24px 0 0',
+}
