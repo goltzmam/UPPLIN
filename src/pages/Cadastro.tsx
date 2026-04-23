@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { ValidatedInput } from "@/components/ui/validated-input";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import { isValidEmail, isValidName, isValidPassword } from "@/lib/validation";
+import { isValidEmail, isValidName, isValidPassword, strongPasswordRequirements } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Cadastro() {
@@ -65,7 +65,7 @@ export default function Cadastro() {
     if (!isFormValid) {
       toast({
         title: "Revise seus dados",
-        description: "Preencha nome, e-mail e uma senha forte para continuar.",
+        description: "Preencha nome, e-mail e crie uma senha forte para continuar.",
         variant: "destructive",
       });
       return;
@@ -333,15 +333,23 @@ export default function Cadastro() {
               <ValidatedInput 
                 id="password" 
                 type="password" 
-                placeholder="Mínimo 6 caracteres" 
+                placeholder="Crie uma senha forte" 
                 className="h-11 sm:h-12 text-sm" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
                 required 
-                minLength={6}
+                minLength={8}
                 icon={<Lock className="h-4 w-4" />}
                 validationRules={passwordRules}
               />
+              <div className="rounded-xl border border-border bg-muted/40 px-3 py-3">
+                <p className="text-xs font-medium text-foreground">Sua senha deve ter:</p>
+                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
+                  {strongPasswordRequirements.map((requirement) => (
+                    <li key={requirement}>• {requirement}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
 
             {/* Optional: city + state for location-aware feed */}
