@@ -213,11 +213,6 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Blurred background */}
-      {coverUrl && (
-        <img src={coverUrl} alt="" className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" loading="eager" aria-hidden="true" />
-      )}
-
       {/* Cover image — visible only until the video has its first frame ready.
           When the user pauses, we keep the current video frame visible (do NOT
           re-show the cover) to avoid the "corrupted image" effect caused by
@@ -227,7 +222,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
           src={coverUrl}
           alt=""
           className={cn(
-            "absolute inset-0 w-full h-full object-contain z-[1] transition-opacity duration-200",
+            "absolute inset-0 h-full w-full object-cover z-[1] transition-opacity duration-200",
             videoLoaded ? "opacity-0" : "opacity-100"
           )}
           loading="eager"
@@ -247,7 +242,7 @@ export const FeedVideoPlayer = React.memo(function FeedVideoPlayer({
         onCanPlayThrough={handleVideoLoaded}
         onError={handleVideoError}
         className={cn(
-          "absolute inset-0 w-full h-full object-contain z-[1] transition-opacity duration-200",
+          "absolute inset-0 h-full w-full object-cover z-[1] transition-opacity duration-200",
           videoLoaded ? "opacity-100" : "opacity-0"
         )}
         style={{ transform: "translate3d(0,0,0)", backfaceVisibility: "hidden" }}
