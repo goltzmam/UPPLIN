@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -14,11 +14,16 @@ interface Profile {
   state: string | null;
 }
 
+export type OnboardingStatus = "participant_pending" | "participant_complete" | "organizer_pending" | "organizer_complete";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  authReady: boolean;
+  onboardingStatus: OnboardingStatus | null;
+  hasCompletedParticipantOnboarding: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null; user: User | null; needsEmailConfirmation: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null; user: User | null }>;
   signInWithGoogle: (redirectUri?: string) => Promise<{ error: Error | null }>;
@@ -51,8 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authReady, setAuthReady] = useState(false);
 
-  const fetchProfile = async (currentUser: User) => {
+  const fetchProfile = useCallback(async (currentUser: User) => {
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
@@ -90,22 +96,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     return createdProfile;
-  };
+  }, []);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       const profileData = await fetchProfile(user);
       setProfile(profileData);
     }
-  };
+  }, [fetchProfile, user]);
 
   const getActiveUserId = (): string | null => {
     return localStorage.getItem(AUTH_USER_KEY);
   };
 
+  const loadProfileForSession = useCallback(async (currentSession: Session | null) => {
+    setSession(currentSession);
+    setUser(currentSession?.user ?? null);
+
+    if (!currentSession?.user) {
+      setProfile(null);
+      localStorage.removeItem(AUTH_USER_KEY);
+      setLoading(false);
+      setAuthReady(true);
+      return;
+    }
+
+    localStorage.setItem(AUTH_USER_KEY, currentSession.user.id);
+    const profileData = await fetchProfile(currentSession.user);
+    setProfile(profileData);
+    setLoading(false);
+    setAuthReady(true);
+  }, [fetchProfile]);
+
   useEffect(() => {
+    let isMounted = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, currentSession) => {
+      (event, currentSession) => {
         const incomingUserId = currentSession?.user?.id ?? null;
         const currentActiveId = localStorage.getItem(AUTH_USER_KEY);
 
@@ -117,20 +144,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           incomingUserId &&
           currentActiveId !== incomingUserId
         ) {
-          // A different user is now logged in from another tab — sign out here too.
-          await supabase.auth.signOut();
+          void supabase.auth.signOut();
           setSession(null);
           setUser(null);
           setProfile(null);
           setLoading(false);
+          setAuthReady(true);
           localStorage.removeItem(AUTH_USER_KEY);
-          // Redirect to login with a notice
           window.location.href = "/login?sessao_encerrada=1";
           return;
         }
-
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
 
         if (event === "SIGNED_IN" && incomingUserId) {
           localStorage.setItem(AUTH_USER_KEY, incomingUserId);
@@ -140,36 +163,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem(AUTH_USER_KEY);
         }
 
-        if (currentSession?.user) {
-          setTimeout(async () => {
-            const profileData = await fetchProfile(currentSession.user);
-            setProfile(profileData);
-            setLoading(false);
-          }, 0);
-        } else {
-          setProfile(null);
-          setLoading(false);
-        }
+        queueMicrotask(() => {
+          if (!isMounted) return;
+          void loadProfileForSession(currentSession);
+        });
       }
     );
 
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-
-      if (currentSession?.user) {
-        localStorage.setItem(AUTH_USER_KEY, currentSession.user.id);
-        fetchProfile(currentSession.user).then((profileData) => {
-          setProfile(profileData);
-          setLoading(false);
-        });
-      } else {
-        setLoading(false);
-      }
+      if (!isMounted) return;
+      void loadProfileForSession(currentSession);
+    }).catch(() => {
+      if (!isMounted) return;
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setLoading(false);
+      setAuthReady(true);
+      localStorage.removeItem(AUTH_USER_KEY);
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchProfile, loadProfileForSession]);
+
+  const hasCompletedParticipantOnboarding = useMemo(() => Boolean(profile?.cpf), [profile?.cpf]);
+  const onboardingStatus = useMemo<OnboardingStatus | null>(() => {
+    if (!user) return null;
+    return hasCompletedParticipantOnboarding ? "participant_complete" : "participant_pending";
+  }, [hasCompletedParticipantOnboarding, user]);
+
+  useEffect(() => {
+    if (!authReady) {
+      setLoading(true);
+    } else {
+      setLoading(false);
+    }
+  }, [authReady]);
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -278,6 +310,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         loading,
+        authReady,
+        onboardingStatus,
+        hasCompletedParticipantOnboarding,
         signUp,
         signIn,
         signInWithGoogle,
