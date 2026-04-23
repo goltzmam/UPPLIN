@@ -534,6 +534,7 @@ export type Database = {
         Row: {
           address_text: string | null
           category: string | null
+          checkout_banner_url: string | null
           commission_percent_snapshot: number | null
           cover_image_url: string | null
           created_at: string | null
@@ -556,6 +557,7 @@ export type Database = {
         Insert: {
           address_text?: string | null
           category?: string | null
+          checkout_banner_url?: string | null
           commission_percent_snapshot?: number | null
           cover_image_url?: string | null
           created_at?: string | null
@@ -578,6 +580,7 @@ export type Database = {
         Update: {
           address_text?: string | null
           category?: string | null
+          checkout_banner_url?: string | null
           commission_percent_snapshot?: number | null
           cover_image_url?: string | null
           created_at?: string | null
