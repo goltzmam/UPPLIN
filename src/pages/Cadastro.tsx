@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ValidatedInput } from "@/components/ui/validated-input";
+import { PasswordRequirementsChecklist } from "@/components/auth/PasswordRequirementsChecklist";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
-import { isValidEmail, isValidName, isValidPassword, strongPasswordRequirements } from "@/lib/validation";
+import { isValidEmail, isValidName, isValidPassword } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPublicAppUrl } from "@/lib/public-origin";
 
@@ -343,14 +344,7 @@ export default function Cadastro() {
                 icon={<Lock className="h-4 w-4" />}
                 validationRules={passwordRules}
               />
-              <div className="rounded-xl border border-border bg-muted/40 px-3 py-3">
-                <p className="text-xs font-medium text-foreground">Sua senha deve ter:</p>
-                <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                  {strongPasswordRequirements.map((requirement) => (
-                    <li key={requirement}>• {requirement}</li>
-                  ))}
-                </ul>
-              </div>
+              <PasswordRequirementsChecklist password={password} />
             </div>
 
             {/* Optional: city + state for location-aware feed */}

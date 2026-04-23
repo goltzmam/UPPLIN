@@ -12,6 +12,29 @@ export const strongPasswordRequirements = [
   "Um caractere especial",
 ] as const;
 
+export const getPasswordRequirementStates = (password: string) => [
+  {
+    label: strongPasswordRequirements[0],
+    met: password.length >= 8,
+  },
+  {
+    label: strongPasswordRequirements[1],
+    met: /[A-Z]/.test(password),
+  },
+  {
+    label: strongPasswordRequirements[2],
+    met: /[a-z]/.test(password),
+  },
+  {
+    label: strongPasswordRequirements[3],
+    met: /\d/.test(password),
+  },
+  {
+    label: strongPasswordRequirements[4],
+    met: /[^A-Za-z0-9]/.test(password),
+  },
+];
+
 // Password validation
 export const isValidPassword = (password: string): boolean => {
   return (
