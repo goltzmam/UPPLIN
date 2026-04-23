@@ -112,8 +112,6 @@ export default function Login() {
     }
   };
 
-  const submitDisabled = loading || !authReady;
-
   return (
     <div className="min-h-[100dvh] bg-background flex items-center justify-center px-4 py-8 sm:p-6 relative overflow-hidden">
       {/* Conflict Dialog */}

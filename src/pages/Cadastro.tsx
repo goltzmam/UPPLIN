@@ -140,8 +140,6 @@ export default function Cadastro() {
     }
   };
 
-  const submitDisabled = loading || !isFormValid || !authReady;
-
   // Awaiting confirmation screen
   if (awaitingConfirmation) {
     return (
