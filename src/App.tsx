@@ -9,6 +9,7 @@ import { stopAllMediaPipelines } from "@/lib/media";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
+import EmailConfirmado from "./pages/EmailConfirmado";
 import Onboarding from "./pages/Onboarding";
 import Eventos from "./pages/Eventos";
 import Evento from "./pages/Evento";
@@ -113,6 +114,7 @@ function AnimatedRoutes() {
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
           <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/email-confirmado" element={<EmailConfirmado />} />
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
           <Route path="/redefinir-senha" element={<RedefinirSenha />} />
           <Route path="/eventos" element={<Eventos />} />
