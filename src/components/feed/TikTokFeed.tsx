@@ -224,7 +224,7 @@ const FeedRow = React.memo(function FeedRow({
       onTouchEnd={handleSwipeEnd}
     >
       <div className="relative w-full h-full overflow-hidden">
-        {/* Media container - blurred bg + object-contain to preserve aspect ratio */}
+        {/* Media container - full bleed for immersive feed */}
         <div className="absolute inset-0 w-full h-full">
           {item.videoUrl ? (
             <FeedVideoPlayer
@@ -234,25 +234,13 @@ const FeedRow = React.memo(function FeedRow({
               forceStop={isScrolling}
             />
           ) : item.coverImageUrl ? (
-            <>
-              {/* Blurred background fill */}
-              <img 
-                src={item.coverImageUrl} 
-                alt="" 
-                aria-hidden="true"
-                className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60" 
-                loading={isActive ? "eager" : "lazy"} 
-                decoding="async"
-              />
-              {/* Main image preserving aspect ratio */}
-              <img 
-                src={item.coverImageUrl} 
-                alt={item.title} 
-                className="absolute inset-0 w-full h-full object-contain z-[1]" 
-                loading={isActive ? "eager" : "lazy"} 
-                decoding="async"
-              />
-            </>
+            <img 
+              src={item.coverImageUrl} 
+              alt={item.title} 
+              className="absolute inset-0 h-full w-full object-cover z-[1]" 
+              loading={isActive ? "eager" : "lazy"} 
+              decoding="async"
+            />
           ) : (
             <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20" />
           )}
