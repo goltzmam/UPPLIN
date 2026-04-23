@@ -182,7 +182,7 @@ export function ShareButton({
           type="button"
           variant="outline"
           size="sm"
-          className={`hover:border-primary hover:text-primary transition-colors [&_svg]:hover:text-primary ${className ?? ""}`}
+          className={`hover:border-primary hover:bg-primary hover:text-primary-foreground transition-colors [&_svg]:hover:text-primary-foreground ${className ?? ""}`}
           onClick={(e) => e.stopPropagation()}
         >
           <Share2 className="h-4 w-4 mr-2" />
