@@ -33,6 +33,12 @@ export default function Index() {
   const queryClient = useQueryClient();
   const { user, profile } = useAuth();
 
+  useEffect(() => {
+    if (user && !profile?.cpf) {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [navigate, profile?.cpf, user]);
+
   // ─── Location: priority Manual > GPS > Profile > Default ─────────────
   const {
     coords,
