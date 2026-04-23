@@ -196,7 +196,13 @@ export default function OrganizadorCadastro() {
 
         if (authError) {
           if (/weak password|known to be weak|easy to guess|pwned/i.test(authError.message)) {
-            throw new Error("Essa senha é muito fraca ou já foi exposta. Use uma senha mais forte.");
+            throw new Error("Use uma senha mais forte com letras maiúsculas, minúsculas, números e caractere especial.");
+          }
+          if (/email not confirmed/i.test(authError.message)) {
+            throw new Error("Confirme seu e-mail para continuar.");
+          }
+          if (/user already registered|already registered/i.test(authError.message)) {
+            throw new Error("Já existe uma conta com esse e-mail.");
           }
           throw authError;
         }
