@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ValidatedInput } from "@/components/ui/validated-input";
+import { PasswordRequirementsChecklist } from "@/components/auth/PasswordRequirementsChecklist";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { isValidPassword, strongPasswordRequirements } from "@/lib/validation";
+import { isValidPassword } from "@/lib/validation";
 
 export default function RedefinirSenha() {
   const [searchParams] = useSearchParams();
@@ -232,14 +233,7 @@ export default function RedefinirSenha() {
                       icon={<Lock className="h-4 w-4" />}
                        validationRules={passwordRules}
                     />
-                    <div className="rounded-xl border border-border bg-muted/40 px-3 py-3">
-                      <p className="text-xs font-medium text-foreground">Sua senha deve ter:</p>
-                      <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
-                        {strongPasswordRequirements.map((requirement) => (
-                          <li key={requirement}>• {requirement}</li>
-                        ))}
-                      </ul>
-                    </div>
+                    <PasswordRequirementsChecklist password={password} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword" className="text-sm">Confirmar senha</Label>
