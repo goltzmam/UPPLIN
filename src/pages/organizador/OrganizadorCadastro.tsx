@@ -536,20 +536,26 @@ export default function OrganizadorCadastro() {
                     <ValidatedInput 
                       id="password" 
                       type="password" 
-                      placeholder="Mínimo 6 caracteres" 
+                      placeholder="Crie uma senha forte" 
                       className="h-10 sm:h-11 text-sm" 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
                       required 
-                      minLength={6}
+                      minLength={8}
                       icon={<Lock className="h-4 w-4" />}
                       validationRules={passwordRules}
                     />
+                    <PasswordRequirementsChecklist password={password} />
                   </div>
                   <Button type="submit" className="w-full h-10 sm:h-11 gap-2 text-xs sm:text-sm btn-gradient" disabled={!isStep1Valid}>
                     Continuar
                     <ChevronRight className="h-4 w-4" />
                   </Button>
+                  {!isStep1Valid ? (
+                    <p className="text-[11px] sm:text-xs text-muted-foreground text-center">
+                      Preencha todos os campos e atenda a todos os requisitos da senha para continuar.
+                    </p>
+                  ) : null}
 
                   {/* Divider */}
                   <div className="flex items-center gap-3 my-1">
