@@ -233,7 +233,6 @@ export default function RedefinirSenha() {
                       icon={<Lock className="h-4 w-4" />}
                        validationRules={passwordRules}
                     />
-                    <PasswordRequirementsChecklist password={password} />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="confirmPassword" className="text-sm">Confirmar senha</Label>
@@ -248,15 +247,25 @@ export default function RedefinirSenha() {
                       icon={<Lock className="h-4 w-4" />}
                        validationRules={confirmRules}
                     />
+                    <PasswordRequirementsChecklist password={password} confirmPassword={confirmPassword} />
                   </div>
                   {!recoveryReady && !recoveryChecking ? (
                     <p className="text-xs text-muted-foreground">
                       Abra o link mais recente enviado para seu e-mail para liberar a troca de senha.
                     </p>
                   ) : null}
-                  <Button type="submit" className="w-full h-11 sm:h-12 text-sm sm:text-base" disabled={loading || recoveryChecking}>
+                  <Button
+                    type="submit"
+                    className="w-full h-11 sm:h-12 text-sm sm:text-base"
+                    disabled={loading || recoveryChecking || !isValidPassword(password) || password !== confirmPassword}
+                  >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar nova senha"}
                   </Button>
+                  {(!isValidPassword(password) || password !== confirmPassword) ? (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Atenda a todos os requisitos da senha e confirme a mesma senha para continuar.
+                    </p>
+                  ) : null}
                 </form>
 
                 <div className="text-center">
