@@ -383,13 +383,13 @@ export default function Cadastro() {
               <Button 
                 type="submit" 
                 className="w-full h-11 sm:h-12 text-xs sm:text-sm font-medium btn-gradient" 
-                disabled={loading || !authReady}
+                disabled={loading || !authReady || !isFormValid}
               >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar Conta"}
             </Button>
-            {submitAttempted && !isFormValid ? (
+            {!isFormValid ? (
               <p className="text-xs text-muted-foreground text-center">
-                Confira os campos obrigatórios antes de criar sua conta.
+                Preencha todos os campos e atenda a todos os requisitos da senha para criar sua conta.
               </p>
             ) : null}
           </form>
