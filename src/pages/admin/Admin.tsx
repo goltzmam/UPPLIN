@@ -38,6 +38,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { translateCpfError } from "@/lib/cpfErrors";
 
 export default function Admin() {
   const [searchUsers, setSearchUsers] = useState("");
@@ -122,8 +123,9 @@ export default function Admin() {
       toast.success(status === "approved" ? "CPF atualizado com sucesso" : "Solicitação rejeitada");
       setCpfDialog({ open: false, request: null });
     },
-    onError: () => {
-      toast.error("Erro ao processar solicitação");
+    onError: (err) => {
+      const { title, description } = translateCpfError(err, "cpf_request");
+      toast.error(title, { description });
     },
   });
 

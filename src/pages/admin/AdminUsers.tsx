@@ -54,6 +54,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { translateCpfError } from "@/lib/cpfErrors";
 import { useAuth } from "@/lib/auth";
 
 interface UserWithRoles {
@@ -187,8 +188,9 @@ export default function AdminUsers() {
       setSuspendDialog({ open: false, user: null, action: null });
       setSuspendReason("");
     },
-    onError: () => {
-      toast.error("Erro ao atualizar status do usuário");
+    onError: (err) => {
+      const { title, description } = translateCpfError(err, "profile");
+      toast.error(title, { description });
     },
   });
 
@@ -226,8 +228,9 @@ export default function AdminUsers() {
       setRoleDialog({ open: false, user: null });
       setSelectedRole("");
     },
-    onError: () => {
-      toast.error("Erro ao atualizar roles");
+    onError: (err) => {
+      const { title, description } = translateCpfError(err, "profile");
+      toast.error(title, { description });
     },
   });
 

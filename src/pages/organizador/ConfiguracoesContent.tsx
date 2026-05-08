@@ -128,7 +128,7 @@ export default function ConfiguracoesContent() {
     },
     onError: (err: any) => {
       if (docType === "cpf") {
-        const { title, description } = translateCpfError(err);
+        const { title, description } = translateCpfError(err, "profile");
         toast({ title, description, variant: "destructive" });
       } else {
         toast({

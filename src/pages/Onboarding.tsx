@@ -89,7 +89,7 @@ export default function Onboarding() {
     });
 
     if (error) {
-      const { title, description } = translateCpfError(error);
+      const { title, description } = translateCpfError(error, "profile");
       toast({ title, description, variant: "destructive" });
       setSaving(false);
       return;

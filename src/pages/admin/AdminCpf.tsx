@@ -40,6 +40,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { translateCpfError } from "@/lib/cpfErrors";
 
 interface CpfRequest {
   id: string;
@@ -147,8 +148,9 @@ export default function AdminCpf() {
       setActionDialog({ open: false, request: null, action: null });
       setRejectReason("");
     },
-    onError: () => {
-      toast.error("Erro ao processar solicitação");
+    onError: (err) => {
+      const { title, description } = translateCpfError(err, "cpf_request");
+      toast.error(title, { description });
     },
   });
 
