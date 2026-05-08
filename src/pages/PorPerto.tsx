@@ -49,13 +49,20 @@ const grayIcon = createMarkerIcon("#94a3b8");
 
 // Photo marker: shows event cover with colored ring + pin tail
 function createPhotoMarker(imageUrl: string | null, color: string, title: string) {
-  const safeTitle = (title || "").replace(/"/g, "&quot;");
+  const safeTitle = (title || "Evento").replace(/"/g, "&quot;");
+  const initials = (title || "EV")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() || "")
+    .join("") || "EV";
+  const fallback = `<div class="photo-marker__fallback">${initials}</div>`;
   const img = imageUrl
-    ? `<img src="${imageUrl}" alt="${safeTitle}" loading="lazy" />`
-    : `<div class="photo-marker__fallback">📍</div>`;
+    ? `<img src="${imageUrl}" alt="${safeTitle}" loading="lazy" onerror="this.parentNode.innerHTML='${fallback.replace(/'/g, "&#39;")}'" />`
+    : fallback;
   return L.divIcon({
     html: `
-      <div class="photo-marker" style="--ring:${color}">
+      <div class="photo-marker" style="--ring:${color}" role="button" aria-label="${safeTitle}" title="${safeTitle}">
         <div class="photo-marker__avatar">${img}</div>
         <div class="photo-marker__tail"></div>
       </div>
@@ -316,18 +323,34 @@ export default function PorPerto() {
                   to={`/evento/${ev.slug || ev.id}`}
                   className="block p-2.5 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-card/80 transition-colors"
                 >
-                  <div className="flex gap-3">
-                    {ev.cover_image_url ? (
-                      <img
-                        src={ev.cover_image_url}
-                        alt={ev.title}
-                        className="w-16 h-16 rounded-lg object-cover shrink-0"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
-                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex gap-3 items-center">
+                    <div
+                      className="w-14 h-14 rounded-full overflow-hidden shrink-0 ring-[3px] shadow-md"
+                      style={{ boxShadow: `0 0 0 3px ${getMarkerColor(ev.start_at)}` }}
+                    >
+                      {ev.cover_image_url ? (
+                        <img
+                          src={ev.cover_image_url}
+                          alt={ev.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            const t = e.currentTarget;
+                            t.style.display = "none";
+                            const sib = t.nextElementSibling as HTMLElement | null;
+                            if (sib) sib.style.display = "flex";
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className="w-full h-full items-center justify-center text-[11px] font-bold text-white"
+                        style={{
+                          display: ev.cover_image_url ? "none" : "flex",
+                          background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+                        }}
+                      >
+                        {(ev.title || "EV").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join("")}
                       </div>
-                    )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-sm line-clamp-2 leading-tight">
                         {ev.title}
