@@ -38,6 +38,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import { translateCpfError } from "@/lib/cpfErrors";
 
 export default function Admin() {
   const [searchUsers, setSearchUsers] = useState("");
