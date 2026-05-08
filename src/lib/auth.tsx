@@ -37,7 +37,7 @@ interface AuthContextType {
 
 const AUTH_USER_KEY = "upplin_active_user_id";
 
-const translateAuthError = (message: string) => {
+export const translateAuthError = (message: string) => {
   if (/email not confirmed/i.test(message)) {
     return "Confirme seu e-mail antes de entrar na sua conta.";
   }
@@ -60,6 +60,22 @@ const translateAuthError = (message: string) => {
 
   if (/weak password|known to be weak|easy to guess|pwned/i.test(message)) {
     return "Use uma senha mais forte com letras maiúsculas, minúsculas, números e caractere especial.";
+  }
+
+  if (/sign[- ]?in was cancelled|user cancelled|cancelled by user|popup closed|access_denied/i.test(message)) {
+    return "Login cancelado. Tente novamente quando quiser.";
+  }
+
+  if (/popup blocked|popup_blocked/i.test(message)) {
+    return "O navegador bloqueou a janela de login. Permita pop-ups e tente novamente.";
+  }
+
+  if (/network|failed to fetch|fetch failed|timeout/i.test(message)) {
+    return "Falha de conexão. Verifique sua internet e tente novamente.";
+  }
+
+  if (/oauth|provider/i.test(message)) {
+    return "Não conseguimos concluir o login com o provedor. Tente novamente.";
   }
 
   return message;
@@ -237,7 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return {
-      error: result.error ? new Error(String(result.error)) : null,
+      error: result.error ? new Error(translateAuthError(String((result.error as any)?.message ?? result.error))) : null,
     };
   };
 

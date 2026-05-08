@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/lib/auth";
+import { useAuth, translateAuthError } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { isValidEmail } from "@/lib/validation";
 import { checkSessionConflict } from "@/lib/session-guard";
@@ -106,10 +106,11 @@ export default function OrganizadorLogin() {
         redirect_uri: buildPublicAppUrl("/organizador/onboarding"),
       });
       if (error) {
-        toast({ title: "Erro com Google", description: String(error), variant: "destructive" });
+        const msg = translateAuthError(String((error as any)?.message ?? error));
+        toast({ title: "Erro ao entrar com Google", description: msg, variant: "destructive" });
       }
     } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      toast({ title: "Erro", description: translateAuthError(err?.message ?? "Não foi possível entrar."), variant: "destructive" });
     } finally {
       setGoogleLoading(false);
     }
