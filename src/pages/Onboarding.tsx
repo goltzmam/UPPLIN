@@ -256,10 +256,10 @@ export default function Onboarding() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => navigate("/")}
+                  onClick={handleGoBack}
                   className="w-full h-12 rounded-xl text-muted-foreground hover:text-foreground"
                 >
-                  Agora não, explorar a plataforma
+                  Continuar explorando
                 </Button>
                 <p className="text-[11px] text-center text-muted-foreground">
                   Você poderá cadastrar o CPF mais tarde, antes de comprar ingressos.
