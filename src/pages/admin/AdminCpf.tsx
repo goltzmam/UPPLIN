@@ -40,6 +40,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
+import { translateCpfError } from "@/lib/cpfErrors";
 
 interface CpfRequest {
   id: string;
