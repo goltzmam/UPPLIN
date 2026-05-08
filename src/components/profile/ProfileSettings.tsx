@@ -80,7 +80,7 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
 
     if (error) {
       if (updates.cpf) {
-        const { title, description } = translateCpfError(error);
+        const { title, description } = translateCpfError(error, "profile");
         toast({ title, description, variant: "destructive" });
       } else {
         toast({
