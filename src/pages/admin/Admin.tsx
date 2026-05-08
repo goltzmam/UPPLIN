@@ -123,8 +123,9 @@ export default function Admin() {
       toast.success(status === "approved" ? "CPF atualizado com sucesso" : "Solicitação rejeitada");
       setCpfDialog({ open: false, request: null });
     },
-    onError: () => {
-      toast.error("Erro ao processar solicitação");
+    onError: (err) => {
+      const { title, description } = translateCpfError(err, "cpf_request");
+      toast.error(title, { description });
     },
   });
 
