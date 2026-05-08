@@ -22,9 +22,10 @@ export function MarkerCluster({ markers }: MarkerClusterProps) {
   useEffect(() => {
     const clusterGroup = L.markerClusterGroup({
       maxClusterRadius: 50,
-      spiderfyOnMaxZoom: true,
+      spiderfyOnMaxZoom: false,
       showCoverageOnHover: false,
       zoomToBoundsOnClick: true,
+      disableClusteringAtZoom: 17,
       iconCreateFunction: (cluster) => {
         const count = cluster.getChildCount();
         let size: "small" | "medium" | "large" = "small";

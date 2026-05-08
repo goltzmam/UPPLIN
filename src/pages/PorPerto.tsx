@@ -47,29 +47,38 @@ const greenIcon = createMarkerIcon("#22c55e");
 const blueIcon = createMarkerIcon("#3b82f6");
 const grayIcon = createMarkerIcon("#94a3b8");
 
-// Photo marker: shows only event cover with colored ring
+const escapeHtml = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+// Photo marker: shows event cover with stable centered anchor + visible event name
 function createPhotoMarker(imageUrl: string | null, color: string, title: string) {
-  const safeTitle = (title || "Evento").replace(/"/g, "&quot;");
+  const safeTitle = escapeHtml(title || "Evento");
   const initials = (title || "EV")
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((w) => w[0]?.toUpperCase() || "")
     .join("") || "EV";
-  const fallback = `<div class="photo-marker__fallback">${initials}</div>`;
+  const fallback = `<div class="photo-marker__fallback">${escapeHtml(initials)}</div>`;
   const img = imageUrl
-    ? `<img src="${imageUrl}" alt="${safeTitle}" loading="lazy" onerror="this.parentNode.innerHTML='${fallback.replace(/'/g, "&#39;")}'" />`
+    ? `${fallback}<img src="${escapeHtml(imageUrl)}" alt="${safeTitle}" loading="lazy" onerror="this.remove()" />`
     : fallback;
   return L.divIcon({
     html: `
       <div class="photo-marker" style="--ring:${color}" role="button" aria-label="${safeTitle}" title="${safeTitle}">
         <div class="photo-marker__avatar">${img}</div>
+        <div class="photo-marker__label">${safeTitle}</div>
       </div>
     `,
     className: "photo-marker-wrapper",
-    iconSize: [56, 56],
-    iconAnchor: [28, 28],
-    popupAnchor: [0, -28],
+    iconSize: [136, 82],
+    iconAnchor: [68, 28],
+    popupAnchor: [0, -36],
   });
 }
 
