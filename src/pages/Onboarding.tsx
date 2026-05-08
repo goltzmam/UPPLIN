@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CreditCard, Check, ArrowRight, Shield, Ticket, Loader2 } from "lucide-react";
+import { CreditCard, Check, ArrowRight, ArrowLeft, Shield, Ticket, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,8 +129,31 @@ export default function Onboarding() {
     );
   }
 
+  // Volta respeitando o histórico — se não houver, vai para o feed (/)
+  const handleGoBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate("/", { replace: true });
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-secondary via-secondary/95 to-secondary flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-secondary via-secondary/95 to-secondary flex items-center justify-center p-4 relative">
+      {/* Botão Voltar — sempre visível, em todas as telas */}
+      {step === 1 && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={handleGoBack}
+          aria-label="Voltar para o feed"
+          className="fixed top-3 left-3 z-50 h-10 px-3 rounded-full bg-background/70 backdrop-blur-md border border-border/50 text-foreground hover:bg-background/90"
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Voltar
+        </Button>
+      )}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -233,10 +256,10 @@ export default function Onboarding() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => navigate("/")}
+                  onClick={handleGoBack}
                   className="w-full h-12 rounded-xl text-muted-foreground hover:text-foreground"
                 >
-                  Agora não, explorar a plataforma
+                  Continuar explorando
                 </Button>
                 <p className="text-[11px] text-center text-muted-foreground">
                   Você poderá cadastrar o CPF mais tarde, antes de comprar ingressos.
