@@ -655,8 +655,13 @@ export function TikTokFeed({
     const v = touchVelocityRef.current; // px/ms
     const totalTime = performance.now() - touchStartTimeRef.current;
     const totalDelta = lastTouchYRef.current - touchStartY.current;
-    // Only treat as flick if quick gesture with meaningful velocity
-    if (totalTime < 350 && Math.abs(v) > 0.35 && Math.abs(totalDelta) > 20) {
+    // Flick: require fast AND meaningful gesture so swipes leves não pulam
+    const minDelta = Math.max(40, containerHeight * 0.08);
+    const isFlick =
+      totalTime < 280 &&
+      Math.abs(v) > 0.6 &&
+      Math.abs(totalDelta) > minDelta;
+    if (isFlick) {
       const currentIdx = Math.round(container.scrollTop / containerHeight);
       const dir = v < 0 ? 1 : -1; // finger up → next, finger down → prev
       const targetIdx = Math.max(0, Math.min(items.length - 1, currentIdx + dir));
