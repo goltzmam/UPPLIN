@@ -332,7 +332,6 @@ export default function Index() {
       </div>
 
       <FeedHeader />
-      <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );
 
@@ -387,6 +386,7 @@ export default function Index() {
       <MobileFeed />
       <DesktopLayout />
       <BottomNav />
+      <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Location prompts — non-blocking, dismissible */}
       <LocationPrompt
