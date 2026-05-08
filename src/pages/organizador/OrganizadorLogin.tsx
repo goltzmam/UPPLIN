@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useAuth } from "@/lib/auth";
+import { useAuth, translateAuthError } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { isValidEmail } from "@/lib/validation";
 import { checkSessionConflict } from "@/lib/session-guard";
