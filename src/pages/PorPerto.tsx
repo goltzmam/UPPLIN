@@ -93,6 +93,7 @@ export default function PorPerto() {
   const [geoState, setGeoState] = useState<GeoState>("idle");
   const [selectedEvent, setSelectedEvent] = useState<NearbyEvent | null>(null);
   const [showMapHint, setShowMapHint] = useState(false);
+  const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
 
   // ── Request geolocation ──────────────────────────────────────────
   const requestLocation = useCallback(() => {
