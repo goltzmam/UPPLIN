@@ -302,6 +302,19 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                       className="w-full max-h-52 object-contain mx-auto"
                     />
                   )}
+                  {selectedFile.type.startsWith('image/') && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditorFile(selectedFile);
+                        setShowEditor(true);
+                      }}
+                      className="absolute top-2 right-2 flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/70 text-white text-xs font-medium hover:bg-black/90 transition-colors"
+                    >
+                      <Wand2 className="h-3.5 w-3.5" />
+                      Editar
+                    </button>
+                  )}
                 </div>
                 <div className="px-4 pb-3 pt-1">
                   <p className="text-xs text-muted-foreground truncate">{selectedFile.name}</p>
@@ -324,13 +337,23 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
                           toast({ title: "Arquivo inválido", description: validationError, variant: "destructive" });
                           return;
                         }
-                      setSelectedFile(file);
+                      if (file.type.startsWith('image/')) {
+                        setEditorFile(file);
+                        setShowEditor(true);
+                      } else {
+                        setSelectedFile(file);
+                      }
                     }
+                    // allow re-picking same file
+                    e.target.value = "";
                   }}
                 />
                 <Upload className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
                 <p className="text-sm text-muted-foreground">
                   Clique para selecionar imagem ou vídeo vertical
+                </p>
+                <p className="text-[11px] text-muted-foreground/70 mt-1">
+                  Imagens podem ser editadas (cortar, ajustar, filtros)
                 </p>
               </label>
             )}
