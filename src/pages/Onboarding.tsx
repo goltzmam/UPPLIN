@@ -74,7 +74,7 @@ export default function Onboarding() {
 
     // Pré-validação: formato, conexão e duplicidade — sempre em pt-BR
     const pre = await validateCpfBeforeSave(cpf, { ignoreUserId: user?.id });
-    if (!pre.ok) {
+    if (pre.ok === false) {
       toast({
         title: pre.title,
         description: pre.description,
