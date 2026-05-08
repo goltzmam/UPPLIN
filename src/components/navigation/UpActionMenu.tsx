@@ -465,6 +465,21 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Photo Editor */}
+    <PhotoEditorDialog
+      file={editorFile}
+      open={showEditor}
+      onOpenChange={(open) => {
+        setShowEditor(open);
+        if (!open) setEditorFile(null);
+      }}
+      onConfirm={async (edited) => {
+        setSelectedFile(edited);
+        setShowEditor(false);
+        setEditorFile(null);
+      }}
+    />
     </>
   );
 }
