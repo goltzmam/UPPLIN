@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
+import { translateCpfError } from "@/lib/cpfErrors";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCPF, formatCNPJ, formatPhone, isValidCPF, isValidCNPJ } from "@/lib/validation";
 
