@@ -60,17 +60,18 @@ function createPhotoMarker(imageUrl: string | null, color: string, title: string
   const img = imageUrl
     ? `<img src="${imageUrl}" alt="${safeTitle}" loading="lazy" onerror="this.parentNode.innerHTML='${fallback.replace(/'/g, "&#39;")}'" />`
     : fallback;
+  const shortTitle = (title || "Evento").length > 22 ? (title || "Evento").slice(0, 22) + "…" : (title || "Evento");
   return L.divIcon({
     html: `
       <div class="photo-marker" style="--ring:${color}" role="button" aria-label="${safeTitle}" title="${safeTitle}">
         <div class="photo-marker__avatar">${img}</div>
-        <div class="photo-marker__tail"></div>
+        <div class="photo-marker__label">${shortTitle}</div>
       </div>
     `,
     className: "photo-marker-wrapper",
-    iconSize: [48, 60],
-    iconAnchor: [24, 58],
-    popupAnchor: [0, -58],
+    iconSize: [120, 78],
+    iconAnchor: [60, 60],
+    popupAnchor: [0, -60],
   });
 }
 
