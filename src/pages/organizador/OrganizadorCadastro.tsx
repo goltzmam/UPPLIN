@@ -11,7 +11,7 @@ import { PasswordRequirementsChecklist } from "@/components/auth/PasswordRequire
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { useAuth } from "@/lib/auth";
+import { useAuth, translateAuthError } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
 import { buildPublicAppUrl } from "@/lib/public-origin";
 import { 
