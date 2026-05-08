@@ -127,7 +127,16 @@ export default function ConfiguracoesContent() {
       toast({ title: "Configurações salvas!" });
     },
     onError: (err: any) => {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+      if (docType === "cpf") {
+        const { title, description } = translateCpfError(err);
+        toast({ title, description, variant: "destructive" });
+      } else {
+        toast({
+          title: "Erro ao salvar",
+          description: err?.message || "Não foi possível salvar as configurações. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
