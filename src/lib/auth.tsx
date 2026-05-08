@@ -253,7 +253,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return {
-      error: result.error ? new Error(String(result.error)) : null,
+      error: result.error ? new Error(translateAuthError(String((result.error as any)?.message ?? result.error))) : null,
     };
   };
 
