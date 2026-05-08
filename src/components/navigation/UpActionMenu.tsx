@@ -203,7 +203,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
             onDragEnd={(_, info) => {
               if (info.offset.y > 100) onClose();
             }}
-            className="fixed bottom-0 left-0 right-0 z-[70] bg-[#0a0a0a] rounded-t-3xl overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-[1110] bg-[#0a0a0a] rounded-t-3xl overflow-hidden"
             style={{ boxShadow: "0 -10px 40px rgba(255, 45, 45, 0.2)" }}
           >
             <div className="flex justify-center pt-3 pb-2">
