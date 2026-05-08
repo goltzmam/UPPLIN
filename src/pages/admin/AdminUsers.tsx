@@ -228,8 +228,9 @@ export default function AdminUsers() {
       setRoleDialog({ open: false, user: null });
       setSelectedRole("");
     },
-    onError: () => {
-      toast.error("Erro ao atualizar roles");
+    onError: (err) => {
+      const { title, description } = translateCpfError(err, "profile");
+      toast.error(title, { description });
     },
   });
 
