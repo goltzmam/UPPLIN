@@ -146,11 +146,7 @@ export function TikTokDesktopSidebar() {
             isActive={isActive("/")} 
           />
 
-          <NavItem 
-            icon={<Search className="h-5 w-5" strokeWidth={1.5} />} 
-            label="Buscar" 
-            onClick={() => setIsSearchOpen(true)}
-          />
+          
 
           <NavItem 
             to="/por-perto"
