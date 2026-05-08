@@ -23,6 +23,10 @@ export function BottomNav() {
   const [isUpMenuOpen, setIsUpMenuOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    setIsUpMenuOpen(false);
+  }, [location.pathname, location.search, location.hash]);
+
   // Navigation items with central UP button
   const navItems: NavItem[] = [
     { icon: Home, label: "Início", path: "/" },

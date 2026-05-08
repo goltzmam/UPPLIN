@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, MapPin, Bookmark, User, ArrowUp, LayoutDashboard } from "lucide-react";
@@ -101,6 +101,10 @@ export function TikTokDesktopSidebar() {
   const { user } = useAuth();
   const { isOrganizer, isAdmin, organizerId, isLoading: rolesLoading } = useUserRoles();
   const [isUpMenuOpen, setIsUpMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setIsUpMenuOpen(false);
+  }, [location.pathname, location.search, location.hash]);
   
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
