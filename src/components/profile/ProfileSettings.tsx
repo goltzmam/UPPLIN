@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { translateCpfError } from "@/lib/cpfErrors";
 import { useAuth } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
 import { supabase } from "@/integrations/supabase/client";
@@ -78,7 +79,16 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
     setSaving(false);
 
     if (error) {
-      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      if (updates.cpf) {
+        const { title, description } = translateCpfError(error);
+        toast({ title, description, variant: "destructive" });
+      } else {
+        toast({
+          title: "Erro ao salvar",
+          description: "Não foi possível salvar suas alterações. Tente novamente.",
+          variant: "destructive",
+        });
+      }
     } else {
       toast({ title: "Perfil atualizado!" });
     }
