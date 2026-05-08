@@ -157,6 +157,20 @@ export default function EventoForm() {
 
     setSaving(true);
 
+    // Geocodificação automática se houver endereço e faltar lat/lng
+    let finalLat = lat;
+    let finalLng = lng;
+    if ((finalLat == null || finalLng == null) && (addressText || venueName)) {
+      const composed = [venueName, addressText].filter(Boolean).join(", ");
+      const geo = await geocodeAddress(composed);
+      if (geo) {
+        finalLat = geo.lat;
+        finalLng = geo.lng;
+        setLat(geo.lat);
+        setLng(geo.lng);
+      }
+    }
+
     try {
       let eventIdToUse = eventId;
       
