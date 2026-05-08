@@ -188,8 +188,9 @@ export default function AdminUsers() {
       setSuspendDialog({ open: false, user: null, action: null });
       setSuspendReason("");
     },
-    onError: () => {
-      toast.error("Erro ao atualizar status do usuário");
+    onError: (err) => {
+      const { title, description } = translateCpfError(err, "profile");
+      toast.error(title, { description });
     },
   });
 
