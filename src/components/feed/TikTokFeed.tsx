@@ -736,7 +736,10 @@ export function TikTokFeed({
         className="h-full w-full overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hide touch-pan-y"
         style={{
           scrollSnapType: 'y mandatory',
+          scrollSnapStop: 'always',
           WebkitOverflowScrolling: 'touch',
+          scrollBehavior: 'smooth',
+          overscrollBehaviorY: 'contain',
         }}
       >
         {items.map((item, index) => {
