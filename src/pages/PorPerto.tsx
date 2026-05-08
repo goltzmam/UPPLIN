@@ -47,6 +47,26 @@ const greenIcon = createMarkerIcon("#22c55e");
 const blueIcon = createMarkerIcon("#3b82f6");
 const grayIcon = createMarkerIcon("#94a3b8");
 
+// Photo marker: shows event cover with colored ring + pin tail
+function createPhotoMarker(imageUrl: string | null, color: string, title: string) {
+  const safeTitle = (title || "").replace(/"/g, "&quot;");
+  const img = imageUrl
+    ? `<img src="${imageUrl}" alt="${safeTitle}" loading="lazy" />`
+    : `<div class="photo-marker__fallback">📍</div>`;
+  return L.divIcon({
+    html: `
+      <div class="photo-marker" style="--ring:${color}">
+        <div class="photo-marker__avatar">${img}</div>
+        <div class="photo-marker__tail"></div>
+      </div>
+    `,
+    className: "photo-marker-wrapper",
+    iconSize: [48, 60],
+    iconAnchor: [24, 58],
+    popupAnchor: [0, -58],
+  });
+}
+
 // ── Fly to user position ─────────────────────────────────────────────
 function FlyToUser({ position }: { position: [number, number] | null }) {
   const map = useMap();
