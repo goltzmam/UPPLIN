@@ -212,7 +212,7 @@ export default function PorPerto() {
 
       <main className="flex-1 lg:ml-[72px] relative">
         {/* Map container - full viewport */}
-        <div className="fixed inset-0 lg:left-[72px] z-0">
+        <div className="fixed inset-0 lg:left-[72px] lg:right-[380px] z-0">
           <MapContainer
             center={defaultCenter}
             zoom={userPos ? 11 : 10}
