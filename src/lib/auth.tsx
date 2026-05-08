@@ -62,6 +62,22 @@ const translateAuthError = (message: string) => {
     return "Use uma senha mais forte com letras maiúsculas, minúsculas, números e caractere especial.";
   }
 
+  if (/sign[- ]?in was cancelled|user cancelled|cancelled by user|popup closed|access_denied/i.test(message)) {
+    return "Login cancelado. Tente novamente quando quiser.";
+  }
+
+  if (/popup blocked|popup_blocked/i.test(message)) {
+    return "O navegador bloqueou a janela de login. Permita pop-ups e tente novamente.";
+  }
+
+  if (/network|failed to fetch|fetch failed|timeout/i.test(message)) {
+    return "Falha de conexão. Verifique sua internet e tente novamente.";
+  }
+
+  if (/oauth|provider/i.test(message)) {
+    return "Não conseguimos concluir o login com o provedor. Tente novamente.";
+  }
+
   return message;
 };
 
