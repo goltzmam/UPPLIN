@@ -296,7 +296,15 @@ export default function PorPerto() {
               </p>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+          <div
+            className="flex-1 overflow-y-auto overscroll-contain p-3 space-y-2 scrollbar-minimal scroll-smooth"
+            style={{
+              maskImage:
+                "linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - 24px), transparent 100%)",
+              WebkitMaskImage:
+                "linear-gradient(to bottom, transparent 0, #000 16px, #000 calc(100% - 24px), transparent 100%)",
+            }}
+          >
             {eventsLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
