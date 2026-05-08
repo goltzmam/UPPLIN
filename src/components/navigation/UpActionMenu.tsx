@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Camera, MapPin, X, Users, Loader2, Upload, Video, Image, ChevronDown, Wand2 } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
@@ -33,6 +33,10 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [showEventPicker, setShowEventPicker] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) onClose();
+  }, [location.pathname, location.search, location.hash]);
 
   // Fetch user's upcoming events for tagging
   const { data: userEvents } = useQuery({
