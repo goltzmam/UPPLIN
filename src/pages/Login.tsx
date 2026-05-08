@@ -281,6 +281,39 @@ export default function Login() {
                 Preencha seu e-mail e senha para continuar.
               </p>
             ) : null}
+            {loginError ? (
+              <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 space-y-2">
+                <p className="text-xs sm:text-sm text-destructive font-medium">
+                  {loginError}
+                </p>
+                <ul className="text-[11px] sm:text-xs text-muted-foreground list-disc pl-4 space-y-0.5">
+                  <li>Confira se digitou o e-mail corretamente.</li>
+                  <li>Verifique se o Caps Lock está desligado.</li>
+                  {attemptCount >= 2 && (
+                    <li>
+                      Esqueceu a senha?{" "}
+                      <Link to="/recuperar-senha" className="text-primary hover:underline">
+                        Recupere agora
+                      </Link>
+                      .
+                    </li>
+                  )}
+                </ul>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9 text-xs"
+                  onClick={() => {
+                    setLoginError(null);
+                    void doSignIn();
+                  }}
+                  disabled={loading || !isFormValid}
+                >
+                  Tentar novamente
+                </Button>
+              </div>
+            ) : null}
           </form>
 
 
