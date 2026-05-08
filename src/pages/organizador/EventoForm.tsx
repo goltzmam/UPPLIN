@@ -14,6 +14,7 @@ import { VideoUpload } from "@/components/events/VideoUpload";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { geocodeAddress } from "@/lib/geocode";
 
 interface MediaItem {
   id: string;
