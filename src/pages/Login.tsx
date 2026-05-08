@@ -42,6 +42,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [attemptCount, setAttemptCount] = useState(0);
   const [conflictEmail, setConflictEmail] = useState<string | null>(null);
   const [pendingSubmit, setPendingSubmit] = useState(false);
   const [searchParams] = useSearchParams();
@@ -58,12 +60,17 @@ export default function Login() {
 
   const doSignIn = async () => {
     setLoading(true);
+    setLoginError(null);
     const { error, user } = await signIn(email, password);
 
     if (error) {
       setLoading(false);
+      setAttemptCount((c) => c + 1);
+      setLoginError(error.message);
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
     } else {
+      setAttemptCount(0);
+      setLoginError(null);
       const destination = user ? await getParticipantDestination(user.id) : "/";
       setLoading(false);
       navigate(destination);
