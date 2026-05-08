@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -92,6 +92,7 @@ export default function PorPerto() {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [geoState, setGeoState] = useState<GeoState>("idle");
   const [selectedEvent, setSelectedEvent] = useState<NearbyEvent | null>(null);
+  const navigate = useNavigate();
   const [showMapHint, setShowMapHint] = useState(false);
   const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
 
@@ -198,9 +199,9 @@ export default function PorPerto() {
         id: event.id,
         position: [event.lat, event.lng] as [number, number],
         icon: getMarkerIcon(event.start_at),
-        onClick: () => setSelectedEvent(event),
+        onClick: () => navigate(`/evento/${event.slug || event.id}`),
       })),
-    [events, getMarkerIcon]
+    [events, getMarkerIcon, navigate]
   );
 
   const formatPrice = (cents: number) =>
@@ -287,7 +288,6 @@ export default function PorPerto() {
                   key={ev.id}
                   to={`/evento/${ev.slug || ev.id}`}
                   className="block p-2.5 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-card/80 transition-colors"
-                  onMouseEnter={() => setSelectedEvent(ev)}
                 >
                   <div className="flex gap-3">
                     {ev.cover_image_url ? (
