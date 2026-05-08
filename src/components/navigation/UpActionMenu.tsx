@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, MapPin, X, Users, Loader2, Upload, Video, Image, ChevronDown } from "lucide-react";
+import { Camera, MapPin, X, Users, Loader2, Upload, Video, Image, ChevronDown, Wand2 } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { createUserPost, getPostMediaValidationError, invalidateSocialQueries } from "@/lib/social-posts";
+import { PhotoEditorDialog } from "@/components/feed/PhotoEditorDialog";
 
 interface UpActionMenuProps {
   isOpen: boolean;
