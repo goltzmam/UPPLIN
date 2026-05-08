@@ -213,15 +213,22 @@ export default function PorPerto() {
   }, [userPos, events]);
 
   // ── Cluster markers data ─────────────────────────────────────────
+  const getMarkerColor = useCallback((startAt: string) => {
+    const date = new Date(startAt);
+    if (isToday(date)) return "#22c55e";
+    if (isThisWeek(date, { weekStartsOn: 1 })) return "#3b82f6";
+    return "#94a3b8";
+  }, []);
+
   const clusterMarkers = useMemo(
     () =>
       events.map((event) => ({
         id: event.id,
         position: [event.lat, event.lng] as [number, number],
-        icon: getMarkerIcon(event.start_at),
+        icon: createPhotoMarker(event.cover_image_url, getMarkerColor(event.start_at), event.title),
         onClick: () => navigate(`/evento/${event.slug || event.id}`),
       })),
-    [events, getMarkerIcon, navigate]
+    [events, getMarkerColor, navigate]
   );
 
   const formatPrice = (cents: number) =>
