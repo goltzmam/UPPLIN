@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { translateCpfError } from "@/lib/cpfErrors";
+import { validateCpfBeforeSave } from "@/lib/cpfValidation";
 
 export default function Onboarding() {
   const { user, profile, updateProfile, refreshProfile, loading } = useAuth();
@@ -69,19 +70,22 @@ export default function Onboarding() {
   };
 
   const handleSubmit = async () => {
-    if (!validateCpf(cpf)) {
+    setSaving(true);
+
+    // Pré-validação: formato, conexão e duplicidade — sempre em pt-BR
+    const pre = await validateCpfBeforeSave(cpf, { ignoreUserId: user?.id });
+    if (pre.ok === false) {
       toast({
-        title: "CPF inválido",
-        description: "Por favor, insira um CPF válido.",
+        title: pre.title,
+        description: pre.description,
         variant: "destructive",
       });
+      setSaving(false);
       return;
     }
 
-    setSaving(true);
-    
     const { error } = await updateProfile({
-      cpf: cpf.replace(/\D/g, ""),
+      cpf: pre.digits,
     });
 
     if (error) {
