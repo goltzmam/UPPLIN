@@ -31,13 +31,15 @@ export default function Index() {
   const scrollPosRef = useRef(0);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (user && !profile?.cpf) {
+    // Only redirect logged-in users whose profile has loaded and is missing CPF.
+    if (authLoading) return;
+    if (user && profile && !profile.cpf) {
       navigate("/onboarding", { replace: true });
     }
-  }, [navigate, profile?.cpf, user]);
+  }, [navigate, profile, user, authLoading]);
 
   // ─── Location: priority Manual > GPS > Profile > Default ─────────────
   const {
