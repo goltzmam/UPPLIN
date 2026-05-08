@@ -71,6 +71,13 @@ export default function Evento() {
     gcTime: 1000 * 60 * 30, // 30 minutes cache
   });
 
+  // Canonical URL: if accessed by UUID and event has a slug, redirect to slug URL
+  useEffect(() => {
+    if (event?.slug && id && id !== event.slug) {
+      navigate(`/evento/${event.slug}`, { replace: true });
+    }
+  }, [event?.slug, id, navigate]);
+
   // Check-in counter (posts tagged with this event)
   const { data: checkinCount = 0 } = useQuery({
     queryKey: ["event-checkins", event?.id],
