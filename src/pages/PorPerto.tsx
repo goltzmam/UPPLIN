@@ -92,6 +92,7 @@ export default function PorPerto() {
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
   const [geoState, setGeoState] = useState<GeoState>("idle");
   const [selectedEvent, setSelectedEvent] = useState<NearbyEvent | null>(null);
+  const navigate = useNavigate();
   const [showMapHint, setShowMapHint] = useState(false);
   const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
 
