@@ -84,9 +84,13 @@ export default function Onboarding() {
     });
 
     if (error) {
+      const raw = (error as { message?: string; code?: string })?.message || "";
+      const isDuplicate = /duplicate key|profiles_cpf_key|already exists|unique constraint/i.test(raw);
       toast({
-        title: "Erro ao salvar",
-        description: error.message,
+        title: isDuplicate ? "CPF já cadastrado" : "Erro ao salvar",
+        description: isDuplicate
+          ? "Este CPF já está vinculado a outra conta. Verifique o número digitado ou entre em contato com o suporte."
+          : "Não foi possível salvar seu CPF agora. Tente novamente em instantes.",
         variant: "destructive",
       });
       setSaving(false);
