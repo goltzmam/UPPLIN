@@ -288,8 +288,6 @@ export default function PorPerto() {
                   key={ev.id}
                   to={`/evento/${ev.slug || ev.id}`}
                   className="block p-2.5 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-card/80 transition-colors"
-                </Link>
-              ));
                 >
                   <div className="flex gap-3">
                     {ev.cover_image_url ? (
