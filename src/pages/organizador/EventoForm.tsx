@@ -14,6 +14,7 @@ import { VideoUpload } from "@/components/events/VideoUpload";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { geocodeAddress } from "@/lib/geocode";
 
 interface MediaItem {
   id: string;
@@ -156,6 +157,20 @@ export default function EventoForm() {
 
     setSaving(true);
 
+    // Geocodificação automática se houver endereço e faltar lat/lng
+    let finalLat = lat;
+    let finalLng = lng;
+    if ((finalLat == null || finalLng == null) && (addressText || venueName)) {
+      const composed = [venueName, addressText].filter(Boolean).join(", ");
+      const geo = await geocodeAddress(composed);
+      if (geo) {
+        finalLat = geo.lat;
+        finalLng = geo.lng;
+        setLat(geo.lat);
+        setLng(geo.lng);
+      }
+    }
+
     try {
       let eventIdToUse = eventId;
       
@@ -176,8 +191,8 @@ export default function EventoForm() {
             end_at: endAt || null,
             venue_name: venueName || null,
             address_text: addressText || null,
-            lat: lat,
-            lng: lng,
+            lat: finalLat,
+            lng: finalLng,
             cover_image_url: coverImageUrl,
             checkout_banner_url: checkoutBannerUrl,
             status,
@@ -198,8 +213,8 @@ export default function EventoForm() {
             end_at: endAt || null,
             venue_name: venueName || null,
             address_text: addressText || null,
-            lat: lat,
-            lng: lng,
+            lat: finalLat,
+            lng: finalLng,
             cover_image_url: coverImageUrl,
             checkout_banner_url: checkoutBannerUrl,
             status,

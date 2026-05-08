@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { format, isToday, isThisWeek } from "date-fns";
@@ -58,6 +58,17 @@ function FlyToUser({ position }: { position: [number, number] | null }) {
   return null;
 }
 
+// ── Track visible map bounds ────────────────────────────────────────
+function BoundsTracker({ onChange }: { onChange: (b: L.LatLngBounds) => void }) {
+  const map = useMapEvents({
+    moveend: () => onChange(map.getBounds()),
+    zoomend: () => onChange(map.getBounds()),
+    load: () => onChange(map.getBounds()),
+  });
+  useEffect(() => { onChange(map.getBounds()); }, [map, onChange]);
+  return null;
+}
+
 // ── Types ────────────────────────────────────────────────────────────
 interface NearbyEvent {
   id: string;
@@ -82,6 +93,7 @@ export default function PorPerto() {
   const [geoState, setGeoState] = useState<GeoState>("idle");
   const [selectedEvent, setSelectedEvent] = useState<NearbyEvent | null>(null);
   const [showMapHint, setShowMapHint] = useState(false);
+  const [bounds, setBounds] = useState<L.LatLngBounds | null>(null);
 
   // ── Request geolocation ──────────────────────────────────────────
   const requestLocation = useCallback(() => {
@@ -200,7 +212,7 @@ export default function PorPerto() {
 
       <main className="flex-1 lg:ml-[72px] relative">
         {/* Map container - full viewport */}
-        <div className="fixed inset-0 lg:left-[72px] z-0">
+        <div className="fixed inset-0 lg:left-[72px] lg:right-[380px] z-0">
           <MapContainer
             center={defaultCenter}
             zoom={userPos ? 11 : 10}
@@ -227,8 +239,92 @@ export default function PorPerto() {
 
             {/* Clustered event markers */}
             <MarkerCluster markers={clusterMarkers} />
+            <BoundsTracker onChange={setBounds} />
           </MapContainer>
         </div>
+
+        {/* Desktop side panel - events visible in current map area */}
+        <aside className="hidden lg:flex flex-col fixed top-0 right-0 bottom-0 w-[380px] z-[1001] bg-background/95 backdrop-blur-md border-l border-border">
+          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-bold flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-primary" />
+                Eventos nesta região
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {(() => {
+                  const visible = bounds
+                    ? events.filter((e) => bounds.contains([e.lat, e.lng]))
+                    : events;
+                  return `${visible.length} ${visible.length === 1 ? "evento encontrado" : "eventos encontrados"}`;
+                })()}
+              </p>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            {eventsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (() => {
+              const visible = bounds
+                ? events.filter((e) => bounds.contains([e.lat, e.lng]))
+                : events;
+              if (visible.length === 0) {
+                return (
+                  <div className="text-center py-12 px-4">
+                    <p className="text-sm text-muted-foreground">
+                      Nenhum evento nesta região do mapa.
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Arraste ou diminua o zoom para ver mais.
+                    </p>
+                  </div>
+                );
+              }
+              return visible.map((ev) => (
+                <Link
+                  key={ev.id}
+                  to={`/evento/${ev.slug || ev.id}`}
+                  className="block p-2.5 rounded-xl border border-border bg-card hover:border-primary/50 hover:bg-card/80 transition-colors"
+                  onMouseEnter={() => setSelectedEvent(ev)}
+                >
+                  <div className="flex gap-3">
+                    {ev.cover_image_url ? (
+                      <img
+                        src={ev.cover_image_url}
+                        alt={ev.title}
+                        className="w-16 h-16 rounded-lg object-cover shrink-0"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center shrink-0">
+                        <Calendar className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm line-clamp-2 leading-tight">
+                        {ev.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <Calendar className="h-3 w-3 shrink-0" />
+                        {format(new Date(ev.start_at), "d MMM · HH:mm", { locale: ptBR })}
+                      </p>
+                      {ev.venue_name && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1 truncate mt-0.5">
+                          <MapPin className="h-3 w-3 shrink-0" />
+                          {ev.venue_name}
+                        </p>
+                      )}
+                      <p className="text-xs font-bold text-primary mt-1">
+                        {(ev.min_price ?? 0) === 0 ? "Grátis" : formatPrice(ev.min_price ?? 0)}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+              ));
+            })()}
+          </div>
+        </aside>
 
         {/* Top overlay - legend + search + recenter */}
         <div className="fixed top-4 left-4 right-4 lg:left-[88px] z-[1000] flex items-start justify-between gap-2 pointer-events-none">
