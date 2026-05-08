@@ -54,6 +54,7 @@ import {
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { toast } from "sonner";
+import { translateCpfError } from "@/lib/cpfErrors";
 import { useAuth } from "@/lib/auth";
 
 interface UserWithRoles {
