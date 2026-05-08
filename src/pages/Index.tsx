@@ -13,6 +13,7 @@ import { LocationPrompt } from "@/components/location/LocationPrompt";
 import { CityChangePrompt } from "@/components/location/CityChangePrompt";
 import { ProfileCityBanner } from "@/components/location/ProfileCityBanner";
 import { cn } from "@/lib/utils";
+import { Search } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { stopAllMediaPipelines } from "@/lib/media";
 import { prioritizeUnseenEvents, markEventsSeen } from "@/lib/seen-events";
