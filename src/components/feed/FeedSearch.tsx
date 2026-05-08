@@ -198,7 +198,7 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
           </div>
 
           {/* Content */}
-          <div className="px-4 py-4 overflow-y-auto max-h-[calc(100dvh-70px)] scrollbar-hide">
+          <div className="px-4 py-4 overflow-y-auto max-h-[calc(100dvh-70px)] lg:max-h-[60vh] scrollbar-hide">
             {debouncedQuery.length >= 2 ? (
               <div className="space-y-1">
                 {searchResults && searchResults.length > 0 ? (
