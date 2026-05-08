@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CreditCard, Check, ArrowRight, Shield, Ticket, Loader2 } from "lucide-react";
+import { CreditCard, Check, ArrowRight, ArrowLeft, Shield, Ticket, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
