@@ -58,6 +58,17 @@ function FlyToUser({ position }: { position: [number, number] | null }) {
   return null;
 }
 
+// ── Track visible map bounds ────────────────────────────────────────
+function BoundsTracker({ onChange }: { onChange: (b: L.LatLngBounds) => void }) {
+  const map = useMapEvents({
+    moveend: () => onChange(map.getBounds()),
+    zoomend: () => onChange(map.getBounds()),
+    load: () => onChange(map.getBounds()),
+  });
+  useEffect(() => { onChange(map.getBounds()); }, [map, onChange]);
+  return null;
+}
+
 // ── Types ────────────────────────────────────────────────────────────
 interface NearbyEvent {
   id: string;
