@@ -28,6 +28,8 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
   const [showPostDialog, setShowPostDialog] = useState(false);
   const [postContent, setPostContent] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [editorFile, setEditorFile] = useState<File | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedEventId, setSelectedEventId] = useState<string>("");
   const [showEventPicker, setShowEventPicker] = useState(false);
