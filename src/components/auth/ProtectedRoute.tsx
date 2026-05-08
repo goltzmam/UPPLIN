@@ -6,29 +6,40 @@ import { PageLoading } from "@/components/ui/loading";
 interface ProtectedRouteProps {
   children: ReactNode;
   redirectTo?: string;
+  /** When true, also waits for the profile to be loaded before rendering. Defaults to true. */
+  requireProfile?: boolean;
 }
 
-export function ProtectedRoute({ children, redirectTo = "/login" }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+export function ProtectedRoute({
+  children,
+  redirectTo = "/login",
+  requireProfile = true,
+}: ProtectedRouteProps) {
+  const { user, profile, loading, authReady } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (!loading && !user) {
-      // Store the attempted URL for redirect after login
-      navigate(redirectTo, { 
-        replace: true, 
-        state: { from: location.pathname } 
+    if (!authReady) return;
+    if (!user) {
+      navigate(redirectTo, {
+        replace: true,
+        state: { from: location.pathname },
       });
     }
-  }, [loading, user, navigate, redirectTo, location.pathname]);
+  }, [authReady, user, navigate, redirectTo, location.pathname]);
 
-  if (loading) {
+  // Wait for the auth check + (optionally) the profile to be loaded.
+  if (loading || !authReady) {
     return <PageLoading />;
   }
 
   if (!user) {
     return null;
+  }
+
+  if (requireProfile && !profile) {
+    return <PageLoading />;
   }
 
   return <>{children}</>;

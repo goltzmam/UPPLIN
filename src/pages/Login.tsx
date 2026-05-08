@@ -42,6 +42,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [attemptCount, setAttemptCount] = useState(0);
   const [conflictEmail, setConflictEmail] = useState<string | null>(null);
   const [pendingSubmit, setPendingSubmit] = useState(false);
   const [searchParams] = useSearchParams();
@@ -58,12 +60,17 @@ export default function Login() {
 
   const doSignIn = async () => {
     setLoading(true);
+    setLoginError(null);
     const { error, user } = await signIn(email, password);
 
     if (error) {
       setLoading(false);
+      setAttemptCount((c) => c + 1);
+      setLoginError(error.message);
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
     } else {
+      setAttemptCount(0);
+      setLoginError(null);
       const destination = user ? await getParticipantDestination(user.id) : "/";
       setLoading(false);
       navigate(destination);
@@ -273,6 +280,39 @@ export default function Login() {
               <p className="text-xs text-muted-foreground text-center">
                 Preencha seu e-mail e senha para continuar.
               </p>
+            ) : null}
+            {loginError ? (
+              <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 space-y-2">
+                <p className="text-xs sm:text-sm text-destructive font-medium">
+                  {loginError}
+                </p>
+                <ul className="text-[11px] sm:text-xs text-muted-foreground list-disc pl-4 space-y-0.5">
+                  <li>Confira se digitou o e-mail corretamente.</li>
+                  <li>Verifique se o Caps Lock está desligado.</li>
+                  {attemptCount >= 2 && (
+                    <li>
+                      Esqueceu a senha?{" "}
+                      <Link to="/recuperar-senha" className="text-primary hover:underline">
+                        Recupere agora
+                      </Link>
+                      .
+                    </li>
+                  )}
+                </ul>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="w-full h-9 text-xs"
+                  onClick={() => {
+                    setLoginError(null);
+                    void doSignIn();
+                  }}
+                  disabled={loading || !isFormValid}
+                >
+                  Tentar novamente
+                </Button>
+              </div>
             ) : null}
           </form>
 
