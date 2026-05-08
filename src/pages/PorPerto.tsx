@@ -199,7 +199,7 @@ export default function PorPerto() {
         id: event.id,
         position: [event.lat, event.lng] as [number, number],
         icon: getMarkerIcon(event.start_at),
-        onClick: () => setSelectedEvent(event),
+        onClick: () => navigate(`/evento/${event.slug || event.id}`),
       })),
     [events, getMarkerIcon]
   );
