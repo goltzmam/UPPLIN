@@ -272,8 +272,17 @@ export default function Index() {
           </button>
         </div>
 
-        {/* Empty space for balance */}
-        <div className={cn("shrink-0", isDesktop ? "hidden" : "w-12")} />
+        {/* Search button right */}
+        <button
+          onClick={() => setIsSearchOpen(true)}
+          aria-label="Buscar"
+          className={cn(
+            "shrink-0 h-9 w-9 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors",
+            isDesktop && "hidden"
+          )}
+        >
+          <Search className="h-5 w-5" strokeWidth={1.75} />
+        </button>
       </div>
     </div>
   );
