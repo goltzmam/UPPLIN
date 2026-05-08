@@ -36,9 +36,14 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isOpen && inputRef.current) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-    }
+    if (!isOpen) return;
+    const focusInput = () => inputRef.current?.focus({ preventScroll: true });
+    const frame = requestAnimationFrame(focusInput);
+    const timer = setTimeout(focusInput, 80);
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
   }, [isOpen]);
 
   useEffect(() => {

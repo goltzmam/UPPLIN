@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, MapPin, Bookmark, User, ArrowUp, LayoutDashboard, Search } from "lucide-react";
+import { Home, MapPin, Bookmark, User, ArrowUp, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useUserRoles } from "@/hooks/use-user-roles";
-import { FeedSearch } from "@/components/feed/FeedSearch";
 import { UpActionMenu } from "@/components/navigation/UpActionMenu";
 
 interface NavItemProps {
@@ -99,10 +98,8 @@ const UpButtonDesktop = ({
   </motion.button>;
 export function TikTokDesktopSidebar() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { isOrganizer, isAdmin, organizerId, isLoading: rolesLoading } = useUserRoles();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUpMenuOpen, setIsUpMenuOpen] = useState(false);
   
   const isActive = (path: string) => {
@@ -199,9 +196,6 @@ export function TikTokDesktopSidebar() {
         )}
       </aside>
 
-      {/* Search overlay */}
-      <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
-      
       {/* UP Action Menu */}
       <UpActionMenu isOpen={isUpMenuOpen} onClose={() => setIsUpMenuOpen(false)} />
     </>

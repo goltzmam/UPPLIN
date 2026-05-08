@@ -201,6 +201,10 @@ export default function Index() {
   }, [queryClient]);
 
   // Shared Header Component for both mobile and desktop
+  const openSearch = useCallback(() => {
+    setIsSearchOpen(true);
+  }, []);
+
   const FeedHeader = ({ isDesktop = false }: { isDesktop?: boolean }) => (
     <div className={cn(
       "absolute top-0 left-0 right-0 z-30 pointer-events-none"
@@ -209,6 +213,7 @@ export default function Index() {
       
       <div className={cn(
         "flex items-center justify-between px-3 py-3 pointer-events-auto transition-colors duration-300",
+        isDesktop && "px-5 md:px-6 lg:px-8 xl:px-10",
         activeTab === "following" && "bg-background"
       )}>
         {/* Logo left - with gradient - larger on mobile/tablet */}
@@ -275,9 +280,13 @@ export default function Index() {
 
         {/* Search button right */}
         <button
-          onClick={() => setIsSearchOpen(true)}
+          type="button"
+          onClick={openSearch}
           aria-label="Buscar"
-          className="shrink-0 h-9 w-9 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+          className={cn(
+            "shrink-0 h-9 w-9 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 transition-colors",
+            isDesktop && "mr-[clamp(24px,4vw,72px)]"
+          )}
         >
           <Search className="h-5 w-5" strokeWidth={1.75} />
         </button>
@@ -323,7 +332,6 @@ export default function Index() {
       </div>
 
       <FeedHeader />
-      <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );
 
@@ -378,6 +386,7 @@ export default function Index() {
       <MobileFeed />
       <DesktopLayout />
       <BottomNav />
+      <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Location prompts — non-blocking, dismissible */}
       <LocationPrompt
