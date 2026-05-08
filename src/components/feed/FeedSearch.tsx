@@ -166,8 +166,10 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-50 bg-background"
+          className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm lg:flex lg:items-start lg:justify-center lg:pt-20"
+          onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
+        <div className="lg:w-full lg:max-w-2xl lg:bg-card lg:border lg:border-border lg:rounded-2xl lg:shadow-2xl lg:overflow-hidden lg:max-h-[80vh] lg:flex lg:flex-col">
           {/* Header */}
           <div className="safe-area-top" />
           <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
