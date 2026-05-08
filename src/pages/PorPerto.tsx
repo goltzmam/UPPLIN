@@ -201,7 +201,7 @@ export default function PorPerto() {
         icon: getMarkerIcon(event.start_at),
         onClick: () => navigate(`/evento/${event.slug || event.id}`),
       })),
-    [events, getMarkerIcon]
+    [events, getMarkerIcon, navigate]
   );
 
   const formatPrice = (cents: number) =>
