@@ -723,3 +723,55 @@
   background: none !important;
   border: none !important;
 }
+
+/* Photo marker for events on map */
+.photo-marker-wrapper {
+  background: none !important;
+  border: none !important;
+}
+.photo-marker {
+  position: relative;
+  width: 48px;
+  height: 60px;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+  transition: transform 0.18s ease;
+}
+.photo-marker:hover {
+  transform: translateY(-2px) scale(1.06);
+}
+.photo-marker__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #111;
+  border: 3px solid var(--ring, #fff);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255,255,255,0.1);
+}
+.photo-marker__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.photo-marker__fallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A);
+}
+.photo-marker__tail {
+  position: absolute;
+  left: 50%;
+  bottom: -2px;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 12px solid var(--ring, #fff);
+}
