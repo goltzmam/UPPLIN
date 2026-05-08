@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Home, MapPin, Bookmark, User, ArrowUp, LayoutDashboard } from "lucide-react";
+import { Home, MapPin, Bookmark, User, ArrowUp, LayoutDashboard, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { useUserRoles } from "@/hooks/use-user-roles";
@@ -144,6 +144,12 @@ export function TikTokDesktopSidebar() {
             icon={<Home className="h-5 w-5" strokeWidth={1.5} />} 
             label="Início" 
             isActive={isActive("/")} 
+          />
+
+          <NavItem 
+            icon={<Search className="h-5 w-5" strokeWidth={1.5} />} 
+            label="Buscar" 
+            onClick={() => setIsSearchOpen(true)}
           />
 
           <NavItem 
