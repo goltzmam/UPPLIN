@@ -90,6 +90,17 @@ export function FollowingTab() {
 
   return (
     <div className="space-y-3 w-full overflow-hidden">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          {following.length} {following.length === 1 ? "organizador" : "organizadores"}
+        </p>
+        <Button asChild size="sm" variant="outline" className="h-8 text-xs">
+          <Link to="/explorar-organizadores">
+            <Users className="h-3.5 w-3.5 mr-1.5" />
+            Explorar
+          </Link>
+        </Button>
+      </div>
       {following.map(({ id, organizer, eventCount }) => (
         <Link
           key={id}
