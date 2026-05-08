@@ -603,32 +603,67 @@ export function TikTokFeed({
     };
   }, []);
 
-  // Touch handlers for pull-to-refresh
+  // Touch handlers: pull-to-refresh + flick-to-snap (native-like)
+  const touchStartTimeRef = useRef(0);
+  const lastTouchYRef = useRef(0);
+  const lastTouchTimeRef = useRef(0);
+  const touchVelocityRef = useRef(0);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartY.current = e.touches[0].clientY;
+    const y = e.touches[0].clientY;
+    touchStartY.current = y;
+    lastTouchYRef.current = y;
+    touchStartTimeRef.current = performance.now();
+    lastTouchTimeRef.current = touchStartTimeRef.current;
+    touchVelocityRef.current = 0;
   }, []);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     const container = containerRef.current;
-    if (!container || container.scrollTop > 0) return;
+    const y = e.touches[0].clientY;
+    const now = performance.now();
+    const dt = now - lastTouchTimeRef.current;
+    if (dt > 0) {
+      // px/ms — positive when moving finger down (scroll up)
+      touchVelocityRef.current = (y - lastTouchYRef.current) / dt;
+    }
+    lastTouchYRef.current = y;
+    lastTouchTimeRef.current = now;
 
-    const deltaY = e.touches[0].clientY - touchStartY.current;
+    if (!container || container.scrollTop > 0) return;
+    const deltaY = y - touchStartY.current;
     if (deltaY > 0 && !isRefreshing) {
       setPullDistance(Math.min(deltaY * 0.4, 80));
     }
   }, [isRefreshing]);
 
   const handleTouchEnd = useCallback(() => {
+    // Pull-to-refresh
     if (pullDistance >= 60 && onRefresh && !isRefreshing) {
       setIsRefreshing(true);
       onRefresh().finally(() => {
         setIsRefreshing(false);
         setPullDistance(0);
       });
-    } else {
+    } else if (pullDistance > 0) {
       setPullDistance(0);
     }
-  }, [pullDistance, onRefresh, isRefreshing]);
+
+    // Flick-to-snap: if quick swipe, jump to next/prev item smoothly
+    const container = containerRef.current;
+    if (!container || containerHeight <= 0) return;
+    const v = touchVelocityRef.current; // px/ms
+    const totalTime = performance.now() - touchStartTimeRef.current;
+    const totalDelta = lastTouchYRef.current - touchStartY.current;
+    // Only treat as flick if quick gesture with meaningful velocity
+    if (totalTime < 350 && Math.abs(v) > 0.35 && Math.abs(totalDelta) > 20) {
+      const currentIdx = Math.round(container.scrollTop / containerHeight);
+      const dir = v < 0 ? 1 : -1; // finger up → next, finger down → prev
+      const targetIdx = Math.max(0, Math.min(items.length - 1, currentIdx + dir));
+      container.scrollTo({ top: targetIdx * containerHeight, behavior: "smooth" });
+    }
+  }, [pullDistance, onRefresh, isRefreshing, containerHeight, items.length]);
+
 
   // Restore scroll position on mount
   useEffect(() => {
@@ -701,7 +736,10 @@ export function TikTokFeed({
         className="h-full w-full overflow-y-auto overflow-x-hidden overscroll-y-contain scrollbar-hide touch-pan-y"
         style={{
           scrollSnapType: 'y mandatory',
+          scrollSnapStop: 'always',
           WebkitOverflowScrolling: 'touch',
+          scrollBehavior: 'smooth',
+          overscrollBehaviorY: 'contain',
         }}
       >
         {items.map((item, index) => {
