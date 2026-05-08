@@ -156,26 +156,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         const incomingUserId = currentSession?.user?.id ?? null;
-        const currentActiveId = localStorage.getItem(AUTH_USER_KEY);
-
-        // ─── Cross-tab session hijack detection ───────────────────────────
-        // If another tab logged in as a DIFFERENT user, force this tab out.
-        if (
-          event === "SIGNED_IN" &&
-          currentActiveId &&
-          incomingUserId &&
-          currentActiveId !== incomingUserId
-        ) {
-          void supabase.auth.signOut();
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-          setLoading(false);
-          setAuthReady(true);
-          localStorage.removeItem(AUTH_USER_KEY);
-          window.location.href = "/login?sessao_encerrada=1";
-          return;
-        }
 
         if (event === "SIGNED_IN" && incomingUserId) {
           localStorage.setItem(AUTH_USER_KEY, incomingUserId);
