@@ -323,6 +323,7 @@ export function FeedSearch({ isOpen, onClose }: FeedSearchProps) {
               </div>
             )}
           </div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
