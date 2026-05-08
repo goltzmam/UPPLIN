@@ -47,7 +47,7 @@ const greenIcon = createMarkerIcon("#22c55e");
 const blueIcon = createMarkerIcon("#3b82f6");
 const grayIcon = createMarkerIcon("#94a3b8");
 
-// Photo marker: shows event cover with colored ring + pin tail
+// Photo marker: shows only event cover with colored ring
 function createPhotoMarker(imageUrl: string | null, color: string, title: string) {
   const safeTitle = (title || "Evento").replace(/"/g, "&quot;");
   const initials = (title || "EV")
@@ -60,18 +60,16 @@ function createPhotoMarker(imageUrl: string | null, color: string, title: string
   const img = imageUrl
     ? `<img src="${imageUrl}" alt="${safeTitle}" loading="lazy" onerror="this.parentNode.innerHTML='${fallback.replace(/'/g, "&#39;")}'" />`
     : fallback;
-  const shortTitle = (title || "Evento").length > 22 ? (title || "Evento").slice(0, 22) + "…" : (title || "Evento");
   return L.divIcon({
     html: `
       <div class="photo-marker" style="--ring:${color}" role="button" aria-label="${safeTitle}" title="${safeTitle}">
         <div class="photo-marker__avatar">${img}</div>
-        <div class="photo-marker__label">${shortTitle}</div>
       </div>
     `,
     className: "photo-marker-wrapper",
-    iconSize: [120, 78],
-    iconAnchor: [60, 60],
-    popupAnchor: [0, -60],
+    iconSize: [56, 56],
+    iconAnchor: [28, 28],
+    popupAnchor: [0, -28],
   });
 }
 
