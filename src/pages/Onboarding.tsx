@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { translateCpfError } from "@/lib/cpfErrors";
+import { validateCpfBeforeSave } from "@/lib/cpfValidation";
 
 export default function Onboarding() {
   const { user, profile, updateProfile, refreshProfile, loading } = useAuth();
