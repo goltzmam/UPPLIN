@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MapPin, Clock, Heart, Minus, Plus, Ticket, Instagram, Facebook, Globe, Building2, Play, Pause, ChevronLeft, ChevronRight, ImageIcon, Users } from "lucide-react";
 import { ShareButton } from "@/components/events/ShareButton";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
