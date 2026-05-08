@@ -2,7 +2,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MapPin, Clock, Heart, Minus, Plus, Ticket, Instagram, Facebook, Globe, Building2, Play, Pause, ChevronLeft, ChevronRight, ImageIcon, Users } from "lucide-react";
 import { ShareButton } from "@/components/events/ShareButton";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
@@ -70,6 +70,13 @@ export default function Evento() {
     staleTime: 1000 * 60 * 5, // 5 minutes - keep fresh for faster navigation
     gcTime: 1000 * 60 * 30, // 30 minutes cache
   });
+
+  // Canonical URL: if accessed by UUID and event has a slug, redirect to slug URL
+  useEffect(() => {
+    if (event?.slug && id && id !== event.slug) {
+      navigate(`/evento/${event.slug}`, { replace: true });
+    }
+  }, [event?.slug, id, navigate]);
 
   // Check-in counter (posts tagged with this event)
   const { data: checkinCount = 0 } = useQuery({
