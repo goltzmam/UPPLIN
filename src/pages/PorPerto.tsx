@@ -423,34 +423,30 @@ export default function PorPerto() {
           </Button>
         </div>
 
-        {/* Geo denied state */}
-        {geoState === "denied" && (
-          <div className="fixed bottom-28 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto">
-            <div className="bg-destructive/10 border border-destructive/30 backdrop-blur-md rounded-xl px-4 py-3 flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-destructive">Localização negada</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Permita acesso à localização nas configurações do navegador para ver eventos próximos.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {showMapHint && !selectedEvent && (
-          <div className="fixed bottom-44 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
-            <div className="bg-background/88 backdrop-blur-md rounded-xl px-4 py-3 text-center border border-border shadow-lg">
-              <p className="text-sm font-medium text-foreground">Explore o mapa e descubra eventos pela região</p>
-            </div>
-          </div>
-        )}
-
+        {/* Bottom stack: hint, denied banner, explore CTA — empilhados sem sobreposição */}
         {!selectedEvent && (
-          <div className="fixed bottom-28 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto">
+          <div className="fixed bottom-24 left-4 right-4 lg:left-[88px] z-[1000] max-w-sm mx-auto flex flex-col gap-2">
+            {showMapHint && (
+              <div className="bg-background/88 backdrop-blur-md rounded-xl px-4 py-2.5 text-center border border-border shadow-lg animate-in fade-in-0 slide-in-from-bottom-2 duration-300">
+                <p className="text-xs font-medium text-foreground">Explore o mapa e descubra eventos pela região</p>
+              </div>
+            )}
+
+            {geoState === "denied" && (
+              <div className="bg-destructive/10 border border-destructive/30 backdrop-blur-md rounded-xl px-3 py-2 flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-destructive">Localização negada</p>
+                  <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                    Permita o acesso à localização nas configurações do navegador.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <Link
               to="/eventos"
-              className="block rounded-xl border border-border bg-background/80 px-4 py-4 text-center text-sm font-medium text-primary shadow-lg backdrop-blur-md transition-colors hover:bg-background/90"
+              className="block rounded-xl border border-border bg-background/85 px-4 py-3 text-center text-sm font-medium text-primary shadow-lg backdrop-blur-md transition-colors hover:bg-background/95"
             >
               Explorar todos os eventos →
             </Link>
