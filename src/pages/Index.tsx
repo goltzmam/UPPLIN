@@ -34,13 +34,8 @@ export default function Index() {
   const queryClient = useQueryClient();
   const { user, profile, loading: authLoading } = useAuth();
 
-  useEffect(() => {
-    // Only redirect logged-in users whose profile has loaded and is missing CPF.
-    if (authLoading) return;
-    if (user && profile && !profile.cpf) {
-      navigate("/onboarding", { replace: true });
-    }
-  }, [navigate, profile, user, authLoading]);
+  // CPF é obrigatório apenas para compra de ingressos — não força redirecionamento aqui.
+  // O usuário pode navegar livremente pelo feed sem CPF.
 
   // ─── Location: priority Manual > GPS > Profile > Default ─────────────
   const {

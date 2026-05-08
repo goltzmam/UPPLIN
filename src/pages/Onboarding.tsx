@@ -214,6 +214,7 @@ export default function Onboarding() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7 }}
+                className="space-y-3"
               >
                 <Button
                   onClick={handleSubmit}
@@ -229,6 +230,17 @@ export default function Onboarding() {
                     </>
                   )}
                 </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => navigate("/")}
+                  className="w-full h-12 rounded-xl text-muted-foreground hover:text-foreground"
+                >
+                  Agora não, explorar a plataforma
+                </Button>
+                <p className="text-[11px] text-center text-muted-foreground">
+                  Você poderá cadastrar o CPF mais tarde, antes de comprar ingressos.
+                </p>
               </motion.div>
             </div>
           </div>
