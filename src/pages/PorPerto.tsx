@@ -49,13 +49,20 @@ const grayIcon = createMarkerIcon("#94a3b8");
 
 // Photo marker: shows event cover with colored ring + pin tail
 function createPhotoMarker(imageUrl: string | null, color: string, title: string) {
-  const safeTitle = (title || "").replace(/"/g, "&quot;");
+  const safeTitle = (title || "Evento").replace(/"/g, "&quot;");
+  const initials = (title || "EV")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase() || "")
+    .join("") || "EV";
+  const fallback = `<div class="photo-marker__fallback">${initials}</div>`;
   const img = imageUrl
-    ? `<img src="${imageUrl}" alt="${safeTitle}" loading="lazy" />`
-    : `<div class="photo-marker__fallback">📍</div>`;
+    ? `<img src="${imageUrl}" alt="${safeTitle}" loading="lazy" onerror="this.parentNode.innerHTML='${fallback.replace(/'/g, "&#39;")}'" />`
+    : fallback;
   return L.divIcon({
     html: `
-      <div class="photo-marker" style="--ring:${color}">
+      <div class="photo-marker" style="--ring:${color}" role="button" aria-label="${safeTitle}" title="${safeTitle}">
         <div class="photo-marker__avatar">${img}</div>
         <div class="photo-marker__tail"></div>
       </div>
