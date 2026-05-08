@@ -37,7 +37,7 @@ interface AuthContextType {
 
 const AUTH_USER_KEY = "upplin_active_user_id";
 
-const translateAuthError = (message: string) => {
+export const translateAuthError = (message: string) => {
   if (/email not confirmed/i.test(message)) {
     return "Confirme seu e-mail antes de entrar na sua conta.";
   }
