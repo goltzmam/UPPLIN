@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useOutletContext, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Save, Upload, Loader2, Instagram, Globe, Facebook, MapPin, CreditCard, CheckCircle2, ExternalLink } from "lucide-react";
+import { Save, Upload, Loader2, Instagram, Globe, Facebook, MapPin, CreditCard, CheckCircle2, ExternalLink, Copy, Check, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -569,12 +569,15 @@ function MercadoPagoCard() {
             </Button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Para vender ingressos e receber pagamentos, você precisa conectar sua conta do Mercado Pago. 
+              Para vender ingressos e receber pagamentos, conecte sua conta do Mercado Pago.
               A UPPLIN cobra uma comissão de <strong>10%</strong> por ingresso vendido.
             </p>
-            <Button onClick={handleConnect} disabled={connecting}>
+
+            <MercadoPagoOnboarding />
+
+            <Button onClick={handleConnect} disabled={connecting} className="w-full sm:w-auto">
               {connecting ? (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
               ) : (
@@ -586,5 +589,127 @@ function MercadoPagoCard() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function MercadoPagoOnboarding() {
+  const { toast } = useToast();
+  const [open, setOpen] = useState(true);
+  const [copied, setCopied] = useState(false);
+
+  const redirectUri = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mp-connect?action=callback`;
+
+  const copyRedirect = async () => {
+    try {
+      await navigator.clipboard.writeText(redirectUri);
+      setCopied(true);
+      toast({ title: "Redirect URI copiada!" });
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast({ title: "Não foi possível copiar", variant: "destructive" });
+    }
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-muted/30 overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-muted/50 transition"
+      >
+        <div className="flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium">Antes de conectar: configure seu app no Mercado Pago</span>
+        </div>
+        {open ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </button>
+
+      {open && (
+        <div className="px-4 pb-4 space-y-4 border-t border-border pt-4">
+          {/* Step 1 */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">1</span>
+              <p className="text-sm font-medium">Acesse o painel de desenvolvedor</p>
+            </div>
+            <a
+              href="https://www.mercadopago.com.br/developers/panel/app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-xs text-primary hover:underline ml-8"
+            >
+              Abrir painel do Mercado Pago <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
+
+          {/* Step 2 */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">2</span>
+              <p className="text-sm font-medium">Crie ou selecione um app do tipo correto</p>
+            </div>
+            <p className="text-xs text-muted-foreground ml-8">
+              O app deve ser do tipo <strong>“Marketplace” / “Plataforma”</strong>. Apps comuns (de uma única loja) não permitem conectar contas de organizadores via OAuth.
+            </p>
+          </div>
+
+          {/* Step 3 */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">3</span>
+              <p className="text-sm font-medium">Cadastre a Redirect URI exatamente assim</p>
+            </div>
+            <div className="ml-8 space-y-1">
+              <div className="flex items-stretch gap-2">
+                <code className="flex-1 text-[11px] sm:text-xs bg-background border border-border rounded-lg px-3 py-2 break-all font-mono">
+                  {redirectUri}
+                </code>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={copyRedirect}
+                  className="shrink-0"
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Deve incluir <code className="font-mono">?action=callback</code> ao final. Sem isso o login falha com “aplicativo não está pronto”.
+              </p>
+            </div>
+          </div>
+
+          {/* Step 4 */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">4</span>
+              <p className="text-sm font-medium">Ative o app em modo produção</p>
+            </div>
+            <p className="text-xs text-muted-foreground ml-8">
+              Em <em>“Detalhes do app”</em> verifique se o status está como <strong>Ativo</strong> e não em <em>rascunho</em>. Apps em rascunho não aceitam OAuth de terceiros.
+            </p>
+          </div>
+
+          {/* Step 5 */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-bold">5</span>
+              <p className="text-sm font-medium">Volte aqui e clique em “Conectar Mercado Pago”</p>
+            </div>
+            <p className="text-xs text-muted-foreground ml-8">
+              Você será redirecionado ao Mercado Pago para autorizar a UPPLIN a processar pagamentos em seu nome.
+            </p>
+          </div>
+
+          <div className="flex items-start gap-2 p-3 bg-background rounded-lg border border-border">
+            <AlertCircle className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Se aparecer <strong>“O aplicativo não está pronto para se conectar a Mercado Pago”</strong>, revise os passos 2, 3 e 4 — geralmente é a Redirect URI digitada incorretamente ou o app ainda inativo.
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
