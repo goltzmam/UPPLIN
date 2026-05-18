@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -36,5 +37,9 @@ async function cleanupStaleServiceWorkersAndCaches() {
     }
   }
 
-  createRoot(ROOT).render(<App />);
+  createRoot(ROOT).render(
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  );
 })();

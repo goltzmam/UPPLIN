@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -251,9 +252,19 @@ export default function PorPerto() {
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">
+      <Helmet>
+        <title>Eventos perto de você — UPPLIN</title>
+        <meta name="description" content="Veja no mapa os eventos acontecendo perto de você: shows, festas e experiências em tempo real no UPPLIN." />
+        <link rel="canonical" href="https://upplin.com/por-perto" />
+        <meta property="og:title" content="Eventos perto de você — UPPLIN" />
+        <meta property="og:description" content="Veja no mapa os eventos acontecendo perto de você." />
+        <meta property="og:url" content="https://upplin.com/por-perto" />
+        <meta property="og:type" content="website" />
+      </Helmet>
       <TikTokDesktopSidebar />
 
       <main className="flex-1 lg:ml-[72px] relative">
+        <h1 className="sr-only">Eventos perto de você no mapa</h1>
         {/* Map container - full viewport */}
         <div className="fixed inset-0 lg:left-[72px] lg:right-[380px] z-0">
           <MapContainer

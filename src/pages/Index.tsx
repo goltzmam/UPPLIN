@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
@@ -378,6 +379,16 @@ export default function Index() {
 
   return (
     <>
+      <Helmet>
+        <title>UPPLIN — Descubra e Compre Ingressos para os Melhores Eventos</title>
+        <meta name="description" content="Feed social de eventos do Brasil: shows, festas, conferências e experiências. Descubra perto de você e compre ingressos em segundos." />
+        <link rel="canonical" href="https://upplin.com/" />
+        <meta property="og:title" content="UPPLIN — Descubra os melhores eventos do Brasil" />
+        <meta property="og:description" content="Feed social de eventos: shows, festas, conferências e experiências únicas." />
+        <meta property="og:url" content="https://upplin.com/" />
+        <meta property="og:type" content="website" />
+      </Helmet>
+      <h1 className="sr-only">UPPLIN — Descubra os melhores eventos do Brasil</h1>
       <MobileFeed />
       <DesktopLayout />
       <BottomNav />

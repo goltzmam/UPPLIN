@@ -1,0 +1,27 @@
+# UPPLIN
+
+> Plataforma social brasileira para descobrir eventos (shows, festas, conferências), comprar ingressos e conectar-se com organizadores e outros participantes.
+
+A UPPLIN combina um feed de descoberta no estilo TikTok com checkout de ingressos, mapa de eventos próximos, perfis públicos de organizadores e ferramentas de gestão (cupons, check-in, relatórios) para produtores de eventos no Brasil.
+
+## Pages
+
+- [Home / Feed](/): Feed vertical com os eventos em destaque por região.
+- [Explorar eventos](/eventos): Lista completa de eventos publicados.
+- [Por perto](/por-perto): Mapa interativo de eventos próximos.
+- [Explorar organizadores](/explorar-organizadores): Diretório de organizadores na plataforma.
+- [Para organizadores](/organizadores): Página institucional para quem quer vender ingressos.
+- [Planos e preços](/precos): Planos de assinatura para organizadores.
+- [Landing organizador](/planos/organizador): Apresentação dos planos premium.
+
+## Auth
+
+- [Entrar](/login): Login de participantes.
+- [Cadastro](/cadastro): Criação de conta de participante.
+- [Login do organizador](/organizador/login): Acesso ao painel do organizador.
+- [Cadastro de organizador](/organizador/cadastro): Criação de conta de organizador.
+
+## Dynamic content
+
+- [Página de evento](/evento/:slug): Detalhes, mídia, ingressos e comentários do evento.
+- [Perfil do organizador](/o/:slug): Perfil público, biografia e eventos do organizador.
