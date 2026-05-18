@@ -225,14 +225,18 @@ export default function OrganizerPublicProfile() {
   const orgTitle = `${organizer.display_name} — Organizador no UPPLIN`.slice(0, 70);
   const rawOrgDesc = (organizer.description || `Conheça os eventos de ${organizer.display_name} no UPPLIN.`).replace(/\s+/g, " ").trim();
   const orgDesc = rawOrgDesc.length > 160 ? rawOrgDesc.slice(0, 157) + "..." : rawOrgDesc;
-  const orgJsonLd = {
+  const orgJsonLd: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: organizer.display_name,
     url: orgCanonical,
-    logo: organizer.logo_url || undefined,
     description: orgDesc,
   };
+  if (organizer.logo_url) {
+    orgJsonLd.logo = { "@type": "ImageObject", url: organizer.logo_url };
+    orgJsonLd.image = organizer.logo_url;
+  }
+  const orgJsonLdSafe = JSON.stringify(orgJsonLd).replace(/</g, "\\u003c");
 
   return (
     <div className="min-h-screen flex flex-col pb-20 md:pb-0 bg-background">
@@ -245,7 +249,7 @@ export default function OrganizerPublicProfile() {
         <meta property="og:url" content={orgCanonical} />
         <meta property="og:type" content="profile" />
         {organizer.logo_url && <meta property="og:image" content={organizer.logo_url} />}
-        <script type="application/ld+json">{JSON.stringify(orgJsonLd)}</script>
+        <script type="application/ld+json">{orgJsonLdSafe}</script>
       </Helmet>
       <Header />
 
