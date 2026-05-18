@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   Instagram, 
@@ -220,8 +221,32 @@ export default function OrganizerPublicProfile() {
     { id: "sobre", label: "Sobre", icon: <MessageCircle className="h-4 w-4" /> },
   ];
 
+  const orgCanonical = `https://upplin.com/o/${organizer.slug || organizer.id}`;
+  const orgTitle = `${organizer.display_name} — Organizador no UPPLIN`.slice(0, 70);
+  const rawOrgDesc = (organizer.description || `Conheça os eventos de ${organizer.display_name} no UPPLIN.`).replace(/\s+/g, " ").trim();
+  const orgDesc = rawOrgDesc.length > 160 ? rawOrgDesc.slice(0, 157) + "..." : rawOrgDesc;
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: organizer.display_name,
+    url: orgCanonical,
+    logo: organizer.logo_url || undefined,
+    description: orgDesc,
+  };
+
   return (
     <div className="min-h-screen flex flex-col pb-20 md:pb-0 bg-background">
+      <Helmet>
+        <title>{orgTitle}</title>
+        <meta name="description" content={orgDesc} />
+        <link rel="canonical" href={orgCanonical} />
+        <meta property="og:title" content={organizer.display_name} />
+        <meta property="og:description" content={orgDesc} />
+        <meta property="og:url" content={orgCanonical} />
+        <meta property="og:type" content="profile" />
+        {organizer.logo_url && <meta property="og:image" content={organizer.logo_url} />}
+        <script type="application/ld+json">{JSON.stringify(orgJsonLd)}</script>
+      </Helmet>
       <Header />
 
       <main className="flex-1 pt-14">
