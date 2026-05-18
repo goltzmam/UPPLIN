@@ -247,33 +247,52 @@ export default function Evento() {
   const rawDesc = (event.description || `Ingressos e detalhes do evento ${event.title}${event.venue_name ? ` em ${event.venue_name}` : ""}.`).replace(/\s+/g, " ").trim();
   const seoDesc = rawDesc.length > 160 ? rawDesc.slice(0, 157) + "..." : rawDesc;
   const ogImage = event.cover_image_url || "";
-  const eventJsonLd = {
+  const offers = (event.ticket_types || []).map((t: any) => ({
+    "@type": "Offer",
+    name: t.name,
+    price: ((t.price_cents || 0) / 100).toFixed(2),
+    priceCurrency: "BRL",
+    availability: "https://schema.org/InStock",
+    url: canonicalUrl,
+    validFrom: event.created_at || undefined,
+  }));
+  const eventJsonLd: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "Event",
     name: event.title,
     description: seoDesc,
     startDate: event.start_at,
-    endDate: event.end_at || undefined,
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    image: ogImage || undefined,
     location: {
       "@type": "Place",
       name: event.venue_name || event.address_text || "Local a divulgar",
-      address: event.address_text || event.venue_name || undefined,
+      ...(event.address_text
+        ? {
+            address: {
+              "@type": "PostalAddress",
+              streetAddress: event.address_text,
+              addressCountry: "BR",
+            },
+          }
+        : {}),
     },
-    organizer: event.organizer_accounts
-      ? { "@type": "Organization", name: event.organizer_accounts.display_name }
-      : undefined,
-    offers: (event.ticket_types || []).map((t: any) => ({
-      "@type": "Offer",
-      name: t.name,
-      price: ((t.price_cents || 0) / 100).toFixed(2),
-      priceCurrency: "BRL",
-      availability: "https://schema.org/InStock",
-      url: canonicalUrl,
-    })),
   };
+  if (event.end_at) eventJsonLd.endDate = event.end_at;
+  if (ogImage) eventJsonLd.image = [ogImage];
+  if (event.organizer_accounts) {
+    eventJsonLd.organizer = {
+      "@type": "Organization",
+      name: event.organizer_accounts.display_name,
+      ...(event.organizer_accounts.slug
+        ? { url: `https://upplin.com/o/${event.organizer_accounts.slug}` }
+        : {}),
+    };
+  }
+  if (offers.length > 0) eventJsonLd.offers = offers;
+
+  // Escape `</` to prevent breaking the <script> tag if any field contains it.
+  const eventJsonLdSafe = JSON.stringify(eventJsonLd).replace(/</g, "\\u003c");
 
   return (
     <div className="min-h-screen bg-background">
@@ -287,7 +306,7 @@ export default function Evento() {
         <meta property="og:type" content="event" />
         {ogImage && <meta property="og:image" content={ogImage} />}
         {ogImage && <meta name="twitter:image" content={ogImage} />}
-        <script type="application/ld+json">{JSON.stringify(eventJsonLd)}</script>
+        <script type="application/ld+json">{eventJsonLdSafe}</script>
       </Helmet>
       <TikTokDesktopSidebar />
 
