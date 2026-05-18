@@ -238,8 +238,9 @@ const FeedRow = React.memo(function FeedRow({
               src={item.coverImageUrl} 
               alt={item.title} 
               className="absolute inset-0 h-full w-full object-cover z-[1]" 
-              loading={isActive ? "eager" : "lazy"} 
+              loading={index === 0 ? "eager" : isActive ? "eager" : "lazy"} 
               decoding="async"
+              {...(index === 0 ? { fetchPriority: "high" as const } : {})}
             />
           ) : (
             <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-muted to-muted-foreground/20" />
