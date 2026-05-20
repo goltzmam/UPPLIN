@@ -141,7 +141,7 @@ export function VideoUpload({
 
       onChange(urlData.publicUrl);
     } catch (err: any) {
-      setError(err.message || "Erro ao enviar vídeo");
+      setError(translateUploadError(err?.message || ""));
     } finally {
       setUploading(false);
     }
