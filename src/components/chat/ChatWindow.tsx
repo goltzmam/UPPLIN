@@ -29,6 +29,9 @@ interface ChatWindowProps {
     id: string;
     name: string;
     photo_url?: string | null;
+    subtitle?: string | null;
+    is_organizer?: boolean;
+    is_support?: boolean;
   };
   onClose?: () => void;
   className?: string;
