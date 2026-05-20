@@ -36,12 +36,43 @@ export default function OrganizerDashboardContent() {
     enabled: !!organizer,
   });
 
-  // Calculate stats
-  const totalTicketsSold = events?.reduce((acc, e) => 
-    acc + (e.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_sold || 0), 0) || 0), 0) || 0;
-  
-  const totalRevenue = events?.reduce((acc, e) => 
-    acc + (e.ticket_types?.reduce((a: number, t: any) => a + ((t.quantity_sold || 0) * (t.price_cents || 0)), 0) || 0), 0) || 0;
+  // Real sold tickets (issued)
+  const { data: issuedTickets } = useQuery({
+    queryKey: ["organizer-issued-tickets-dash", organizer?.id],
+    queryFn: async () => {
+      const eventIds = (events || []).map((e: any) => e.id);
+      if (eventIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("id, event_id, ticket_type_id")
+        .in("event_id", eventIds)
+        .eq("status", "issued");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!events && events.length > 0,
+  });
+
+  // Paid orders for real revenue
+  const { data: paidOrders } = useQuery({
+    queryKey: ["organizer-paid-orders-dash", organizer?.id],
+    queryFn: async () => {
+      const eventIds = (events || []).map((e: any) => e.id);
+      if (eventIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("orders")
+        .select("total_cents, event_id")
+        .in("event_id", eventIds)
+        .eq("status", "paid");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!events && events.length > 0,
+  });
+
+  // Calculate stats based on REAL paid sales, not reservations
+  const totalTicketsSold = issuedTickets?.length || 0;
+  const totalRevenue = paidOrders?.reduce((acc: number, o: any) => acc + (o.total_cents || 0), 0) || 0;
 
   const formatPrice = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
 
@@ -141,7 +172,7 @@ export default function OrganizerDashboardContent() {
         ) : events && events.length > 0 ? (
           <div className="divide-y divide-border">
             {events.map((event) => {
-              const ticketsSold = event.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_sold || 0), 0) || 0;
+              const ticketsSold = issuedTickets?.filter((t: any) => t.event_id === event.id).length || 0;
               const totalTickets = event.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_total || 0), 0) || 0;
 
               return (
