@@ -173,6 +173,12 @@ export default function Evento() {
       return;
     }
 
+    // Exige onboarding completo (CPF) antes de comprar
+    if (!hasCompletedParticipantOnboarding) {
+      navigate(`/onboarding?redirect=${encodeURIComponent(`/evento/${event?.slug ?? event?.id ?? ""}`)}`);
+      return;
+    }
+
     if (totalItems === 0) {
       return;
     }
