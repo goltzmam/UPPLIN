@@ -21,6 +21,8 @@ project_id = "pyhlsgfsunjcjbaqjcwn"
     verify_jwt = false
   [functions.mp-webhook]
     verify_jwt = false
+  [functions.mp-check-payment-status]
+    verify_jwt = false
   [functions.payment-webhook]
     verify_jwt = false
   [functions.process-email-queue]
