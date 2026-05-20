@@ -36,7 +36,7 @@ export function TicketQRCode({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
-      className={cn("relative w-full max-w-[360px] mx-auto", className)}
+      className={cn("relative w-full max-w-[320px] sm:max-w-[360px] mx-auto", className)}
     >
       {/* Main Ticket Card */}
       <div className="relative overflow-hidden rounded-3xl shadow-xl">
@@ -83,14 +83,15 @@ export function TicketQRCode({
           <div className="flex flex-col items-center">
             {/* QR Code */}
             <div className={cn(
-              "relative p-4 rounded-2xl bg-white shadow-sm border border-border/50 mb-4",
+              "relative p-3 sm:p-4 rounded-2xl bg-white shadow-sm border border-border/50 mb-4",
               !isValid && "opacity-40 grayscale"
             )}>
               <QRCodeSVG
                 value={qrValue}
-                size={180}
+                size={156}
                 level="H"
                 includeMargin={false}
+                className="h-auto w-full max-w-[180px]"
                 imageSettings={{
                   src: "",
                   height: 0,
