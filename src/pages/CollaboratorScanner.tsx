@@ -1,18 +1,15 @@
 import { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, XCircle, QrCode, Keyboard, Search, ArrowLeft, Wifi } from "lucide-react";
+import { XCircle, QrCode, Keyboard, Search, ArrowLeft, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { QRScanner } from "@/components/checkin/QRScanner";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import { triggerFeedback } from "@/lib/feedback";
 import { getCheckInErrorMessage } from "@/lib/checkin";
 import { CheckInFeedback } from "@/components/checkin/CheckInFeedback";
@@ -28,7 +25,6 @@ export default function CollaboratorScanner() {
   const { eventId } = useParams<{ eventId: string }>();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [manualCode, setManualCode] = useState("");
   const [checkInResult, setCheckInResult] = useState<CheckInResult | null>(null);
@@ -90,9 +86,10 @@ export default function CollaboratorScanner() {
 
       const total = allTickets?.length || 0;
       const checkedIn = allTickets?.filter((t) => t.status === "used").length || 0;
+      const pending = allTickets?.filter((t) => t.status === "issued").length || 0;
       const myCheckins = allTickets?.filter((t) => t.checked_in_by === user!.id).length || 0;
 
-      return { total, checkedIn, myCheckins };
+      return { total, checkedIn, pending, myCheckins };
     },
     enabled: !!access && !!user,
   });
@@ -126,6 +123,7 @@ export default function CollaboratorScanner() {
         return {
           ...current,
           checkedIn: current.checkedIn + 1,
+          pending: Math.max((current.pending || 0) - 1, 0),
           myCheckins: current.myCheckins + 1,
         };
       });
@@ -220,16 +218,16 @@ export default function CollaboratorScanner() {
         {/* Quick stats */}
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-card border border-border rounded-xl p-3 text-center">
-            <p className="text-lg font-bold text-primary">{stats?.myCheckins || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Meus</p>
+            <p className="text-lg font-bold text-primary">{stats?.checkedIn || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Validados</p>
           </div>
           <div className="bg-card border border-border rounded-xl p-3 text-center">
-            <p className="text-lg font-bold text-foreground">{stats?.checkedIn || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Total</p>
+            <p className="text-lg font-bold text-foreground">{stats?.pending || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Pendentes</p>
           </div>
           <div className="bg-card border border-border rounded-xl p-3 text-center">
             <p className="text-lg font-bold text-muted-foreground">{stats?.total || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Ingressos</p>
+            <p className="text-[10px] text-muted-foreground">Total</p>
           </div>
         </div>
 
