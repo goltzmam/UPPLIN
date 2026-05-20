@@ -31,6 +31,10 @@ import {
   Calendar,
   CreditCard,
   RefreshCw,
+  Activity,
+  UserCog,
+  User as UserIcon,
+  Radio,
 } from "lucide-react";
 import { format, subDays, startOfDay, eachDayOfInterval, subMonths, startOfMonth, eachMonthOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
