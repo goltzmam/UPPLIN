@@ -19,7 +19,7 @@ export default function Checkout() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, hasCompletedParticipantOnboarding } = useAuth();
   const { toast } = useToast();
   const [processing, setProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
