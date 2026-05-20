@@ -238,11 +238,25 @@ export function ConversationsList({
     >
       <Avatar className="h-12 w-12 shrink-0">
         <AvatarImage src={conv.other_participant?.photo_url || undefined} />
-        <AvatarFallback>{getInitials(conv.other_participant?.full_name)}</AvatarFallback>
+        <AvatarFallback className={cn(
+          (conv.other_participant?.is_organizer || conv.other_participant?.is_support) &&
+            "bg-primary/15 text-primary"
+        )}>
+          {conv.other_participant?.is_support
+            ? <Shield className="h-5 w-5" />
+            : conv.other_participant?.is_organizer
+              ? <Building2 className="h-5 w-5" />
+              : getInitials(conv.other_participant?.full_name)}
+        </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-semibold truncate">{conv.other_participant?.full_name || "Usuário"}</p>
+          <div className="flex items-center gap-1 min-w-0">
+            <p className="font-semibold truncate">{conv.other_participant?.full_name || "Usuário"}</p>
+            {(conv.other_participant?.is_organizer || conv.other_participant?.is_support) && (
+              <Shield className="h-3 w-3 text-primary shrink-0" />
+            )}
+          </div>
           {conv.last_message && (
             <span className="text-xs text-muted-foreground shrink-0">
               {formatDate(conv.last_message.created_at)}
