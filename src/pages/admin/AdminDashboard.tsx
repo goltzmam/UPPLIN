@@ -21,11 +21,12 @@ export default function AdminDashboard() {
   const { data: stats, isLoading } = useQuery({
     queryKey: ["admin-dashboard-stats"],
     queryFn: async () => {
-      const [usersRes, organizersRes, eventsRes, ordersRes, cpfRes] = await Promise.all([
+      const [usersRes, organizersRes, eventsRes, ordersRes, ticketsRes, cpfRes] = await Promise.all([
         supabase.from("profiles").select("id", { count: "exact", head: true }),
         supabase.from("organizer_accounts").select("id", { count: "exact", head: true }),
         supabase.from("events").select("id, status", { count: "exact" }),
         supabase.from("orders").select("total_cents, status"),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("status", "issued"),
         supabase.from("cpf_change_requests").select("id, status"),
       ]);
 
@@ -38,12 +39,14 @@ export default function AdminDashboard() {
         organizers: organizersRes.count || 0,
         events: eventsRes.data?.length || 0,
         publishedEvents: publishedEvents.length,
-        ticketsSold: paidOrders.length,
+        ticketsSold: ticketsRes.count || 0,
         revenue: paidOrders.reduce((acc, o) => acc + (o.total_cents || 0), 0),
         pendingCpf: pendingCpf.length,
       };
     },
-    staleTime: 1000 * 60 * 2, // 2 minutes - dashboard stats don't need to be real-time
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
+    staleTime: 20_000,
     gcTime: 1000 * 60 * 10,
   });
 
