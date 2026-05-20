@@ -16,6 +16,26 @@ interface VideoUploadProps {
 const MAX_DURATION_SECONDS = 60;
 const MAX_FILE_SIZE_MB = 50;
 
+function translateUploadError(message: string): string {
+  const msg = (message || "").toLowerCase();
+  if (msg.includes("mime type") && msg.includes("not supported")) {
+    return "Formato de vídeo não suportado. Use MP4, WebM ou MOV.";
+  }
+  if (msg.includes("payload too large") || msg.includes("exceeded the maximum")) {
+    return `Arquivo muito grande. Máximo permitido: ${MAX_FILE_SIZE_MB}MB.`;
+  }
+  if (msg.includes("duplicate") || msg.includes("already exists")) {
+    return "Já existe um arquivo com esse nome. Tente novamente.";
+  }
+  if (msg.includes("network") || msg.includes("failed to fetch")) {
+    return "Falha de conexão. Verifique sua internet e tente novamente.";
+  }
+  if (msg.includes("unauthorized") || msg.includes("not authorized")) {
+    return "Você não tem permissão para enviar este arquivo.";
+  }
+  return "Erro ao enviar vídeo. Tente novamente.";
+}
+
 export function VideoUpload({
   eventId,
   organizerId,
@@ -121,7 +141,7 @@ export function VideoUpload({
 
       onChange(urlData.publicUrl);
     } catch (err: any) {
-      setError(err.message || "Erro ao enviar vídeo");
+      setError(translateUploadError(err?.message || ""));
     } finally {
       setUploading(false);
     }
