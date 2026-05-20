@@ -36,7 +36,7 @@ export function TicketQRCode({
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: "spring", stiffness: 200, damping: 20 }}
-      className={cn("relative w-full max-w-[360px] mx-auto", className)}
+      className={cn("relative w-full max-w-[320px] sm:max-w-[360px] mx-auto", className)}
     >
       {/* Main Ticket Card */}
       <div className="relative overflow-hidden rounded-3xl shadow-xl">
