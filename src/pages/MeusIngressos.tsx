@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MapPin, QrCode, Ticket, Download, X, Clock, CreditCard, MessageCircle, CheckCircle } from "lucide-react";
+import { Calendar, MapPin, QrCode, Ticket, Download, Clock, CreditCard, MessageCircle, CheckCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -158,11 +158,11 @@ export default function MeusIngressos() {
   );
 
   const upcomingTickets = tickets?.filter(
-    (t) => new Date(t.events?.start_at) >= new Date() && t.status === "issued"
+    (t) => new Date(t.events?.start_at) >= new Date() && t.status !== "cancelled"
   ) || [];
 
   const pastTickets = tickets?.filter(
-    (t) => new Date(t.events?.start_at) < new Date() || t.status !== "issued"
+    (t) => new Date(t.events?.start_at) < new Date() || t.status === "cancelled"
   ) || [];
 
   const statusBadge = (status: string) => {
