@@ -1752,6 +1752,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_in_ticket: {
+        Args: { p_event_id?: string; p_ticket_code: string }
+        Returns: Json
+      }
       confirm_paid_order: {
         Args: {
           p_amount_cents: number
