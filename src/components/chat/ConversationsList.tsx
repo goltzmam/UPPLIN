@@ -97,11 +97,28 @@ export function ConversationsList({
               .select("display_name, logo_url, owner_user_id")
               .eq("owner_user_id", otherParticipantId)
               .maybeSingle();
+            let coverFallback: string | null = null;
+            if (conv.event_id) {
+              const { data: ev } = await supabase
+                .from("events")
+                .select("cover_image_url")
+                .eq("id", conv.event_id)
+                .maybeSingle();
+              coverFallback = ev?.cover_image_url || null;
+            }
             if (org) {
               enrichedParticipant = {
                 id: otherParticipantId,
                 full_name: org.display_name,
-                photo_url: org.logo_url,
+                photo_url: org.logo_url || coverFallback,
+                subtitle: org.display_name ? `Organizador • ${conv.events?.title || "Evento"}` : "Organizador do evento",
+                is_organizer: true,
+              };
+            } else {
+              // Participant viewing organizer (or vice versa) — at minimum show the event title
+              enrichedParticipant = {
+                ...enrichedParticipant,
+                photo_url: enrichedParticipant.photo_url || coverFallback,
                 subtitle: "Organizador do evento",
                 is_organizer: true,
               };
