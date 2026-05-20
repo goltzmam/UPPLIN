@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { QrCode, CheckCircle, Search, Ticket, User, Calendar, Keyboard, Users } from "lucide-react";
+import { QrCode, CheckCircle, Search, Ticket, User, Calendar, Keyboard } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -72,6 +72,27 @@ export default function CheckInContent() {
         .order("issued_at", { ascending: false });
       if (error) throw error;
       return data || [];
+    },
+    enabled: !!selectedEvent,
+  });
+
+  const { data: ticketStats, refetch: refetchStats } = useQuery({
+    queryKey: ["event-ticket-stats", selectedEvent],
+    queryFn: async () => {
+      const [totalResult, checkedInResult, pendingResult] = await Promise.all([
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", selectedEvent),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", selectedEvent).eq("status", "used"),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", selectedEvent).eq("status", "issued"),
+      ]);
+
+      const error = totalResult.error || checkedInResult.error || pendingResult.error;
+      if (error) throw error;
+
+      return {
+        total: totalResult.count || 0,
+        checkedIn: checkedInResult.count || 0,
+        pending: pendingResult.count || 0,
+      };
     },
     enabled: !!selectedEvent,
   });
