@@ -67,7 +67,7 @@ serve(async (req) => {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (order.status === "failed" || order.status === "cancelled" || order.status === "refunded") {
+    if ((order.status === "failed" || order.status === "cancelled" || order.status === "refunded") && !order.mp_payment_id) {
       return new Response(JSON.stringify({ status: order.status }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
