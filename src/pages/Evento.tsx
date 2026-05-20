@@ -39,7 +39,7 @@ interface MediaItem {
 export default function Evento() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasCompletedParticipantOnboarding } = useAuth();
   const queryClient = useQueryClient();
   const [selection, setSelection] = useState<TicketSelection>({});
   const [checkingOut, setCheckingOut] = useState(false);
