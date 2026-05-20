@@ -39,7 +39,7 @@ interface MediaItem {
 export default function Evento() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, hasCompletedParticipantOnboarding } = useAuth();
   const queryClient = useQueryClient();
   const [selection, setSelection] = useState<TicketSelection>({});
   const [checkingOut, setCheckingOut] = useState(false);
@@ -170,6 +170,12 @@ export default function Evento() {
   const handleCheckout = async () => {
     if (!user) {
       navigate("/login");
+      return;
+    }
+
+    // Exige onboarding completo (CPF) antes de comprar
+    if (!hasCompletedParticipantOnboarding) {
+      navigate(`/onboarding?redirect=${encodeURIComponent(`/evento/${event?.slug ?? event?.id ?? ""}`)}`);
       return;
     }
 

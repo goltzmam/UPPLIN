@@ -19,7 +19,7 @@ export default function Checkout() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, hasCompletedParticipantOnboarding } = useAuth();
   const { toast } = useToast();
   const [processing, setProcessing] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -62,8 +62,16 @@ export default function Checkout() {
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) navigate("/login");
-  }, [authLoading, user, navigate]);
+    if (authLoading) return;
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    // Bloqueia checkout até concluir o onboarding (CPF obrigatório)
+    if (profile && !hasCompletedParticipantOnboarding) {
+      navigate(`/onboarding?redirect=${encodeURIComponent(`/checkout/${orderId ?? ""}`)}`, { replace: true });
+    }
+  }, [authLoading, user, profile, hasCompletedParticipantOnboarding, navigate, orderId]);
 
   // Fetch MP public key
   const { data: mpPublicKey } = useQuery({
