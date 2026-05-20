@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { MessageCircle, ArrowLeft, Plus, Users, Building2, Shield, Search, Ticket } from "lucide-react";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
