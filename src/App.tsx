@@ -93,6 +93,8 @@ if (typeof window !== "undefined") {
 // Simplified routes wrapper - removed heavy AnimatePresence for mobile performance
 function AnimatedRoutes() {
   const location = useLocation();
+  usePresenceHeartbeat();
+
 
   // Global kill-switch: stop any media when navigating away from feed pages
   const prevPathRef = useRef(location.pathname);
