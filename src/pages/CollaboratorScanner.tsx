@@ -1,20 +1,18 @@
 import { useState, useCallback, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, XCircle, QrCode, Keyboard, Search, ArrowLeft, Wifi } from "lucide-react";
+import { XCircle, QrCode, Keyboard, Search, ArrowLeft, Wifi } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { QRScanner } from "@/components/checkin/QRScanner";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 import { triggerFeedback } from "@/lib/feedback";
 import { getCheckInErrorMessage } from "@/lib/checkin";
+import { CheckInFeedback } from "@/components/checkin/CheckInFeedback";
 import confetti from "canvas-confetti";
 
 interface CheckInResult {
@@ -27,7 +25,6 @@ export default function CollaboratorScanner() {
   const { eventId } = useParams<{ eventId: string }>();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [manualCode, setManualCode] = useState("");
   const [checkInResult, setCheckInResult] = useState<CheckInResult | null>(null);
@@ -79,19 +76,25 @@ export default function CollaboratorScanner() {
   });
 
   // Stats
-  const { data: stats } = useQuery({
+  const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ["collab-scanner-stats", eventId, user?.id],
     queryFn: async () => {
-      const { data: allTickets } = await supabase
-        .from("tickets")
-        .select("status, checked_in_by")
-        .eq("event_id", eventId!);
+      const [totalResult, checkedInResult, pendingResult, myResult] = await Promise.all([
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!).eq("status", "used"),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!).eq("status", "issued"),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!).eq("checked_in_by", user!.id),
+      ]);
 
-      const total = allTickets?.length || 0;
-      const checkedIn = allTickets?.filter((t) => t.status === "used").length || 0;
-      const myCheckins = allTickets?.filter((t) => t.checked_in_by === user!.id).length || 0;
+      const error = totalResult.error || checkedInResult.error || pendingResult.error || myResult.error;
+      if (error) throw error;
 
-      return { total, checkedIn, myCheckins };
+      const total = totalResult.count || 0;
+      const checkedIn = checkedInResult.count || 0;
+      const pending = pendingResult.count || 0;
+      const myCheckins = myResult.count || 0;
+
+      return { total, checkedIn, pending, myCheckins };
     },
     enabled: !!access && !!user,
   });
@@ -120,8 +123,18 @@ export default function CollaboratorScanner() {
     },
     onSuccess: (ticket) => {
       setCheckInResult({ success: true, message: "Check-in realizado!", ticket });
+      queryClient.setQueryData(["collab-scanner-stats", eventId, user?.id], (current: any) => {
+        if (!current) return current;
+        return {
+          ...current,
+          checkedIn: current.checkedIn + 1,
+          pending: Math.max((current.pending || 0) - 1, 0),
+          myCheckins: current.myCheckins + 1,
+        };
+      });
       triggerFeedback({ sound: "success", haptic: "success" });
       queryClient.invalidateQueries({ queryKey: ["collab-scanner-stats", eventId] });
+      refetchStats();
       confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 }, colors: ["#f59e0b", "#8b5cf6", "#ec4899", "#10b981"] });
       setTimeout(() => setCheckInResult(null), 5000);
     },
@@ -134,7 +147,7 @@ export default function CollaboratorScanner() {
 
   const processCode = useCallback((code: string) => {
     const ticketCode = code.trim();
-    if (!ticketCode) return;
+    if (!ticketCode || checkInMutation.isPending) return;
     checkInMutation.mutate(ticketCode);
   }, [checkInMutation]);
 
@@ -210,59 +223,20 @@ export default function CollaboratorScanner() {
         {/* Quick stats */}
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-card border border-border rounded-xl p-3 text-center">
-            <p className="text-lg font-bold text-primary">{stats?.myCheckins || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Meus</p>
+            <p className="text-lg font-bold text-primary">{stats?.checkedIn || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Validados</p>
           </div>
           <div className="bg-card border border-border rounded-xl p-3 text-center">
-            <p className="text-lg font-bold text-foreground">{stats?.checkedIn || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Total</p>
+            <p className="text-lg font-bold text-foreground">{stats?.pending || 0}</p>
+            <p className="text-[10px] text-muted-foreground">Pendentes</p>
           </div>
           <div className="bg-card border border-border rounded-xl p-3 text-center">
             <p className="text-lg font-bold text-muted-foreground">{stats?.total || 0}</p>
-            <p className="text-[10px] text-muted-foreground">Ingressos</p>
+            <p className="text-[10px] text-muted-foreground">Total</p>
           </div>
         </div>
 
-        {/* Result */}
-        <AnimatePresence>
-          {checkInResult && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className={cn(
-                "p-4 rounded-2xl flex items-center gap-3 border-2",
-                checkInResult.success
-                  ? "bg-green-50 dark:bg-green-950/30 border-green-500/40"
-                  : "bg-red-50 dark:bg-red-950/30 border-destructive/40"
-              )}
-            >
-              {checkInResult.success ? (
-                <CheckCircle className="h-10 w-10 text-green-500 shrink-0" />
-              ) : (
-                <XCircle className="h-10 w-10 text-destructive shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-display font-bold">{checkInResult.success ? "Entrada liberada!" : "Não autorizado"}</p>
-                <p className="text-xs text-muted-foreground">{checkInResult.message}</p>
-                {checkInResult.success && checkInResult.ticket?.profiles && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <Avatar className="h-8 w-8 border border-primary/30">
-                      <AvatarImage src={checkInResult.ticket.profiles.photo_url} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                        {(checkInResult.ticket.profiles.full_name || "?").charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{checkInResult.ticket.profiles.full_name}</p>
-                      <p className="text-[10px] text-muted-foreground">{checkInResult.ticket.ticket_types?.name}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <CheckInFeedback result={checkInResult} />
 
         {/* Scanner tabs */}
         <Tabs defaultValue="scanner" className="space-y-3">

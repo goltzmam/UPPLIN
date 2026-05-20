@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MapPin, QrCode, Ticket, Download, X, Clock, CreditCard, MessageCircle } from "lucide-react";
+import { Calendar, MapPin, QrCode, Ticket, Download, Clock, CreditCard, MessageCircle, CheckCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -58,6 +58,42 @@ export default function MeusIngressos() {
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 15,
   });
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel(`my-tickets-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tickets",
+          filter: `buyer_user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updatedTicket = payload.new as any;
+          queryClient.invalidateQueries({ queryKey: ["my-tickets", user.id] });
+          setSelectedTicket((current: any) =>
+            current?.id && updatedTicket?.id === current.id ? { ...current, ...updatedTicket } : current
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient, user]);
+
+  useEffect(() => {
+    if (!selectedTicket?.id || !tickets) return;
+    const freshTicket = tickets.find((ticket: any) => ticket.id === selectedTicket.id);
+    if (freshTicket && freshTicket.status !== selectedTicket.status) {
+      setSelectedTicket(freshTicket);
+    }
+  }, [selectedTicket?.id, selectedTicket?.status, tickets]);
 
   const handleContactOrganizer = useCallback(async (ticket: any) => {
     if (!user) return;
@@ -122,11 +158,11 @@ export default function MeusIngressos() {
   );
 
   const upcomingTickets = tickets?.filter(
-    (t) => new Date(t.events?.start_at) >= new Date() && t.status === "issued"
+    (t) => new Date(t.events?.start_at) >= new Date() && t.status !== "cancelled"
   ) || [];
 
   const pastTickets = tickets?.filter(
-    (t) => new Date(t.events?.start_at) < new Date() || t.status !== "issued"
+    (t) => new Date(t.events?.start_at) < new Date() || t.status === "cancelled"
   ) || [];
 
   const statusBadge = (status: string) => {
@@ -211,9 +247,10 @@ export default function MeusIngressos() {
   const TicketCard = ({ ticket }: { ticket: any }) => {
     const eventDate = new Date(ticket.events?.start_at);
     const isPast = eventDate < new Date();
+    const isUsed = ticket.status === "used";
 
     return (
-      <div className={`bg-card rounded-xl sm:rounded-2xl border border-border overflow-hidden ${isPast ? "opacity-70" : ""}`}>
+      <div className={`bg-card rounded-xl sm:rounded-2xl border border-border overflow-hidden ${isPast && !isUsed ? "opacity-70" : ""}`}>
         <div className="flex flex-col sm:flex-row">
           {/* Event Image */}
           <div className="sm:w-40 md:w-48 h-28 sm:h-auto relative shrink-0">
@@ -247,6 +284,12 @@ export default function MeusIngressos() {
                     </div>
                   )}
                 </div>
+                {isUsed && (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl border border-success/40 bg-success/10 px-3 py-2 text-xs font-medium text-success">
+                    <CheckCircle className="h-4 w-4 shrink-0" />
+                    <span>Check-in confirmado. Sua entrada foi validada.</span>
+                  </div>
+                )}
               </div>
 
               {/* QR Code Preview - desktop only */}
@@ -273,6 +316,15 @@ export default function MeusIngressos() {
                 <Button variant="outline" size="sm" className="text-xs h-8">
                   <Download className="h-3.5 w-3.5 mr-1.5" />
                   Baixar PDF
+                </Button>
+              </div>
+            )}
+
+            {isUsed && (
+              <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
+                <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelectedTicket(ticket)}>
+                  <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                  Ver check-in
                 </Button>
               </div>
             )}
