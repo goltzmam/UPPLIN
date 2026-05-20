@@ -85,6 +85,40 @@ export function ConversationsList({
             .eq("id", otherParticipantId)
             .maybeSingle();
 
+          let enrichedParticipant: Conversation["other_participant"] = participantData
+            ? { ...participantData, subtitle: "Online" }
+            : { id: otherParticipantId, full_name: null, photo_url: null, subtitle: "Online" };
+
+          // For event chats: if the OTHER participant is an organizer owner,
+          // show the organizer brand (display_name + logo) instead of the personal profile.
+          if (conv.type === "user_organizer") {
+            const { data: org } = await supabase
+              .from("organizer_accounts")
+              .select("display_name, logo_url, owner_user_id")
+              .eq("owner_user_id", otherParticipantId)
+              .maybeSingle();
+            if (org) {
+              enrichedParticipant = {
+                id: otherParticipantId,
+                full_name: org.display_name,
+                photo_url: org.logo_url,
+                subtitle: "Organizador do evento",
+                is_organizer: true,
+              };
+            }
+          }
+
+          // Platform support
+          if (conv.type === "user_admin" || conv.type === "organizer_admin") {
+            enrichedParticipant = {
+              id: otherParticipantId,
+              full_name: "Suporte UPPLIN",
+              photo_url: enrichedParticipant.photo_url,
+              subtitle: "Equipe oficial",
+              is_support: true,
+            };
+          }
+
           const { data: lastMsg } = await supabase
             .from("messages")
             .select("content, created_at, sender_id")
@@ -102,7 +136,7 @@ export function ConversationsList({
 
           return {
             ...conv,
-            other_participant: participantData,
+            other_participant: enrichedParticipant,
             last_message: lastMsg,
             unread_count: count || 0,
           };
