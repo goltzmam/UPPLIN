@@ -137,6 +137,7 @@ export default function Evento() {
       navigate("/login");
       return;
     }
+    if (!event?.id) return;
 
     setSavingEvent(true);
 
@@ -145,25 +146,26 @@ export default function Evento() {
         const { error } = await supabase
           .from("saved_events")
           .delete()
-          .eq("event_id", id!)
+          .eq("event_id", event.id)
           .eq("user_id", user.id);
 
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from("saved_events")
-          .insert({ event_id: id, user_id: user.id });
+          .insert({ event_id: event.id, user_id: user.id });
 
         if (error) throw error;
       }
 
-      queryClient.invalidateQueries({ queryKey: ["saved-event", id, user.id] });
+      queryClient.invalidateQueries({ queryKey: ["saved-event", event.id, user.id] });
     } catch (err: any) {
       console.error("Erro ao salvar evento:", err.message);
     } finally {
       setSavingEvent(false);
     }
   };
+
 
   const handleCheckout = async () => {
     if (!user) {
