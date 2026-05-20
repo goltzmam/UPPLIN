@@ -1,7 +1,7 @@
 import { QRCodeSVG } from "qrcode.react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Calendar, MapPin, Ticket, Shield } from "lucide-react";
+import { Calendar, CheckCircle, MapPin, Ticket, Shield } from "lucide-react";
 
 interface TicketQRCodeProps {
   ticketId: string;
@@ -102,14 +102,19 @@ export function TicketQRCode({
               {!isValid && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="bg-destructive/90 text-white px-4 py-1.5 rounded-full text-sm font-bold uppercase -rotate-12 shadow-lg">
-                    {status === "used" ? "Utilizado" : "Cancelado"}
+                    {status === "used" ? "Check-in feito" : "Cancelado"}
                   </div>
                 </div>
               )}
             </div>
 
             {/* Status indicator */}
-            {isValid && (
+            {status === "used" ? (
+              <div className="mb-3 flex max-w-[260px] items-center gap-2 rounded-xl border border-success/40 bg-success/10 px-3 py-2 text-center">
+                <CheckCircle className="h-4 w-4 shrink-0 text-success" />
+                <span className="text-xs font-semibold text-success">Check-in realizado com sucesso</span>
+              </div>
+            ) : isValid && (
               <motion.div
                 animate={{ opacity: [0.5, 1, 0.5] }}
                 transition={{ duration: 2, repeat: Infinity }}
@@ -139,7 +144,7 @@ export function TicketQRCode({
         {/* Bottom bar */}
         <div className="bg-muted/50 px-6 py-3 flex items-center justify-center">
           <p className="text-[11px] text-muted-foreground text-center">
-            Apresente este QR Code na entrada do evento
+            {status === "used" ? "Este ingresso já foi validado e não pode ser usado novamente" : "Apresente este QR Code na entrada do evento"}
           </p>
         </div>
       </div>
