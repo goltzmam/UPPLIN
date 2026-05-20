@@ -328,6 +328,35 @@ async function handleApprovedPayment(adminClient: any, order: any, orderId: stri
     await adminClient.from("tickets").insert(ticketsToCreate);
   }
 
+  // Auto-create buyer<->organizer conversation
+  try {
+    const organizer = order.events?.organizer_accounts as any;
+    const ownerId = organizer?.owner_user_id;
+    if (ownerId && ownerId !== order.buyer_user_id) {
+      const p1 = order.buyer_user_id < ownerId ? order.buyer_user_id : ownerId;
+      const p2 = order.buyer_user_id < ownerId ? ownerId : order.buyer_user_id;
+      const { data: existingConv } = await adminClient
+        .from("conversations")
+        .select("id")
+        .eq("type", "user_organizer")
+        .eq("event_id", order.event_id)
+        .eq("participant_1_id", p1)
+        .eq("participant_2_id", p2)
+        .maybeSingle();
+      if (!existingConv) {
+        await adminClient.from("conversations").insert({
+          type: "user_organizer",
+          event_id: order.event_id,
+          participant_1_id: p1,
+          participant_2_id: p2,
+          subject: order.events?.title || null,
+        });
+      }
+    }
+  } catch (e) {
+    console.error("conv create failed", e);
+  }
+
   console.log(`Order ${orderId} paid inline, ${ticketsToCreate.length} tickets issued`);
 }
 
