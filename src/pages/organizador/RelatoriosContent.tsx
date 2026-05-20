@@ -46,6 +46,23 @@ export default function RelatoriosContent() {
     enabled: !!events && events.length > 0,
   });
 
+  // Get issued tickets (real sold count, not reservations)
+  const { data: issuedTickets } = useQuery({
+    queryKey: ["organizer-issued-tickets", organizer?.id],
+    queryFn: async () => {
+      if (!events || events.length === 0) return [];
+      const eventIds = events.map((e: any) => e.id);
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("id, event_id")
+        .in("event_id", eventIds)
+        .eq("status", "issued");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!events && events.length > 0,
+  });
+
   // Subscription info
   const { data: subscription } = useQuery({
     queryKey: ["organizer-subscription", organizer?.id],
@@ -64,8 +81,7 @@ export default function RelatoriosContent() {
   // Calculate stats
   const totalEvents = events?.length || 0;
   const publishedEvents = events?.filter((e: any) => e.status === "published").length || 0;
-  const totalTicketsSold = events?.reduce((acc: number, e: any) =>
-    acc + (e.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_sold || 0), 0) || 0), 0) || 0;
+  const totalTicketsSold = issuedTickets?.length || 0;
   const totalTicketsAvailable = events?.reduce((acc: number, e: any) =>
     acc + (e.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_total || 0), 0) || 0), 0) || 0;
   const grossRevenue = orders?.reduce((acc: number, o: any) => acc + (o.total_cents || 0), 0) || 0;
@@ -104,7 +120,7 @@ export default function RelatoriosContent() {
       const eventOrders = orders?.filter((o: any) => o.event_id === event.id) || [];
       const revenue = eventOrders.reduce((a: number, o: any) => a + (o.total_cents || 0), 0);
       const commission = eventOrders.reduce((a: number, o: any) => a + (o.commission_cents || 0), 0);
-      const ticketsSold = event.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_sold || 0), 0) || 0;
+      const ticketsSold = issuedTickets?.filter((t: any) => t.event_id === event.id).length || 0;
       return { ...event, revenue, commission, net: revenue - commission, ticketsSold };
     })
     .sort((a: any, b: any) => b.revenue - a.revenue)

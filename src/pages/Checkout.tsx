@@ -122,29 +122,28 @@ export default function Checkout() {
 
     pollingRef.current = setInterval(async () => {
       try {
-        const { data, error } = await supabase
-          .from("orders")
-          .select("status")
-          .eq("id", ordId)
-          .single();
+        // Actively ask the server to check Mercado Pago status (webhook fallback)
+        const { data: poll } = await supabase.functions.invoke("mp-check-payment-status", {
+          body: { order_id: ordId },
+        });
 
-        if (error) return;
+        const status = poll?.status;
 
-        if (data?.status === "paid") {
+        if (status === "paid") {
           if (pollingRef.current) clearInterval(pollingRef.current);
           setPaymentSuccess(true);
           toast({ title: "Pagamento aprovado! 🎉", description: "Seus ingressos foram emitidos." });
           queryClient.invalidateQueries({ queryKey: ["order", ordId] });
           setTimeout(() => navigate("/pagamento-sucesso?status=approved"), 1500);
-        } else if (data?.status === "failed") {
+        } else if (status === "failed" || status === "cancelled") {
           if (pollingRef.current) clearInterval(pollingRef.current);
-          setPaymentError("Pagamento foi recusado.");
+          setPaymentError("Pagamento foi recusado ou cancelado.");
           setPixData(null);
         }
       } catch {
         // ignore polling errors
       }
-    }, 5000);
+    }, 4000);
   }, [navigate, toast, queryClient]);
 
   const formatPrice = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;

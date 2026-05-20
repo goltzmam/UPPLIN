@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MapPin, QrCode, Ticket, Download, X, Clock, CreditCard } from "lucide-react";
+import { Calendar, MapPin, QrCode, Ticket, Download, X, Clock, CreditCard, MessageCircle } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
@@ -44,7 +45,7 @@ export default function MeusIngressos() {
         .from("tickets")
         .select(`
           *,
-          events(title, start_at, venue_name, cover_image_url),
+          events(id, title, start_at, venue_name, cover_image_url, organizer_id, organizer_accounts!organizer_id(owner_user_id, display_name)),
           ticket_types(name, price_cents)
         `)
         .eq("buyer_user_id", user!.id)
@@ -57,6 +58,45 @@ export default function MeusIngressos() {
     staleTime: 1000 * 60 * 2,
     gcTime: 1000 * 60 * 15,
   });
+
+  const handleContactOrganizer = useCallback(async (ticket: any) => {
+    if (!user) return;
+    const ownerId = (ticket.events?.organizer_accounts as any)?.owner_user_id;
+    const eventId = ticket.events?.id;
+    if (!ownerId || !eventId) {
+      toast({ title: "Não foi possível abrir o chat", description: "Organizador indisponível.", variant: "destructive" });
+      return;
+    }
+    if (ownerId === user.id) {
+      navigate("/mensagens");
+      return;
+    }
+    const p1 = user.id < ownerId ? user.id : ownerId;
+    const p2 = user.id < ownerId ? ownerId : user.id;
+    try {
+      const { data: existing } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("type", "user_organizer")
+        .eq("event_id", eventId)
+        .eq("participant_1_id", p1)
+        .eq("participant_2_id", p2)
+        .maybeSingle();
+      if (!existing) {
+        const { error } = await supabase.from("conversations").insert({
+          type: "user_organizer",
+          event_id: eventId,
+          participant_1_id: p1,
+          participant_2_id: p2,
+          subject: ticket.events?.title || null,
+        });
+        if (error) throw error;
+      }
+      navigate("/mensagens");
+    } catch (e: any) {
+      toast({ title: "Erro ao abrir conversa", description: e.message || "Tente novamente", variant: "destructive" });
+    }
+  }, [user, navigate]);
 
   const { data: pendingOrders } = useQuery({
     queryKey: ["my-pending-orders", user?.id],
@@ -229,10 +269,14 @@ export default function MeusIngressos() {
             </div>
 
             {ticket.status === "issued" && !isPast && (
-              <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+              <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
                 <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelectedTicket(ticket)}>
                   <QrCode className="h-3.5 w-3.5 mr-1.5" />
                   Ver QR Code
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => handleContactOrganizer(ticket)}>
+                  <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+                  Falar com organizador
                 </Button>
                 <Button variant="outline" size="sm" className="text-xs h-8">
                   <Download className="h-3.5 w-3.5 mr-1.5" />
