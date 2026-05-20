@@ -97,10 +97,54 @@ export default function Mensagens() {
     enabled: !!user && !isOrganizer && !isAdmin,
   });
 
+  const resolveOtherParticipant = async (
+    type: string,
+    participantId: string
+  ): Promise<Conversation["other_participant"]> => {
+    if (type === "user_organizer") {
+      const { data: org } = await supabase
+        .from("organizer_accounts")
+        .select("display_name, logo_url")
+        .eq("owner_user_id", participantId)
+        .maybeSingle();
+      if (org) {
+        return {
+          id: participantId,
+          full_name: org.display_name,
+          photo_url: org.logo_url,
+          subtitle: "Organizador do evento",
+          is_organizer: true,
+        };
+      }
+    }
+    if (type === "user_admin" || type === "organizer_admin") {
+      return {
+        id: participantId,
+        full_name: "Suporte UPPLIN",
+        photo_url: null,
+        subtitle: "Equipe oficial",
+        is_support: true,
+      };
+    }
+    const { data: profile } = await supabase
+      .from("profiles_public")
+      .select("id, full_name, photo_url")
+      .eq("id", participantId)
+      .maybeSingle();
+    return {
+      id: participantId,
+      full_name: profile?.full_name || null,
+      photo_url: profile?.photo_url || null,
+      subtitle: "Online",
+    };
+  };
+
   const startNewConversation = async (type: string, participantId: string, eventId?: string) => {
     if (!user) return;
 
     try {
+      const other_participant = await resolveOtherParticipant(type, participantId);
+
       // Check if conversation already exists
       const { data: existing } = await supabase
         .from("conversations")
@@ -110,10 +154,7 @@ export default function Mensagens() {
         .maybeSingle();
 
       if (existing) {
-        setSelectedConversation({
-          ...existing,
-          other_participant: { id: participantId, full_name: null, photo_url: null },
-        });
+        setSelectedConversation({ ...existing, other_participant });
         setShowNewChat(false);
         return;
       }
@@ -132,10 +173,7 @@ export default function Mensagens() {
 
       if (error) throw error;
 
-      setSelectedConversation({
-        ...newConv,
-        other_participant: { id: participantId, full_name: null, photo_url: null },
-      });
+      setSelectedConversation({ ...newConv, other_participant });
       setShowNewChat(false);
     } catch (err: any) {
       console.error("Erro ao iniciar conversa:", err.message);
