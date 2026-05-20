@@ -256,86 +256,22 @@ serve(async (req) => {
 
     // Map MP status to our status
     if (payment.status === "approved") {
-      // Already paid? Skip
+      // Already paid? Continue idempotently to ensure tickets/conversation exist
       if (order.status === "paid") {
-        return new Response(JSON.stringify({ ok: true, message: "Already processed" }), {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        console.log(`Order ${orderId} already paid; confirming side effects idempotently`);
       }
 
-      // Create payment record
-      await adminClient.from("payments").insert({
-        order_id: orderId,
-        provider: "mercadopago",
-        provider_payment_id: payment.id.toString(),
-        amount_cents: Math.round(payment.transaction_amount * 100),
-        status: "paid",
-        method: payment.payment_method_id || payment.payment_type_id,
-        raw: payment,
+      const { data: confirmResult, error: confirmError } = await adminClient.rpc("confirm_paid_order", {
+        p_order_id: orderId,
+        p_provider: "mercadopago",
+        p_provider_payment_id: payment.id?.toString(),
+        p_amount_cents: Math.round((payment.transaction_amount || 0) * 100),
+        p_method: payment.payment_method_id || payment.payment_type_id,
+        p_raw: payment,
       });
 
-      // Update order
-      await adminClient
-        .from("orders")
-        .update({ status: "paid", mp_payment_id: payment.id.toString() })
-        .eq("id", orderId);
-
-      // Issue tickets
-      const ticketsToCreate = [];
-      for (const item of order.order_items || []) {
-        for (let i = 0; i < item.qty; i++) {
-          ticketsToCreate.push({
-            order_id: order.id,
-            event_id: order.event_id,
-            buyer_user_id: order.buyer_user_id,
-            ticket_type_id: item.ticket_type_id,
-            status: "issued",
-          });
-        }
-      }
-
-      if (ticketsToCreate.length > 0) {
-        const { error: ticketsError } = await adminClient
-          .from("tickets")
-          .insert(ticketsToCreate);
-
-        if (ticketsError) {
-          console.error("Tickets creation error:", ticketsError);
-        }
-      }
-
-      // Auto-create buyer<->organizer conversation
-      try {
-        const { data: orgRow } = await adminClient
-          .from("events")
-          .select("organizer_accounts!organizer_id(owner_user_id)")
-          .eq("id", order.event_id)
-          .maybeSingle();
-        const ownerId = (orgRow?.organizer_accounts as any)?.owner_user_id;
-        if (ownerId && ownerId !== order.buyer_user_id) {
-          const p1 = order.buyer_user_id < ownerId ? order.buyer_user_id : ownerId;
-          const p2 = order.buyer_user_id < ownerId ? ownerId : order.buyer_user_id;
-          const { data: existingConv } = await adminClient
-            .from("conversations")
-            .select("id")
-            .eq("type", "user_organizer")
-            .eq("event_id", order.event_id)
-            .eq("participant_1_id", p1)
-            .eq("participant_2_id", p2)
-            .maybeSingle();
-          if (!existingConv) {
-            await adminClient.from("conversations").insert({
-              type: "user_organizer",
-              event_id: order.event_id,
-              participant_1_id: p1,
-              participant_2_id: p2,
-            });
-          }
-        }
-      } catch (e) {
-        console.error("conv create failed (webhook)", e);
-      }
+      if (confirmError) throw confirmError;
+      const confirmedTicketsCount = Number((confirmResult as any)?.tickets_created ?? 0);
 
       // Notify buyer about confirmed payment
       try {
@@ -359,7 +295,7 @@ serve(async (req) => {
             order_id: orderId,
             event_id: order.event_id,
             total_cents: Math.round((payment.transaction_amount || 0) * 100),
-            tickets_count: ticketsToCreate.length,
+            tickets_count: confirmedTicketsCount,
           },
         });
 
@@ -403,7 +339,7 @@ serve(async (req) => {
                     eventDate,
                     eventVenue: event?.venue_name || "",
                     ticketType: ticketTypeName,
-                    ticketQuantity: ticketsToCreate.length,
+                    ticketQuantity: confirmedTicketsCount,
                     totalAmount: `R$ ${totalReais}`,
                     orderId: orderId,
                   },
@@ -442,7 +378,7 @@ serve(async (req) => {
         console.error("Error creating notifications:", notifErr);
       }
 
-      console.log(`Order ${orderId} paid, ${ticketsToCreate.length} tickets issued`);
+      console.log(`Order ${orderId} paid, ${confirmedTicketsCount} tickets issued`);
     } else if (payment.status === "rejected" || payment.status === "cancelled") {
       await adminClient
         .from("orders")
