@@ -269,10 +269,14 @@ export default function MeusIngressos() {
             </div>
 
             {ticket.status === "issued" && !isPast && (
-              <div className="flex gap-2 mt-3 pt-3 border-t border-border">
+              <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-border">
                 <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => setSelectedTicket(ticket)}>
                   <QrCode className="h-3.5 w-3.5 mr-1.5" />
                   Ver QR Code
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => handleContactOrganizer(ticket)}>
+                  <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
+                  Falar com organizador
                 </Button>
                 <Button variant="outline" size="sm" className="text-xs h-8">
                   <Download className="h-3.5 w-3.5 mr-1.5" />
