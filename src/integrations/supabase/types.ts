@@ -1088,6 +1088,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          last_seen_at: string | null
           photo_url: string | null
           state: string | null
           status: string | null
@@ -1105,6 +1106,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          last_seen_at?: string | null
           photo_url?: string | null
           state?: string | null
           status?: string | null
@@ -1122,6 +1124,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          last_seen_at?: string | null
           photo_url?: string | null
           state?: string | null
           status?: string | null
@@ -1752,6 +1755,7 @@ export type Database = {
           id: string
         }[]
       }
+      get_active_users_metrics: { Args: never; Returns: Json }
       get_organizer_commission: {
         Args: { p_organizer_id: string }
         Returns: number
@@ -1789,6 +1793,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      touch_last_seen: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "user" | "organizer"

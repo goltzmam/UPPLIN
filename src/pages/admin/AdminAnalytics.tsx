@@ -31,6 +31,10 @@ import {
   Calendar,
   CreditCard,
   RefreshCw,
+  Activity,
+  UserCog,
+  User as UserIcon,
+  Radio,
 } from "lucide-react";
 import { format, subDays, startOfDay, eachDayOfInterval, subMonths, startOfMonth, eachMonthOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -255,11 +259,31 @@ export default function AdminAnalytics() {
     },
   });
 
+  // Active users metrics (live / today / 7d / 30d) — refreshes every 20s for the "ao vivo" tile
+  const { data: activeMetrics, refetch: refetchActive } = useQuery({
+    queryKey: ["admin-analytics-active-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_active_users_metrics");
+      if (error) throw error;
+      return data as {
+        live: { total: number; organizers: number; participants: number };
+        today: { total: number; organizers: number; participants: number };
+        d7: { total: number; organizers: number; participants: number };
+        d30: { total: number; organizers: number; participants: number };
+        totals: { total: number; organizers: number; participants: number };
+      };
+    },
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
+  });
+
   const handleRefresh = () => {
     refetchUsers();
     refetchEvents();
     refetchRevenue();
+    refetchActive();
   };
+
 
   const formatPrice = (value: number) => `R$ ${value.toFixed(2).replace(".", ",")}`;
 
@@ -290,8 +314,77 @@ export default function AdminAnalytics() {
         </div>
       </div>
 
+      {/* Active Users — real-time */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5 text-primary" />
+                Usuários ativos
+              </CardTitle>
+              <CardDescription>
+                Acompanhamento em tempo real — atualiza a cada 20s
+              </CardDescription>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
+              </span>
+              ao vivo
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {[
+              { key: "live",  label: "Ao vivo",  hint: "online agora", icon: Radio, accent: "text-success", bucket: activeMetrics?.live },
+              { key: "today", label: "Hoje",     hint: "desde 00:00",  icon: Activity, accent: "text-primary", bucket: activeMetrics?.today },
+              { key: "d7",    label: "7 dias",   hint: "últimos 7d",   icon: Activity, accent: "text-primary", bucket: activeMetrics?.d7 },
+              { key: "d30",   label: "30 dias",  hint: "últimos 30d",  icon: Activity, accent: "text-primary", bucket: activeMetrics?.d30 },
+              { key: "tot",   label: "Total",    hint: "base completa", icon: Users,   accent: "text-muted-foreground", bucket: activeMetrics?.totals },
+            ].map((tile) => {
+              const Icon = tile.icon;
+              return (
+                <div
+                  key={tile.key}
+                  className="rounded-xl border border-border bg-card/50 p-3 space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {tile.label}
+                    </span>
+                    <Icon className={`h-3.5 w-3.5 ${tile.accent}`} />
+                  </div>
+                  <div className="text-2xl font-bold leading-none">
+                    {tile.bucket?.total ?? 0}
+                  </div>
+                  <div className="text-[11px] text-muted-foreground">{tile.hint}</div>
+                  <div className="pt-1 space-y-1 border-t border-border/60">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <UserIcon className="h-3 w-3" /> Participantes
+                      </span>
+                      <span className="font-semibold">{tile.bucket?.participants ?? 0}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <UserCog className="h-3 w-3" /> Organizadores
+                      </span>
+                      <span className="font-semibold">{tile.bucket?.organizers ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Summary Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-3">

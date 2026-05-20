@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { usePresenceHeartbeat } from "@/hooks/use-presence-heartbeat";
 import { stopAllMediaPipelines } from "@/lib/media";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
@@ -92,6 +93,8 @@ if (typeof window !== "undefined") {
 // Simplified routes wrapper - removed heavy AnimatePresence for mobile performance
 function AnimatedRoutes() {
   const location = useLocation();
+  usePresenceHeartbeat();
+
 
   // Global kill-switch: stop any media when navigating away from feed pages
   const prevPathRef = useRef(location.pathname);
