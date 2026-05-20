@@ -45,6 +45,38 @@ export default function EventosListContent() {
     enabled: !!organizer,
   });
 
+  const { data: issuedTickets } = useQuery({
+    queryKey: ["organizer-issued-tickets-events-list", organizer?.id, events?.length],
+    queryFn: async () => {
+      const eventIds = (events || []).map((event: any) => event.id);
+      if (eventIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("tickets")
+        .select("id, event_id")
+        .in("event_id", eventIds)
+        .eq("status", "issued");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!events && events.length > 0,
+  });
+
+  const { data: paidOrders } = useQuery({
+    queryKey: ["organizer-paid-orders-events-list", organizer?.id, events?.length],
+    queryFn: async () => {
+      const eventIds = (events || []).map((event: any) => event.id);
+      if (eventIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("orders")
+        .select("total_cents, event_id")
+        .in("event_id", eventIds)
+        .eq("status", "paid");
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!events && events.length > 0,
+  });
+
   const statusVariant = (status: string) => {
     switch (status) {
       case "published": return "default";
@@ -121,9 +153,9 @@ export default function EventosListContent() {
         ) : filteredEvents.length > 0 ? (
           <div className="divide-y divide-border">
             {filteredEvents.map((event) => {
-              const ticketsSold = event.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_sold || 0), 0) || 0;
+              const ticketsSold = issuedTickets?.filter((ticket: any) => ticket.event_id === event.id).length || 0;
               const totalTickets = event.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_total || 0), 0) || 0;
-              const revenue = event.ticket_types?.reduce((a: number, t: any) => a + ((t.quantity_sold || 0) * (t.price_cents || 0)), 0) || 0;
+              const revenue = paidOrders?.filter((order: any) => order.event_id === event.id).reduce((acc: number, order: any) => acc + (order.total_cents || 0), 0) || 0;
 
               return (
                 <div key={event.id} className="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-4">
