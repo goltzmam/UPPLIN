@@ -296,6 +296,9 @@ export default function Mensagens() {
                     id: selectedConversation.other_participant?.id || "",
                     name: selectedConversation.other_participant?.full_name || "Usuário",
                     photo_url: selectedConversation.other_participant?.photo_url,
+                    subtitle: selectedConversation.other_participant?.subtitle,
+                    is_organizer: selectedConversation.other_participant?.is_organizer,
+                    is_support: selectedConversation.other_participant?.is_support,
                   }}
                   onClose={() => setSelectedConversation(null)}
                   className="h-full border-0 rounded-none"
