@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { triggerFeedback } from "@/lib/feedback";
 import { getCheckInErrorMessage } from "@/lib/checkin";
+import { CheckInFeedback } from "@/components/checkin/CheckInFeedback";
 import confetti from "canvas-confetti";
 
 interface CheckInResult {
@@ -79,7 +80,7 @@ export default function CollaboratorScanner() {
   });
 
   // Stats
-  const { data: stats } = useQuery({
+  const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ["collab-scanner-stats", eventId, user?.id],
     queryFn: async () => {
       const { data: allTickets } = await supabase
@@ -120,8 +121,17 @@ export default function CollaboratorScanner() {
     },
     onSuccess: (ticket) => {
       setCheckInResult({ success: true, message: "Check-in realizado!", ticket });
+      queryClient.setQueryData(["collab-scanner-stats", eventId, user?.id], (current: any) => {
+        if (!current) return current;
+        return {
+          ...current,
+          checkedIn: current.checkedIn + 1,
+          myCheckins: current.myCheckins + 1,
+        };
+      });
       triggerFeedback({ sound: "success", haptic: "success" });
       queryClient.invalidateQueries({ queryKey: ["collab-scanner-stats", eventId] });
+      refetchStats();
       confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 }, colors: ["#f59e0b", "#8b5cf6", "#ec4899", "#10b981"] });
       setTimeout(() => setCheckInResult(null), 5000);
     },
@@ -134,7 +144,7 @@ export default function CollaboratorScanner() {
 
   const processCode = useCallback((code: string) => {
     const ticketCode = code.trim();
-    if (!ticketCode) return;
+    if (!ticketCode || checkInMutation.isPending) return;
     checkInMutation.mutate(ticketCode);
   }, [checkInMutation]);
 
@@ -223,46 +233,7 @@ export default function CollaboratorScanner() {
           </div>
         </div>
 
-        {/* Result */}
-        <AnimatePresence>
-          {checkInResult && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-              className={cn(
-                "p-4 rounded-2xl flex items-center gap-3 border-2",
-                checkInResult.success
-                  ? "bg-green-50 dark:bg-green-950/30 border-green-500/40"
-                  : "bg-red-50 dark:bg-red-950/30 border-destructive/40"
-              )}
-            >
-              {checkInResult.success ? (
-                <CheckCircle className="h-10 w-10 text-green-500 shrink-0" />
-              ) : (
-                <XCircle className="h-10 w-10 text-destructive shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <p className="font-display font-bold">{checkInResult.success ? "Entrada liberada!" : "Não autorizado"}</p>
-                <p className="text-xs text-muted-foreground">{checkInResult.message}</p>
-                {checkInResult.success && checkInResult.ticket?.profiles && (
-                  <div className="flex items-center gap-2 mt-2">
-                    <Avatar className="h-8 w-8 border border-primary/30">
-                      <AvatarImage src={checkInResult.ticket.profiles.photo_url} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                        {(checkInResult.ticket.profiles.full_name || "?").charAt(0).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{checkInResult.ticket.profiles.full_name}</p>
-                      <p className="text-[10px] text-muted-foreground">{checkInResult.ticket.ticket_types?.name}</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <CheckInFeedback result={checkInResult} />
 
         {/* Scanner tabs */}
         <Tabs defaultValue="scanner" className="space-y-3">
