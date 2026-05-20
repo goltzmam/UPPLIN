@@ -51,6 +51,7 @@ export default function Mensagens() {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, isOrganizer } = useUserRoles();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [showNewChat, setShowNewChat] = useState(false);
   const [newChatType, setNewChatType] = useState<string>("");
@@ -62,6 +63,29 @@ export default function Mensagens() {
       navigate("/login");
     }
   }, [authLoading, user, navigate]);
+
+  // Auto-select conversation from ?c= query param
+  const requestedConvId = searchParams.get("c");
+  useEffect(() => {
+    if (!user || !requestedConvId) return;
+    if (selectedConversation?.id === requestedConvId) return;
+    (async () => {
+      const { data: conv } = await supabase
+        .from("conversations")
+        .select("*")
+        .eq("id", requestedConvId)
+        .maybeSingle();
+      if (!conv) return;
+      const otherId = conv.participant_1_id === user.id ? conv.participant_2_id : conv.participant_1_id;
+      const other = await resolveOtherParticipant(conv.type, otherId, conv.event_id);
+      setSelectedConversation({ ...conv, other_participant: other } as Conversation);
+      // Clean up the query param so refreshes don't keep forcing selection
+      const next = new URLSearchParams(searchParams);
+      next.delete("c");
+      setSearchParams(next, { replace: true });
+    })();
+  }, [user, requestedConvId]);
+
 
   // Fetch admin users for support chat
   const { data: adminUsers = [] } = useQuery({
