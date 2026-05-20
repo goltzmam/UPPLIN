@@ -22,7 +22,6 @@ import { QRScanner } from "@/components/checkin/QRScanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { triggerFeedback } from "@/lib/feedback";
-import { useAuth } from "@/lib/auth";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import confetti from "canvas-confetti";
 import { CollaboratorManager } from "@/components/checkin/CollaboratorManager";
@@ -37,7 +36,6 @@ interface CheckInResult {
 
 export default function CheckInContent() {
   const { organizer } = useOutletContext<{ organizer: any }>();
-  const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedEvent, setSelectedEvent] = useState<string>("");
