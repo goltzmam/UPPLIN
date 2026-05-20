@@ -184,7 +184,7 @@ export default function Mensagens() {
     if (!user) return;
 
     try {
-      const other_participant = await resolveOtherParticipant(type, participantId);
+      const other_participant = await resolveOtherParticipant(type, participantId, eventId);
 
       // Check if conversation already exists
       const { data: existing } = await supabase
