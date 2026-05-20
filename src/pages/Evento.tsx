@@ -95,21 +95,22 @@ export default function Evento() {
   });
 
   const { data: isSaved } = useQuery({
-    queryKey: ["saved-event", id, user?.id],
+    queryKey: ["saved-event", event?.id, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("saved_events")
         .select("id")
-        .eq("event_id", id!)
+        .eq("event_id", event!.id)
         .eq("user_id", user!.id)
         .maybeSingle();
 
       if (error) throw error;
       return !!data;
     },
-    enabled: !!id && !!user,
+    enabled: !!event?.id && !!user,
     staleTime: 1000 * 60 * 2,
   });
+
 
   const updateSelection = (ticketTypeId: string, delta: number) => {
     setSelection((prev) => {
