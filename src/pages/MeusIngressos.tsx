@@ -61,42 +61,34 @@ export default function MeusIngressos() {
 
   const handleContactOrganizer = useCallback(async (ticket: any) => {
     if (!user) return;
-    const ownerId = (ticket.events?.organizer_accounts as any)?.owner_user_id;
     const eventId = ticket.events?.id;
-    if (!ownerId || !eventId) {
-      toast({ title: "Não foi possível abrir o chat", description: "Organizador indisponível.", variant: "destructive" });
+    if (!eventId) {
+      toast({ title: "Não foi possível abrir o chat", description: "Evento não encontrado.", variant: "destructive" });
       return;
     }
-    if (ownerId === user.id) {
-      navigate("/mensagens");
-      return;
-    }
-    const p1 = user.id < ownerId ? user.id : ownerId;
-    const p2 = user.id < ownerId ? ownerId : user.id;
     try {
-      const { data: existing } = await supabase
-        .from("conversations")
-        .select("id")
-        .eq("type", "user_organizer")
-        .eq("event_id", eventId)
-        .eq("participant_1_id", p1)
-        .eq("participant_2_id", p2)
-        .maybeSingle();
-      if (!existing) {
-        const { error } = await supabase.from("conversations").insert({
-          type: "user_organizer",
-          event_id: eventId,
-          participant_1_id: p1,
-          participant_2_id: p2,
-          subject: ticket.events?.title || null,
-        });
-        if (error) throw error;
+      const { data, error } = await supabase.rpc("open_event_conversation", { p_event_id: eventId });
+      if (error) {
+        const msg = error.message || "";
+        if (/organizer_offline/i.test(msg)) {
+          toast({ title: "Organizador offline", description: "Ele está indisponível no chat agora. Tente mais tarde.", variant: "destructive" });
+        } else if (/no_ticket/i.test(msg)) {
+          toast({ title: "Sem acesso", description: "Compre um ingresso para falar com o organizador.", variant: "destructive" });
+        } else {
+          toast({ title: "Erro ao abrir conversa", description: msg, variant: "destructive" });
+        }
+        return;
       }
-      navigate("/mensagens");
+      const conversationId = (data as any)?.conversation_id;
+      if ((data as any)?.self) {
+        navigate("/mensagens");
+        return;
+      }
+      navigate(conversationId ? `/mensagens?c=${conversationId}` : "/mensagens");
     } catch (e: any) {
-      toast({ title: "Erro ao abrir conversa", description: e.message || "Tente novamente", variant: "destructive" });
+      toast({ title: "Erro ao abrir conversa", description: e?.message || "Tente novamente", variant: "destructive" });
     }
-  }, [user, navigate]);
+  }, [user, navigate, toast]);
 
   const { data: pendingOrders } = useQuery({
     queryKey: ["my-pending-orders", user?.id],

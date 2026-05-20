@@ -29,6 +29,8 @@ export default function ConfiguracoesContent() {
   const [website, setWebsite] = useState(organizer?.social_website || "");
   const [logoUrl, setLogoUrl] = useState(organizer?.logo_url || "");
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [chatAvailable, setChatAvailable] = useState<boolean>(organizer?.chat_available ?? true);
+  const [savingChat, setSavingChat] = useState(false);
 
   // Document (CPF or CNPJ)
   const initialDocType: DocumentType = organizer?.cpf ? "cpf" : "cnpj";
@@ -166,6 +168,23 @@ export default function ConfiguracoesContent() {
     }
   };
 
+  const toggleChatAvailable = async (next: boolean) => {
+    setChatAvailable(next);
+    setSavingChat(true);
+    const { error } = await supabase
+      .from("organizer_accounts")
+      .update({ chat_available: next } as any)
+      .eq("id", organizer.id);
+    setSavingChat(false);
+    if (error) {
+      setChatAvailable(!next);
+      toast({ title: "Erro ao atualizar status", description: error.message, variant: "destructive" });
+    } else {
+      queryClient.invalidateQueries({ queryKey: ["organizer-account"] });
+      toast({ title: next ? "Você está online no chat" : "Você está offline no chat" });
+    }
+  };
+
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
@@ -183,6 +202,34 @@ export default function ConfiguracoesContent() {
           Salvar
         </Button>
       </div>
+
+      {/* Chat availability */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className={`h-2.5 w-2.5 rounded-full ${chatAvailable ? "bg-emerald-500" : "bg-muted-foreground/50"}`} />
+                <h3 className="font-semibold">{chatAvailable ? "Disponível para chat" : "Indisponível para chat"}</h3>
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                Quando ativo, participantes que compraram ingresso podem te enviar mensagens.
+              </p>
+            </div>
+            <label className="inline-flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="sr-only peer"
+                checked={chatAvailable}
+                disabled={savingChat}
+                onChange={(e) => toggleChatAvailable(e.target.checked)}
+              />
+              <span className="relative w-11 h-6 bg-muted rounded-full peer-checked:bg-primary transition-colors after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-transform peer-checked:after:translate-x-5" />
+              <span className="text-sm font-medium">{chatAvailable ? "Online" : "Offline"}</span>
+            </label>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Logo & Basic Info */}
       <Card>
