@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { QrCode, CheckCircle, XCircle, Search, Ticket, User, Calendar, Keyboard, Users } from "lucide-react";
+import { QrCode, CheckCircle, Search, Ticket, User, Calendar, Keyboard, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
@@ -19,14 +19,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { QRScanner } from "@/components/checkin/QRScanner";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { triggerFeedback } from "@/lib/feedback";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import confetti from "canvas-confetti";
 import { CollaboratorManager } from "@/components/checkin/CollaboratorManager";
 import { CheckInReport } from "@/components/checkin/CheckInReport";
 import { getCheckInErrorMessage } from "@/lib/checkin";
+import { CheckInFeedback } from "@/components/checkin/CheckInFeedback";
 
 interface CheckInResult {
   success: boolean;
@@ -88,6 +88,19 @@ export default function CheckInContent() {
     },
     onSuccess: (ticket) => {
       setCheckInResult({ success: true, message: "Check-in realizado com sucesso!", ticket });
+      queryClient.setQueryData(["event-tickets", selectedEvent], (current: any[] | undefined) => {
+        if (!current) return current;
+        return current.map((item) =>
+          item.id === ticket.id
+            ? {
+                ...item,
+                ...ticket,
+                ticket_types: ticket.ticket_types || item.ticket_types,
+                profiles: ticket.profiles || item.profiles,
+              }
+            : item
+        );
+      });
       refetchTickets();
       triggerFeedback({ sound: "success", haptic: "success" });
       toast({ title: "✅ Check-in realizado!", description: ticket.ticket_types?.name });
@@ -110,7 +123,7 @@ export default function CheckInContent() {
 
   const processCode = useCallback((code: string) => {
     const ticketCode = code.trim();
-    if (!ticketCode || !selectedEvent) return;
+    if (!ticketCode || !selectedEvent || checkInMutation.isPending) return;
     checkInMutation.mutate(ticketCode);
   }, [checkInMutation, selectedEvent]);
 
@@ -221,56 +234,7 @@ export default function CheckInContent() {
             </div>
           </div>
 
-          {/* Check-in Result Overlay */}
-          <AnimatePresence>
-            {checkInResult && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: -10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                className={cn(
-                  "p-5 rounded-2xl flex items-center gap-4 border-2",
-                  checkInResult.success
-                    ? "bg-green-50 dark:bg-green-950/30 border-green-500/40"
-                    : "bg-red-50 dark:bg-red-950/30 border-destructive/40"
-                )}
-              >
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.1 }}
-                >
-                  {checkInResult.success ? (
-                    <CheckCircle className="h-12 w-12 text-green-500 shrink-0" />
-                  ) : (
-                    <XCircle className="h-12 w-12 text-destructive shrink-0" />
-                  )}
-                </motion.div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-display font-bold text-lg">{checkInResult.success ? "Entrada liberada!" : "Não autorizado"}</p>
-                  <p className="text-sm text-muted-foreground">{checkInResult.message}</p>
-                  {checkInResult.success && checkInResult.ticket && (
-                    <div className="flex items-center gap-3 mt-3 p-3 rounded-xl bg-background/60 border border-border/50">
-                      <Avatar className="h-12 w-12 border-2 border-primary/30">
-                        <AvatarImage src={checkInResult.ticket.profiles?.photo_url} />
-                        <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                          {(checkInResult.ticket.profiles?.full_name || "?").charAt(0).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm truncate">{checkInResult.ticket.profiles?.full_name || "Participante"}</p>
-                        <p className="text-xs text-muted-foreground truncate">{checkInResult.ticket.profiles?.email}</p>
-                        <p className="text-xs font-medium text-primary mt-0.5">{checkInResult.ticket.ticket_types?.name}</p>
-                      </div>
-                    </div>
-                  )}
-                  {!checkInResult.success && checkInResult.ticket && (
-                    <p className="text-sm font-medium mt-1">{checkInResult.ticket.ticket_types?.name}</p>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <CheckInFeedback result={checkInResult} />
 
           {/* Scanner / Manual tabs */}
           <Tabs defaultValue="scanner" className="space-y-4">
