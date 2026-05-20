@@ -14,6 +14,7 @@ import { QRScanner } from "@/components/checkin/QRScanner";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { triggerFeedback } from "@/lib/feedback";
+import { getCheckInErrorMessage } from "@/lib/checkin";
 import confetti from "canvas-confetti";
 
 interface CheckInResult {
@@ -108,29 +109,14 @@ export default function CollaboratorScanner() {
   }, [eventId, queryClient]);
 
   const checkInMutation = useMutation({
-    mutationFn: async (ticketId: string) => {
-      const { data: ticket, error: findError } = await supabase
-        .from("tickets")
-        .select(`*, ticket_types(name), profiles:buyer_user_id(full_name, photo_url, email)`)
-        .eq("id", ticketId)
-        .maybeSingle();
+    mutationFn: async (ticketCode: string) => {
+      const { data, error } = await supabase.rpc("check_in_ticket", {
+        p_ticket_code: ticketCode.trim(),
+        p_event_id: eventId!,
+      });
 
-      if (findError || !ticket) throw new Error("Ingresso não encontrado");
-      if (ticket.event_id !== eventId) throw new Error("Ingresso não pertence a este evento");
-      if (ticket.status === "used") throw new Error("Este ingresso já foi utilizado");
-      if (ticket.status === "cancelled") throw new Error("Este ingresso foi cancelado");
-
-      const { error: updateError } = await supabase
-        .from("tickets")
-        .update({
-          status: "used",
-          used_at: new Date().toISOString(),
-          checked_in_by: user!.id,
-        })
-        .eq("id", ticketId);
-
-      if (updateError) throw updateError;
-      return ticket;
+      if (error) throw new Error(getCheckInErrorMessage(error));
+      return data as any;
     },
     onSuccess: (ticket) => {
       setCheckInResult({ success: true, message: "Check-in realizado!", ticket });
@@ -147,9 +133,9 @@ export default function CollaboratorScanner() {
   });
 
   const processCode = useCallback((code: string) => {
-    let ticketId = code.trim();
-    try { const parsed = JSON.parse(code); ticketId = parsed.ticketId || parsed.id || code; } catch {}
-    checkInMutation.mutate(ticketId);
+    const ticketCode = code.trim();
+    if (!ticketCode) return;
+    checkInMutation.mutate(ticketCode);
   }, [checkInMutation]);
 
   const handleManualCheckIn = () => {
