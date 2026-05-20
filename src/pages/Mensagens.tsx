@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { MessageCircle, ArrowLeft, Plus, Users, Building2, Shield, Search } from "lucide-react";
+import { MessageCircle, ArrowLeft, Plus, Users, Building2, Shield, Search, Ticket } from "lucide-react";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
@@ -52,6 +52,7 @@ export default function Mensagens() {
   const [showNewChat, setShowNewChat] = useState(false);
   const [newChatType, setNewChatType] = useState<string>("");
   const [searchUser, setSearchUser] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -183,10 +184,26 @@ export default function Mensagens() {
           <div className="flex flex-col lg:grid lg:grid-cols-[350px_1fr] gap-4 sm:gap-6 h-auto lg:h-[calc(100vh-220px)]">
             {/* Conversations List */}
             {/* Conversations - hide on mobile when chat is selected */}
-            <div className={`bg-card rounded-xl sm:rounded-2xl border overflow-hidden min-h-[300px] lg:min-h-0 ${selectedConversation ? 'hidden lg:block' : ''}`}>
-              <Tabs defaultValue="all" className="h-full flex flex-col">
+            <div className={`bg-card rounded-xl sm:rounded-2xl border overflow-hidden min-h-[300px] lg:min-h-0 flex flex-col ${selectedConversation ? 'hidden lg:block' : ''}`}>
+              {/* Search bar */}
+              <div className="p-2 border-b">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por nome, evento ou mensagem..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="h-9 pl-8 text-xs sm:text-sm"
+                  />
+                </div>
+              </div>
+
+              <Tabs defaultValue="all" className="flex-1 flex flex-col min-h-0">
                 <TabsList className="w-full justify-start rounded-none border-b p-1 h-auto">
                   <TabsTrigger value="all" className="text-[10px] sm:text-xs">Todas</TabsTrigger>
+                  <TabsTrigger value="by_event" className="text-[10px] sm:text-xs gap-1">
+                    <Ticket className="h-3 w-3" /> Por Evento
+                  </TabsTrigger>
                   <TabsTrigger value="user_organizer" className="text-[10px] sm:text-xs gap-1">
                     <Building2 className="h-3 w-3" /> Eventos
                   </TabsTrigger>
@@ -198,6 +215,15 @@ export default function Mensagens() {
                   <ConversationsList
                     onSelectConversation={(conv) => setSelectedConversation(conv)}
                     selectedId={selectedConversation?.id}
+                    search={searchQuery}
+                  />
+                </TabsContent>
+                <TabsContent value="by_event" className="flex-1 m-0 overflow-hidden">
+                  <ConversationsList
+                    onSelectConversation={(conv) => setSelectedConversation(conv)}
+                    selectedId={selectedConversation?.id}
+                    search={searchQuery}
+                    groupByEvent
                   />
                 </TabsContent>
                 <TabsContent value="user_organizer" className="flex-1 m-0 overflow-hidden">
@@ -205,6 +231,8 @@ export default function Mensagens() {
                     onSelectConversation={(conv) => setSelectedConversation(conv)}
                     selectedId={selectedConversation?.id}
                     filter="user_organizer"
+                    search={searchQuery}
+                    groupByEvent
                   />
                 </TabsContent>
                 <TabsContent value="support" className="flex-1 m-0 overflow-hidden">
@@ -212,6 +240,7 @@ export default function Mensagens() {
                     onSelectConversation={(conv) => setSelectedConversation(conv)}
                     selectedId={selectedConversation?.id}
                     filter={isOrganizer ? "organizer_admin" : "user_admin"}
+                    search={searchQuery}
                   />
                 </TabsContent>
               </Tabs>

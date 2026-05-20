@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { MessageCircle, Plus, User, Building2, Shield } from "lucide-react";
+import { MessageCircle, User, Building2, Shield, Ticket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -41,9 +40,17 @@ interface ConversationsListProps {
   onSelectConversation: (conv: Conversation) => void;
   selectedId?: string;
   filter?: "all" | "user_organizer" | "organizer_admin" | "user_admin";
+  search?: string;
+  groupByEvent?: boolean;
 }
 
-export function ConversationsList({ onSelectConversation, selectedId, filter = "all" }: ConversationsListProps) {
+export function ConversationsList({
+  onSelectConversation,
+  selectedId,
+  filter = "all",
+  search = "",
+  groupByEvent = false,
+}: ConversationsListProps) {
   const { user } = useAuth();
 
   const { data: conversations = [], isLoading } = useQuery({
@@ -53,10 +60,7 @@ export function ConversationsList({ onSelectConversation, selectedId, filter = "
 
       let query = supabase
         .from("conversations")
-        .select(`
-          *,
-          events(title)
-        `)
+        .select(`*, events(title)`)
         .or(`participant_1_id.eq.${user.id},participant_2_id.eq.${user.id}`)
         .order("updated_at", { ascending: false });
 
@@ -67,21 +71,17 @@ export function ConversationsList({ onSelectConversation, selectedId, filter = "
       const { data: convs, error } = await query;
       if (error) throw error;
 
-      // Fetch other participants and last messages
       const enrichedConvs = await Promise.all(
         (convs || []).map(async (conv) => {
-          const otherParticipantId = conv.participant_1_id === user.id 
-            ? conv.participant_2_id 
-            : conv.participant_1_id;
+          const otherParticipantId =
+            conv.participant_1_id === user.id ? conv.participant_2_id : conv.participant_1_id;
 
-          // Get other participant profile
           const { data: participantData } = await supabase
             .from("profiles_public")
             .select("id, full_name, photo_url")
             .eq("id", otherParticipantId)
             .maybeSingle();
 
-          // Get last message
           const { data: lastMsg } = await supabase
             .from("messages")
             .select("content, created_at, sender_id")
@@ -90,7 +90,6 @@ export function ConversationsList({ onSelectConversation, selectedId, filter = "
             .limit(1)
             .maybeSingle();
 
-          // Get unread count
           const { count } = await supabase
             .from("messages")
             .select("*", { count: "exact", head: true })
@@ -113,9 +112,38 @@ export function ConversationsList({ onSelectConversation, selectedId, filter = "
     refetchInterval: 10000,
   });
 
+  const filteredConvs = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return conversations;
+    return conversations.filter((c) => {
+      const name = (c.other_participant?.full_name || "").toLowerCase();
+      const ev = (c.event?.title || "").toLowerCase();
+      const subj = (c.subject || "").toLowerCase();
+      const msg = (c.last_message?.content || "").toLowerCase();
+      return name.includes(q) || ev.includes(q) || subj.includes(q) || msg.includes(q);
+    });
+  }, [conversations, search]);
+
+  const grouped = useMemo(() => {
+    if (!groupByEvent) return null;
+    const map = new Map<string, { title: string; eventId: string | null; items: Conversation[] }>();
+    filteredConvs.forEach((c) => {
+      const key = c.event_id || "__no_event__";
+      const title = c.event?.title || (c.type === "user_organizer" ? "Evento removido" : "Suporte / Sem evento");
+      if (!map.has(key)) map.set(key, { title, eventId: c.event_id, items: [] });
+      map.get(key)!.items.push(c);
+    });
+    // Sort: events with most recent activity first
+    return Array.from(map.values()).sort((a, b) => {
+      const ta = Math.max(...a.items.map((x) => new Date(x.updated_at).getTime()));
+      const tb = Math.max(...b.items.map((x) => new Date(x.updated_at).getTime()));
+      return tb - ta;
+    });
+  }, [filteredConvs, groupByEvent]);
+
   const getInitials = (name: string | null) => {
     if (!name) return "?";
-    return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+    return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
   const formatDate = (dateStr: string) => {
@@ -127,92 +155,115 @@ export function ConversationsList({ onSelectConversation, selectedId, filter = "
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case "user_organizer": return <Building2 className="h-3 w-3" />;
-      case "organizer_admin": return <Shield className="h-3 w-3" />;
-      case "user_admin": return <Shield className="h-3 w-3" />;
-      default: return <User className="h-3 w-3" />;
+      case "user_organizer":
+        return <Building2 className="h-3 w-3" />;
+      case "organizer_admin":
+      case "user_admin":
+        return <Shield className="h-3 w-3" />;
+      default:
+        return <User className="h-3 w-3" />;
     }
   };
 
   const getTypeLabel = (type: string) => {
     switch (type) {
-      case "user_organizer": return "Evento";
-      case "organizer_admin": return "Suporte";
-      case "user_admin": return "Suporte";
-      default: return type;
+      case "user_organizer":
+        return "Evento";
+      case "organizer_admin":
+      case "user_admin":
+        return "Suporte";
+      default:
+        return type;
     }
   };
 
   if (isLoading) {
+    return <div className="p-4 text-center text-muted-foreground text-sm">Carregando conversas...</div>;
+  }
+
+  if (filteredConvs.length === 0) {
     return (
-      <div className="p-4 text-center text-muted-foreground">
-        Carregando conversas...
+      <div className="p-8 text-center text-muted-foreground">
+        <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
+        <p className="text-sm">{search ? "Nenhuma conversa encontrada" : "Nenhuma conversa ainda"}</p>
       </div>
     );
   }
 
-  if (conversations.length === 0) {
-    return (
-      <div className="p-8 text-center text-muted-foreground">
-        <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
-        <p>Nenhuma conversa ainda</p>
+  const renderItem = (conv: Conversation) => (
+    <button
+      key={conv.id}
+      onClick={() => onSelectConversation(conv)}
+      className={cn(
+        "w-full p-4 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left",
+        selectedId === conv.id && "bg-muted"
+      )}
+    >
+      <Avatar className="h-12 w-12 shrink-0">
+        <AvatarImage src={conv.other_participant?.photo_url || undefined} />
+        <AvatarFallback>{getInitials(conv.other_participant?.full_name)}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-semibold truncate">{conv.other_participant?.full_name || "Usuário"}</p>
+          {conv.last_message && (
+            <span className="text-xs text-muted-foreground shrink-0">
+              {formatDate(conv.last_message.created_at)}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+            {getTypeIcon(conv.type)}
+            <span className="ml-1">{getTypeLabel(conv.type)}</span>
+          </Badge>
+          {!groupByEvent && conv.event?.title && (
+            <span className="text-xs text-muted-foreground truncate">{conv.event.title}</span>
+          )}
+        </div>
+        {conv.last_message && (
+          <p className="text-sm text-muted-foreground truncate mt-1">
+            {conv.last_message.sender_id === user?.id && "Você: "}
+            {conv.last_message.content}
+          </p>
+        )}
       </div>
+      {conv.unread_count > 0 && (
+        <Badge className="h-5 min-w-5 px-1.5 justify-center shrink-0">{conv.unread_count}</Badge>
+      )}
+    </button>
+  );
+
+  if (groupByEvent && grouped) {
+    return (
+      <ScrollArea className="h-full">
+        <div>
+          {grouped.map((group) => {
+            const totalUnread = group.items.reduce((s, c) => s + (c.unread_count || 0), 0);
+            return (
+              <div key={group.eventId ?? "no_event"} className="border-b border-border last:border-b-0">
+                <div className="px-4 py-2 bg-muted/40 flex items-center gap-2 sticky top-0 z-[1]">
+                  <Ticket className="h-3.5 w-3.5 text-primary shrink-0" />
+                  <p className="text-xs font-semibold truncate flex-1">{group.title}</p>
+                  <span className="text-[10px] text-muted-foreground shrink-0">
+                    {group.items.length} {group.items.length === 1 ? "conversa" : "conversas"}
+                  </span>
+                  {totalUnread > 0 && (
+                    <Badge className="h-4 min-w-4 px-1 text-[10px] justify-center shrink-0">{totalUnread}</Badge>
+                  )}
+                </div>
+                <div className="divide-y divide-border">{group.items.map(renderItem)}</div>
+              </div>
+            );
+          })}
+        </div>
+      </ScrollArea>
     );
   }
 
   return (
     <ScrollArea className="h-full">
-      <div className="divide-y divide-border">
-        {conversations.map((conv) => (
-          <button
-            key={conv.id}
-            onClick={() => onSelectConversation(conv)}
-            className={cn(
-              "w-full p-4 flex items-start gap-3 hover:bg-muted/50 transition-colors text-left",
-              selectedId === conv.id && "bg-muted"
-            )}
-          >
-            <Avatar className="h-12 w-12 shrink-0">
-              <AvatarImage src={conv.other_participant?.photo_url || undefined} />
-              <AvatarFallback>{getInitials(conv.other_participant?.full_name)}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-semibold truncate">
-                  {conv.other_participant?.full_name || "Usuário"}
-                </p>
-                {conv.last_message && (
-                  <span className="text-xs text-muted-foreground shrink-0">
-                    {formatDate(conv.last_message.created_at)}
-                  </span>
-                )}
-              </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                  {getTypeIcon(conv.type)}
-                  <span className="ml-1">{getTypeLabel(conv.type)}</span>
-                </Badge>
-                {conv.event?.title && (
-                  <span className="text-xs text-muted-foreground truncate">
-                    {conv.event.title}
-                  </span>
-                )}
-              </div>
-              {conv.last_message && (
-                <p className="text-sm text-muted-foreground truncate mt-1">
-                  {conv.last_message.sender_id === user?.id && "Você: "}
-                  {conv.last_message.content}
-                </p>
-              )}
-            </div>
-            {conv.unread_count > 0 && (
-              <Badge className="h-5 min-w-5 px-1.5 justify-center shrink-0">
-                {conv.unread_count}
-              </Badge>
-            )}
-          </button>
-        ))}
-      </div>
+      <div className="divide-y divide-border">{filteredConvs.map(renderItem)}</div>
     </ScrollArea>
   );
 }
