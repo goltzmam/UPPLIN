@@ -575,7 +575,7 @@ function MercadoPagoCard() {
               A UPPLIN cobra uma comissão de <strong>10%</strong> por ingresso vendido.
             </p>
 
-            <MercadoPagoOnboarding />
+            
 
             <Button onClick={handleConnect} disabled={connecting} className="w-full sm:w-auto">
               {connecting ? (
