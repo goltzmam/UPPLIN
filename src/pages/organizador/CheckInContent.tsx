@@ -122,7 +122,16 @@ export default function CheckInContent() {
             : item
         );
       });
+      queryClient.setQueryData(["event-ticket-stats", selectedEvent], (current: any) => {
+        if (!current) return current;
+        return {
+          ...current,
+          checkedIn: current.checkedIn + 1,
+          pending: Math.max((current.pending || 0) - 1, 0),
+        };
+      });
       refetchTickets();
+      refetchStats();
       triggerFeedback({ sound: "success", haptic: "success" });
       toast({ title: "✅ Check-in realizado!", description: ticket.ticket_types?.name });
       // Fire confetti 🎉
@@ -170,6 +179,7 @@ export default function CheckInContent() {
         },
         () => {
           queryClient.invalidateQueries({ queryKey: ["event-tickets", selectedEvent] });
+          queryClient.invalidateQueries({ queryKey: ["event-ticket-stats", selectedEvent] });
         }
       )
       .subscribe();
@@ -191,9 +201,9 @@ export default function CheckInContent() {
     });
   }, [eventTickets, searchQuery]);
 
-  const checkedIn = eventTickets.filter(t => t.status === "used").length;
-  const total = eventTickets.length;
-  const pending = eventTickets.filter(t => t.status === "issued").length;
+  const checkedIn = ticketStats?.checkedIn ?? eventTickets.filter(t => t.status === "used").length;
+  const total = ticketStats?.total ?? eventTickets.length;
+  const pending = ticketStats?.pending ?? eventTickets.filter(t => t.status === "issued").length;
   const progressPercent = total > 0 ? Math.round((checkedIn / total) * 100) : 0;
 
   return (
