@@ -29,6 +29,8 @@ export default function ConfiguracoesContent() {
   const [website, setWebsite] = useState(organizer?.social_website || "");
   const [logoUrl, setLogoUrl] = useState(organizer?.logo_url || "");
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [chatAvailable, setChatAvailable] = useState<boolean>(organizer?.chat_available ?? true);
+  const [savingChat, setSavingChat] = useState(false);
 
   // Document (CPF or CNPJ)
   const initialDocType: DocumentType = organizer?.cpf ? "cpf" : "cnpj";
