@@ -79,15 +79,20 @@ export default function CollaboratorScanner() {
   const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ["collab-scanner-stats", eventId, user?.id],
     queryFn: async () => {
-      const { data: allTickets } = await supabase
-        .from("tickets")
-        .select("status, checked_in_by")
-        .eq("event_id", eventId!);
+      const [totalResult, checkedInResult, pendingResult, myResult] = await Promise.all([
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!).eq("status", "used"),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!).eq("status", "issued"),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!).eq("checked_in_by", user!.id),
+      ]);
 
-      const total = allTickets?.length || 0;
-      const checkedIn = allTickets?.filter((t) => t.status === "used").length || 0;
-      const pending = allTickets?.filter((t) => t.status === "issued").length || 0;
-      const myCheckins = allTickets?.filter((t) => t.checked_in_by === user!.id).length || 0;
+      const error = totalResult.error || checkedInResult.error || pendingResult.error || myResult.error;
+      if (error) throw error;
+
+      const total = totalResult.count || 0;
+      const checkedIn = checkedInResult.count || 0;
+      const pending = pendingResult.count || 0;
+      const myCheckins = myResult.count || 0;
 
       return { total, checkedIn, pending, myCheckins };
     },
