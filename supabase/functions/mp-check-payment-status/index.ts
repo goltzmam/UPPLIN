@@ -67,7 +67,7 @@ serve(async (req) => {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    if (order.status === "failed" || order.status === "cancelled" || order.status === "refunded") {
+    if ((order.status === "failed" || order.status === "cancelled" || order.status === "refunded") && !order.mp_payment_id) {
       return new Response(JSON.stringify({ status: order.status }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -109,78 +109,16 @@ serve(async (req) => {
     console.log("MP poll status:", payment.id, payment.status);
 
     if (payment.status === "approved") {
-      // Idempotent processing
-      const { data: existing } = await admin
-        .from("payments")
-        .select("id")
-        .eq("provider_payment_id", payment.id.toString())
-        .eq("status", "paid")
-        .maybeSingle();
+      const { error: confirmError } = await admin.rpc("confirm_paid_order", {
+        p_order_id: order.id,
+        p_provider: "mercadopago",
+        p_provider_payment_id: payment.id?.toString(),
+        p_amount_cents: Math.round((payment.transaction_amount || 0) * 100),
+        p_method: payment.payment_method_id || payment.payment_type_id,
+        p_raw: payment,
+      });
 
-      if (!existing) {
-        await admin.from("payments").insert({
-          order_id: order.id,
-          provider: "mercadopago",
-          provider_payment_id: payment.id.toString(),
-          amount_cents: Math.round((payment.transaction_amount || 0) * 100),
-          status: "paid",
-          method: payment.payment_method_id || payment.payment_type_id,
-          raw: payment,
-        });
-      }
-
-      await admin.from("orders").update({ status: "paid" }).eq("id", order.id).eq("status", "pending");
-
-      // Issue tickets if not already
-      const { count: existingTickets } = await admin
-        .from("tickets")
-        .select("*", { count: "exact", head: true })
-        .eq("order_id", order.id);
-
-      if (!existingTickets || existingTickets === 0) {
-        const ticketsToCreate: any[] = [];
-        for (const item of order.order_items || []) {
-          for (let i = 0; i < (item as any).qty; i++) {
-            ticketsToCreate.push({
-              order_id: order.id,
-              event_id: order.event_id,
-              buyer_user_id: order.buyer_user_id,
-              ticket_type_id: (item as any).ticket_type_id,
-              status: "issued",
-            });
-          }
-        }
-        if (ticketsToCreate.length > 0) {
-          await admin.from("tickets").insert(ticketsToCreate);
-        }
-      }
-
-      // Create buyer<->organizer conversation
-      const organizer = order.events?.organizer_accounts as any;
-      const ownerId = organizer?.owner_user_id;
-      if (ownerId && ownerId !== order.buyer_user_id) {
-        const p1 = order.buyer_user_id < ownerId ? order.buyer_user_id : ownerId;
-        const p2 = order.buyer_user_id < ownerId ? ownerId : order.buyer_user_id;
-
-        const { data: existingConv } = await admin
-          .from("conversations")
-          .select("id")
-          .eq("type", "user_organizer")
-          .eq("event_id", order.event_id)
-          .eq("participant_1_id", p1)
-          .eq("participant_2_id", p2)
-          .maybeSingle();
-
-        if (!existingConv) {
-          await admin.from("conversations").insert({
-            type: "user_organizer",
-            event_id: order.event_id,
-            participant_1_id: p1,
-            participant_2_id: p2,
-            subject: order.events?.title || null,
-          });
-        }
-      }
+      if (confirmError) throw confirmError;
 
       return new Response(JSON.stringify({ status: "paid" }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },

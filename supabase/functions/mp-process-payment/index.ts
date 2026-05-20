@@ -73,7 +73,7 @@ serve(async (req) => {
       .from("orders")
       .select(`
         *,
-        events(id, title, organizer_id, organizer_accounts!organizer_id(id, display_name, commission_percent)),
+        events(id, title, organizer_id, organizer_accounts!organizer_id(id, owner_user_id, display_name, commission_percent)),
         order_items(*, ticket_types(name))
       `)
       .eq("id", order_id)
@@ -122,6 +122,33 @@ serve(async (req) => {
     const transactionAmount = order.total_cents / 100;
     const commissionCents = Math.ceil(order.total_cents * (commissionPercent / 100));
     const applicationFee = commissionCents / 100;
+
+    if (isPixPayment) {
+      const { data: existingPix } = await adminClient
+        .from("payments")
+        .select("provider_payment_id, raw")
+        .eq("order_id", order_id)
+        .eq("provider", "mercadopago")
+        .eq("method", "pix")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const pixData = (existingPix?.raw as any)?.point_of_interaction?.transaction_data;
+      if (existingPix?.provider_payment_id && pixData?.qr_code) {
+        return new Response(
+          JSON.stringify({
+            status: "pending",
+            payment_id: Number(existingPix.provider_payment_id),
+            pix_qr_code: pixData.qr_code,
+            pix_qr_code_base64: pixData.qr_code_base64,
+            pix_expiration: (existingPix.raw as any)?.date_of_expiration,
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
 
     // Validate qty limits (max 10 per ticket type per order to prevent abuse)
     for (const item of order.order_items || []) {
@@ -175,7 +202,9 @@ serve(async (req) => {
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${mpAccount.mp_access_token}`,
-        "X-Idempotency-Key": `order-${order_id}-${isPixPayment ? "pix" : "card"}-${Date.now()}`,
+        "X-Idempotency-Key": isPixPayment
+          ? `order-${order_id}-pix`
+          : `order-${order_id}-card-${crypto.randomUUID()}`,
       },
       body: JSON.stringify(paymentPayload),
     });
@@ -232,12 +261,12 @@ serve(async (req) => {
 
     // Handle approved payments inline
     if (mpData.status === "approved") {
-      await handleApprovedPayment(adminClient, order, order_id, mpData, commissionCents);
+      await handleApprovedPayment(adminClient, order, order_id, mpData);
     } else if (mpData.status === "rejected") {
       await handleRejectedPayment(adminClient, order, order_id);
     } else if (isPixPayment && (mpData.status === "pending" || mpData.status === "in_process")) {
       // Save pending PIX payment so user can retrieve QR code later
-      await adminClient.from("payments").insert({
+      await adminClient.from("payments").upsert({
         order_id: order_id,
         provider: "mercadopago",
         provider_payment_id: mpData.id.toString(),
@@ -245,7 +274,7 @@ serve(async (req) => {
         status: "pending",
         method: "pix",
         raw: mpData,
-      });
+      }, { onConflict: "provider,provider_payment_id" });
 
       // Send PIX QR Code email to user
       try {
@@ -298,66 +327,18 @@ serve(async (req) => {
   }
 });
 
-async function handleApprovedPayment(adminClient: any, order: any, orderId: string, mpData: any, commissionCents: number) {
-  await adminClient.from("payments").insert({
-    order_id: orderId,
-    provider: "mercadopago",
-    provider_payment_id: mpData.id.toString(),
-    amount_cents: Math.round(mpData.transaction_amount * 100),
-    status: "paid",
-    method: mpData.payment_method_id || mpData.payment_type_id,
-    raw: mpData,
+async function handleApprovedPayment(adminClient: any, order: any, orderId: string, mpData: any) {
+  const { data, error } = await adminClient.rpc("confirm_paid_order", {
+    p_order_id: orderId,
+    p_provider: "mercadopago",
+    p_provider_payment_id: mpData.id?.toString(),
+    p_amount_cents: Math.round((mpData.transaction_amount || 0) * 100),
+    p_method: mpData.payment_method_id || mpData.payment_type_id,
+    p_raw: mpData,
   });
 
-  await adminClient.from("orders").update({ status: "paid" }).eq("id", orderId);
-
-  const ticketsToCreate = [];
-  for (const item of order.order_items || []) {
-    for (let i = 0; i < (item as any).qty; i++) {
-      ticketsToCreate.push({
-        order_id: order.id,
-        event_id: order.event_id,
-        buyer_user_id: order.buyer_user_id,
-        ticket_type_id: (item as any).ticket_type_id,
-        status: "issued",
-      });
-    }
-  }
-
-  if (ticketsToCreate.length > 0) {
-    await adminClient.from("tickets").insert(ticketsToCreate);
-  }
-
-  // Auto-create buyer<->organizer conversation
-  try {
-    const organizer = order.events?.organizer_accounts as any;
-    const ownerId = organizer?.owner_user_id;
-    if (ownerId && ownerId !== order.buyer_user_id) {
-      const p1 = order.buyer_user_id < ownerId ? order.buyer_user_id : ownerId;
-      const p2 = order.buyer_user_id < ownerId ? ownerId : order.buyer_user_id;
-      const { data: existingConv } = await adminClient
-        .from("conversations")
-        .select("id")
-        .eq("type", "user_organizer")
-        .eq("event_id", order.event_id)
-        .eq("participant_1_id", p1)
-        .eq("participant_2_id", p2)
-        .maybeSingle();
-      if (!existingConv) {
-        await adminClient.from("conversations").insert({
-          type: "user_organizer",
-          event_id: order.event_id,
-          participant_1_id: p1,
-          participant_2_id: p2,
-          subject: order.events?.title || null,
-        });
-      }
-    }
-  } catch (e) {
-    console.error("conv create failed", e);
-  }
-
-  console.log(`Order ${orderId} paid inline, ${ticketsToCreate.length} tickets issued`);
+  if (error) throw error;
+  console.log(`Order ${orderId} paid inline`, JSON.stringify(data));
 }
 
 async function handleRejectedPayment(adminClient: any, order: any, orderId: string) {

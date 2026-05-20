@@ -57,20 +57,26 @@ export default function PagamentoPendente() {
     if (pollingRef.current || !orderId) return;
     pollingRef.current = setInterval(async () => {
       try {
+        const { data: checked } = await supabase.functions.invoke("mp-check-payment-status", {
+          body: { order_id: orderId },
+        });
+
         const { data } = await supabase
           .from("orders")
           .select("status")
           .eq("id", orderId)
-          .single();
+          .maybeSingle();
 
-        if (data?.status === "paid") {
+        const status = checked?.status || data?.status;
+
+        if (status === "paid") {
           if (pollingRef.current) clearInterval(pollingRef.current);
           pollingRef.current = null;
           setPaymentApproved(true);
           toast({ title: "Pagamento aprovado! 🎉", description: "Seus ingressos foram emitidos." });
           queryClient.invalidateQueries({ queryKey: ["pending-order", orderId] });
           setTimeout(() => navigate("/pagamento-sucesso?status=approved"), 2000);
-        } else if (data?.status === "failed" || data?.status === "cancelled") {
+        } else if (status === "failed" || status === "cancelled") {
           if (pollingRef.current) clearInterval(pollingRef.current);
           pollingRef.current = null;
           queryClient.invalidateQueries({ queryKey: ["pending-order", orderId] });

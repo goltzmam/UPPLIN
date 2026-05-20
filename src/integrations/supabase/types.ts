@@ -739,6 +739,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          item_index: number | null
           order_id: string
           qty: number
           ticket_type_id: string
@@ -747,6 +748,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          item_index?: number | null
           order_id: string
           qty?: number
           ticket_type_id: string
@@ -755,6 +757,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          item_index?: number | null
           order_id?: string
           qty?: number
           ticket_type_id?: string
@@ -1423,9 +1426,11 @@ export type Database = {
           event_id: string
           id: string
           issued_at: string | null
+          item_index: number | null
           order_id: string
           qr_token: string | null
           status: Database["public"]["Enums"]["ticket_status"] | null
+          ticket_number: number | null
           ticket_type_id: string
           used_at: string | null
         }
@@ -1435,9 +1440,11 @@ export type Database = {
           event_id: string
           id?: string
           issued_at?: string | null
+          item_index?: number | null
           order_id: string
           qr_token?: string | null
           status?: Database["public"]["Enums"]["ticket_status"] | null
+          ticket_number?: number | null
           ticket_type_id: string
           used_at?: string | null
         }
@@ -1447,9 +1454,11 @@ export type Database = {
           event_id?: string
           id?: string
           issued_at?: string | null
+          item_index?: number | null
           order_id?: string
           qr_token?: string | null
           status?: Database["public"]["Enums"]["ticket_status"] | null
+          ticket_number?: number | null
           ticket_type_id?: string
           used_at?: string | null
         }
@@ -1740,6 +1749,17 @@ export type Database = {
       }
     }
     Functions: {
+      confirm_paid_order: {
+        Args: {
+          p_amount_cents: number
+          p_method: string
+          p_order_id: string
+          p_provider: string
+          p_provider_payment_id: string
+          p_raw?: Json
+        }
+        Returns: Json
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
