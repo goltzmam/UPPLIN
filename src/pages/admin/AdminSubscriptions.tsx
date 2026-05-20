@@ -87,7 +87,7 @@ export default function AdminSubscriptions() {
     },
   });
 
-  // Update plan pricing
+  // Update plan pricing — cascades commission to all active organizers on this plan
   const updatePlanMutation = useMutation({
     mutationFn: async (plan: any) => {
       const { error } = await supabase
@@ -98,11 +98,33 @@ export default function AdminSubscriptions() {
         })
         .eq("id", plan.id);
       if (error) throw error;
+
+      // Keep cached organizer_accounts.commission_percent in sync
+      // (live split already reads via get_organizer_commission RPC, but we
+      // align the fallback column for display + edge cases)
+      const { data: subs } = await supabase
+        .from("organizer_subscriptions")
+        .select("organizer_id")
+        .eq("plan_id", plan.id)
+        .eq("status", "active");
+
+      const orgIds = (subs || []).map((s: any) => s.organizer_id);
+      if (orgIds.length > 0) {
+        await supabase
+          .from("organizer_accounts")
+          .update({ commission_percent: plan.commission_percent } as any)
+          .in("id", orgIds);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-subscription-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-organizers-subs"] });
+      queryClient.invalidateQueries({ queryKey: ["subscription-plans"] });
       setEditPlanDialog({ open: false, plan: null });
-      toast({ title: "Plano atualizado!" });
+      toast({
+        title: "Plano atualizado!",
+        description: "Preço, comissão e split do Mercado Pago já refletem o novo valor para todos os organizadores deste plano.",
+      });
     },
     onError: (err: any) => {
       toast({ title: "Erro", description: err.message, variant: "destructive" });
