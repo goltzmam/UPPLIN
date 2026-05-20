@@ -833,6 +833,7 @@ export type Database = {
       organizer_accounts: {
         Row: {
           cep: string | null
+          chat_available: boolean
           city: string | null
           cnpj: string | null
           commission_percent: number
@@ -859,6 +860,7 @@ export type Database = {
         }
         Insert: {
           cep?: string | null
+          chat_available?: boolean
           city?: string | null
           cnpj?: string | null
           commission_percent?: number
@@ -885,6 +887,7 @@ export type Database = {
         }
         Update: {
           cep?: string | null
+          chat_available?: boolean
           city?: string | null
           cnpj?: string | null
           commission_percent?: number
@@ -1776,6 +1779,10 @@ export type Database = {
         }[]
       }
       get_active_users_metrics: { Args: never; Returns: Json }
+      get_event_organizer_status: {
+        Args: { p_event_id: string }
+        Returns: Json
+      }
       get_organizer_commission: {
         Args: { p_organizer_id: string }
         Returns: number
@@ -1805,6 +1812,7 @@ export type Database = {
         }
         Returns: number
       }
+      open_event_conversation: { Args: { p_event_id: string }; Returns: Json }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
