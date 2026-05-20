@@ -259,11 +259,31 @@ export default function AdminAnalytics() {
     },
   });
 
+  // Active users metrics (live / today / 7d / 30d) — refreshes every 20s for the "ao vivo" tile
+  const { data: activeMetrics, refetch: refetchActive } = useQuery({
+    queryKey: ["admin-analytics-active-users"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_active_users_metrics");
+      if (error) throw error;
+      return data as {
+        live: { total: number; organizers: number; participants: number };
+        today: { total: number; organizers: number; participants: number };
+        d7: { total: number; organizers: number; participants: number };
+        d30: { total: number; organizers: number; participants: number };
+        totals: { total: number; organizers: number; participants: number };
+      };
+    },
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
+  });
+
   const handleRefresh = () => {
     refetchUsers();
     refetchEvents();
     refetchRevenue();
+    refetchActive();
   };
+
 
   const formatPrice = (value: number) => `R$ ${value.toFixed(2).replace(".", ",")}`;
 
