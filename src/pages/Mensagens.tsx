@@ -99,7 +99,8 @@ export default function Mensagens() {
 
   const resolveOtherParticipant = async (
     type: string,
-    participantId: string
+    participantId: string,
+    eventId?: string | null
   ): Promise<Conversation["other_participant"]> => {
     if (type === "user_organizer") {
       const { data: org } = await supabase
@@ -107,15 +108,31 @@ export default function Mensagens() {
         .select("display_name, logo_url")
         .eq("owner_user_id", participantId)
         .maybeSingle();
+      let coverFallback: string | null = null;
+      if (eventId) {
+        const { data: ev } = await supabase
+          .from("events")
+          .select("cover_image_url")
+          .eq("id", eventId)
+          .maybeSingle();
+        coverFallback = ev?.cover_image_url || null;
+      }
       if (org) {
         return {
           id: participantId,
           full_name: org.display_name,
-          photo_url: org.logo_url,
+          photo_url: org.logo_url || coverFallback,
           subtitle: "Organizador do evento",
           is_organizer: true,
         };
       }
+      return {
+        id: participantId,
+        full_name: "Organizador",
+        photo_url: coverFallback,
+        subtitle: "Organizador do evento",
+        is_organizer: true,
+      };
     }
     if (type === "user_admin" || type === "organizer_admin") {
       return {
