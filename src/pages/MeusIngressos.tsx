@@ -296,11 +296,11 @@ export default function MeusIngressos() {
 
     return (
       <Dialog open={!!selectedTicket} onOpenChange={() => setSelectedTicket(null)}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle className="text-center">Seu Ingresso</DialogTitle>
+        <DialogContent className="w-[calc(100vw-2rem)] max-w-sm sm:max-w-md p-0 overflow-hidden max-h-[90dvh] flex flex-col gap-0">
+          <DialogHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 shrink-0">
+            <DialogTitle className="text-center text-base sm:text-lg">Seu Ingresso</DialogTitle>
           </DialogHeader>
-          <div className="p-6">
+          <div className="px-4 pb-4 sm:px-6 sm:pb-6 overflow-y-auto overscroll-contain flex-1">
             <TicketQRCode
               ticketId={selectedTicket.id}
               qrToken={selectedTicket.qr_token || selectedTicket.id}
