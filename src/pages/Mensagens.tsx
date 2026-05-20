@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { MessageCircle, ArrowLeft, Plus, Users, Building2, Shield, Search, Ticket } from "lucide-react";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
@@ -51,6 +51,7 @@ export default function Mensagens() {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, isOrganizer } = useUserRoles();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [showNewChat, setShowNewChat] = useState(false);
   const [newChatType, setNewChatType] = useState<string>("");
@@ -62,6 +63,29 @@ export default function Mensagens() {
       navigate("/login");
     }
   }, [authLoading, user, navigate]);
+
+  // Auto-select conversation from ?c= query param
+  const requestedConvId = searchParams.get("c");
+  useEffect(() => {
+    if (!user || !requestedConvId) return;
+    if (selectedConversation?.id === requestedConvId) return;
+    (async () => {
+      const { data: conv } = await supabase
+        .from("conversations")
+        .select("*")
+        .eq("id", requestedConvId)
+        .maybeSingle();
+      if (!conv) return;
+      const otherId = conv.participant_1_id === user.id ? conv.participant_2_id : conv.participant_1_id;
+      const other = await resolveOtherParticipant(conv.type, otherId, conv.event_id);
+      setSelectedConversation({ ...conv, other_participant: other } as Conversation);
+      // Clean up the query param so refreshes don't keep forcing selection
+      const next = new URLSearchParams(searchParams);
+      next.delete("c");
+      setSearchParams(next, { replace: true });
+    })();
+  }, [user, requestedConvId]);
+
 
   // Fetch admin users for support chat
   const { data: adminUsers = [] } = useQuery({
@@ -99,7 +123,8 @@ export default function Mensagens() {
 
   const resolveOtherParticipant = async (
     type: string,
-    participantId: string
+    participantId: string,
+    eventId?: string | null
   ): Promise<Conversation["other_participant"]> => {
     if (type === "user_organizer") {
       const { data: org } = await supabase
@@ -107,15 +132,31 @@ export default function Mensagens() {
         .select("display_name, logo_url")
         .eq("owner_user_id", participantId)
         .maybeSingle();
+      let coverFallback: string | null = null;
+      if (eventId) {
+        const { data: ev } = await supabase
+          .from("events")
+          .select("cover_image_url")
+          .eq("id", eventId)
+          .maybeSingle();
+        coverFallback = ev?.cover_image_url || null;
+      }
       if (org) {
         return {
           id: participantId,
           full_name: org.display_name,
-          photo_url: org.logo_url,
+          photo_url: org.logo_url || coverFallback,
           subtitle: "Organizador do evento",
           is_organizer: true,
         };
       }
+      return {
+        id: participantId,
+        full_name: "Organizador",
+        photo_url: coverFallback,
+        subtitle: "Organizador do evento",
+        is_organizer: true,
+      };
     }
     if (type === "user_admin" || type === "organizer_admin") {
       return {
@@ -143,7 +184,7 @@ export default function Mensagens() {
     if (!user) return;
 
     try {
-      const other_participant = await resolveOtherParticipant(type, participantId);
+      const other_participant = await resolveOtherParticipant(type, participantId, eventId);
 
       // Check if conversation already exists
       const { data: existing } = await supabase
