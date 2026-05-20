@@ -41,6 +41,9 @@ interface Conversation {
     id: string;
     full_name: string | null;
     photo_url: string | null;
+    subtitle?: string | null;
+    is_organizer?: boolean;
+    is_support?: boolean;
   };
 }
 
