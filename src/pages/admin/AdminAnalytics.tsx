@@ -105,7 +105,10 @@ export default function AdminAnalytics() {
         users: count,
       }));
     },
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   });
+
 
   // Fetch event creation data
   const { data: eventGrowth = [], refetch: refetchEvents } = useQuery({
@@ -154,7 +157,10 @@ export default function AdminAnalytics() {
         published: counts.published,
       }));
     },
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   });
+
 
   // Fetch revenue data
   const { data: revenueData = [], refetch: refetchRevenue } = useQuery({
@@ -200,7 +206,10 @@ export default function AdminAnalytics() {
         revenue: revenue,
       }));
     },
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   });
+
 
   // Fetch category distribution
   const { data: categoryData = [] } = useQuery({
@@ -226,7 +235,10 @@ export default function AdminAnalytics() {
         .sort((a, b) => b.value - a.value)
         .slice(0, 5);
     },
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   });
+
 
   // Summary stats
   const { data: summaryStats } = useQuery({
@@ -257,7 +269,10 @@ export default function AdminAnalytics() {
         totalRevenue,
       };
     },
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   });
+
 
   // Active users metrics (live / today / 7d / 30d) — refreshes every 20s for the "ao vivo" tile
   const { data: activeMetrics, refetch: refetchActive } = useQuery({
