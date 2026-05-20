@@ -24,6 +24,9 @@ interface Conversation {
     id: string;
     full_name: string | null;
     photo_url: string | null;
+    subtitle?: string | null;
+    is_organizer?: boolean;
+    is_support?: boolean;
   };
   last_message?: {
     content: string;
@@ -82,6 +85,40 @@ export function ConversationsList({
             .eq("id", otherParticipantId)
             .maybeSingle();
 
+          let enrichedParticipant: Conversation["other_participant"] = participantData
+            ? { ...participantData, subtitle: "Online" }
+            : { id: otherParticipantId, full_name: null, photo_url: null, subtitle: "Online" };
+
+          // For event chats: if the OTHER participant is an organizer owner,
+          // show the organizer brand (display_name + logo) instead of the personal profile.
+          if (conv.type === "user_organizer") {
+            const { data: org } = await supabase
+              .from("organizer_accounts")
+              .select("display_name, logo_url, owner_user_id")
+              .eq("owner_user_id", otherParticipantId)
+              .maybeSingle();
+            if (org) {
+              enrichedParticipant = {
+                id: otherParticipantId,
+                full_name: org.display_name,
+                photo_url: org.logo_url,
+                subtitle: "Organizador do evento",
+                is_organizer: true,
+              };
+            }
+          }
+
+          // Platform support
+          if (conv.type === "user_admin" || conv.type === "organizer_admin") {
+            enrichedParticipant = {
+              id: otherParticipantId,
+              full_name: "Suporte UPPLIN",
+              photo_url: enrichedParticipant.photo_url,
+              subtitle: "Equipe oficial",
+              is_support: true,
+            };
+          }
+
           const { data: lastMsg } = await supabase
             .from("messages")
             .select("content, created_at, sender_id")
@@ -99,7 +136,7 @@ export function ConversationsList({
 
           return {
             ...conv,
-            other_participant: participantData,
+            other_participant: enrichedParticipant,
             last_message: lastMsg,
             unread_count: count || 0,
           };
@@ -201,11 +238,25 @@ export function ConversationsList({
     >
       <Avatar className="h-12 w-12 shrink-0">
         <AvatarImage src={conv.other_participant?.photo_url || undefined} />
-        <AvatarFallback>{getInitials(conv.other_participant?.full_name)}</AvatarFallback>
+        <AvatarFallback className={cn(
+          (conv.other_participant?.is_organizer || conv.other_participant?.is_support) &&
+            "bg-primary/15 text-primary"
+        )}>
+          {conv.other_participant?.is_support
+            ? <Shield className="h-5 w-5" />
+            : conv.other_participant?.is_organizer
+              ? <Building2 className="h-5 w-5" />
+              : getInitials(conv.other_participant?.full_name)}
+        </AvatarFallback>
       </Avatar>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-semibold truncate">{conv.other_participant?.full_name || "Usuário"}</p>
+          <div className="flex items-center gap-1 min-w-0">
+            <p className="font-semibold truncate">{conv.other_participant?.full_name || "Usuário"}</p>
+            {(conv.other_participant?.is_organizer || conv.other_participant?.is_support) && (
+              <Shield className="h-3 w-3 text-primary shrink-0" />
+            )}
+          </div>
           {conv.last_message && (
             <span className="text-xs text-muted-foreground shrink-0">
               {formatDate(conv.last_message.created_at)}

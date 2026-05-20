@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, ArrowLeft, X, MessageCircle } from "lucide-react";
+import { Send, ArrowLeft, X, MessageCircle, Shield, Building2, BadgeCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,9 @@ interface ChatWindowProps {
     id: string;
     name: string;
     photo_url?: string | null;
+    subtitle?: string | null;
+    is_organizer?: boolean;
+    is_support?: boolean;
   };
   onClose?: () => void;
   className?: string;
@@ -137,13 +140,28 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
             <ArrowLeft className="h-5 w-5" />
           </Button>
         )}
-        <Avatar className="h-10 w-10">
+        <Avatar className="h-10 w-10 ring-2 ring-primary/20">
           <AvatarImage src={otherParticipant.photo_url || undefined} />
-          <AvatarFallback>{getInitials(otherParticipant.name)}</AvatarFallback>
+          <AvatarFallback className={cn(
+            (otherParticipant.is_organizer || otherParticipant.is_support) && "bg-primary/15 text-primary"
+          )}>
+            {otherParticipant.is_support
+              ? <Shield className="h-5 w-5" />
+              : otherParticipant.is_organizer
+                ? <Building2 className="h-5 w-5" />
+                : getInitials(otherParticipant.name)}
+          </AvatarFallback>
         </Avatar>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold truncate">{otherParticipant.name}</p>
-          <p className="text-xs text-muted-foreground">Online</p>
+          <div className="flex items-center gap-1">
+            <p className="font-semibold truncate">{otherParticipant.name}</p>
+            {(otherParticipant.is_organizer || otherParticipant.is_support) && (
+              <BadgeCheck className="h-4 w-4 text-primary shrink-0" />
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground truncate">
+            {otherParticipant.subtitle || "Online"}
+          </p>
         </div>
       </div>
 
