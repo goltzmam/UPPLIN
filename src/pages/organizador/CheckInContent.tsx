@@ -112,7 +112,7 @@ export default function CheckInContent() {
     const ticketCode = code.trim();
     if (!ticketCode || !selectedEvent) return;
     checkInMutation.mutate(ticketCode);
-  }, [checkInMutation]);
+  }, [checkInMutation, selectedEvent]);
 
   const handleManualCheckIn = () => {
     if (!manualCode.trim()) return;
