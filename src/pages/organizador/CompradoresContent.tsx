@@ -220,7 +220,7 @@ export default function CompradoresContent() {
         <CardContent>
           {filtered.length === 0 ? (
             <EmptyState
-              icon={Users}
+              icon={<Users className="h-8 w-8" />}
               title="Nenhum comprador encontrado"
               description="Quando houver vendas pagas dos seus eventos, os compradores aparecem aqui."
             />
