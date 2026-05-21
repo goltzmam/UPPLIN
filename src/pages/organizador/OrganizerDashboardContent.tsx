@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Calendar, Ticket, TrendingUp, BarChart3, MoreVertical, Edit, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
