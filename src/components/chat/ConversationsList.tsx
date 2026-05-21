@@ -79,60 +79,79 @@ export function ConversationsList({
           const otherParticipantId =
             conv.participant_1_id === user.id ? conv.participant_2_id : conv.participant_1_id;
 
-          const { data: participantData } = await supabase
-            .from("profiles_public")
-            .select("id, full_name, photo_url")
-            .eq("id", otherParticipantId)
-            .maybeSingle();
+          let enrichedParticipant: Conversation["other_participant"] = {
+            id: otherParticipantId,
+            full_name: null,
+            photo_url: null,
+            subtitle: "Online",
+          };
 
-          let enrichedParticipant: Conversation["other_participant"] = participantData
-            ? { ...participantData, subtitle: "Online" }
-            : { id: otherParticipantId, full_name: null, photo_url: null, subtitle: "Online" };
-
-          // For event chats: if the OTHER participant is an organizer owner,
-          // show the organizer brand (display_name + logo) instead of the personal profile.
           if (conv.type === "user_organizer") {
-            const { data: org } = await supabase
-              .from("organizer_accounts")
-              .select("display_name, logo_url, owner_user_id")
-              .eq("owner_user_id", otherParticipantId)
-              .maybeSingle();
+            // Fetch event + organizer brand to determine which side is the organizer
+            let org: { owner_user_id: string; display_name: string | null; logo_url: string | null } | null = null;
             let coverFallback: string | null = null;
+            let eventTitle: string | null = conv.events?.title ?? null;
             if (conv.event_id) {
               const { data: ev } = await supabase
                 .from("events")
-                .select("cover_image_url")
+                .select("cover_image_url, title, organizer_accounts!inner(owner_user_id, display_name, logo_url)")
                 .eq("id", conv.event_id)
                 .maybeSingle();
-              coverFallback = ev?.cover_image_url || null;
+              coverFallback = (ev as any)?.cover_image_url || null;
+              eventTitle = eventTitle || (ev as any)?.title || null;
+              org = (ev as any)?.organizer_accounts || null;
             }
-            if (org) {
+            if (!org) {
+              const { data: orgByOwner } = await supabase
+                .from("organizer_accounts")
+                .select("owner_user_id, display_name, logo_url")
+                .eq("owner_user_id", otherParticipantId)
+                .maybeSingle();
+              org = orgByOwner;
+            }
+
+            const currentUserIsOrganizer = org?.owner_user_id === user.id;
+
+            if (currentUserIsOrganizer) {
+              const { data: p } = await supabase
+                .from("profiles_public")
+                .select("id, full_name, photo_url")
+                .eq("id", otherParticipantId)
+                .maybeSingle();
               enrichedParticipant = {
                 id: otherParticipantId,
-                full_name: org.display_name,
-                photo_url: org.logo_url || coverFallback,
-                subtitle: org.display_name ? `Organizador • ${conv.events?.title || "Evento"}` : "Organizador do evento",
-                is_organizer: true,
+                full_name: p?.full_name || "Participante",
+                photo_url: p?.photo_url || null,
+                subtitle: eventTitle ? `Participante • ${eventTitle}` : "Participante do evento",
               };
             } else {
-              // Participant viewing organizer (or vice versa) — at minimum show the event title
               enrichedParticipant = {
-                ...enrichedParticipant,
-                photo_url: enrichedParticipant.photo_url || coverFallback,
-                subtitle: "Organizador do evento",
+                id: otherParticipantId,
+                full_name: org?.display_name || "Organizador",
+                photo_url: org?.logo_url || coverFallback,
+                subtitle: eventTitle ? `Organizador • ${eventTitle}` : "Organizador do evento",
                 is_organizer: true,
               };
             }
-          }
-
-          // Platform support
-          if (conv.type === "user_admin" || conv.type === "organizer_admin") {
+          } else if (conv.type === "user_admin" || conv.type === "organizer_admin") {
             enrichedParticipant = {
               id: otherParticipantId,
               full_name: "Suporte UPPLIN",
-              photo_url: enrichedParticipant.photo_url,
+              photo_url: null,
               subtitle: "Equipe oficial",
               is_support: true,
+            };
+          } else {
+            const { data: p } = await supabase
+              .from("profiles_public")
+              .select("id, full_name, photo_url")
+              .eq("id", otherParticipantId)
+              .maybeSingle();
+            enrichedParticipant = {
+              id: otherParticipantId,
+              full_name: p?.full_name || "Usuário",
+              photo_url: p?.photo_url || null,
+              subtitle: "Online",
             };
           }
 
