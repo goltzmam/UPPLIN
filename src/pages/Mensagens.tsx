@@ -422,25 +422,51 @@ export default function Mensagens() {
             <DialogDescription>Escolha o tipo de conversa que deseja iniciar</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            {!isAdmin && !isOrganizer && (
+            {!isAdmin && (
               <>
                 <Button
                   variant="outline"
                   className="w-full justify-start h-auto p-4"
                   onClick={() => {
                     if (adminUsers.length > 0) {
-                      startNewConversation("user_admin", adminUsers[0].id);
+                      startNewConversation(
+                        isOrganizer ? "organizer_admin" : "user_admin",
+                        adminUsers[0].id
+                      );
                     }
                   }}
+                  disabled={adminUsers.length === 0}
                 >
                   <Shield className="h-5 w-5 mr-3 text-primary" />
                   <div className="text-left">
-                    <p className="font-medium">Suporte da Plataforma</p>
-                    <p className="text-sm text-muted-foreground">Fale com a equipe de suporte</p>
+                    <p className="font-medium">
+                      {isOrganizer ? "Suporte para Organizadores" : "Suporte UPPLIN"}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {adminUsers.length === 0
+                        ? "Suporte indisponível no momento"
+                        : "Fale com a equipe oficial: problemas, bugs, conflitos ou dúvidas"}
+                    </p>
                   </div>
                 </Button>
 
-                {userEvents.length > 0 && (
+                {isOrganizer && adminUsers.length > 0 && (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-auto p-4"
+                    onClick={() => startNewConversation("user_admin", adminUsers[0].id)}
+                  >
+                    <Shield className="h-5 w-5 mr-3 text-success" />
+                    <div className="text-left">
+                      <p className="font-medium">Suporte como Participante</p>
+                      <p className="text-sm text-muted-foreground">
+                        Falar com o suporte sobre uma compra ou conta pessoal
+                      </p>
+                    </div>
+                  </Button>
+                )}
+
+                {!isOrganizer && userEvents.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Conversar sobre um evento:</p>
                     {userEvents.slice(0, 5).map((event: any) => (
@@ -449,7 +475,7 @@ export default function Mensagens() {
                         variant="outline"
                         className="w-full justify-start h-auto p-3"
                         onClick={() => startNewConversation(
-                          "user_organizer", 
+                          "user_organizer",
                           event.organizer_accounts?.owner_user_id,
                           event.id
                         )}
@@ -466,24 +492,6 @@ export default function Mensagens() {
                   </div>
                 )}
               </>
-            )}
-
-            {isOrganizer && !isAdmin && (
-              <Button
-                variant="outline"
-                className="w-full justify-start h-auto p-4"
-                onClick={() => {
-                  if (adminUsers.length > 0) {
-                    startNewConversation("organizer_admin", adminUsers[0].id);
-                  }
-                }}
-              >
-                <Shield className="h-5 w-5 mr-3 text-primary" />
-                <div className="text-left">
-                  <p className="font-medium">Suporte para Organizadores</p>
-                  <p className="text-sm text-muted-foreground">Fale com a equipe de suporte</p>
-                </div>
-              </Button>
             )}
 
             {isAdmin && (
