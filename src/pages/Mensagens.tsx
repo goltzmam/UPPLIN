@@ -28,6 +28,7 @@ import { useAuth } from "@/lib/auth";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { supabase } from "@/integrations/supabase/client";
 import { PageLoading } from "@/components/ui/loading";
+import { cn } from "@/lib/utils";
 
 interface Conversation {
   id: string;
