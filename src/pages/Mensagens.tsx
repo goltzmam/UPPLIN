@@ -247,20 +247,40 @@ export default function Mensagens() {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background">
       <TikTokDesktopSidebar />
 
-      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe">
-        <div className="w-full max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <main
+        className={cn(
+          "lg:ml-[72px] min-h-[100dvh]",
+          // On mobile: hide BottomNav padding when a chat is open (full-screen chat)
+          selectedConversation ? "pb-0" : "pb-app-bottom-safe lg:pb-0"
+        )}
+      >
+        <div
+          className={cn(
+            "w-full mx-auto",
+            // Full-bleed on mobile when chat selected; normal padding otherwise
+            selectedConversation
+              ? "max-w-6xl px-0 sm:px-4 py-0 sm:py-6"
+              : "max-w-6xl px-3 sm:px-4 py-4 sm:py-6"
+          )}
+        >
           {/* Breadcrumb - desktop only */}
           <div className="hidden lg:block">
-            <Breadcrumb 
-              items={[{ label: "Mensagens" }]} 
+            <Breadcrumb
+              items={[{ label: "Mensagens" }]}
               className="mb-4"
             />
           </div>
-          
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
+
+          {/* Page header - hidden on mobile when chat is open */}
+          <div
+            className={cn(
+              "flex items-center justify-between mb-4 sm:mb-6 px-3 sm:px-0",
+              selectedConversation && "hidden lg:flex"
+            )}
+          >
             <div className="flex items-center gap-2 sm:gap-3 min-w-0">
               <Button variant="ghost" size="icon" className="shrink-0" onClick={() => navigate(-1)}>
                 <ArrowLeft className="h-5 w-5" />
@@ -277,11 +297,24 @@ export default function Mensagens() {
             </Button>
           </div>
 
-          {/* Mobile: stacked layout, Desktop: side-by-side */}
-          <div className="flex flex-col lg:grid lg:grid-cols-[350px_1fr] gap-4 sm:gap-6 h-auto lg:h-[calc(100vh-220px)]">
-            {/* Conversations List */}
-            {/* Conversations - hide on mobile when chat is selected */}
-            <div className={`bg-card rounded-xl sm:rounded-2xl border overflow-hidden min-h-[300px] lg:min-h-0 flex flex-col ${selectedConversation ? 'hidden lg:block' : ''}`}>
+          {/* Mobile: full-height stacked layout, Desktop: side-by-side */}
+          <div
+            className={cn(
+              "flex flex-col lg:grid lg:grid-cols-[350px_1fr] gap-0 lg:gap-6",
+              // Mobile full-height when chat open; otherwise let list scroll naturally
+              selectedConversation
+                ? "h-[100dvh] lg:h-[calc(100vh-220px)]"
+                : "h-[calc(100dvh-160px)] lg:h-[calc(100vh-220px)]"
+            )}
+          >
+            {/* Conversations List - hide on mobile when chat is selected */}
+            <div
+              className={cn(
+                "bg-card border overflow-hidden flex flex-col min-h-0",
+                "rounded-none sm:rounded-xl lg:rounded-2xl",
+                selectedConversation ? "hidden lg:flex" : "flex-1 lg:flex"
+              )}
+            >
               {/* Search bar */}
               <div className="p-2 border-b">
                 <div className="relative">
@@ -296,7 +329,7 @@ export default function Mensagens() {
               </div>
 
               <Tabs defaultValue="all" className="flex-1 flex flex-col min-h-0">
-                <TabsList className="w-full justify-start rounded-none border-b p-1 h-auto">
+                <TabsList className="w-full justify-start rounded-none border-b p-1 h-auto overflow-x-auto">
                   <TabsTrigger value="all" className="text-[10px] sm:text-xs">Todas</TabsTrigger>
                   <TabsTrigger value="by_event" className="text-[10px] sm:text-xs gap-1">
                     <Ticket className="h-3 w-3" /> Por Evento
@@ -343,8 +376,14 @@ export default function Mensagens() {
               </Tabs>
             </div>
 
-            {/* Chat Window - full width on mobile when selected */}
-            <div className={`bg-card rounded-xl sm:rounded-2xl border overflow-hidden min-h-[400px] lg:min-h-0 ${selectedConversation ? '' : 'hidden lg:block'}`}>
+            {/* Chat Window - full screen on mobile when selected */}
+            <div
+              className={cn(
+                "bg-card border overflow-hidden flex flex-col min-h-0",
+                "rounded-none sm:rounded-xl lg:rounded-2xl",
+                selectedConversation ? "flex-1" : "hidden lg:flex"
+              )}
+            >
               {selectedConversation ? (
                 <ChatWindow
                   conversationId={selectedConversation.id}
@@ -372,6 +411,7 @@ export default function Mensagens() {
           </div>
         </div>
       </main>
+
 
       {/* New Chat Dialog */}
       <Dialog open={showNewChat} onOpenChange={setShowNewChat}>
