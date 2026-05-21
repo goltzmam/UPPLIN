@@ -26,7 +26,7 @@ export default function AdminDashboard() {
         supabase.from("organizer_accounts").select("id", { count: "exact", head: true }),
         supabase.from("events").select("id, status", { count: "exact" }),
         supabase.from("orders").select("total_cents, status"),
-        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("status", "issued"),
+        supabase.from("tickets").select("id", { count: "exact", head: true }).in("status", ["issued", "used"]),
         supabase.from("cpf_change_requests").select("id, status"),
       ]);
 
