@@ -54,7 +54,7 @@ export default function EventosListContent() {
         .from("tickets")
         .select("id, event_id")
         .in("event_id", eventIds)
-        .eq("status", "issued");
+        .in("status", ["issued", "used"]);
       if (error) throw error;
       return data;
     },
