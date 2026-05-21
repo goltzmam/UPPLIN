@@ -39,6 +39,7 @@ import CuponsContent from "./pages/organizador/CuponsContent";
 import CheckInContent from "./pages/organizador/CheckInContent";
 import ConfiguracoesContent from "./pages/organizador/ConfiguracoesContent";
 import RelatoriosContent from "./pages/organizador/RelatoriosContent";
+import CompradoresContent from "./pages/organizador/CompradoresContent";
 import AssinaturasContent from "./pages/organizador/AssinaturasContent";
 
 // Admin imports
@@ -168,6 +169,7 @@ function AnimatedRoutes() {
             <Route path="check-in" element={<CheckInContent />} />
             <Route path="configuracoes" element={<ConfiguracoesContent />} />
             <Route path="relatorios" element={<RelatoriosContent />} />
+            <Route path="compradores" element={<CompradoresContent />} />
             <Route path="assinaturas" element={<AssinaturasContent />} />
           </Route>
           

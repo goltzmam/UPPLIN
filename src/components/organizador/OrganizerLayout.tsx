@@ -13,7 +13,8 @@ import {
   Plus,
   BarChart3,
   Crown,
-  MessageCircle
+  MessageCircle,
+  Users
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
@@ -31,6 +32,7 @@ const SIDEBAR_COLLAPSED_KEY = "upplin_org_sidebar_collapsed";
 const navItems = [
   { href: "/organizador/painel", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/organizador/painel/eventos", label: "Meus Eventos", icon: Calendar },
+  { href: "/organizador/painel/compradores", label: "Compradores", icon: Users },
   { href: "/mensagens", label: "Mensagens", icon: MessageCircle },
   { href: "/organizador/painel/cupons", label: "Cupons", icon: Tag },
   { href: "/organizador/painel/check-in", label: "Check-in", icon: QrCode },
