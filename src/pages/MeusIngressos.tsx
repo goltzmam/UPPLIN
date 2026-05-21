@@ -127,6 +127,24 @@ export default function MeusIngressos() {
     }
   }, [user, navigate, toast]);
 
+  const handleDownloadPdf = useCallback(async (ticket: any) => {
+    try {
+      await downloadTicketPdf({
+        eventTitle: ticket.events?.title || "Evento",
+        eventDate: new Date(ticket.events?.start_at),
+        venueName: ticket.events?.venue_name,
+        ticketTypeName: ticket.ticket_types?.name,
+        holderName: profile?.full_name || null,
+        qrToken: ticket.qr_token,
+        ticketCode: ticket.qr_token?.slice(0, 12) || null,
+        organizerName: ticket.events?.organizer_accounts?.display_name || null,
+      });
+      toast({ title: "PDF gerado", description: "Seu ingresso foi baixado." });
+    } catch (e: any) {
+      toast({ title: "Erro ao gerar PDF", description: e?.message || "Tente novamente", variant: "destructive" });
+    }
+  }, [profile?.full_name]);
+
   const { data: pendingOrders } = useQuery({
     queryKey: ["my-pending-orders", user?.id],
     queryFn: async () => {
