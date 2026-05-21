@@ -784,43 +784,59 @@ export type Database = {
         Row: {
           buyer_user_id: string
           commission_cents: number | null
+          coupon_id: string | null
           created_at: string | null
+          discount_cents: number
           event_id: string
           expires_at: string | null
           id: string
           mp_payment_id: string | null
           mp_preference_id: string | null
           status: Database["public"]["Enums"]["order_status"] | null
+          subtotal_cents: number | null
           total_cents: number
           updated_at: string | null
         }
         Insert: {
           buyer_user_id: string
           commission_cents?: number | null
+          coupon_id?: string | null
           created_at?: string | null
+          discount_cents?: number
           event_id: string
           expires_at?: string | null
           id?: string
           mp_payment_id?: string | null
           mp_preference_id?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
+          subtotal_cents?: number | null
           total_cents?: number
           updated_at?: string | null
         }
         Update: {
           buyer_user_id?: string
           commission_cents?: number | null
+          coupon_id?: string | null
           created_at?: string | null
+          discount_cents?: number
           event_id?: string
           expires_at?: string | null
           id?: string
           mp_payment_id?: string | null
           mp_preference_id?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
+          subtotal_cents?: number | null
           total_cents?: number
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_event_id_fkey"
             columns: ["event_id"]
@@ -1752,6 +1768,10 @@ export type Database = {
       }
     }
     Functions: {
+      apply_coupon_to_order: {
+        Args: { p_code: string; p_order_id: string }
+        Returns: Json
+      }
       check_in_ticket: {
         Args: { p_event_id?: string; p_ticket_code: string }
         Returns: Json
@@ -1825,6 +1845,7 @@ export type Database = {
           read_ct: number
         }[]
       }
+      remove_coupon_from_order: { Args: { p_order_id: string }; Returns: Json }
       touch_last_seen: { Args: never; Returns: undefined }
     }
     Enums: {

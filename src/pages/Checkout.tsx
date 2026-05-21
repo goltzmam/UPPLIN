@@ -156,44 +156,81 @@ export default function Checkout() {
 
   const formatPrice = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
 
-  const calculateDiscount = () => {
-    if (!appliedCoupon || !order) return 0;
-    if (appliedCoupon.discount_type === "percentage") {
-      return Math.floor(order.total_cents * (appliedCoupon.discount_value / 100));
-    }
-    return appliedCoupon.discount_value;
-  };
+  // When a coupon is applied server-side, order.total_cents already reflects the discount.
+  // We derive subtotal/discount from the order itself.
+  const orderSubtotal = order ? (order.subtotal_cents ?? order.total_cents + (order.discount_cents ?? 0)) : 0;
+  const discountAmount = order?.discount_cents ?? 0;
+  const finalTotal = order ? order.total_cents : 0;
 
-  const discountAmount = calculateDiscount();
-  const finalTotal = order ? Math.max(0, order.total_cents - discountAmount) : 0;
+  // Hydrate applied coupon from order on load
+  useEffect(() => {
+    if (order?.coupon_id && !appliedCoupon) {
+      (async () => {
+        const { data } = await supabase
+          .from("coupons")
+          .select("id, code, discount_type, discount_value")
+          .eq("id", order.coupon_id)
+          .maybeSingle();
+        if (data) {
+          setAppliedCoupon({
+            id: data.id,
+            code: data.code,
+            discount_type: data.discount_type,
+            discount_value: data.discount_value,
+          });
+        }
+      })();
+    } else if (order && !order.coupon_id && appliedCoupon) {
+      setAppliedCoupon(null);
+    }
+  }, [order?.coupon_id]);
+
+  const couponErrorMessage = (code: string): string => {
+    const map: Record<string, string> = {
+      coupon_not_found: "Cupom não encontrado",
+      coupon_wrong_event: "Cupom não válido para este evento",
+      coupon_wrong_organizer: "Cupom não válido para este organizador",
+      coupon_not_yet_valid: "Cupom ainda não está válido",
+      coupon_expired: "Cupom expirado",
+      coupon_exhausted: "Cupom esgotado",
+      coupon_min_purchase: "Valor mínimo não atingido para este cupom",
+      order_not_pending: "Pedido não está mais aberto",
+      order_not_found: "Pedido não encontrado",
+    };
+    return map[code] || "Erro ao aplicar cupom";
+  };
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim() || !order) return;
     setApplyingCoupon(true);
     setCouponError(null);
     try {
-      const { data: coupon, error } = await supabase
-        .from("coupons")
-        .select("*")
-        .eq("code", couponCode.toUpperCase().trim())
-        .eq("is_active", true)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!coupon) { setCouponError("Cupom não encontrado"); return; }
-      if (coupon.event_id && coupon.event_id !== order.event_id) { setCouponError("Cupom não válido para este evento"); return; }
-      const now = new Date();
-      if (coupon.valid_from && new Date(coupon.valid_from) > now) { setCouponError("Cupom ainda não está válido"); return; }
-      if (coupon.valid_until && new Date(coupon.valid_until) < now) { setCouponError("Cupom expirado"); return; }
-      if (coupon.usage_limit && coupon.usage_count >= coupon.usage_limit) { setCouponError("Cupom esgotado"); return; }
-      if (coupon.min_purchase_cents && order.total_cents < coupon.min_purchase_cents) { setCouponError(`Mínimo de ${formatPrice(coupon.min_purchase_cents)}`); return; }
-
-      setAppliedCoupon({
-        id: coupon.id,
-        code: coupon.code,
-        discount_type: coupon.discount_type,
-        discount_value: coupon.discount_value,
+      const { data, error } = await supabase.rpc("apply_coupon_to_order", {
+        p_order_id: order.id,
+        p_code: couponCode.toUpperCase().trim(),
       });
+      if (error) {
+        const msg = (error.message || "").toLowerCase();
+        const key = Object.keys({
+          coupon_not_found: 1, coupon_wrong_event: 1, coupon_wrong_organizer: 1,
+          coupon_not_yet_valid: 1, coupon_expired: 1, coupon_exhausted: 1,
+          coupon_min_purchase: 1, order_not_pending: 1, order_not_found: 1,
+        }).find((k) => msg.includes(k));
+        setCouponError(key ? couponErrorMessage(key) : "Erro ao aplicar cupom");
+        return;
+      }
+      const result = data as any;
+      setAppliedCoupon({
+        id: result.coupon_id,
+        code: result.code,
+        discount_type: result.discount_type,
+        discount_value: result.discount_value,
+      });
+      // Refresh order so totals + brick reflect the new value
+      await queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+      // Force MP card brick to remount with new amount
+      setCardBrickKey((k) => k + 1);
+      toast({ title: "Cupom aplicado!", description: `Desconto de ${formatPrice(result.discount_cents)}` });
     } catch {
       setCouponError("Erro ao aplicar cupom");
     } finally {
@@ -201,11 +238,20 @@ export default function Checkout() {
     }
   };
 
-  const handleRemoveCoupon = () => {
+  const handleRemoveCoupon = async () => {
+    if (!order) return;
+    try {
+      await supabase.rpc("remove_coupon_from_order", { p_order_id: order.id });
+    } catch {
+      // ignore
+    }
     setAppliedCoupon(null);
     setCouponCode("");
     setCouponError(null);
+    await queryClient.invalidateQueries({ queryKey: ["order", orderId] });
+    setCardBrickKey((k) => k + 1);
   };
+
 
   // Card payment handler
   const onCardPaymentSubmit = useCallback(async (formData: any) => {
@@ -441,7 +487,7 @@ export default function Checkout() {
                           <Check className="h-4 w-4 text-primary" />
                           <span className="font-medium text-primary text-sm">{appliedCoupon.code}</span>
                           <span className="text-xs text-muted-foreground">
-                            (-{appliedCoupon.discount_type === 'percentage' ? `${appliedCoupon.discount_value}%` : formatPrice(appliedCoupon.discount_value)})
+                            (-{appliedCoupon.discount_type === 'percent' ? `${appliedCoupon.discount_value}%` : formatPrice(appliedCoupon.discount_value)})
                           </span>
                         </div>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleRemoveCoupon}>
@@ -470,11 +516,11 @@ export default function Checkout() {
                   <div className="border-t border-border pt-4 mt-4 space-y-2">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>{formatPrice(order.total_cents)}</span>
+                      <span>{formatPrice(orderSubtotal)}</span>
                     </div>
                     {discountAmount > 0 && (
                       <div className="flex justify-between items-center text-sm text-primary">
-                        <span>Desconto</span>
+                        <span>Desconto {appliedCoupon ? `(${appliedCoupon.code})` : ""}</span>
                         <span>-{formatPrice(discountAmount)}</span>
                       </div>
                     )}
@@ -484,6 +530,7 @@ export default function Checkout() {
                     </div>
                   </div>
                 </div>
+
 
                 {expiresAt && (
                   <div className="bg-accent/20 rounded-xl p-3 flex items-center gap-3">
