@@ -19,6 +19,7 @@ import { useOutletContext } from "react-router-dom";
 
 export default function OrganizerDashboardContent() {
   const { organizer } = useOutletContext<{ organizer: any }>();
+  const queryClient = useQueryClient();
 
   // Get events
   const { data: events, isLoading: eventsLoading } = useQuery({
@@ -35,30 +36,31 @@ export default function OrganizerDashboardContent() {
       return data;
     },
     enabled: !!organizer,
+    refetchInterval: 15000,
   });
 
-  // Real sold tickets (issued)
-  const { data: issuedTickets } = useQuery({
-    queryKey: ["organizer-issued-tickets-dash", organizer?.id],
+  // Sold tickets = any issued ticket (includes already checked-in/used)
+  const eventIds = (events || []).map((e: any) => e.id);
+  const { data: soldTickets } = useQuery({
+    queryKey: ["organizer-sold-tickets-dash", organizer?.id, eventIds.join(",")],
     queryFn: async () => {
-      const eventIds = (events || []).map((e: any) => e.id);
       if (eventIds.length === 0) return [];
       const { data, error } = await supabase
         .from("tickets")
-        .select("id, event_id, ticket_type_id")
+        .select("id, event_id, ticket_type_id, status")
         .in("event_id", eventIds)
-        .eq("status", "issued");
+        .in("status", ["issued", "used"]);
       if (error) throw error;
       return data;
     },
     enabled: !!events && events.length > 0,
+    refetchInterval: 15000,
   });
 
   // Paid orders for real revenue
   const { data: paidOrders } = useQuery({
-    queryKey: ["organizer-paid-orders-dash", organizer?.id],
+    queryKey: ["organizer-paid-orders-dash", organizer?.id, eventIds.join(",")],
     queryFn: async () => {
-      const eventIds = (events || []).map((e: any) => e.id);
       if (eventIds.length === 0) return [];
       const { data, error } = await supabase
         .from("orders")
@@ -69,10 +71,34 @@ export default function OrganizerDashboardContent() {
       return data;
     },
     enabled: !!events && events.length > 0,
+    refetchInterval: 15000,
   });
 
-  // Calculate stats based on REAL paid sales, not reservations
-  const totalTicketsSold = issuedTickets?.length || 0;
+  // Realtime: refresh stats when tickets/orders change for these events
+  useEffect(() => {
+    if (eventIds.length === 0) return;
+    const channel = supabase
+      .channel(`org-dash-${organizer?.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tickets" }, (payload) => {
+        const evId = (payload.new as any)?.event_id || (payload.old as any)?.event_id;
+        if (evId && eventIds.includes(evId)) {
+          queryClient.invalidateQueries({ queryKey: ["organizer-sold-tickets-dash", organizer?.id] });
+        }
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
+        const evId = (payload.new as any)?.event_id || (payload.old as any)?.event_id;
+        if (evId && eventIds.includes(evId)) {
+          queryClient.invalidateQueries({ queryKey: ["organizer-paid-orders-dash", organizer?.id] });
+        }
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [organizer?.id, eventIds.join(","), queryClient]);
+
+  // Calculate stats based on REAL paid sales
+  const totalTicketsSold = soldTickets?.length || 0;
   const totalRevenue = paidOrders?.reduce((acc: number, o: any) => acc + (o.total_cents || 0), 0) || 0;
 
   const formatPrice = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
