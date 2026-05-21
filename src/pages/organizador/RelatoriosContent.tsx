@@ -13,6 +13,7 @@ const CHART_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--su
 
 export default function RelatoriosContent() {
   const { organizer } = useOutletContext<{ organizer: any }>();
+  const queryClient = useQueryClient();
 
   // Get all events with ticket data
   const { data: events } = useQuery({
@@ -27,14 +28,16 @@ export default function RelatoriosContent() {
       return data;
     },
     enabled: !!organizer,
+    refetchInterval: 15000,
   });
+
+  const eventIds = (events || []).map((e: any) => e.id);
 
   // Get paid orders for this organizer's events
   const { data: orders } = useQuery({
-    queryKey: ["organizer-orders", organizer?.id],
+    queryKey: ["organizer-orders", organizer?.id, eventIds.join(",")],
     queryFn: async () => {
-      if (!events || events.length === 0) return [];
-      const eventIds = events.map((e: any) => e.id);
+      if (eventIds.length === 0) return [];
       const { data, error } = await supabase
         .from("orders")
         .select("id, total_cents, commission_cents, status, created_at, event_id")
@@ -44,25 +47,49 @@ export default function RelatoriosContent() {
       if (error) throw error;
       return data;
     },
-    enabled: !!events && events.length > 0,
+    enabled: eventIds.length > 0,
+    refetchInterval: 15000,
   });
 
-  // Get issued tickets (real sold count, not reservations)
+  // Get issued/used tickets (real sold count)
   const { data: issuedTickets } = useQuery({
-    queryKey: ["organizer-issued-tickets", organizer?.id],
+    queryKey: ["organizer-issued-tickets", organizer?.id, eventIds.join(",")],
     queryFn: async () => {
-      if (!events || events.length === 0) return [];
-      const eventIds = events.map((e: any) => e.id);
+      if (eventIds.length === 0) return [];
       const { data, error } = await supabase
         .from("tickets")
-        .select("id, event_id")
+        .select("id, event_id, status")
         .in("event_id", eventIds)
-        .eq("status", "issued");
+        .in("status", ["issued", "used"]);
       if (error) throw error;
       return data;
     },
-    enabled: !!events && events.length > 0,
+    enabled: eventIds.length > 0,
+    refetchInterval: 15000,
   });
+
+  // Realtime updates
+  useEffect(() => {
+    if (eventIds.length === 0) return;
+    const channel = supabase
+      .channel(`org-reports-${organizer?.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "tickets" }, (payload) => {
+        const evId = (payload.new as any)?.event_id || (payload.old as any)?.event_id;
+        if (evId && eventIds.includes(evId)) {
+          queryClient.invalidateQueries({ queryKey: ["organizer-issued-tickets", organizer?.id] });
+        }
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
+        const evId = (payload.new as any)?.event_id || (payload.old as any)?.event_id;
+        if (evId && eventIds.includes(evId)) {
+          queryClient.invalidateQueries({ queryKey: ["organizer-orders", organizer?.id] });
+        }
+      })
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [organizer?.id, eventIds.join(","), queryClient]);
 
   // Subscription info
   const { data: subscription } = useQuery({
