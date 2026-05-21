@@ -1811,6 +1811,22 @@ export type Database = {
         Args: { p_organizer_id: string }
         Returns: number
       }
+      get_organizer_leads: {
+        Args: { p_organizer_id: string }
+        Returns: {
+          buyer_user_id: string
+          email: string
+          event_id: string
+          event_start_at: string
+          event_title: string
+          full_name: string
+          last_order_at: string
+          orders_count: number
+          photo_url: string
+          tickets_count: number
+          total_cents: number
+        }[]
+      }
       get_user_organizer_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -1837,6 +1853,10 @@ export type Database = {
         Returns: number
       }
       open_event_conversation: { Args: { p_event_id: string }; Returns: Json }
+      open_organizer_conversation_with_user: {
+        Args: { p_event_id: string; p_user_id: string }
+        Returns: Json
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
