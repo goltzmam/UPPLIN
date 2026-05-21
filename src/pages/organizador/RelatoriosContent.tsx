@@ -1,5 +1,6 @@
+import { useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BarChart3, TrendingUp, Ticket, Calendar, DollarSign, Percent, ArrowDownRight, ArrowUpRight } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
