@@ -18,6 +18,7 @@ import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { downloadTicketPdf } from "@/lib/ticket-pdf";
 
 export default function MeusIngressos() {
   const { user, profile, loading } = useAuth();
