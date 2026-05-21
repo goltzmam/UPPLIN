@@ -168,6 +168,7 @@ function AnimatedRoutes() {
             <Route path="check-in" element={<CheckInContent />} />
             <Route path="configuracoes" element={<ConfiguracoesContent />} />
             <Route path="relatorios" element={<RelatoriosContent />} />
+            <Route path="compradores" element={<CompradoresContent />} />
             <Route path="assinaturas" element={<AssinaturasContent />} />
           </Route>
           
