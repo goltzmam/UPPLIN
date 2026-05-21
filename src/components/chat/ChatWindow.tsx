@@ -132,15 +132,15 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
   };
 
   return (
-    <div className={cn("flex flex-col h-full bg-background border rounded-2xl overflow-hidden", className)}>
+    <div className={cn("flex flex-col h-full min-h-0 bg-background border rounded-2xl overflow-hidden", className)}>
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b bg-card">
+      <div className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b bg-card shrink-0">
         {onClose && (
-          <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0">
+          <Button variant="ghost" size="icon" onClick={onClose} className="shrink-0 h-9 w-9 lg:hidden">
             <ArrowLeft className="h-5 w-5" />
           </Button>
         )}
-        <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+        <Avatar className="h-9 w-9 sm:h-10 sm:w-10 ring-2 ring-primary/20 shrink-0">
           <AvatarImage src={otherParticipant.photo_url || undefined} />
           <AvatarFallback className={cn(
             (otherParticipant.is_organizer || otherParticipant.is_support) && "bg-primary/15 text-primary"
@@ -154,20 +154,20 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
         </Avatar>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1">
-            <p className="font-semibold truncate">{otherParticipant.name}</p>
+            <p className="font-semibold text-sm sm:text-base truncate">{otherParticipant.name}</p>
             {(otherParticipant.is_organizer || otherParticipant.is_support) && (
               <BadgeCheck className="h-4 w-4 text-primary shrink-0" />
             )}
           </div>
-          <p className="text-xs text-muted-foreground truncate">
+          <p className="text-[11px] sm:text-xs text-muted-foreground truncate">
             {otherParticipant.subtitle || "Online"}
           </p>
         </div>
       </div>
 
       {/* Messages */}
-      <ScrollArea ref={scrollRef} className="flex-1 p-4">
-        <div className="space-y-4">
+      <ScrollArea ref={scrollRef} className="flex-1 min-h-0 px-3 sm:px-4 py-3 sm:py-4">
+        <div className="space-y-3 sm:space-y-4">
           {messages.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <MessageCircle className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -180,9 +180,9 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
               return (
                 <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
                   <div className={cn(
-                    "max-w-[80%] rounded-2xl px-4 py-2",
-                    isMe 
-                      ? "bg-primary text-primary-foreground rounded-br-md" 
+                    "max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 sm:px-4 py-2",
+                    isMe
+                      ? "bg-primary text-primary-foreground rounded-br-md"
                       : "bg-muted rounded-bl-md"
                   )}>
                     <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
@@ -201,16 +201,20 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
       </ScrollArea>
 
       {/* Input */}
-      <form onSubmit={sendMessage} className="p-4 border-t bg-card">
+      <form
+        onSubmit={sendMessage}
+        className="px-3 sm:px-4 py-3 border-t bg-card shrink-0"
+        style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+      >
         <div className="flex gap-2">
           <Input
             placeholder="Digite sua mensagem..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 rounded-full"
+            className="flex-1 rounded-full text-base sm:text-sm"
             disabled={sending}
           />
-          <Button type="submit" size="icon" className="rounded-full shrink-0" disabled={!newMessage.trim() || sending}>
+          <Button type="submit" size="icon" className="rounded-full shrink-0 h-10 w-10" disabled={!newMessage.trim() || sending}>
             <Send className="h-4 w-4" />
           </Button>
         </div>
