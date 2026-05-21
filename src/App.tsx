@@ -39,6 +39,7 @@ import CuponsContent from "./pages/organizador/CuponsContent";
 import CheckInContent from "./pages/organizador/CheckInContent";
 import ConfiguracoesContent from "./pages/organizador/ConfiguracoesContent";
 import RelatoriosContent from "./pages/organizador/RelatoriosContent";
+import CompradoresContent from "./pages/organizador/CompradoresContent";
 import AssinaturasContent from "./pages/organizador/AssinaturasContent";
 
 // Admin imports
