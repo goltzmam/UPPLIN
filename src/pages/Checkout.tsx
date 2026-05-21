@@ -487,7 +487,7 @@ export default function Checkout() {
                           <Check className="h-4 w-4 text-primary" />
                           <span className="font-medium text-primary text-sm">{appliedCoupon.code}</span>
                           <span className="text-xs text-muted-foreground">
-                            (-{appliedCoupon.discount_type === 'percentage' ? `${appliedCoupon.discount_value}%` : formatPrice(appliedCoupon.discount_value)})
+                            (-{appliedCoupon.discount_type === 'percent' ? `${appliedCoupon.discount_value}%` : formatPrice(appliedCoupon.discount_value)})
                           </span>
                         </div>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleRemoveCoupon}>
@@ -516,11 +516,11 @@ export default function Checkout() {
                   <div className="border-t border-border pt-4 mt-4 space-y-2">
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-muted-foreground">Subtotal</span>
-                      <span>{formatPrice(order.total_cents)}</span>
+                      <span>{formatPrice(orderSubtotal)}</span>
                     </div>
                     {discountAmount > 0 && (
                       <div className="flex justify-between items-center text-sm text-primary">
-                        <span>Desconto</span>
+                        <span>Desconto {appliedCoupon ? `(${appliedCoupon.code})` : ""}</span>
                         <span>-{formatPrice(discountAmount)}</span>
                       </div>
                     )}
@@ -530,6 +530,7 @@ export default function Checkout() {
                     </div>
                   </div>
                 </div>
+
 
                 {expiresAt && (
                   <div className="bg-accent/20 rounded-xl p-3 flex items-center gap-3">
