@@ -12,7 +12,8 @@ import {
   Menu,
   Plus,
   BarChart3,
-  Crown
+  Crown,
+  MessageCircle
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
