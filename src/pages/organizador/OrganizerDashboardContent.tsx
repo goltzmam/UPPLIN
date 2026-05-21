@@ -199,7 +199,7 @@ export default function OrganizerDashboardContent() {
         ) : events && events.length > 0 ? (
           <div className="divide-y divide-border">
             {events.map((event) => {
-              const ticketsSold = issuedTickets?.filter((t: any) => t.event_id === event.id).length || 0;
+              const ticketsSold = soldTickets?.filter((t: any) => t.event_id === event.id).length || 0;
               const totalTickets = event.ticket_types?.reduce((a: number, t: any) => a + (t.quantity_total || 0), 0) || 0;
 
               return (
