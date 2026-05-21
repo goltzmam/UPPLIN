@@ -313,7 +313,7 @@ export default function MeusIngressos() {
                   <MessageCircle className="h-3.5 w-3.5 mr-1.5" />
                   Falar com organizador
                 </Button>
-                <Button variant="outline" size="sm" className="text-xs h-8">
+                <Button variant="outline" size="sm" className="text-xs h-8" onClick={() => handleDownloadPdf(ticket)}>
                   <Download className="h-3.5 w-3.5 mr-1.5" />
                   Baixar PDF
                 </Button>
