@@ -56,7 +56,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
           )
         `)
         .eq("buyer_user_id", user.id)
-        .eq("status", "issued");
+        .in("status", ["issued", "used"]);
       
       if (error) throw error;
       
