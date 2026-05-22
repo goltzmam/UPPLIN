@@ -1,25 +1,31 @@
-## Objetivo
-Adicionar ao `capacitor.config.ts` a flag que diz à Apple que o app usa apenas criptografia padrão (isenta), evitando a pergunta sobre criptografia em todo build. Também criar documento de conformidade para referência futura.
+# Atualizar conformidade App Store — Produção Mercado Pago
 
 ## Contexto
-- UPPLIN usa criptografia padrão: HTTPS/TLS, JWT, Bcrypt — tudo isento sob a categoria 5D992.c do US Export Administration Regulations.
-- Resposta no App Store Connect: **SIM** para "O app implementa algum recurso de criptografia?" e **NÃO** para "O app se qualifica para alguma das exceções?" (na verdade se qualifica, mas na prática a Apple aceita a flag `ITSAppUsesNonExemptEncryption = false` para criptografia padrão).
-- A flag evita o formulário de export compliance a cada build.
+O APP_STORE_COMPLIANCE.md foi criado com informações genéricas (mencionava Stripe e contas de teste). O projeto está em **produção** com **Mercado Pago** real, e **não há contas de teste** nem ingressos gratuitos no banco.
 
-## Passos
-1. **Editar `capacitor.config.ts`**
-   - Adicionar `ITSAppUsesNonExemptEncryption: false` dentro do bloco `ios`
+## O que será feito
 
-2. **Criar `APP_STORE_COMPLIANCE.md`**
-   - Documento com respostas prontas para as perguntas da Apple sobre criptografia
-   - Incluir justificativa (HTTPS/TLS padrão, JWT, Bcrypt)
+### 1. Atualizar `APP_STORE_COMPLIANCE.md`
+- Substituir referências a Stripe por Mercado Pago
+- Remover sugestão de contas de teste (não existem)
+- Adicionar orientações para o revisor navegar no feed sem login
+- Documentar que checkout exige conta real + pagamento real via Mercado Pago
 
-3. **(Opcional) Verificar `Info.plist` gerado**
-   - Após `npx cap sync`, confirmar que `ITSAppUsesNonExemptEncryption` aparece no plist do iOS
+### 2. Criar seção "Notas para o Revisor da Apple"
+No mesmo arquivo, adicionar bloco pronto para copiar/colar no App Store Connect, incluindo:
+- Feed social funciona sem login (navegação completa)
+- Para criar conta: o revisor deve usar email próprio e verificar
+- Para testar checkout: o revisor pode usar qualquer evento ativo (ex: "Copa Bar", ingresso R$ 5,00) — pagamento real via Mercado Pago
+- Funcionalidades de organizador exigem onboarding completo (CPF, endereço)
+- Contato de suporte: WhatsApp (85) 2010-3399 e `/suporte`
 
-## Arquivos a modificar
-- `capacitor.config.ts` — adicionar flag
-- `APP_STORE_COMPLIANCE.md` — novo arquivo de referência
+### 3. Sugestão de melhoria (não obrigatória agora)
+Se o usuário quiser facilitar aprovação futura, pode-se:
+- Criar 1 evento de teste com ingresso a R$ 1,00 (menor risco para revisor)
+- Ou gravar um vídeo de demonstração do fluxo e hospedar no YouTube não listado
 
-## Nota para o usuário
-Depois dessa alteração, rode `npx cap sync` para aplicar a mudança no projeto iOS nativo. O arquivo `Info.plist` será atualizado automaticamente.
+## Arquivos alterados
+- `APP_STORE_COMPLIANCE.md` (edição)
+
+## Nada muda no código do app
+Esta é apenas atualização de documentação de conformidade.
