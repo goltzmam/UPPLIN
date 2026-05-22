@@ -67,6 +67,7 @@ import CollaboratorScanner from "./pages/CollaboratorScanner";
 import NotFound from "./pages/NotFound";
 import LpOrganizador from "./pages/LpOrganizador";
 import PoliticaPlano from "./pages/PoliticaPlano";
+import Suporte from "./pages/Suporte";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -129,6 +130,7 @@ function AnimatedRoutes() {
           <Route path="/por-perto" element={<PorPerto />} />
           <Route path="/planos/organizador" element={<LpOrganizador />} />
           <Route path="/politica/:slug" element={<PoliticaPlano />} />
+          <Route path="/suporte" element={<Suporte />} />
           
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}

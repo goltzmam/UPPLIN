@@ -85,6 +85,11 @@ export function Footer() {
                 </a>
               </li>
               <li>
+                <Link to="/suporte" className="text-foreground/80 hover:text-foreground transition-colors">
+                  Central de Suporte
+                </Link>
+              </li>
+              <li>
                 <Link to="/faq" className="text-foreground/80 hover:text-foreground transition-colors">
                   FAQ
                 </Link>
