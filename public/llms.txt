@@ -13,6 +13,7 @@ A UPPLIN combina um feed de descoberta no estilo TikTok com checkout de ingresso
 - [Para organizadores](/organizadores): Página institucional para quem quer vender ingressos.
 - [Planos e preços](/precos): Planos de assinatura para organizadores.
 - [Landing organizador](/planos/organizador): Apresentação dos planos premium.
+- [Suporte](/suporte): Central de ajuda com canais de contato (e-mail, WhatsApp, telefone).
 
 ## Auth
 
