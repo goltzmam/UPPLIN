@@ -1,0 +1,52 @@
+=== UPPLIN — Plataforma social de eventos (PT-BR) ===
+
+O UPPLIN é uma plataforma em PRODUÇÃO usada por organizadores e
+participantes de eventos reais no Brasil. Não há contas de teste
+nem ambiente sandbox — todos os dados e pagamentos são reais.
+
+--- COMO TESTAR ---
+
+1) FEED SOCIAL (sem login)
+   Toda a navegação principal funciona sem cadastro. Basta abrir
+   o app e explorar o feed estilo TikTok, eventos em destaque,
+   busca, mapa e perfis públicos de organizadores.
+
+2) CADASTRO (opcional)
+   Para testar funções autenticadas (curtir, comentar, salvar,
+   comprar), o revisor pode criar uma conta gratuita usando um
+   email próprio. A verificação de email é obrigatória.
+
+3) CHECKOUT (pagamento real via Mercado Pago)
+   Estamos em produção, sem sandbox. Caso o revisor queira testar
+   o fluxo completo de compra, há ingressos a partir de R$ 5,00
+   (ex: evento "Copa Bar"). A compra é REAL e o valor pode ser
+   estornado a pedido pelo email contato@upplin.com.
+   Alternativa: o fluxo de checkout pode ser observado até a tela
+   de pagamento sem concluir a transação.
+
+4) ÁREA DO ORGANIZADOR
+   Requer onboarding completo (CPF, endereço via CEP, conexão
+   com conta Mercado Pago). Não é necessário para revisão das
+   funcionalidades principais do app de participante.
+
+--- PERMISSÕES ---
+
+- Câmera: opcional (foto de perfil, check-in via QR Code)
+- Localização: opcional (eventos próximos / mapa)
+- Notificações: opcional (alertas de ingressos e eventos)
+
+--- INFORMAÇÕES TÉCNICAS ---
+
+- Idioma: Português (Brasil)
+- Pagamentos: Mercado Pago (Pix e Cartão de Crédito) — produção
+- Moderação: conteúdo gerado por usuários moderado em até 24h
+  com ferramentas de denúncia e bloqueio disponíveis no app
+- Segurança: HTTPS/TLS, JWT, Bcrypt (5D992.c — criptografia
+  padrão isenta)
+
+--- CONTATO ---
+
+- Email: contato@upplin.com
+- WhatsApp: (85) 2010-3399
+- Site: https://upplin.com
+- Suporte no app: tela /suporte
