@@ -10,6 +10,9 @@ const config: CapacitorConfig = {
   },
   ios: {
     contentInset: 'always',
+    // Criptografia padrão (HTTPS/TLS, JWT, Bcrypt) — isenta sob 5D992.c.
+    // Evita a pergunta de export compliance da Apple a cada build.
+    ITSAppUsesNonExemptEncryption: false,
   },
   android: {
     allowMixedContent: true,
