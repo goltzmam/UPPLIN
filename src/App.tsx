@@ -132,6 +132,7 @@ function AnimatedRoutes() {
           <Route path="/planos/organizador" element={<LpOrganizador />} />
           <Route path="/politica/:slug" element={<PoliticaPlano />} />
           <Route path="/suporte" element={<Suporte />} />
+          <Route path="/privacidade" element={<Privacidade />} />
           
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}
