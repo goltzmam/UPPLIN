@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus, MapPin } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus, MapPin, Shield, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
