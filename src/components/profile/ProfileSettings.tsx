@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus, MapPin } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus, MapPin, Shield, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -389,6 +389,29 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
         </Button>
       </div>
 
+
+      {/* Documentos legais */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-semibold text-foreground">Documentos legais</h3>
+        <div className="rounded-xl border border-border/60 bg-card/40 overflow-hidden">
+          <Link
+            to="/privacidade/participante"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-card/70 transition-colors border-b border-border/60"
+          >
+            <Shield className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1 text-sm text-foreground">Política de Privacidade</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+          <Link
+            to="/termos/participante"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-card/70 transition-colors"
+          >
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1 text-sm text-foreground">Termos de Uso</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        </div>
+      </div>
 
       {/* Account Actions */}
       <div className="flex flex-col gap-3">

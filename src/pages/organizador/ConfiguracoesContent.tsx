@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
-import { useOutletContext, useSearchParams } from "react-router-dom";
+import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Save, Upload, Loader2, Instagram, Globe, Facebook, MapPin, CreditCard, CheckCircle2, ExternalLink, Copy, Check, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, Upload, Loader2, Instagram, Globe, Facebook, MapPin, CreditCard, CheckCircle2, ExternalLink, Copy, Check, AlertCircle, ChevronDown, ChevronUp, ChevronRight, Shield, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -757,6 +757,32 @@ function MercadoPagoOnboarding() {
           </div>
         </div>
       )}
+
+      {/* Documentos legais do Organizador */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Documentos legais</CardTitle>
+          <CardDescription>Termos e políticas aplicáveis ao seu cadastro como organizador.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Link
+            to="/privacidade/organizador"
+            className="flex items-center gap-3 rounded-lg border border-border/60 bg-background px-4 py-3 hover:border-primary/50 transition-colors"
+          >
+            <Shield className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1 text-sm text-foreground">Política de Privacidade do Organizador</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+          <Link
+            to="/termos/organizador"
+            className="flex items-center gap-3 rounded-lg border border-border/60 bg-background px-4 py-3 hover:border-primary/50 transition-colors"
+          >
+            <FileText className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1 text-sm text-foreground">Termos de Uso do Organizador</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   );
 }

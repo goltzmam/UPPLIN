@@ -69,6 +69,11 @@ import LpOrganizador from "./pages/LpOrganizador";
 import PoliticaPlano from "./pages/PoliticaPlano";
 import Suporte from "./pages/Suporte";
 import Privacidade from "./pages/Privacidade";
+import PrivacidadeParticipante from "./pages/PrivacidadeParticipante";
+import PrivacidadeOrganizador from "./pages/PrivacidadeOrganizador";
+import Termos from "./pages/Termos";
+import TermosParticipante from "./pages/TermosParticipante";
+import TermosOrganizador from "./pages/TermosOrganizador";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -133,6 +138,11 @@ function AnimatedRoutes() {
           <Route path="/politica/:slug" element={<PoliticaPlano />} />
           <Route path="/suporte" element={<Suporte />} />
           <Route path="/privacidade" element={<Privacidade />} />
+          <Route path="/privacidade/participante" element={<PrivacidadeParticipante />} />
+          <Route path="/privacidade/organizador" element={<PrivacidadeOrganizador />} />
+          <Route path="/termos" element={<Termos />} />
+          <Route path="/termos/participante" element={<TermosParticipante />} />
+          <Route path="/termos/organizador" element={<TermosOrganizador />} />
           
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}
