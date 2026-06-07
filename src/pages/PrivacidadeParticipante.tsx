@@ -48,8 +48,8 @@ export default function PrivacidadeParticipante() {
             e-mail para emissão e validação do ingresso comprado.
           </li>
           <li><strong className="text-foreground">Mercado Pago</strong> — gateway de pagamento.</li>
-          <li><strong className="text-foreground">Resend</strong> — envio de e-mails transacionais.</li>
-          <li><strong className="text-foreground">Lovable Cloud / Supabase</strong> — hospedagem e banco.</li>
+          <li><strong className="text-foreground">Provedor de e-mail transacional</strong> — envio de confirmações e notificações.</li>
+          <li><strong className="text-foreground">Provedores de infraestrutura em nuvem</strong> — hospedagem e banco de dados, sob contrato de confidencialidade.</li>
         </ul>
         <p>Não vendemos seus dados.</p>
       </LegalSection>
