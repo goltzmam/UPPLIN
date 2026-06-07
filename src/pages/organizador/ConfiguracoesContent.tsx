@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
-import { useOutletContext, useSearchParams } from "react-router-dom";
+import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Save, Upload, Loader2, Instagram, Globe, Facebook, MapPin, CreditCard, CheckCircle2, ExternalLink, Copy, Check, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Save, Upload, Loader2, Instagram, Globe, Facebook, MapPin, CreditCard, CheckCircle2, ExternalLink, Copy, Check, AlertCircle, ChevronDown, ChevronUp, ChevronRight, Shield, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
