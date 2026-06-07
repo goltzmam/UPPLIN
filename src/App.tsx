@@ -69,6 +69,11 @@ import LpOrganizador from "./pages/LpOrganizador";
 import PoliticaPlano from "./pages/PoliticaPlano";
 import Suporte from "./pages/Suporte";
 import Privacidade from "./pages/Privacidade";
+import PrivacidadeParticipante from "./pages/PrivacidadeParticipante";
+import PrivacidadeOrganizador from "./pages/PrivacidadeOrganizador";
+import Termos from "./pages/Termos";
+import TermosParticipante from "./pages/TermosParticipante";
+import TermosOrganizador from "./pages/TermosOrganizador";
 
 const queryClient = new QueryClient({
   defaultOptions: {
