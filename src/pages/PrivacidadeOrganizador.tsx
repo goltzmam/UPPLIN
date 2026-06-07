@@ -62,8 +62,8 @@ export default function PrivacidadeOrganizador() {
         <ul className="list-disc space-y-2 pl-5">
           <li><strong className="text-foreground">Mercado Pago</strong> — autorização OAuth e repasse.</li>
           <li><strong className="text-foreground">Receita Federal / autoridades</strong> — quando exigido por lei.</li>
-          <li><strong className="text-foreground">Resend</strong> — e-mails transacionais e de notificação.</li>
-          <li><strong className="text-foreground">Lovable Cloud / Supabase</strong> — hospedagem.</li>
+          <li><strong className="text-foreground">Provedor de e-mail transacional</strong> — envio de e-mails e notificações.</li>
+          <li><strong className="text-foreground">Provedores de infraestrutura em nuvem</strong> — hospedagem e banco de dados, sob contrato de confidencialidade.</li>
         </ul>
       </LegalSection>
 
