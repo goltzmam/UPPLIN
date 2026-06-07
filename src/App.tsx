@@ -68,6 +68,7 @@ import NotFound from "./pages/NotFound";
 import LpOrganizador from "./pages/LpOrganizador";
 import PoliticaPlano from "./pages/PoliticaPlano";
 import Suporte from "./pages/Suporte";
+import Privacidade from "./pages/Privacidade";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -131,6 +132,7 @@ function AnimatedRoutes() {
           <Route path="/planos/organizador" element={<LpOrganizador />} />
           <Route path="/politica/:slug" element={<PoliticaPlano />} />
           <Route path="/suporte" element={<Suporte />} />
+          <Route path="/privacidade" element={<Privacidade />} />
           
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}
