@@ -74,6 +74,14 @@ export function RefundRequestDialog({ open, onOpenChange, order, onSuccess }: Pr
 
       if (error) throw error;
 
+      // Fire-and-forget email + admin notification
+      const requestId = (data as any)?.id;
+      if (requestId) {
+        supabase.functions.invoke("notify-refund", {
+          body: { request_id: requestId, event: (data as any)?.within_guarantee ? "requested" : "disputed" },
+        }).catch(() => {});
+      }
+
       toast({
         title: "Solicitação enviada",
         description: (data as any)?.within_guarantee

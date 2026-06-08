@@ -405,47 +405,70 @@ serve(async (req) => {
 
       console.log(`Order ${orderId} failed/cancelled, tickets released`);
     } else if (payment.status === "refunded") {
-      await adminClient
-        .from("orders")
-        .update({ status: "refunded", mp_payment_id: payment.id.toString() })
-        .eq("id", orderId);
-
-      await adminClient
-        .from("tickets")
-        .update({ status: "cancelled" })
-        .eq("order_id", orderId);
-
-      // Release ticket counts
-      for (const item of order.order_items || []) {
-        const { data: ticketType } = await adminClient
-          .from("ticket_types")
-          .select("quantity_sold")
-          .eq("id", item.ticket_type_id)
-          .single();
-
-        if (ticketType) {
-          await adminClient
-            .from("ticket_types")
-            .update({
-              quantity_sold: Math.max(0, (ticketType.quantity_sold || 0) - item.qty),
-            })
-            .eq("id", item.ticket_type_id);
-        }
-      }
-
-      // Create refund payment record
+      // Create refund payment ledger row (idempotent on provider+provider_payment_id)
       await adminClient.from("payments").insert({
         order_id: orderId,
         provider: "mercadopago",
-        provider_payment_id: payment.id.toString(),
+        provider_payment_id: `${payment.id}-refund`,
         amount_cents: -Math.round(payment.transaction_amount * 100),
         status: "refunded",
         method: payment.payment_method_id,
         raw: payment,
       });
 
-      console.log(`Order ${orderId} refunded, tickets cancelled`);
+      // If we have a refund_request for this order, mark it completed.
+      // mark_refund_completed cancels tickets, releases stock, updates order/payments,
+      // and emits in-app notifications for buyer + organizer.
+      const { data: refundReqId } = await adminClient.rpc("find_refund_by_payment", {
+        p_mp_payment_id: payment.id.toString(),
+      });
+
+      if (refundReqId) {
+        await adminClient.rpc("mark_refund_completed", {
+          p_request_id: refundReqId,
+          p_mp_refund_id: String(payment.id),
+        });
+        console.log(`Refund request ${refundReqId} completed via webhook`);
+
+        // Fire transactional emails to buyer + organizer
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        fetch(`${supabaseUrl}/functions/v1/notify-refund`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+          body: JSON.stringify({ request_id: refundReqId, event: "refunded" }),
+        }).catch((e) => console.error("notify-refund (refunded) failed:", e));
+      } else {
+        // Fallback (manual refund without a request row): legacy behavior
+        await adminClient
+          .from("orders")
+          .update({ status: "refunded", mp_payment_id: payment.id.toString() })
+          .eq("id", orderId);
+
+        await adminClient
+          .from("tickets")
+          .update({ status: "cancelled" })
+          .eq("order_id", orderId);
+
+        for (const item of order.order_items || []) {
+          const { data: ticketType } = await adminClient
+            .from("ticket_types")
+            .select("quantity_sold")
+            .eq("id", item.ticket_type_id)
+            .single();
+          if (ticketType) {
+            await adminClient
+              .from("ticket_types")
+              .update({
+                quantity_sold: Math.max(0, (ticketType.quantity_sold || 0) - item.qty),
+              })
+              .eq("id", item.ticket_type_id);
+          }
+        }
+        console.log(`Order ${orderId} refunded (no refund_request linked)`);
+      }
     }
+
     // "pending" and "in_process" — do nothing, order stays pending
 
     return new Response(JSON.stringify({ ok: true }), {
