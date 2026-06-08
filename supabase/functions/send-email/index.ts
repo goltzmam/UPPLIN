@@ -49,6 +49,7 @@ const emailRequestSchema = z.object({
     "pix_pending",
     "pix_confirmed",
     "collaborator_invite",
+    "refund_status_update",
   ]),
   to: z.string().email(),
   data: z.object({
@@ -73,8 +74,16 @@ const emailRequestSchema = z.object({
     collaboratorName: z.string().min(1).max(120).optional(),
     organizerId: z.string().uuid().optional(),
     eventId: z.string().uuid().optional(),
+    // refund_status_update extras
+    refundStatus: z.string().min(1).max(40).optional(),
+    refundHeadline: z.string().min(1).max(160).optional(),
+    refundMessage: z.string().min(1).max(2000).optional(),
+    refundAmount: z.string().min(1).max(60).optional(),
+    refundRequestId: z.string().uuid().optional(),
+    recipientRole: z.enum(["buyer", "organizer", "admin"]).optional(),
   }),
 });
+
 
 const clientAllowedTypes = new Set([
   "welcome",
