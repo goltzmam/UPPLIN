@@ -91,7 +91,7 @@ const clientAllowedTypes = new Set([
 ] as const);
 
 interface EmailRequest {
-  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer" | "pix_pending" | "pix_confirmed" | "collaborator_invite";
+  type: "purchase_confirmation" | "event_reminder" | "ticket_cancelled" | "password_reset" | "welcome" | "welcome_organizer" | "pix_pending" | "pix_confirmed" | "collaborator_invite" | "refund_status_update";
   to: string;
   data: {
     userName?: string;
@@ -115,6 +115,12 @@ interface EmailRequest {
     collaboratorName?: string;
     organizerId?: string;
     eventId?: string;
+    refundStatus?: string;
+    refundHeadline?: string;
+    refundMessage?: string;
+    refundAmount?: string;
+    refundRequestId?: string;
+    recipientRole?: "buyer" | "organizer" | "admin";
   };
 }
 
