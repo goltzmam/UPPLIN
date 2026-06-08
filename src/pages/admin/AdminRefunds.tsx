@@ -30,7 +30,7 @@ export default function AdminRefunds() {
   const { data: refunds = [], isLoading } = useQuery({
     queryKey: ["admin-refunds"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("refund_requests")
         .select("*, events(title), organizer_accounts!organizer_id(display_name), profiles:requester_user_id(full_name, email)")
         .order("created_at", { ascending: false });

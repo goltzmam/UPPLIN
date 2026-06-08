@@ -32,7 +32,7 @@ export default function ReembolsosContent() {
   const { data: refunds = [], isLoading } = useQuery({
     queryKey: ["organizer-refunds", organizer.id],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("refund_requests")
         .select("*, orders(total_cents), events(title), profiles:requester_user_id(full_name, email)")
         .eq("organizer_id", organizer.id)
