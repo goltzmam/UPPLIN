@@ -632,7 +632,44 @@ const emailTemplates = {
       </html>
     `,
   }),
+
+  refund_status_update: (data: EmailRequest["data"]) => ({
+    subject: `${data.refundHeadline || "Atualização do seu reembolso"} - ${data.eventTitle || ""}`.trim(),
+    html: `
+      <!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <style>
+        body{font-family:'Segoe UI',sans-serif;background:#f5f5f5;margin:0;padding:20px}
+        .container{max-width:600px;margin:0 auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px rgba(0,0,0,.1)}
+        .header{background:linear-gradient(135deg,#FF6A00,#FF2D2D,#FF007A);padding:32px 30px;text-align:center}
+        .header h1{color:#fff;margin:0;font-size:24px}
+        .logo{font-size:22px;font-weight:900;color:#fff;letter-spacing:-1px;margin-bottom:8px}
+        .content{padding:30px;color:#1e293b;line-height:1.6}
+        .card{background:#f8fafc;border-radius:12px;padding:18px;margin:18px 0;border-left:4px solid #FF2D2D}
+        .row{color:#475569;margin:4px 0;font-size:14px}
+        .amount{font-size:22px;font-weight:bold;color:#FF2D2D;text-align:center;margin:16px 0}
+        .footer{background:#1e293b;color:#94a3b8;padding:18px;text-align:center;font-size:12px}
+      </style></head><body>
+        <div class="container">
+          <div class="header"><div class="logo">UPPLIN</div><h1>${data.refundHeadline || "Atualização do reembolso"}</h1></div>
+          <div class="content">
+            <p>Olá <strong>${data.userName || ""}</strong>,</p>
+            <p>${data.refundMessage || "Houve uma atualização na sua solicitação de reembolso."}</p>
+            <div class="card">
+              ${data.eventTitle ? `<div class="row"><strong>Evento:</strong> ${data.eventTitle}</div>` : ""}
+              ${data.eventDate ? `<div class="row">📅 ${data.eventDate}</div>` : ""}
+              <div class="row"><strong>Status:</strong> ${data.refundStatus || "-"}</div>
+              ${data.orderId ? `<div class="row"><strong>Pedido:</strong> #${data.orderId.slice(0,8).toUpperCase()}</div>` : ""}
+            </div>
+            ${data.refundAmount ? `<div class="amount">${data.refundAmount}</div>` : ""}
+            <p style="color:#64748b;font-size:13px;margin-top:24px">Acompanhe pelo app em <strong>Meus Ingressos → Reembolsos</strong>.</p>
+          </div>
+          <div class="footer"><p><strong>UPPLIN</strong></p><p>Este é um email automático, por favor não responda.</p></div>
+        </div>
+      </body></html>
+    `,
+  }),
 };
+
 
 function jsonResponse(status: number, payload: Record<string, unknown>) {
   return new Response(JSON.stringify(payload), {
