@@ -41,6 +41,7 @@ import ConfiguracoesContent from "./pages/organizador/ConfiguracoesContent";
 import RelatoriosContent from "./pages/organizador/RelatoriosContent";
 import CompradoresContent from "./pages/organizador/CompradoresContent";
 import AssinaturasContent from "./pages/organizador/AssinaturasContent";
+import ReembolsosContent from "./pages/organizador/ReembolsosContent";
 
 // Admin imports
 import AdminLogin from "./pages/admin/AdminLogin";
