@@ -213,6 +213,7 @@ function AnimatedRoutes() {
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="refunds" element={<AdminRefunds />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
