@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Calendar, MapPin, QrCode, Ticket, Download, Clock, CreditCard, MessageCircle, CheckCircle } from "lucide-react";
+import { Calendar, MapPin, QrCode, Ticket, Download, Clock, CreditCard, MessageCircle, CheckCircle, Undo2 } from "lucide-react";
+import { RefundRequestDialog } from "@/components/tickets/RefundRequestDialog";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,6 +26,7 @@ export default function MeusIngressos() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [refundOrder, setRefundOrder] = useState<any>(null);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["my-tickets", user?.id] });
@@ -336,6 +338,10 @@ export default function MeusIngressos() {
                   <Download className="h-3.5 w-3.5 mr-1.5" />
                   Baixar PDF
                 </Button>
+                <Button variant="outline" size="sm" className="text-xs h-8 text-destructive hover:text-destructive" onClick={() => setRefundOrder({ id: ticket.order_id, created_at: ticket.issued_at, total_cents: ticket.ticket_types?.price_cents || 0, events: ticket.events })}>
+                  <Undo2 className="h-3.5 w-3.5 mr-1.5" />
+                  Solicitar reembolso
+                </Button>
               </div>
             )}
 
@@ -387,6 +393,14 @@ export default function MeusIngressos() {
     <div className="min-h-screen bg-background text-foreground w-full overflow-x-hidden">
       <TikTokDesktopSidebar />
       <QRCodeModal />
+      {refundOrder && (
+        <RefundRequestDialog
+          open={!!refundOrder}
+          onOpenChange={(o) => !o && setRefundOrder(null)}
+          order={refundOrder}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ["my-tickets", user?.id] })}
+        />
+      )}
 
       <main className="pb-app-bottom-safe lg:ml-[72px]">
         <PullToRefresh onRefresh={handleRefresh} className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">

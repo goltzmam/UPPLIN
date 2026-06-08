@@ -41,6 +41,7 @@ import ConfiguracoesContent from "./pages/organizador/ConfiguracoesContent";
 import RelatoriosContent from "./pages/organizador/RelatoriosContent";
 import CompradoresContent from "./pages/organizador/CompradoresContent";
 import AssinaturasContent from "./pages/organizador/AssinaturasContent";
+import ReembolsosContent from "./pages/organizador/ReembolsosContent";
 
 // Admin imports
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -54,6 +55,7 @@ import AdminCpf from "./pages/admin/AdminCpf";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminRefunds from "./pages/admin/AdminRefunds";
 
 // Other imports
 import Precos from "./pages/Precos";
@@ -185,6 +187,7 @@ function AnimatedRoutes() {
             <Route path="relatorios" element={<RelatoriosContent />} />
             <Route path="compradores" element={<CompradoresContent />} />
             <Route path="assinaturas" element={<AssinaturasContent />} />
+            <Route path="reembolsos" element={<ReembolsosContent />} />
           </Route>
           
           {/* Legacy redirects: old /organizador/* paths -> new /organizador/painel/* */}
@@ -210,6 +213,7 @@ function AnimatedRoutes() {
             <Route path="analytics" element={<AdminAnalytics />} />
             <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="settings" element={<AdminSettings />} />
+            <Route path="refunds" element={<AdminRefunds />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />

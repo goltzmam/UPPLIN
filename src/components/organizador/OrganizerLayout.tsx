@@ -14,7 +14,8 @@ import {
   BarChart3,
   Crown,
   MessageCircle,
-  Users
+  Users,
+  Undo2
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
@@ -38,6 +39,7 @@ const navItems = [
   { href: "/organizador/painel/check-in", label: "Check-in", icon: QrCode },
   { href: "/organizador/painel/relatorios", label: "Relatórios", icon: BarChart3 },
   { href: "/organizador/painel/assinaturas", label: "Planos", icon: Crown },
+  { href: "/organizador/painel/reembolsos", label: "Reembolsos", icon: Undo2 },
   { href: "/organizador/painel/configuracoes", label: "Configurações", icon: Settings },
 ];
 
