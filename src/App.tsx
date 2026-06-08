@@ -187,6 +187,7 @@ function AnimatedRoutes() {
             <Route path="relatorios" element={<RelatoriosContent />} />
             <Route path="compradores" element={<CompradoresContent />} />
             <Route path="assinaturas" element={<AssinaturasContent />} />
+            <Route path="reembolsos" element={<ReembolsosContent />} />
           </Route>
           
           {/* Legacy redirects: old /organizador/* paths -> new /organizador/painel/* */}
