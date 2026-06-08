@@ -429,6 +429,15 @@ serve(async (req) => {
           p_mp_refund_id: String(payment.id),
         });
         console.log(`Refund request ${refundReqId} completed via webhook`);
+
+        // Fire transactional emails to buyer + organizer
+        const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        fetch(`${supabaseUrl}/functions/v1/notify-refund`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+          body: JSON.stringify({ request_id: refundReqId, event: "refunded" }),
+        }).catch((e) => console.error("notify-refund (refunded) failed:", e));
       } else {
         // Fallback (manual refund without a request row): legacy behavior
         await adminClient
