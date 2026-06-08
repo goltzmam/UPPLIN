@@ -341,7 +341,7 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
 
       {/* Messages */}
       <div className="relative flex-1 min-h-0">
-        <ScrollArea className="h-full" onScrollCapture={handleScroll} viewportRef={scrollViewportRef as any}>
+        <div ref={scrollViewportRef} onScroll={handleScroll} className="h-full overflow-y-auto overscroll-contain">
           <div className="px-3 sm:px-4 py-3 sm:py-4">
             {messages.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground">
