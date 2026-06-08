@@ -432,7 +432,7 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
 
             <div ref={bottomAnchorRef} />
           </div>
-        </ScrollArea>
+        </div>
 
         {showJumpToBottom && (
           <button
