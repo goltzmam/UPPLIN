@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3, Menu, X, Crown } from "lucide-react";
+import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3, Menu, X, Crown, Undo2 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
 import { useUserRoles } from "@/hooks/use-user-roles";
