@@ -393,6 +393,14 @@ export default function MeusIngressos() {
     <div className="min-h-screen bg-background text-foreground w-full overflow-x-hidden">
       <TikTokDesktopSidebar />
       <QRCodeModal />
+      {refundOrder && (
+        <RefundRequestDialog
+          open={!!refundOrder}
+          onOpenChange={(o) => !o && setRefundOrder(null)}
+          order={refundOrder}
+          onSuccess={() => queryClient.invalidateQueries({ queryKey: ["my-tickets", user?.id] })}
+        />
+      )}
 
       <main className="pb-app-bottom-safe lg:ml-[72px]">
         <PullToRefresh onRefresh={handleRefresh} className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
