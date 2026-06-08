@@ -26,6 +26,7 @@ export default function MeusIngressos() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
+  const [refundOrder, setRefundOrder] = useState<any>(null);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["my-tickets", user?.id] });
