@@ -1184,6 +1184,155 @@ export type Database = {
         }
         Relationships: []
       }
+      refund_requests: {
+        Row: {
+          admin_decided_at: string | null
+          admin_decision_note: string | null
+          attachments: Json
+          created_at: string
+          event_id: string
+          fee_policy: string | null
+          id: string
+          mp_refund_id: string | null
+          order_id: string
+          organizer_deadline_at: string | null
+          organizer_decided_at: string | null
+          organizer_decision_note: string | null
+          organizer_id: string
+          reason: string
+          refund_amount_cents: number
+          refunded_at: string | null
+          requester_user_id: string
+          status: Database["public"]["Enums"]["refund_status"]
+          updated_at: string
+          within_guarantee: boolean
+        }
+        Insert: {
+          admin_decided_at?: string | null
+          admin_decision_note?: string | null
+          attachments?: Json
+          created_at?: string
+          event_id: string
+          fee_policy?: string | null
+          id?: string
+          mp_refund_id?: string | null
+          order_id: string
+          organizer_deadline_at?: string | null
+          organizer_decided_at?: string | null
+          organizer_decision_note?: string | null
+          organizer_id: string
+          reason: string
+          refund_amount_cents?: number
+          refunded_at?: string | null
+          requester_user_id: string
+          status?: Database["public"]["Enums"]["refund_status"]
+          updated_at?: string
+          within_guarantee?: boolean
+        }
+        Update: {
+          admin_decided_at?: string | null
+          admin_decision_note?: string | null
+          attachments?: Json
+          created_at?: string
+          event_id?: string
+          fee_policy?: string | null
+          id?: string
+          mp_refund_id?: string | null
+          order_id?: string
+          organizer_deadline_at?: string | null
+          organizer_decided_at?: string | null
+          organizer_decision_note?: string | null
+          organizer_id?: string
+          reason?: string
+          refund_amount_cents?: number
+          refunded_at?: string | null
+          requester_user_id?: string
+          status?: Database["public"]["Enums"]["refund_status"]
+          updated_at?: string
+          within_guarantee?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_feed"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "organizer_accounts_public"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refund_status_logs: {
+        Row: {
+          actor_role: string
+          actor_user_id: string | null
+          created_at: string
+          from_status: Database["public"]["Enums"]["refund_status"] | null
+          id: string
+          metadata: Json
+          note: string | null
+          refund_request_id: string
+          to_status: Database["public"]["Enums"]["refund_status"]
+        }
+        Insert: {
+          actor_role: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["refund_status"] | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          refund_request_id: string
+          to_status: Database["public"]["Enums"]["refund_status"]
+        }
+        Update: {
+          actor_role?: string
+          actor_user_id?: string | null
+          created_at?: string
+          from_status?: Database["public"]["Enums"]["refund_status"] | null
+          id?: string
+          metadata?: Json
+          note?: string | null
+          refund_request_id?: string
+          to_status?: Database["public"]["Enums"]["refund_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_status_logs_refund_request_id_fkey"
+            columns: ["refund_request_id"]
+            isOneToOne: false
+            referencedRelation: "refund_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_events: {
         Row: {
           created_at: string | null
@@ -1768,6 +1917,35 @@ export type Database = {
       }
     }
     Functions: {
+      _refund_log: {
+        Args: {
+          p_actor: string
+          p_from: Database["public"]["Enums"]["refund_status"]
+          p_meta?: Json
+          p_note?: string
+          p_request_id: string
+          p_role: string
+          p_to: Database["public"]["Enums"]["refund_status"]
+        }
+        Returns: undefined
+      }
+      _refund_notify: {
+        Args: {
+          p_body: string
+          p_request_id: string
+          p_title: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      admin_force_refund: {
+        Args: { p_note?: string; p_request_id: string }
+        Returns: Json
+      }
+      admin_reject_refund: {
+        Args: { p_note?: string; p_request_id: string }
+        Returns: Json
+      }
       apply_coupon_to_order: {
         Args: { p_code: string; p_order_id: string }
         Returns: Json
@@ -1787,6 +1965,10 @@ export type Database = {
         }
         Returns: Json
       }
+      decide_refund: {
+        Args: { p_decision: string; p_note?: string; p_request_id: string }
+        Returns: Json
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1794,6 +1976,10 @@ export type Database = {
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
+      }
+      find_refund_by_payment: {
+        Args: { p_mp_payment_id: string }
+        Returns: string
       }
       find_user_by_email: {
         Args: { p_email: string }
@@ -1843,6 +2029,22 @@ export type Database = {
         Args: { _organizer_id: string; _user_id: string }
         Returns: boolean
       }
+      mark_refund_completed: {
+        Args: { p_mp_refund_id?: string; p_request_id: string }
+        Returns: Json
+      }
+      mark_refund_failed: {
+        Args: { p_note?: string; p_request_id: string }
+        Returns: Json
+      }
+      mark_refund_pending: {
+        Args: {
+          p_fee_policy?: string
+          p_mp_refund_id?: string
+          p_request_id: string
+        }
+        Returns: Json
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -1866,6 +2068,10 @@ export type Database = {
         }[]
       }
       remove_coupon_from_order: { Args: { p_order_id: string }; Returns: Json }
+      request_refund: {
+        Args: { p_attachments?: Json; p_order_id: string; p_reason: string }
+        Returns: Json
+      }
       touch_last_seen: { Args: never; Returns: undefined }
     }
     Enums: {
@@ -1881,6 +2087,14 @@ export type Database = {
       order_status: "pending" | "paid" | "failed" | "cancelled" | "refunded"
       organizer_status: "active" | "suspended"
       payment_status: "pending" | "paid" | "failed" | "refunded"
+      refund_status:
+        | "requested"
+        | "approved"
+        | "rejected"
+        | "disputed"
+        | "pending_refund"
+        | "refunded"
+        | "failed"
       ticket_status: "issued" | "used" | "cancelled"
       ticket_type_status: "active" | "paused" | "sold_out"
       webhook_status: "received" | "processed" | "failed"
@@ -2024,6 +2238,15 @@ export const Constants = {
       order_status: ["pending", "paid", "failed", "cancelled", "refunded"],
       organizer_status: ["active", "suspended"],
       payment_status: ["pending", "paid", "failed", "refunded"],
+      refund_status: [
+        "requested",
+        "approved",
+        "rejected",
+        "disputed",
+        "pending_refund",
+        "refunded",
+        "failed",
+      ],
       ticket_status: ["issued", "used", "cancelled"],
       ticket_type_status: ["active", "paused", "sold_out"],
       webhook_status: ["received", "processed", "failed"],
