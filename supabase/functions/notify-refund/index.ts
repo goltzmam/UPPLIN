@@ -70,26 +70,50 @@ serve(async (req) => {
     const authHeader = req.headers.get("Authorization") || "";
     if (!authHeader) return j({ error: "unauthenticated" }, 401);
 
-    // Permission check via user RLS (will fail if caller can't see this refund)
-    const userClient = createClient(supabaseUrl, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: { user }, error: uErr } = await userClient.auth.getUser();
-    if (uErr || !user) return j({ error: "unauthenticated" }, 401);
+    const isService = authHeader === `Bearer ${serviceKey}`;
+    let actorId: string | null = null;
+
+    if (!isService) {
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: { user }, error: uErr } = await userClient.auth.getUser();
+      if (uErr || !user) return j({ error: "unauthenticated" }, 401);
+      actorId = user.id;
+
+      const body = await req.json().catch(() => ({}));
+      const requestId: string | undefined = body?.request_id;
+      const event: EventKey | undefined = body?.event;
+      if (!requestId || !event || !(event in COPY)) return j({ error: "invalid_input" }, 400);
+
+      // Caller must be able to see this refund (enforced by RLS)
+      const { data: visible, error: visErr } = await userClient
+        .from("refund_requests").select("id").eq("id", requestId).maybeSingle();
+      if (visErr || !visible) return j({ error: "not_allowed" }, 403);
+
+      return await dispatch(supabaseUrl, serviceKey, requestId, event, actorId);
+    }
 
     const body = await req.json().catch(() => ({}));
     const requestId: string | undefined = body?.request_id;
     const event: EventKey | undefined = body?.event;
-    if (!requestId || !event || !(event in COPY)) {
-      return j({ error: "invalid_input" }, 400);
-    }
+    if (!requestId || !event || !(event in COPY)) return j({ error: "invalid_input" }, 400);
 
-    // Caller must be able to see this refund (enforced by RLS).
-    const { data: visible, error: visErr } = await userClient
-      .from("refund_requests").select("id").eq("id", requestId).maybeSingle();
-    if (visErr || !visible) return j({ error: "not_allowed" }, 403);
+    return await dispatch(supabaseUrl, serviceKey, requestId, event, null);
+  } catch (err) {
+    console.error("notify-refund fatal:", err);
+    return j({ error: "internal_error", message: String(err) }, 500);
+  }
+});
 
-    const admin = createClient(supabaseUrl, serviceKey);
+async function dispatch(
+  supabaseUrl: string,
+  serviceKey: string,
+  requestId: string,
+  event: EventKey,
+  actorId: string | null,
+) {
+  const admin = createClient(supabaseUrl, serviceKey);
 
     const { data: refund } = await admin
       .from("refund_requests")
