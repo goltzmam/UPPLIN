@@ -18,6 +18,7 @@ const navItems = [
   { href: "/admin/users", label: "Usuários", icon: Users },
   { href: "/admin/events", label: "Eventos", icon: Calendar },
   { href: "/admin/orders", label: "Pedidos", icon: CreditCard },
+  { href: "/admin/refunds", label: "Reembolsos", icon: Undo2 },
   { href: "/admin/subscriptions", label: "Assinaturas", icon: Crown },
   { href: "/admin/cpf", label: "Solicitações CPF", icon: FileText },
   { href: "/admin/settings", label: "Configurações", icon: Settings },
