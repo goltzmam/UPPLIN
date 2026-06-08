@@ -14,7 +14,8 @@ import {
   BarChart3,
   Crown,
   MessageCircle,
-  Users
+  Users,
+  Undo2
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
