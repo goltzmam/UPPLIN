@@ -6,7 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday, differenceInMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
