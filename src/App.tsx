@@ -55,6 +55,7 @@ import AdminCpf from "./pages/admin/AdminCpf";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminRefunds from "./pages/admin/AdminRefunds";
 
 // Other imports
 import Precos from "./pages/Precos";
