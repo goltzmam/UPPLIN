@@ -45,7 +45,7 @@ export default function AdminRefunds() {
     if (!actionDialog) return;
     setLoading(true);
     try {
-      const { error } = await supabase.rpc("admin_force_refund", {
+      const { error } = await (supabase as any).rpc("admin_force_refund", {
         p_request_id: actionDialog.refund.id,
         p_note: note || "Forçado pelo admin",
       });
@@ -74,7 +74,7 @@ export default function AdminRefunds() {
     }
     setLoading(true);
     try {
-      const { error } = await supabase.rpc("admin_reject_refund", {
+      const { error } = await (supabase as any).rpc("admin_reject_refund", {
         p_request_id: actionDialog.refund.id,
         p_note: note.trim(),
       });

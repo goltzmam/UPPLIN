@@ -66,7 +66,7 @@ export function RefundRequestDialog({ open, onOpenChange, order, onSuccess }: Pr
         setUploading(false);
       }
 
-      const { data, error } = await supabase.rpc("request_refund", {
+      const { data, error } = await (supabase as any).rpc("request_refund", {
         p_order_id: order.id,
         p_reason: reason.trim(),
         p_attachments: uploaded as any,

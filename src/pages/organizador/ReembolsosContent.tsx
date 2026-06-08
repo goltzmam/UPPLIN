@@ -46,7 +46,7 @@ export default function ReembolsosContent() {
     if (!confirm("Aprovar reembolso e processar estorno via Mercado Pago?")) return;
     setActionLoading(refund.id);
     try {
-      const { error } = await supabase.rpc("decide_refund", {
+      const { error } = await (supabase as any).rpc("decide_refund", {
         p_request_id: refund.id,
         p_action: "approve",
       });
@@ -73,7 +73,7 @@ export default function ReembolsosContent() {
     }
     setActionLoading(rejecting.id);
     try {
-      const { error } = await supabase.rpc("decide_refund", {
+      const { error } = await (supabase as any).rpc("decide_refund", {
         p_request_id: rejecting.id,
         p_action: "reject",
         p_note: rejectNote.trim(),
