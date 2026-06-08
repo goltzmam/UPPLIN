@@ -111,6 +111,13 @@ serve(async (req) => {
       p_fee_policy: feePolicy,
     });
 
+    // Fire-and-forget transactional emails for pending_refund
+    fetch(`${supabaseUrl}/functions/v1/notify-refund`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: authHeader },
+      body: JSON.stringify({ request_id: requestId, event: "pending_refund" }),
+    }).catch((e) => console.error("notify-refund (pending) failed:", e));
+
     return j({ ok: true, refund_id: mpData?.id, fee_policy: feePolicy });
   } catch (err) {
     console.error("mp-refund fatal:", err);
