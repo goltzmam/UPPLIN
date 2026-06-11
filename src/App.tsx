@@ -90,6 +90,29 @@ if (typeof window !== "undefined") {
   (window as unknown as { __QUERY_CLIENT__?: typeof queryClient }).__QUERY_CLIENT__ = queryClient;
 }
 
+function AppBootFallback() {
+  return (
+    <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-background text-foreground">
+      <div className="text-center">
+        <div
+          className="font-display text-3xl font-bold"
+          style={{
+            background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          UPPLIN
+        </div>
+        <div className="mx-auto mt-5 h-1 w-20 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full w-1/2 animate-[shimmer_1.2s_infinite] rounded-full bg-primary" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Simplified routes wrapper - removed heavy AnimatePresence for mobile performance
 function AnimatedRoutes() {
   const location = useLocation();
@@ -110,7 +133,8 @@ function AnimatedRoutes() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <Routes location={location}>
+      <Suspense fallback={<AppBootFallback />}>
+        <Routes location={location}>
           {/* ============================================ */}
           {/* PUBLIC ROUTES - Accessible to everyone       */}
           {/* ============================================ */}
@@ -208,6 +232,7 @@ function AnimatedRoutes() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+      </Suspense>
     </div>
   );
 }
