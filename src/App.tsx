@@ -1,81 +1,71 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { usePresenceHeartbeat } from "@/hooks/use-presence-heartbeat";
 import { stopAllMediaPipelines } from "@/lib/media";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Cadastro from "./pages/Cadastro";
-import EmailConfirmado from "./pages/EmailConfirmado";
-import Onboarding from "./pages/Onboarding";
-import Eventos from "./pages/Eventos";
-import Evento from "./pages/Evento";
-import Perfil from "./pages/Perfil";
-import MeusIngressos from "./pages/MeusIngressos";
-import Mensagens from "./pages/Mensagens";
-import Checkout from "./pages/Checkout";
 
-import RecuperarSenha from "./pages/RecuperarSenha";
-import RedefinirSenha from "./pages/RedefinirSenha";
-
-// Organizer imports - PUBLIC profile
-import OrganizerPublicProfile from "./pages/organizador/OrganizerPublicProfile";
-
-// Organizer imports - AUTH & ONBOARDING
-import OrganizadorLogin from "./pages/organizador/OrganizadorLogin";
-import OrganizadorCadastro from "./pages/organizador/OrganizadorCadastro";
-import OnboardingOrganizador from "./pages/organizador/OnboardingOrganizador";
-
-// Organizer imports - PRIVATE DASHBOARD (painel)
-import { OrganizerLayout } from "./components/organizador/OrganizerLayout";
-import OrganizerDashboardContent from "./pages/organizador/OrganizerDashboardContent";
-import EventosListContent from "./pages/organizador/EventosListContent";
-import EventoForm from "./pages/organizador/EventoForm";
-import CuponsContent from "./pages/organizador/CuponsContent";
-import CheckInContent from "./pages/organizador/CheckInContent";
-import ConfiguracoesContent from "./pages/organizador/ConfiguracoesContent";
-import RelatoriosContent from "./pages/organizador/RelatoriosContent";
-import CompradoresContent from "./pages/organizador/CompradoresContent";
-import AssinaturasContent from "./pages/organizador/AssinaturasContent";
-import ReembolsosContent from "./pages/organizador/ReembolsosContent";
-
-// Admin imports
-import AdminLogin from "./pages/admin/AdminLogin";
-import { AdminLayout } from "./components/admin/AdminLayout";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminChats from "./pages/admin/AdminChats";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminEvents from "./pages/admin/AdminEvents";
-import AdminOrders from "./pages/admin/AdminOrders";
-import AdminCpf from "./pages/admin/AdminCpf";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
-import AdminAnalytics from "./pages/admin/AdminAnalytics";
-import AdminRefunds from "./pages/admin/AdminRefunds";
-
-// Other imports
-import Precos from "./pages/Precos";
-import Organizadores from "./pages/Organizadores";
-import ExplorarOrganizadores from "./pages/ExplorarOrganizadores";
-import EventosSalvos from "./pages/EventosSalvos";
-import PorPerto from "./pages/PorPerto";
-import PagamentoSucesso from "./pages/PagamentoSucesso";
-import PagamentoPendente from "./pages/PagamentoPendente";
-import CollaboratorScanner from "./pages/CollaboratorScanner";
-import NotFound from "./pages/NotFound";
-import LpOrganizador from "./pages/LpOrganizador";
-import PoliticaPlano from "./pages/PoliticaPlano";
-import Suporte from "./pages/Suporte";
-import Privacidade from "./pages/Privacidade";
-import PrivacidadeParticipante from "./pages/PrivacidadeParticipante";
-import PrivacidadeOrganizador from "./pages/PrivacidadeOrganizador";
-import Termos from "./pages/Termos";
-import TermosParticipante from "./pages/TermosParticipante";
-import TermosOrganizador from "./pages/TermosOrganizador";
+const Index = lazy(() => import("./pages/Index"));
+const Login = lazy(() => import("./pages/Login"));
+const Cadastro = lazy(() => import("./pages/Cadastro"));
+const EmailConfirmado = lazy(() => import("./pages/EmailConfirmado"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Eventos = lazy(() => import("./pages/Eventos"));
+const Evento = lazy(() => import("./pages/Evento"));
+const Perfil = lazy(() => import("./pages/Perfil"));
+const MeusIngressos = lazy(() => import("./pages/MeusIngressos"));
+const Mensagens = lazy(() => import("./pages/Mensagens"));
+const Checkout = lazy(() => import("./pages/Checkout"));
+const RecuperarSenha = lazy(() => import("./pages/RecuperarSenha"));
+const RedefinirSenha = lazy(() => import("./pages/RedefinirSenha"));
+const OrganizerPublicProfile = lazy(() => import("./pages/organizador/OrganizerPublicProfile"));
+const OrganizadorLogin = lazy(() => import("./pages/organizador/OrganizadorLogin"));
+const OrganizadorCadastro = lazy(() => import("./pages/organizador/OrganizadorCadastro"));
+const OnboardingOrganizador = lazy(() => import("./pages/organizador/OnboardingOrganizador"));
+const OrganizerLayout = lazy(() => import("./components/organizador/OrganizerLayout").then((m) => ({ default: m.OrganizerLayout })));
+const OrganizerDashboardContent = lazy(() => import("./pages/organizador/OrganizerDashboardContent"));
+const EventosListContent = lazy(() => import("./pages/organizador/EventosListContent"));
+const EventoForm = lazy(() => import("./pages/organizador/EventoForm"));
+const CuponsContent = lazy(() => import("./pages/organizador/CuponsContent"));
+const CheckInContent = lazy(() => import("./pages/organizador/CheckInContent"));
+const ConfiguracoesContent = lazy(() => import("./pages/organizador/ConfiguracoesContent"));
+const RelatoriosContent = lazy(() => import("./pages/organizador/RelatoriosContent"));
+const CompradoresContent = lazy(() => import("./pages/organizador/CompradoresContent"));
+const AssinaturasContent = lazy(() => import("./pages/organizador/AssinaturasContent"));
+const ReembolsosContent = lazy(() => import("./pages/organizador/ReembolsosContent"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
+const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then((m) => ({ default: m.AdminLayout })));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminChats = lazy(() => import("./pages/admin/AdminChats"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminEvents = lazy(() => import("./pages/admin/AdminEvents"));
+const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
+const AdminCpf = lazy(() => import("./pages/admin/AdminCpf"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
+const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
+const AdminRefunds = lazy(() => import("./pages/admin/AdminRefunds"));
+const Precos = lazy(() => import("./pages/Precos"));
+const Organizadores = lazy(() => import("./pages/Organizadores"));
+const ExplorarOrganizadores = lazy(() => import("./pages/ExplorarOrganizadores"));
+const EventosSalvos = lazy(() => import("./pages/EventosSalvos"));
+const PorPerto = lazy(() => import("./pages/PorPerto"));
+const PagamentoSucesso = lazy(() => import("./pages/PagamentoSucesso"));
+const PagamentoPendente = lazy(() => import("./pages/PagamentoPendente"));
+const CollaboratorScanner = lazy(() => import("./pages/CollaboratorScanner"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const LpOrganizador = lazy(() => import("./pages/LpOrganizador"));
+const PoliticaPlano = lazy(() => import("./pages/PoliticaPlano"));
+const Suporte = lazy(() => import("./pages/Suporte"));
+const Privacidade = lazy(() => import("./pages/Privacidade"));
+const PrivacidadeParticipante = lazy(() => import("./pages/PrivacidadeParticipante"));
+const PrivacidadeOrganizador = lazy(() => import("./pages/PrivacidadeOrganizador"));
+const Termos = lazy(() => import("./pages/Termos"));
+const TermosParticipante = lazy(() => import("./pages/TermosParticipante"));
+const TermosOrganizador = lazy(() => import("./pages/TermosOrganizador"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -100,6 +90,29 @@ if (typeof window !== "undefined") {
   (window as unknown as { __QUERY_CLIENT__?: typeof queryClient }).__QUERY_CLIENT__ = queryClient;
 }
 
+function AppBootFallback() {
+  return (
+    <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-background text-foreground">
+      <div className="text-center">
+        <div
+          className="font-display text-3xl font-bold"
+          style={{
+            background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          UPPLIN
+        </div>
+        <div className="mx-auto mt-5 h-1 w-20 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full w-1/2 animate-[shimmer_1.2s_infinite] rounded-full bg-primary" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Simplified routes wrapper - removed heavy AnimatePresence for mobile performance
 function AnimatedRoutes() {
   const location = useLocation();
@@ -120,7 +133,8 @@ function AnimatedRoutes() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
-      <Routes location={location}>
+      <Suspense fallback={<AppBootFallback />}>
+        <Routes location={location}>
           {/* ============================================ */}
           {/* PUBLIC ROUTES - Accessible to everyone       */}
           {/* ============================================ */}
@@ -218,6 +232,7 @@ function AnimatedRoutes() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
+      </Suspense>
     </div>
   );
 }

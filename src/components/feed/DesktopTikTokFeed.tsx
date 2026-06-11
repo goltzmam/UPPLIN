@@ -37,6 +37,7 @@ interface FeedItem {
 interface DesktopTikTokFeedProps {
   items: FeedItem[];
   isLoading?: boolean;
+  loadError?: boolean;
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -350,6 +351,7 @@ const FeedCard = React.memo(function FeedCard({
 export function DesktopTikTokFeed({
   items,
   isLoading,
+  loadError = false,
   onLoadMore,
   hasMore,
   isLoadingMore,
@@ -393,6 +395,24 @@ export function DesktopTikTokFeed({
     return (
       <div className="h-full w-full flex items-center justify-center bg-background">
         <FeedSkeleton />
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-background px-8 text-center">
+        <div>
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10">
+            <Calendar className="h-8 w-8 text-primary" />
+          </div>
+          <p className="mb-1 font-semibold text-white">
+            {loadError ? "Não foi possível carregar agora" : "Nenhum evento encontrado"}
+          </p>
+          <p className="text-sm text-white/60">
+            {loadError ? "Verifique sua conexão e tente novamente" : "Explore categorias ou siga organizadores"}
+          </p>
+        </div>
       </div>
     );
   }

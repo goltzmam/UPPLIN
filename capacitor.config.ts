@@ -19,6 +19,15 @@ const config: CapacitorConfig = {
   // Para hot-reload durante desenvolvimento local, adicione o bloco
   // `server` apenas temporariamente e NUNCA faça commit dele.
 
+  server: {
+    // Configuração local do Capacitor para builds empacotados. NÃO usa URL
+    // remota; apenas fixa origem/scheme previsíveis no WKWebView para evitar
+    // tela branca/preta em revisão da App Store em iPads.
+    hostname: 'localhost',
+    iosScheme: 'capacitor',
+    androidScheme: 'https',
+  },
+
   ios: {
     contentInset: 'always',
     backgroundColor: '#000000',
@@ -47,8 +56,6 @@ const config: CapacitorConfig = {
     // Mantém o WebView ativo em background curto (transições, picture-in-picture).
     // Evita "tela preta" ao voltar de outro app durante o review da Google.
     initialFocus: false,
-    // Esquema HTTPS (padrão moderno e exigido para Service Workers/PWA APIs).
-    androidScheme: 'https',
   },
 };
 
