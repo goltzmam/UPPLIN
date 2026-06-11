@@ -37,6 +37,7 @@ interface TikTokFeedItem {
 interface TikTokFeedProps {
   items: TikTokFeedItem[];
   isLoading?: boolean;
+  loadError?: boolean;
   onLoadMore?: () => void;
   hasMore?: boolean;
   isLoadingMore?: boolean;
@@ -444,6 +445,7 @@ const FeedRow = React.memo(function FeedRow({
 export function TikTokFeed({
   items,
   isLoading,
+  loadError = false,
   onLoadMore,
   hasMore,
   isLoadingMore,
@@ -706,8 +708,12 @@ export function TikTokFeed({
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
             <Calendar className="h-8 w-8 text-primary" />
           </div>
-          <p className="text-white font-semibold mb-1">Nenhum evento encontrado</p>
-          <p className="text-sm text-white/60">Explore categorias ou siga organizadores</p>
+          <p className="text-white font-semibold mb-1">
+            {loadError ? "Não foi possível carregar agora" : "Nenhum evento encontrado"}
+          </p>
+          <p className="text-sm text-white/60">
+            {loadError ? "Verifique sua conexão e tente novamente" : "Explore categorias ou siga organizadores"}
+          </p>
         </div>
       </div>
     );
