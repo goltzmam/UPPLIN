@@ -78,14 +78,20 @@ export default function Index() {
   const {
     data,
     isLoading,
+    isError,
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage
   } = useInfiniteQuery({
     queryKey: ["homepage-events-infinite"],
-    queryFn: async ({ pageParam = 0 }) => {
+    queryFn: async ({ pageParam = 0, signal }) => {
       const from = pageParam * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+      signal?.addEventListener("abort", () => controller.abort(), { once: true });
+
+      try {
       const { data, error, count } = await supabase
         .from("events")
         .select(`
@@ -96,13 +102,17 @@ export default function Index() {
         `, { count: "exact" })
         .eq("status", "published")
         .order("start_at", { ascending: true })
-        .range(from, to);
+        .range(from, to)
+        .abortSignal(controller.signal);
       if (error) throw error;
       return {
         data: data || [],
         nextPage: (data?.length || 0) === PAGE_SIZE ? pageParam + 1 : undefined,
         totalCount: count || 0
       };
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
     },
     getNextPageParam: lastPage => lastPage.nextPage,
     initialPageParam: 0
@@ -216,8 +226,7 @@ export default function Index() {
         <Link 
           to="/" 
           className={cn(
-            "font-display text-xl md:text-2xl font-bold tracking-tight shrink-0 transition-colors",
-            isDesktop && "hidden" // Hide on desktop since sidebar has logo
+            "font-display text-xl md:text-2xl font-bold tracking-tight shrink-0 transition-colors"
           )}
           style={{ 
             background: "linear-gradient(135deg, #FF6A00, #FF2D2D, #FF007A)",
@@ -304,7 +313,8 @@ export default function Index() {
       >
         <TikTokFeed 
           items={feedItems} 
-          isLoading={isLoading} 
+          isLoading={isLoading && !isError}
+          loadError={isError}
           onLoadMore={fetchNextPage} 
           hasMore={!!hasNextPage} 
           isLoadingMore={isFetchingNextPage} 
@@ -350,7 +360,8 @@ export default function Index() {
         >
           <DesktopTikTokFeed
             items={feedItems}
-            isLoading={isLoading}
+            isLoading={isLoading && !isError}
+            loadError={isError}
             onLoadMore={fetchNextPage}
             hasMore={!!hasNextPage}
             isLoadingMore={isFetchingNextPage}
