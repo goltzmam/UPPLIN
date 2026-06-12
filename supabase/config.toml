@@ -3,6 +3,10 @@ project_id = "pyhlsgfsunjcjbaqjcwn"
 [functions]
   [functions.auth-email-hook]
     verify_jwt = false
+  [functions.marketing-unsubscribe]
+    verify_jwt = false
+  [functions.resend-marketing-webhook]
+    verify_jwt = false
   [functions.check-subscription-expiry]
     verify_jwt = false
   [functions.create-order]
