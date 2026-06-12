@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { AvatarCropDialog } from "@/components/profile/AvatarCropDialog";
+import { cn } from "@/lib/utils";
 
 interface Profile {
   id: string;
