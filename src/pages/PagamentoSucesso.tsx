@@ -50,6 +50,14 @@ export default function PagamentoSucesso() {
     }
   }, [confettiFired]);
 
+  // Auto-redirect to "Meus Ingressos" so the user sees the purchased ticket immediately
+  useEffect(() => {
+    const t = setTimeout(() => {
+      navigate("/meus-ingressos?purchase=success", { replace: true });
+    }, 2200);
+    return () => clearTimeout(t);
+  }, [navigate]);
+
   // Fetch recent paid tickets
   const { data: tickets, isLoading } = useQuery({
     queryKey: ["success-tickets", user?.id],
