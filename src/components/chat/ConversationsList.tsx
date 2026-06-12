@@ -17,7 +17,6 @@ interface Conversation {
   event_id: string | null;
   participant_1_id: string;
   participant_2_id: string;
-  status: string;
   created_at: string;
   updated_at: string;
   other_participant?: {

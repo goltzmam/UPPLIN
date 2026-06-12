@@ -6,8 +6,6 @@ export interface UserRoles {
   isAdmin: boolean;
   isOrganizer: boolean;
   isUser: boolean;
-  isMarketing: boolean;
-  isSupport: boolean;
   roles: string[];
   organizerId: string | null;
 }
@@ -51,8 +49,6 @@ export function useUserRoles(): UserRoles & { isLoading: boolean } {
     isAdmin: roles.includes("admin"),
     isOrganizer: hasOrganizerRole || hasOrganizerAccount,
     isUser: roles.includes("user"),
-    isMarketing: roles.includes("marketing"),
-    isSupport: roles.includes("support"),
     roles,
     organizerId: organizer?.id || null,
     isLoading: authLoading || rolesLoading || orgLoading,
