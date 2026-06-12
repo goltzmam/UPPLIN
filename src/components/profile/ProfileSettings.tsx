@@ -389,6 +389,7 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
         </Button>
       </div>
 
+      <MarketingOptInToggle userId={profile.id} />
 
       {/* Documentos legais */}
       <div className="space-y-2">
@@ -439,6 +440,48 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
           {loggingOut ? "Saindo..." : "Sair da conta"}
         </Button>
       </div>
+    </div>
+  );
+}
+
+function MarketingOptInToggle({ userId }: { userId: string }) {
+  const { toast } = useToast();
+  const [optIn, setOptIn] = useState<boolean | null>(null);
+
+  useState(() => {
+    supabase.from("profiles").select("marketing_opt_in").eq("id", userId).maybeSingle()
+      .then(({ data }) => setOptIn(data?.marketing_opt_in ?? true));
+  });
+
+  const handleToggle = async () => {
+    const next = !optIn;
+    setOptIn(next);
+    const { error } = await supabase.from("profiles").update({ marketing_opt_in: next }).eq("id", userId);
+    if (error) {
+      setOptIn(!next);
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: next ? "Você receberá novidades" : "Descadastrado dos emails" });
+    }
+  };
+
+  if (optIn === null) return null;
+
+  return (
+    <div className="space-y-2">
+      <h3 className="text-sm font-semibold text-foreground">Comunicações</h3>
+      <button
+        onClick={handleToggle}
+        className="w-full flex items-center justify-between rounded-xl border border-border/60 bg-card/40 px-4 py-3 hover:bg-card/70 transition-colors"
+      >
+        <div className="text-left">
+          <p className="text-sm text-foreground">Receber emails de novidades da UPPLIN</p>
+          <p className="text-xs text-muted-foreground">Eventos em alta, lançamentos e promoções</p>
+        </div>
+        <div className={cn("h-6 w-11 rounded-full transition-colors relative", optIn ? "bg-primary" : "bg-muted")}>
+          <div className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white transition-transform", optIn ? "translate-x-5" : "translate-x-0.5")} />
+        </div>
+      </button>
     </div>
   );
 }
