@@ -12,10 +12,11 @@ import { ptBR } from "date-fns/locale";
 import { AlertCircle, CheckCircle, XCircle, Clock, ShieldAlert } from "lucide-react";
 
 const STATUS_LABEL: Record<string, { label: string; variant: any }> = {
-  pending: { label: "Pendente", variant: "default" },
+  requested: { label: "Pendente", variant: "default" },
   approved: { label: "Aprovado", variant: "secondary" },
   rejected: { label: "Recusado", variant: "destructive" },
   disputed: { label: "Disputa", variant: "outline" },
+  pending_refund: { label: "Processando estorno", variant: "outline" },
   refunded: { label: "Estornado", variant: "secondary" },
   failed: { label: "Falhou", variant: "destructive" },
 };
@@ -32,10 +33,16 @@ export default function AdminRefunds() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("refund_requests")
-        .select("*, events(title), organizer_accounts!organizer_id(display_name), profiles:requester_user_id(full_name, email)")
+        .select("*, events(title), organizer_accounts!organizer_id(display_name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data || [];
+      const rows = data || [];
+      const requesterIds = [...new Set(rows.map((r: any) => r.requester_user_id).filter(Boolean))];
+      const { data: profiles } = requesterIds.length
+        ? await (supabase as any).from("profiles").select("id, full_name, email").in("id", requesterIds)
+        : { data: [] };
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      return rows.map((r: any) => ({ ...r, profiles: profileMap.get(r.requester_user_id) || null }));
     },
   });
 
@@ -92,7 +99,7 @@ export default function AdminRefunds() {
 
   const counts = {
     disputed: refunds.filter((r) => r.status === "disputed").length,
-    pending: refunds.filter((r) => r.status === "pending").length,
+    requested: refunds.filter((r) => r.status === "requested").length,
     failed: refunds.filter((r) => r.status === "failed").length,
   };
 
@@ -111,8 +118,9 @@ export default function AdminRefunds() {
             <ShieldAlert className="h-3.5 w-3.5 mr-1" />
             Disputas ({counts.disputed})
           </TabsTrigger>
-          <TabsTrigger value="pending">Pendentes ({counts.pending})</TabsTrigger>
+          <TabsTrigger value="requested">Pendentes ({counts.requested})</TabsTrigger>
           <TabsTrigger value="failed">Falhas ({counts.failed})</TabsTrigger>
+          <TabsTrigger value="pending_refund">Processando</TabsTrigger>
           <TabsTrigger value="refunded">Estornados</TabsTrigger>
           <TabsTrigger value="all">Todos</TabsTrigger>
         </TabsList>
