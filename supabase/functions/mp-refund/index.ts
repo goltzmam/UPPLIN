@@ -53,7 +53,20 @@ serve(async (req) => {
     }
 
     const order = refund.orders;
-    if (!order?.mp_payment_id) {
+    let paymentId = order?.mp_payment_id;
+    if (!paymentId) {
+      const { data: payment } = await admin
+        .from("payments")
+        .select("provider_payment_id")
+        .eq("order_id", refund.order_id)
+        .eq("provider", "mercadopago")
+        .neq("amount_cents", 0)
+        .order("created_at", { ascending: false })
+        .maybeSingle();
+      paymentId = payment?.provider_payment_id;
+    }
+
+    if (!paymentId) {
       await admin.rpc("mark_refund_failed", {
         p_request_id: requestId, p_note: "Pagamento original não encontrado",
       });
@@ -82,7 +95,7 @@ serve(async (req) => {
     }
 
     const mpResp = await fetch(
-      `https://api.mercadopago.com/v1/payments/${order.mp_payment_id}/refunds`,
+      `https://api.mercadopago.com/v1/payments/${paymentId}/refunds`,
       {
         method: "POST",
         headers: {
@@ -104,11 +117,17 @@ serve(async (req) => {
       return j({ error: "mp_refund_failed", details: mpData }, 502);
     }
 
-    // Move to pending_refund; webhook will confirm and call mark_refund_completed
+    // Move to pending_refund first for audit, then finalize immediately on MP success.
+    // The webhook can still arrive later; mark_refund_completed is idempotent.
     await admin.rpc("mark_refund_pending", {
       p_request_id: requestId,
       p_mp_refund_id: String(mpData?.id ?? ""),
       p_fee_policy: feePolicy,
+    });
+
+    await admin.rpc("mark_refund_completed", {
+      p_request_id: requestId,
+      p_mp_refund_id: String(mpData?.id ?? ""),
     });
 
     // Fire-and-forget transactional emails for pending_refund
@@ -118,7 +137,7 @@ serve(async (req) => {
       body: JSON.stringify({ request_id: requestId, event: "pending_refund" }),
     }).catch((e) => console.error("notify-refund (pending) failed:", e));
 
-    return j({ ok: true, refund_id: mpData?.id, fee_policy: feePolicy });
+    return j({ ok: true, status: "refunded", refund_id: mpData?.id, fee_policy: feePolicy });
   } catch (err) {
     console.error("mp-refund fatal:", err);
     return j({ error: "internal_error", message: String(err) }, 500);
