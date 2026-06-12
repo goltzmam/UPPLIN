@@ -23,7 +23,7 @@ const STATUS_LABEL: Record<string, { label: string; variant: any }> = {
 
 export default function AdminRefunds() {
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("disputed");
+  const [tab, setTab] = useState("all");
   const [actionDialog, setActionDialog] = useState<{ refund: any; action: "force" | "reject" } | null>(null);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
