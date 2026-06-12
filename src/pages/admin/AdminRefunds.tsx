@@ -24,7 +24,7 @@ const STATUS_LABEL: Record<string, { label: string; variant: any }> = {
 export default function AdminRefunds() {
   const queryClient = useQueryClient();
   const [tab, setTab] = useState("all");
-  const [actionDialog, setActionDialog] = useState<{ refund: any; action: "force" | "reject" } | null>(null);
+  const [actionDialog, setActionDialog] = useState<{ refund: any; action: "reject" } | null>(null);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -48,25 +48,22 @@ export default function AdminRefunds() {
 
   const filtered = refunds.filter((r) => (tab === "all" ? true : r.status === tab));
 
-  const handleForce = async () => {
-    if (!actionDialog) return;
+  const handleForce = async (refund: any) => {
     setLoading(true);
     try {
       const { error } = await (supabase as any).rpc("admin_force_refund", {
-        p_request_id: actionDialog.refund.id,
-        p_note: note || "Forçado pelo admin",
+        p_request_id: refund.id,
+        p_note: "Forçado pelo admin",
       });
       if (error) throw error;
 
       const { error: fnErr } = await supabase.functions.invoke("mp-refund", {
-        body: { request_id: actionDialog.refund.id },
+        body: { request_id: refund.id },
       });
       if (fnErr) throw fnErr;
 
       toast({ title: "Estorno forçado", description: "Reembolso processado via Mercado Pago." });
       queryClient.invalidateQueries({ queryKey: ["admin-refunds"] });
-      setActionDialog(null);
-      setNote("");
     } catch (e: any) {
       toast({ title: "Erro", description: e?.message, variant: "destructive" });
     } finally {
