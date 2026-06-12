@@ -233,10 +233,8 @@ export default function AdminChats() {
                 <div className="flex items-center gap-3">
                   <Eye className="h-5 w-5 text-warning" />
                   <div>
-                    <p className="text-2xl font-bold">
-                      {conversations.filter(c => c.status === "open").length}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Abertas</p>
+                    <p className="text-2xl font-bold">{conversations.length}</p>
+                    <p className="text-xs text-muted-foreground">Ativas</p>
                   </div>
                 </div>
               </CardContent>
