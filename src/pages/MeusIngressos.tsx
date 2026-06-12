@@ -25,9 +25,30 @@ import { downloadTicketPdf } from "@/lib/ticket-pdf";
 export default function MeusIngressos() {
   const { user, profile, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const [selectedTicket, setSelectedTicket] = useState<any>(null);
   const [refundOrder, setRefundOrder] = useState<any>(null);
+
+  // Celebrate post-purchase landing
+  useEffect(() => {
+    if (searchParams.get("purchase") !== "success") return;
+    confetti({
+      particleCount: 120,
+      spread: 75,
+      origin: { y: 0.3 },
+      colors: ["#FF6A00", "#FF2D2D", "#FF007A", "#FFD700"],
+    });
+    toast({
+      title: "Compra confirmada! 🎉",
+      description: "Seu ingresso já está disponível abaixo.",
+    });
+    // Make sure newly issued tickets show up immediately
+    queryClient.invalidateQueries({ queryKey: ["my-tickets", user?.id] });
+    const next = new URLSearchParams(searchParams);
+    next.delete("purchase");
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, queryClient, user?.id]);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["my-tickets", user?.id] });
