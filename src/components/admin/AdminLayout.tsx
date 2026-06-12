@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3, Menu, X, Crown, Undo2 } from "lucide-react";
+import { Shield, Users, MessageCircle, LayoutDashboard, LogOut, Calendar, CreditCard, FileText, Settings, BarChart3, Menu, X, Crown, Undo2, Mail, UserPlus } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
 import { useUserRoles } from "@/hooks/use-user-roles";
@@ -10,37 +10,42 @@ import { PageLoading } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard; roles: ("admin" | "marketing" | "support")[] };
 
-const navItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/admin/chats", label: "Central de Mensagens", icon: MessageCircle },
-  { href: "/admin/users", label: "Usuários", icon: Users },
-  { href: "/admin/events", label: "Eventos", icon: Calendar },
-  { href: "/admin/orders", label: "Pedidos", icon: CreditCard },
-  { href: "/admin/refunds", label: "Reembolsos", icon: Undo2 },
-  { href: "/admin/subscriptions", label: "Assinaturas", icon: Crown },
-  { href: "/admin/cpf", label: "Solicitações CPF", icon: FileText },
-  { href: "/admin/settings", label: "Configurações", icon: Settings },
+const allNavItems: NavItem[] = [
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard, roles: ["admin"] },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart3, roles: ["admin"] },
+  { href: "/admin/chats", label: "Central de Mensagens", icon: MessageCircle, roles: ["admin", "support"] },
+  { href: "/admin/marketing", label: "Email Marketing", icon: Mail, roles: ["admin", "marketing"] },
+  { href: "/admin/equipe", label: "Equipe", icon: UserPlus, roles: ["admin"] },
+  { href: "/admin/users", label: "Usuários", icon: Users, roles: ["admin"] },
+  { href: "/admin/events", label: "Eventos", icon: Calendar, roles: ["admin"] },
+  { href: "/admin/orders", label: "Pedidos", icon: CreditCard, roles: ["admin"] },
+  { href: "/admin/refunds", label: "Reembolsos", icon: Undo2, roles: ["admin"] },
+  { href: "/admin/subscriptions", label: "Assinaturas", icon: Crown, roles: ["admin"] },
+  { href: "/admin/cpf", label: "Solicitações CPF", icon: FileText, roles: ["admin"] },
+  { href: "/admin/settings", label: "Configurações", icon: Settings, roles: ["admin"] },
 ];
 
 export function AdminLayout() {
   const { user, loading: authLoading } = useAuth();
-  const { isAdmin, isLoading: rolesLoading } = useUserRoles();
+  const { isAdmin, isMarketing, isSupport, isLoading: rolesLoading } = useUserRoles();
   const { logout, loggingOut } = useLogout({ redirectTo: "/admin/login" });
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  const hasAnyAdminAccess = isAdmin || isMarketing || isSupport;
+
   useEffect(() => {
     if (!authLoading && !rolesLoading) {
       if (!user) {
         navigate("/admin/login");
-      } else if (!isAdmin) {
+      } else if (!hasAnyAdminAccess) {
         navigate("/");
       }
     }
-  }, [authLoading, rolesLoading, user, isAdmin, navigate]);
+  }, [authLoading, rolesLoading, user, hasAnyAdminAccess, navigate]);
 
   const handleSignOut = () => logout();
 
@@ -48,9 +53,13 @@ export function AdminLayout() {
     return <PageLoading />;
   }
 
-  if (!user || !isAdmin) {
+  if (!user || !hasAnyAdminAccess) {
     return null;
   }
+
+  const navItems = allNavItems.filter((item) =>
+    isAdmin || item.roles.some((r) => (r === "marketing" && isMarketing) || (r === "support" && isSupport))
+  );
 
   const isActive = (path: string) => {
     if (path === "/admin") return location.pathname === "/admin";

@@ -48,6 +48,10 @@ const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminSubscriptions = lazy(() => import("./pages/admin/AdminSubscriptions"));
 const AdminAnalytics = lazy(() => import("./pages/admin/AdminAnalytics"));
 const AdminRefunds = lazy(() => import("./pages/admin/AdminRefunds"));
+const AdminEquipe = lazy(() => import("./pages/admin/AdminEquipe"));
+const AdminMarketing = lazy(() => import("./pages/admin/AdminMarketing"));
+const AceitarConvite = lazy(() => import("./pages/AceitarConvite"));
+const EmailUnsubscribe = lazy(() => import("./pages/EmailUnsubscribe"));
 const Precos = lazy(() => import("./pages/Precos"));
 const Organizadores = lazy(() => import("./pages/Organizadores"));
 const ExplorarOrganizadores = lazy(() => import("./pages/ExplorarOrganizadores"));
@@ -159,6 +163,8 @@ function AnimatedRoutes() {
           <Route path="/termos" element={<Termos />} />
           <Route path="/termos/participante" element={<TermosParticipante />} />
           <Route path="/termos/organizador" element={<TermosOrganizador />} />
+          <Route path="/admin/aceitar-convite" element={<AceitarConvite />} />
+          <Route path="/email/unsubscribe" element={<EmailUnsubscribe />} />
           
           
           {/* PUBLIC ORGANIZER PROFILE - /o/:slug for participants to view */}
@@ -228,6 +234,8 @@ function AnimatedRoutes() {
             <Route path="subscriptions" element={<AdminSubscriptions />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="refunds" element={<AdminRefunds />} />
+            <Route path="equipe" element={<AdminEquipe />} />
+            <Route path="marketing" element={<AdminMarketing />} />
           </Route>
 
           <Route path="*" element={<NotFound />} />
