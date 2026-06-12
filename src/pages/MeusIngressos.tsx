@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Calendar, MapPin, QrCode, Ticket, Download, Clock, CreditCard, MessageCircle, CheckCircle, Undo2 } from "lucide-react";
+import confetti from "canvas-confetti";
 import { RefundRequestDialog } from "@/components/tickets/RefundRequestDialog";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
