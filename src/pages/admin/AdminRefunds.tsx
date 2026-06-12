@@ -162,12 +162,10 @@ export default function AdminRefunds() {
                     <Button
                       size="sm"
                       className="flex-1"
-                      onClick={() => {
-                        setActionDialog({ refund: r, action: "force" });
-                        setNote("");
-                      }}
+                      onClick={() => handleForce(r)}
+                      disabled={loading}
                     >
-                      Forçar estorno
+                      {loading ? "Processando..." : "Forçar estorno"}
                     </Button>
                     <Button
                       size="sm"
@@ -192,18 +190,14 @@ export default function AdminRefunds() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {actionDialog?.action === "force" ? "Forçar estorno" : "Negar reembolso"}
+              Negar reembolso
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder={
-                actionDialog?.action === "force"
-                  ? "Nota interna (opcional)"
-                  : "Justifique a negativa (mín. 5 caracteres)..."
-              }
+              placeholder="Justifique a negativa (mín. 5 caracteres)..."
               className="min-h-[100px]"
             />
             <div className="flex gap-2">
@@ -212,8 +206,8 @@ export default function AdminRefunds() {
               </Button>
               <Button
                 className="flex-1"
-                variant={actionDialog?.action === "force" ? "default" : "destructive"}
-                onClick={actionDialog?.action === "force" ? handleForce : handleReject}
+                variant="destructive"
+                onClick={handleReject}
                 disabled={loading}
               >
                 {loading ? "Processando..." : "Confirmar"}
