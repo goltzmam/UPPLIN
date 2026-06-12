@@ -50,7 +50,6 @@ export default function ReembolsosContent() {
   });
 
   const handleApprove = async (refund: any) => {
-    if (!confirm("Aprovar reembolso e processar estorno via Mercado Pago?")) return;
     setActionLoading(refund.id);
     try {
       const { error } = await (supabase as any).rpc("decide_refund", {
