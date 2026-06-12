@@ -79,25 +79,21 @@ export default function CollaboratorScanner() {
   const { data: stats, refetch: refetchStats } = useQuery({
     queryKey: ["collab-scanner-stats", eventId, user?.id],
     queryFn: async () => {
-      const [totalResult, checkedInResult, pendingResult, myResult] = await Promise.all([
-        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!),
-        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!).eq("status", "used"),
-        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!).eq("status", "issued"),
-        supabase.from("tickets").select("id", { count: "exact", head: true }).eq("event_id", eventId!).eq("checked_in_by", user!.id),
-      ]);
-
-      const error = totalResult.error || checkedInResult.error || pendingResult.error || myResult.error;
+      const { data, error } = await (supabase.rpc as any)("get_collaborator_scanner_stats", {
+        p_event_id: eventId!,
+      });
       if (error) throw error;
-
-      const total = totalResult.count || 0;
-      const checkedIn = checkedInResult.count || 0;
-      const pending = pendingResult.count || 0;
-      const myCheckins = myResult.count || 0;
-
-      return { total, checkedIn, pending, myCheckins };
+      const row = Array.isArray(data) ? data[0] : data;
+      return {
+        total: Number(row?.total ?? 0),
+        checkedIn: Number(row?.checked_in ?? 0),
+        pending: Number(row?.pending ?? 0),
+        myCheckins: Number(row?.my_checkins ?? 0),
+      };
     },
     enabled: !!access && !!user,
   });
+
 
   // Realtime
   useEffect(() => {
