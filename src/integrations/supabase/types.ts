@@ -47,6 +47,42 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_user_id: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          roles: Database["public"]["Enums"]["app_role"][]
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          roles: Database["public"]["Enums"]["app_role"][]
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          roles?: Database["public"]["Enums"]["app_role"][]
+          token?: string
+        }
+        Relationships: []
+      }
       checkin_collaborators: {
         Row: {
           created_at: string
@@ -111,6 +147,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          assigned_to: string | null
           created_at: string
           event_id: string | null
           id: string
@@ -122,6 +159,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           created_at?: string
           event_id?: string | null
           id?: string
@@ -133,6 +171,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           created_at?: string
           event_id?: string | null
           id?: string
@@ -263,6 +302,208 @@ export type Database = {
           status?: Database["public"]["Enums"]["cpf_request_status"] | null
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      email_audiences: {
+        Row: {
+          cached_at: string | null
+          cached_count: number | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          filter: Json
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          cached_at?: string | null
+          cached_count?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filter?: Json
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          cached_at?: string | null
+          cached_count?: number | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filter?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_campaign_recipients: {
+        Row: {
+          campaign_id: string
+          clicked_at: string | null
+          created_at: string
+          delivered_at: string | null
+          email: string
+          error: string | null
+          id: string
+          opened_at: string | null
+          resend_message_id: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          campaign_id: string
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          email: string
+          error?: string | null
+          id?: string
+          opened_at?: string | null
+          resend_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          clicked_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          email?: string
+          error?: string | null
+          id?: string
+          opened_at?: string | null
+          resend_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          audience_id: string | null
+          audience_snapshot: Json | null
+          bounced_count: number
+          clicked_count: number
+          complained_count: number
+          created_at: string
+          created_by: string | null
+          delivered_count: number
+          failed_count: number
+          from_name: string
+          html_body: string
+          id: string
+          name: string
+          opened_count: number
+          preheader: string | null
+          reply_to: string | null
+          scheduled_at: string | null
+          sent_at: string | null
+          sent_count: number
+          started_at: string | null
+          status: string
+          subject: string
+          total_recipients: number
+          unsubscribed_count: number
+          updated_at: string
+        }
+        Insert: {
+          audience_id?: string | null
+          audience_snapshot?: Json | null
+          bounced_count?: number
+          clicked_count?: number
+          complained_count?: number
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number
+          failed_count?: number
+          from_name?: string
+          html_body: string
+          id?: string
+          name: string
+          opened_count?: number
+          preheader?: string | null
+          reply_to?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          started_at?: string | null
+          status?: string
+          subject: string
+          total_recipients?: number
+          unsubscribed_count?: number
+          updated_at?: string
+        }
+        Update: {
+          audience_id?: string | null
+          audience_snapshot?: Json | null
+          bounced_count?: number
+          clicked_count?: number
+          complained_count?: number
+          created_at?: string
+          created_by?: string | null
+          delivered_count?: number
+          failed_count?: number
+          from_name?: string
+          html_body?: string
+          id?: string
+          name?: string
+          opened_count?: number
+          preheader?: string | null
+          reply_to?: string | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number
+          started_at?: string | null
+          status?: string
+          subject?: string
+          total_recipients?: number
+          unsubscribed_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_audience_id_fkey"
+            columns: ["audience_id"]
+            isOneToOne: false
+            referencedRelation: "email_audiences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_marketing_unsubscribes: {
+        Row: {
+          created_at: string
+          email: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          reason?: string | null
         }
         Relationships: []
       }
@@ -1111,6 +1352,7 @@ export type Database = {
           full_name: string | null
           id: string
           last_seen_at: string | null
+          marketing_opt_in: boolean
           photo_url: string | null
           state: string | null
           status: string | null
@@ -1129,6 +1371,7 @@ export type Database = {
           full_name?: string | null
           id: string
           last_seen_at?: string | null
+          marketing_opt_in?: boolean
           photo_url?: string | null
           state?: string | null
           status?: string | null
@@ -1147,6 +1390,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_seen_at?: string | null
+          marketing_opt_in?: boolean
           photo_url?: string | null
           state?: string | null
           status?: string | null
@@ -1938,6 +2182,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      accept_admin_invite: { Args: { p_token: string }; Returns: Json }
       admin_force_refund: {
         Args: { p_note?: string; p_request_id: string }
         Returns: Json
@@ -1950,9 +2195,21 @@ export type Database = {
         Args: { p_code: string; p_order_id: string }
         Returns: Json
       }
+      assign_conversation: {
+        Args: { p_conv_id: string; p_status?: string; p_take?: boolean }
+        Returns: Json
+      }
       check_in_ticket: {
         Args: { p_event_id?: string; p_ticket_code: string }
         Returns: Json
+      }
+      compute_audience: {
+        Args: { p_filter: Json }
+        Returns: {
+          email: string
+          full_name: string
+          user_id: string
+        }[]
       }
       confirm_paid_order: {
         Args: {
@@ -2023,12 +2280,23 @@ export type Database = {
         }[]
       }
       get_user_organizer_id: { Args: { _user_id: string }; Returns: string }
+      has_any_role: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_campaign_counter: {
+        Args: { p_campaign_id: string; p_field: string }
+        Returns: undefined
       }
       increment_quantity_sold: {
         Args: { p_increment_by: number; p_ticket_type_id: string }
@@ -2084,7 +2352,7 @@ export type Database = {
       touch_last_seen: { Args: never; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "user" | "organizer"
+      app_role: "admin" | "user" | "organizer" | "marketing" | "support"
       cpf_request_status: "pending" | "approved" | "rejected"
       event_status:
         | "draft"
@@ -2234,7 +2502,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user", "organizer"],
+      app_role: ["admin", "user", "organizer", "marketing", "support"],
       cpf_request_status: ["pending", "approved", "rejected"],
       event_status: [
         "draft",
