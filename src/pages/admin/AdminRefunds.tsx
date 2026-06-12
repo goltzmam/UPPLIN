@@ -12,18 +12,19 @@ import { ptBR } from "date-fns/locale";
 import { AlertCircle, CheckCircle, XCircle, Clock, ShieldAlert } from "lucide-react";
 
 const STATUS_LABEL: Record<string, { label: string; variant: any }> = {
-  pending: { label: "Pendente", variant: "default" },
+  requested: { label: "Pendente", variant: "default" },
   approved: { label: "Aprovado", variant: "secondary" },
   rejected: { label: "Recusado", variant: "destructive" },
   disputed: { label: "Disputa", variant: "outline" },
+  pending_refund: { label: "Processando estorno", variant: "outline" },
   refunded: { label: "Estornado", variant: "secondary" },
   failed: { label: "Falhou", variant: "destructive" },
 };
 
 export default function AdminRefunds() {
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("disputed");
-  const [actionDialog, setActionDialog] = useState<{ refund: any; action: "force" | "reject" } | null>(null);
+  const [tab, setTab] = useState("all");
+  const [actionDialog, setActionDialog] = useState<{ refund: any; action: "reject" } | null>(null);
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,34 +33,37 @@ export default function AdminRefunds() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("refund_requests")
-        .select("*, events(title), organizer_accounts!organizer_id(display_name), profiles:requester_user_id(full_name, email)")
+        .select("*, events(title), organizer_accounts!organizer_id(display_name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data || [];
+      const rows = data || [];
+      const requesterIds = [...new Set(rows.map((r: any) => r.requester_user_id).filter(Boolean))];
+      const { data: profiles } = requesterIds.length
+        ? await (supabase as any).from("profiles").select("id, full_name, email").in("id", requesterIds)
+        : { data: [] };
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      return rows.map((r: any) => ({ ...r, profiles: profileMap.get(r.requester_user_id) || null }));
     },
   });
 
   const filtered = refunds.filter((r) => (tab === "all" ? true : r.status === tab));
 
-  const handleForce = async () => {
-    if (!actionDialog) return;
+  const handleForce = async (refund: any) => {
     setLoading(true);
     try {
       const { error } = await (supabase as any).rpc("admin_force_refund", {
-        p_request_id: actionDialog.refund.id,
-        p_note: note || "Forçado pelo admin",
+        p_request_id: refund.id,
+        p_note: "Forçado pelo admin",
       });
       if (error) throw error;
 
       const { error: fnErr } = await supabase.functions.invoke("mp-refund", {
-        body: { request_id: actionDialog.refund.id },
+        body: { request_id: refund.id },
       });
       if (fnErr) throw fnErr;
 
       toast({ title: "Estorno forçado", description: "Reembolso processado via Mercado Pago." });
       queryClient.invalidateQueries({ queryKey: ["admin-refunds"] });
-      setActionDialog(null);
-      setNote("");
     } catch (e: any) {
       toast({ title: "Erro", description: e?.message, variant: "destructive" });
     } finally {
@@ -92,7 +96,7 @@ export default function AdminRefunds() {
 
   const counts = {
     disputed: refunds.filter((r) => r.status === "disputed").length,
-    pending: refunds.filter((r) => r.status === "pending").length,
+    requested: refunds.filter((r) => r.status === "requested").length,
     failed: refunds.filter((r) => r.status === "failed").length,
   };
 
@@ -111,8 +115,9 @@ export default function AdminRefunds() {
             <ShieldAlert className="h-3.5 w-3.5 mr-1" />
             Disputas ({counts.disputed})
           </TabsTrigger>
-          <TabsTrigger value="pending">Pendentes ({counts.pending})</TabsTrigger>
+          <TabsTrigger value="requested">Pendentes ({counts.requested})</TabsTrigger>
           <TabsTrigger value="failed">Falhas ({counts.failed})</TabsTrigger>
+          <TabsTrigger value="pending_refund">Processando</TabsTrigger>
           <TabsTrigger value="refunded">Estornados</TabsTrigger>
           <TabsTrigger value="all">Todos</TabsTrigger>
         </TabsList>
@@ -157,12 +162,10 @@ export default function AdminRefunds() {
                     <Button
                       size="sm"
                       className="flex-1"
-                      onClick={() => {
-                        setActionDialog({ refund: r, action: "force" });
-                        setNote("");
-                      }}
+                      onClick={() => handleForce(r)}
+                      disabled={loading}
                     >
-                      Forçar estorno
+                      {loading ? "Processando..." : "Forçar estorno"}
                     </Button>
                     <Button
                       size="sm"
@@ -187,18 +190,14 @@ export default function AdminRefunds() {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {actionDialog?.action === "force" ? "Forçar estorno" : "Negar reembolso"}
+              Negar reembolso
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Textarea
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder={
-                actionDialog?.action === "force"
-                  ? "Nota interna (opcional)"
-                  : "Justifique a negativa (mín. 5 caracteres)..."
-              }
+              placeholder="Justifique a negativa (mín. 5 caracteres)..."
               className="min-h-[100px]"
             />
             <div className="flex gap-2">
@@ -207,8 +206,8 @@ export default function AdminRefunds() {
               </Button>
               <Button
                 className="flex-1"
-                variant={actionDialog?.action === "force" ? "default" : "destructive"}
-                onClick={actionDialog?.action === "force" ? handleForce : handleReject}
+                variant="destructive"
+                onClick={handleReject}
                 disabled={loading}
               >
                 {loading ? "Processando..." : "Confirmar"}

@@ -13,10 +13,11 @@ import { ptBR } from "date-fns/locale";
 import { AlertCircle, CheckCircle, XCircle, Clock, RefreshCw } from "lucide-react";
 
 const STATUS_LABEL: Record<string, { label: string; variant: any; icon: any }> = {
-  pending: { label: "Pendente", variant: "default", icon: Clock },
+  requested: { label: "Pendente", variant: "default", icon: Clock },
   approved: { label: "Aprovado", variant: "secondary", icon: CheckCircle },
   rejected: { label: "Recusado", variant: "destructive", icon: XCircle },
   disputed: { label: "Em disputa (admin)", variant: "outline", icon: AlertCircle },
+  pending_refund: { label: "Processando estorno", variant: "outline", icon: RefreshCw },
   refunded: { label: "Estornado", variant: "secondary", icon: CheckCircle },
   failed: { label: "Falhou", variant: "destructive", icon: XCircle },
 };
@@ -24,7 +25,7 @@ const STATUS_LABEL: Record<string, { label: string; variant: any; icon: any }> =
 export default function ReembolsosContent() {
   const { organizer } = useOrganizerContext();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("pending");
+  const [tab, setTab] = useState("requested");
   const [rejecting, setRejecting] = useState<any>(null);
   const [rejectNote, setRejectNote] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -34,21 +35,26 @@ export default function ReembolsosContent() {
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from("refund_requests")
-        .select("*, orders(total_cents), events(title), profiles:requester_user_id(full_name, email)")
+        .select("*, orders(total_cents, buyer_user_id), events(title)")
         .eq("organizer_id", organizer.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data || [];
+      const rows = data || [];
+      const requesterIds = [...new Set(rows.map((r: any) => r.requester_user_id).filter(Boolean))];
+      const { data: profiles } = requesterIds.length
+        ? await (supabase as any).from("profiles").select("id, full_name, email").in("id", requesterIds)
+        : { data: [] };
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      return rows.map((r: any) => ({ ...r, profiles: profileMap.get(r.requester_user_id) || null }));
     },
   });
 
   const handleApprove = async (refund: any) => {
-    if (!confirm("Aprovar reembolso e processar estorno via Mercado Pago?")) return;
     setActionLoading(refund.id);
     try {
       const { error } = await (supabase as any).rpc("decide_refund", {
         p_request_id: refund.id,
-        p_action: "approve",
+        p_decision: "approve",
       });
       if (error) throw error;
 
@@ -75,7 +81,7 @@ export default function ReembolsosContent() {
     try {
       const { error } = await (supabase as any).rpc("decide_refund", {
         p_request_id: rejecting.id,
-        p_action: "reject",
+        p_decision: "reject",
         p_note: rejectNote.trim(),
       });
       if (error) throw error;
@@ -91,7 +97,7 @@ export default function ReembolsosContent() {
   };
 
   const filtered = refunds.filter((r) =>
-    tab === "pending" ? r.status === "pending" : tab === "all" ? true : r.status === tab
+    tab === "requested" ? r.status === "requested" : tab === "all" ? true : r.status === tab
   );
 
   return (
@@ -103,9 +109,10 @@ export default function ReembolsosContent() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList>
-          <TabsTrigger value="pending">
-            Pendentes ({refunds.filter((r) => r.status === "pending").length})
+          <TabsTrigger value="requested">
+            Pendentes ({refunds.filter((r) => r.status === "requested").length})
           </TabsTrigger>
+          <TabsTrigger value="pending_refund">Processando</TabsTrigger>
           <TabsTrigger value="refunded">Estornados</TabsTrigger>
           <TabsTrigger value="disputed">Em disputa</TabsTrigger>
           <TabsTrigger value="all">Todos</TabsTrigger>
@@ -160,7 +167,7 @@ export default function ReembolsosContent() {
                     <p className="text-xs text-muted-foreground italic">Sua nota: {r.decision_note}</p>
                   )}
 
-                  {r.status === "pending" && (
+                  {r.status === "requested" && (
                     <div className="flex gap-2 pt-2 border-t border-border">
                       <Button
                         size="sm"
