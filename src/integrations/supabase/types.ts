@@ -1989,6 +1989,15 @@ export type Database = {
         }[]
       }
       get_active_users_metrics: { Args: never; Returns: Json }
+      get_collaborator_scanner_stats: {
+        Args: { p_event_id: string }
+        Returns: {
+          checked_in: number
+          my_checkins: number
+          pending: number
+          total: number
+        }[]
+      }
       get_event_organizer_status: {
         Args: { p_event_id: string }
         Returns: Json
