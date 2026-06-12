@@ -35,7 +35,6 @@ interface Conversation {
   id: string;
   type: string;
   subject: string | null;
-  status: string;
   created_at: string;
   updated_at: string;
   participant_1: {

@@ -37,7 +37,6 @@ interface Conversation {
   event_id: string | null;
   participant_1_id: string;
   participant_2_id: string;
-  status: string;
   other_participant?: {
     id: string;
     full_name: string | null;
