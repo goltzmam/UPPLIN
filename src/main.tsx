@@ -2,7 +2,15 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import {
+  extractChunkUrl,
+  getBootRequestId,
+  logBootEvent,
+} from "./lib/boot-diagnostics";
 import "./index.css";
+
+logBootEvent("boot_start", { request_id_source: "session" });
+
 
 /**
  * Remove Service Workers e caches antigos sem recarregar a página.
