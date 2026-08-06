@@ -75,32 +75,56 @@ function isChunkLoadError(err: unknown): boolean {
   );
 }
 
-function handleChunkFailure(err: unknown) {
-  if (chunkFailureHandled) return;
+function handleChunkFailure(err: unknown, source = "unknown") {
+  const chunkUrl = extractChunkUrl(err);
+  if (chunkFailureHandled) {
+    logBootEvent("chunk_error", { source, chunk: chunkUrl, error: err, deduped: true });
+    return;
+  }
   chunkFailureHandled = true;
 
   let canReload = false;
+  let lastReloadAt = 0;
   try {
-    const last = Number(sessionStorage.getItem(RELOAD_FLAG) || 0);
-    canReload = !last || Date.now() - last > RELOAD_COOLDOWN_MS;
+    lastReloadAt = Number(sessionStorage.getItem(RELOAD_FLAG) || 0);
+    canReload = !lastReloadAt || Date.now() - lastReloadAt > RELOAD_COOLDOWN_MS;
     if (canReload) sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
   } catch {
     canReload = false;
   }
 
+  logBootEvent("chunk_error", {
+    source,
+    chunk: chunkUrl,
+    error: err,
+    react_mounted: mounted,
+    will_retry: canReload,
+    last_reload_at: lastReloadAt ? new Date(lastReloadAt).toISOString() : null,
+  });
+
   if (canReload) {
+    logBootEvent("chunk_retry_reload", { source, chunk: chunkUrl, attempt: 1 });
     window.location.reload();
     return;
   }
 
-  console.error("[boot] chunk load failed:", err);
+  logBootEvent("chunk_retry_exhausted", {
+    source,
+    chunk: chunkUrl,
+    error: err,
+    cooldown_ms: RELOAD_COOLDOWN_MS,
+    react_mounted: mounted,
+  });
   // Se o React já montou, o ErrorBoundary exibe a tela de erro — não
   // mexemos no DOM controlado por ele (evita conflito de removeChild).
   if (mounted) return;
   renderFallback(
-    "Não conseguimos carregar todos os arquivos do app. Verifique sua conexão e tente novamente."
+    "Não conseguimos carregar todos os arquivos do app. Verifique sua conexão e tente novamente.",
+    "chunk_retry_exhausted",
+    { chunk: chunkUrl, source }
   );
 }
+
 
 
 // Watchdog: se o React não montar, nunca deixar tela em branco.
