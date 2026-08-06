@@ -1,7 +1,7 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -91,9 +91,19 @@ if (typeof window !== "undefined") {
 }
 
 function AppBootFallback() {
+  // Esta tela NUNCA pode ficar presa: se a rota não carregar em 8s
+  // (chunk travado, rede lenta, WKWebView do iPad), mostramos uma
+  // mensagem clara + botão de recarregar em vez de pulsar para sempre.
+  const [stalled, setStalled] = useState(false);
+
+  useEffect(() => {
+    const t = window.setTimeout(() => setStalled(true), 8000);
+    return () => window.clearTimeout(t);
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-background text-foreground">
-      <div className="text-center">
+    <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-background px-6 text-foreground">
+      <div className="max-w-xs text-center">
         <div
           className="font-display text-3xl font-bold"
           style={{
@@ -105,13 +115,30 @@ function AppBootFallback() {
         >
           UPPLIN
         </div>
-        <div className="mx-auto mt-5 h-1 w-20 overflow-hidden rounded-full bg-white/10">
-          <div className="h-full w-1/2 animate-[shimmer_1.2s_infinite] rounded-full bg-primary" />
-        </div>
+
+        {!stalled ? (
+          <div className="mx-auto mt-5 h-1 w-20 overflow-hidden rounded-full bg-white/10">
+            <div className="h-full w-1/2 animate-[shimmer_1.2s_infinite] rounded-full bg-primary" />
+          </div>
+        ) : (
+          <div className="mt-5">
+            <p className="text-sm text-muted-foreground">
+              Está demorando mais que o normal para abrir. Verifique sua conexão.
+            </p>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+
 
 // Simplified routes wrapper - removed heavy AnimatePresence for mobile performance
 function AnimatedRoutes() {
