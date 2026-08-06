@@ -97,7 +97,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [authReady, setAuthReady] = useState(false);
 
   const fetchProfile = useCallback(async (currentUser: User) => {
-    const { data, error } = await supabase
+    // Nunca deixa o boot preso: se o backend não responder em 6s, seguimos
+    // com o perfil derivado da sessão.
+    const withTimeout = <T,>(promise: PromiseLike<T>, ms = 6000) =>
+      Promise.race([
+        Promise.resolve(promise),
+        new Promise<null>((resolve) => window.setTimeout(() => resolve(null), ms)),
+      ]);
+
+    const result = await withTimeout(
+      supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", currentUser.id)
+        .maybeSingle()
+    );
+
+    if (!result) {
+      console.warn("[auth] timeout ao carregar perfil — usando dados da sessão");
+      return {
+        id: currentUser.id,
+        email: currentUser.email ?? "",
+        full_name:
+          (currentUser.user_metadata?.full_name as string | undefined) ??
+          (currentUser.user_metadata?.name as string | undefined) ??
+          null,
+        photo_url: (currentUser.user_metadata?.avatar_url as string | undefined) ?? null,
+        cpf: null,
+        cpf_locked: null,
+        city: null,
+        state: null,
+      } as Profile;
+    }
+
+    const { data, error } = result as Awaited<ReturnType<typeof supabase.from>> extends never
+      ? { data: Profile | null; error: unknown }
+      : { data: Profile | null; error: { message: string } | null };
+
+    void supabase
       .from("profiles")
       .select("*")
       .eq("id", currentUser.id)
@@ -165,6 +202,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
     setAuthReady(true);
   }, [fetchProfile]);
+
+  // Watchdog de auth: se a rede travar (getSession/profile sem resposta),
+  // liberamos o app mesmo assim. Sem isso, telas protegidas ficam em
+  // loading infinito (tela "em branco" no review da Apple).
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      setAuthReady((ready) => {
+        if (!ready) console.warn("[auth] watchdog: liberando app sem resposta do servidor");
+        return true;
+      });
+      setLoading(false);
+    }, 6000);
+    return () => window.clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
