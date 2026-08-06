@@ -38,6 +38,50 @@ function renderFallback(message: string) {
     </div>`;
 }
 
+/**
+ * Retry único para falhas de carregamento de chunk (dynamic import).
+ * Em redes instáveis / WebView do iOS, um chunk pode falhar e a tela
+ * fica presa no loading. Recarregamos UMA vez por sessão; se falhar
+ * de novo, mostramos a tela de erro com botão manual.
+ */
+const RELOAD_FLAG = "__upplin_chunk_reload__";
+
+function isChunkLoadError(err: unknown): boolean {
+  const msg = String((err as Error)?.message ?? err ?? "");
+  return (
+    /Failed to fetch dynamically imported module/i.test(msg) ||
+    /Importing a module script failed/i.test(msg) ||
+    /error loading dynamically imported module/i.test(msg) ||
+    /ChunkLoadError/i.test(msg)
+  );
+}
+
+function handleChunkFailure(err: unknown) {
+  let alreadyTried = false;
+  try {
+    alreadyTried = sessionStorage.getItem(RELOAD_FLAG) === "1";
+    if (!alreadyTried) sessionStorage.setItem(RELOAD_FLAG, "1");
+  } catch {
+    alreadyTried = true;
+  }
+  if (!alreadyTried) {
+    window.location.reload();
+    return;
+  }
+  console.error("[boot] chunk load failed twice:", err);
+  renderFallback("Não conseguimos carregar todos os arquivos do app. Verifique sua conexão e tente novamente.");
+}
+
+// Watchdog: se o React não montar, nunca deixar tela em branco.
+let mounted = false;
+const bootWatchdog = window.setTimeout(() => {
+  if (mounted) return;
+  const root = document.getElementById("root");
+  if (root && root.childElementCount === 0) {
+    renderFallback("O app está demorando mais que o normal para abrir.");
+  }
+}, 10000);
+
 (async () => {
   try {
     const ROOT = document.getElementById("root");
@@ -69,7 +113,15 @@ function renderFallback(message: string) {
         </HelmetProvider>
       </ErrorBoundary>
     );
+    mounted = true;
+    window.clearTimeout(bootWatchdog);
+    try {
+      sessionStorage.removeItem(RELOAD_FLAG);
+    } catch {
+      /* noop */
+    }
   } catch (err) {
+    window.clearTimeout(bootWatchdog);
     console.error("[boot] fatal:", err);
     renderFallback("Não conseguimos iniciar o app. Tente recarregar.");
   }
@@ -77,10 +129,18 @@ function renderFallback(message: string) {
 
 // Captura erros globais não tratados (especialmente úteis no WebView do iOS).
 if (typeof window !== "undefined") {
+  // Vite dispara este evento quando o preload de um chunk falha.
+  window.addEventListener("vite:preloadError", (e: Event) => {
+    e.preventDefault();
+    handleChunkFailure((e as Event & { payload?: unknown }).payload);
+  });
+
   window.addEventListener("error", (e) => {
     console.error("[window.error]", e.error || e.message);
+    if (isChunkLoadError(e.error || e.message)) handleChunkFailure(e.error || e.message);
   });
   window.addEventListener("unhandledrejection", (e) => {
     console.error("[unhandledrejection]", e.reason);
+    if (isChunkLoadError(e.reason)) handleChunkFailure(e.reason);
   });
 }
