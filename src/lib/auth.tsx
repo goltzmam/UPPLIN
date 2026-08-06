@@ -130,15 +130,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } as Profile;
     }
 
-    const { data, error } = result as Awaited<ReturnType<typeof supabase.from>> extends never
-      ? { data: Profile | null; error: unknown }
-      : { data: Profile | null; error: { message: string } | null };
+    const { data, error } = result as { data: Profile | null; error: { message: string } | null };
 
-    void supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", currentUser.id)
-      .maybeSingle();
 
     if (error) {
       console.error("Error fetching profile:", error);
