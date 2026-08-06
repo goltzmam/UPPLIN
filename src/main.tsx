@@ -126,11 +126,6 @@ const bootWatchdog = window.setTimeout(() => {
     );
     mounted = true;
     window.clearTimeout(bootWatchdog);
-    try {
-      sessionStorage.removeItem(RELOAD_FLAG);
-    } catch {
-      /* noop */
-    }
   } catch (err) {
     window.clearTimeout(bootWatchdog);
     console.error("[boot] fatal:", err);
@@ -141,8 +136,10 @@ const bootWatchdog = window.setTimeout(() => {
 // Captura erros globais não tratados (especialmente úteis no WebView do iOS).
 if (typeof window !== "undefined") {
   // Vite dispara este evento quando o preload de um chunk falha.
+  // NÃO usar preventDefault aqui: isso faria o import resolver `undefined`
+  // e quebrar o render. Deixamos o erro propagar para o ErrorBoundary e só
+  // registramos a tentativa de recarregar.
   window.addEventListener("vite:preloadError", (e: Event) => {
-    e.preventDefault();
     handleChunkFailure((e as Event & { payload?: unknown }).payload);
   });
 
