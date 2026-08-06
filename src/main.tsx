@@ -38,6 +38,64 @@ function renderFallback(message: string) {
     </div>`;
 }
 
+/**
+ * Retry único para falhas de carregamento de chunk (dynamic import).
+ * Em redes instáveis / WebView do iOS, um chunk pode falhar e a tela
+ * fica presa no loading. Recarregamos NO MÁXIMO uma vez a cada 60s
+ * (nunca em loop); se falhar de novo, o ErrorBoundary/fallback assume.
+ */
+const RELOAD_FLAG = "__upplin_chunk_reload_at__";
+const RELOAD_COOLDOWN_MS = 60_000;
+let chunkFailureHandled = false;
+
+function isChunkLoadError(err: unknown): boolean {
+  const msg = String((err as Error)?.message ?? err ?? "");
+  return (
+    /Failed to fetch dynamically imported module/i.test(msg) ||
+    /Importing a module script failed/i.test(msg) ||
+    /error loading dynamically imported module/i.test(msg) ||
+    /ChunkLoadError/i.test(msg)
+  );
+}
+
+function handleChunkFailure(err: unknown) {
+  if (chunkFailureHandled) return;
+  chunkFailureHandled = true;
+
+  let canReload = false;
+  try {
+    const last = Number(sessionStorage.getItem(RELOAD_FLAG) || 0);
+    canReload = !last || Date.now() - last > RELOAD_COOLDOWN_MS;
+    if (canReload) sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
+  } catch {
+    canReload = false;
+  }
+
+  if (canReload) {
+    window.location.reload();
+    return;
+  }
+
+  console.error("[boot] chunk load failed:", err);
+  // Se o React já montou, o ErrorBoundary exibe a tela de erro — não
+  // mexemos no DOM controlado por ele (evita conflito de removeChild).
+  if (mounted) return;
+  renderFallback(
+    "Não conseguimos carregar todos os arquivos do app. Verifique sua conexão e tente novamente."
+  );
+}
+
+
+// Watchdog: se o React não montar, nunca deixar tela em branco.
+let mounted = false;
+const bootWatchdog = window.setTimeout(() => {
+  if (mounted) return;
+  const root = document.getElementById("root");
+  if (root && root.childElementCount === 0) {
+    renderFallback("O app está demorando mais que o normal para abrir.");
+  }
+}, 10000);
+
 (async () => {
   try {
     const ROOT = document.getElementById("root");
@@ -69,7 +127,10 @@ function renderFallback(message: string) {
         </HelmetProvider>
       </ErrorBoundary>
     );
+    mounted = true;
+    window.clearTimeout(bootWatchdog);
   } catch (err) {
+    window.clearTimeout(bootWatchdog);
     console.error("[boot] fatal:", err);
     renderFallback("Não conseguimos iniciar o app. Tente recarregar.");
   }
@@ -77,10 +138,20 @@ function renderFallback(message: string) {
 
 // Captura erros globais não tratados (especialmente úteis no WebView do iOS).
 if (typeof window !== "undefined") {
+  // Vite dispara este evento quando o preload de um chunk falha.
+  // NÃO usar preventDefault aqui: isso faria o import resolver `undefined`
+  // e quebrar o render. Deixamos o erro propagar para o ErrorBoundary e só
+  // registramos a tentativa de recarregar.
+  window.addEventListener("vite:preloadError", (e: Event) => {
+    handleChunkFailure((e as Event & { payload?: unknown }).payload);
+  });
+
   window.addEventListener("error", (e) => {
     console.error("[window.error]", e.error || e.message);
+    if (isChunkLoadError(e.error || e.message)) handleChunkFailure(e.error || e.message);
   });
   window.addEventListener("unhandledrejection", (e) => {
     console.error("[unhandledrejection]", e.reason);
+    if (isChunkLoadError(e.reason)) handleChunkFailure(e.reason);
   });
 }
