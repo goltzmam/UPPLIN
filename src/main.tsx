@@ -33,18 +33,27 @@ async function cleanupStaleServiceWorkersAndCaches() {
   }
 }
 
-function renderFallback(message: string) {
+function renderFallback(message: string, reason = "unknown", details: Record<string, unknown> = {}) {
   const root = document.getElementById("root");
   if (!root) return;
+  logBootEvent("fallback_shown", { surface: "html_fallback", reason, message, ...details });
+  const requestId = getBootRequestId();
   root.innerHTML = `
     <div style="min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;padding:24px;text-align:center">
       <div style="max-width:360px">
         <div style="font-size:28px;font-weight:800;letter-spacing:-0.02em;background:linear-gradient(135deg,#FF6A00,#FF2D2D,#FF007A);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px">UPPLIN</div>
         <p style="font-size:14px;opacity:.7;margin:0 0 24px">${message}</p>
-        <button onclick="window.location.reload()" style="background:linear-gradient(135deg,#FF6A00,#FF2D2D,#FF007A);color:#fff;border:none;border-radius:999px;padding:12px 28px;font-size:14px;font-weight:600">Recarregar</button>
+        <button id="upplin-boot-retry" style="background:linear-gradient(135deg,#FF6A00,#FF2D2D,#FF007A);color:#fff;border:none;border-radius:999px;padding:12px 28px;font-size:14px;font-weight:600">Recarregar</button>
+        <p style="font-size:10px;opacity:.35;margin:20px 0 0;font-family:ui-monospace,monospace">ID: ${requestId}</p>
       </div>
     </div>`;
+  const btn = document.getElementById("upplin-boot-retry");
+  btn?.addEventListener("click", () => {
+    logBootEvent("fallback_manual_retry", { surface: "html_fallback", reason });
+    window.location.reload();
+  });
 }
+
 
 /**
  * Retry único para falhas de carregamento de chunk (dynamic import).
