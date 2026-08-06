@@ -178,10 +178,13 @@ const bootWatchdog = window.setTimeout(() => {
     );
     mounted = true;
     window.clearTimeout(bootWatchdog);
+    logBootEvent("boot_mounted", {});
   } catch (err) {
     window.clearTimeout(bootWatchdog);
-    console.error("[boot] fatal:", err);
-    renderFallback("Não conseguimos iniciar o app. Tente recarregar.");
+    logBootEvent("boot_fatal", { error: err });
+    renderFallback("Não conseguimos iniciar o app. Tente recarregar.", "boot_fatal", {
+      error_message: String((err as Error)?.message ?? err),
+    });
   }
 })();
 
@@ -192,15 +195,23 @@ if (typeof window !== "undefined") {
   // e quebrar o render. Deixamos o erro propagar para o ErrorBoundary e só
   // registramos a tentativa de recarregar.
   window.addEventListener("vite:preloadError", (e: Event) => {
-    handleChunkFailure((e as Event & { payload?: unknown }).payload);
+    handleChunkFailure((e as Event & { payload?: unknown }).payload, "vite:preloadError");
   });
 
   window.addEventListener("error", (e) => {
-    console.error("[window.error]", e.error || e.message);
-    if (isChunkLoadError(e.error || e.message)) handleChunkFailure(e.error || e.message);
+    const err = e.error || e.message;
+    logBootEvent("window_error", {
+      error: err,
+      source_file: e.filename || null,
+      line: e.lineno ?? null,
+      column: e.colno ?? null,
+      react_mounted: mounted,
+    });
+    if (isChunkLoadError(err)) handleChunkFailure(err, "window.error");
   });
   window.addEventListener("unhandledrejection", (e) => {
-    console.error("[unhandledrejection]", e.reason);
-    if (isChunkLoadError(e.reason)) handleChunkFailure(e.reason);
+    logBootEvent("unhandled_rejection", { error: e.reason, react_mounted: mounted });
+    if (isChunkLoadError(e.reason)) handleChunkFailure(e.reason, "unhandledrejection");
   });
+
 }
