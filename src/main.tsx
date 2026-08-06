@@ -132,10 +132,18 @@ let mounted = false;
 const bootWatchdog = window.setTimeout(() => {
   if (mounted) return;
   const root = document.getElementById("root");
+  logBootEvent("watchdog_timeout", {
+    timeout_ms: 10000,
+    root_children: root?.childElementCount ?? null,
+    chunk_failure_handled: chunkFailureHandled,
+  });
   if (root && root.childElementCount === 0) {
-    renderFallback("O app está demorando mais que o normal para abrir.");
+    renderFallback("O app está demorando mais que o normal para abrir.", "watchdog_timeout", {
+      timeout_ms: 10000,
+    });
   }
 }, 10000);
+
 
 (async () => {
   try {
