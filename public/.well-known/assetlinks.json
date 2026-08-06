@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.despia.upplin",
+      "sha256_cert_fingerprints": [
+        "D141B0AE855C3E05129A95F2E86E7F96E5E48E37D2F4CF646FB58FCA3AC7BD10"
+      ]
+    }
+  }
+]
