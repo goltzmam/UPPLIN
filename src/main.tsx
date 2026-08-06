@@ -41,10 +41,12 @@ function renderFallback(message: string) {
 /**
  * Retry único para falhas de carregamento de chunk (dynamic import).
  * Em redes instáveis / WebView do iOS, um chunk pode falhar e a tela
- * fica presa no loading. Recarregamos UMA vez por sessão; se falhar
- * de novo, mostramos a tela de erro com botão manual.
+ * fica presa no loading. Recarregamos NO MÁXIMO uma vez a cada 60s
+ * (nunca em loop); se falhar de novo, o ErrorBoundary/fallback assume.
  */
-const RELOAD_FLAG = "__upplin_chunk_reload__";
+const RELOAD_FLAG = "__upplin_chunk_reload_at__";
+const RELOAD_COOLDOWN_MS = 60_000;
+let chunkFailureHandled = false;
 
 function isChunkLoadError(err: unknown): boolean {
   const msg = String((err as Error)?.message ?? err ?? "");
@@ -57,20 +59,29 @@ function isChunkLoadError(err: unknown): boolean {
 }
 
 function handleChunkFailure(err: unknown) {
-  let alreadyTried = false;
+  if (chunkFailureHandled) return;
+  chunkFailureHandled = true;
+
+  let canReload = false;
   try {
-    alreadyTried = sessionStorage.getItem(RELOAD_FLAG) === "1";
-    if (!alreadyTried) sessionStorage.setItem(RELOAD_FLAG, "1");
+    const last = Number(sessionStorage.getItem(RELOAD_FLAG) || 0);
+    canReload = !last || Date.now() - last > RELOAD_COOLDOWN_MS;
+    if (canReload) sessionStorage.setItem(RELOAD_FLAG, String(Date.now()));
   } catch {
-    alreadyTried = true;
+    canReload = false;
   }
-  if (!alreadyTried) {
+
+  if (canReload) {
     window.location.reload();
     return;
   }
-  console.error("[boot] chunk load failed twice:", err);
-  renderFallback("Não conseguimos carregar todos os arquivos do app. Verifique sua conexão e tente novamente.");
+
+  console.error("[boot] chunk load failed:", err);
+  renderFallback(
+    "Não conseguimos carregar todos os arquivos do app. Verifique sua conexão e tente novamente."
+  );
 }
+
 
 // Watchdog: se o React não montar, nunca deixar tela em branco.
 let mounted = false;
