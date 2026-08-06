@@ -7,6 +7,8 @@ import { AuthProvider } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { usePresenceHeartbeat } from "@/hooks/use-presence-heartbeat";
 import { stopAllMediaPipelines } from "@/lib/media";
+import { getBootRequestId, logBootEvent } from "@/lib/boot-diagnostics";
+
 
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
