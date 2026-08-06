@@ -7,6 +7,8 @@ import { AuthProvider } from "@/lib/auth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { usePresenceHeartbeat } from "@/hooks/use-presence-heartbeat";
 import { stopAllMediaPipelines } from "@/lib/media";
+import { getBootRequestId, logBootEvent } from "@/lib/boot-diagnostics";
+
 
 const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
@@ -95,11 +97,37 @@ function AppBootFallback() {
   // (chunk travado, rede lenta, WKWebView do iPad), mostramos uma
   // mensagem clara + botão de recarregar em vez de pulsar para sempre.
   const [stalled, setStalled] = useState(false);
+  const location = useLocation();
+  const requestId = getBootRequestId();
+  const shownAtRef = useRef(Date.now());
 
   useEffect(() => {
-    const t = window.setTimeout(() => setStalled(true), 8000);
+    shownAtRef.current = Date.now();
+    logBootEvent("fallback_shown", {
+      surface: "suspense",
+      pending_route: location.pathname,
+    });
+    const t = window.setTimeout(() => {
+      setStalled(true);
+      logBootEvent("fallback_stalled", {
+        surface: "suspense",
+        pending_route: location.pathname,
+        waited_ms: Date.now() - shownAtRef.current,
+        timeout_ms: 8000,
+      });
+    }, 8000);
     return () => window.clearTimeout(t);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
+
+  const handleRetry = () => {
+    logBootEvent("fallback_manual_retry", {
+      surface: "suspense",
+      pending_route: location.pathname,
+      waited_ms: Date.now() - shownAtRef.current,
+    });
+    window.location.reload();
+  };
 
   return (
     <div className="fixed inset-0 z-[9999] flex min-h-[100dvh] items-center justify-center bg-background px-6 text-foreground">
@@ -127,17 +155,21 @@ function AppBootFallback() {
             </p>
             <button
               type="button"
-              onClick={() => window.location.reload()}
+              onClick={handleRetry}
               className="mt-4 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
             >
               Tentar novamente
             </button>
+            <p className="mt-5 font-mono text-[10px] text-muted-foreground/40">
+              ID: {requestId}
+            </p>
           </div>
         )}
       </div>
     </div>
   );
 }
+
 
 
 // Simplified routes wrapper - removed heavy AnimatePresence for mobile performance
