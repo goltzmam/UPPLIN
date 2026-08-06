@@ -8,7 +8,8 @@
       "namespace": "android_app",
       "package_name": "com.despia.upplin",
       "sha256_cert_fingerprints": [
-        "D141B0AE855C3E05129A95F2E86E7F96E5E48E37D2F4CF646FB58FCA3AC7BD10"
+        "D141B0AE855C3E05129A95F2E86E7F96E5E48E37D2F4CF646FB58FCA3AC7BD10",
+        "D1:41:B0:AE:85:5C:3E:05:12:9A:95:F2:E8:6E:7F:96:E5:E4:8E:37:D2:F4:CF:64:6F:B5:8F:CA:3A:C7:BD:10"
       ]
     }
   }
