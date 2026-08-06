@@ -77,6 +77,9 @@ function handleChunkFailure(err: unknown) {
   }
 
   console.error("[boot] chunk load failed:", err);
+  // Se o React já montou, o ErrorBoundary exibe a tela de erro — não
+  // mexemos no DOM controlado por ele (evita conflito de removeChild).
+  if (mounted) return;
   renderFallback(
     "Não conseguimos carregar todos os arquivos do app. Verifique sua conexão e tente novamente."
   );
