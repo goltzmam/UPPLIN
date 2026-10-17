@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useUserRoles } from "@/hooks/use-user-roles";
 import { PageLoading } from "@/components/ui/loading";
@@ -57,7 +56,15 @@ export default function PainelMigracao() {
   );
 
   if (isLoading) return <PageLoading />;
-  if (!isAdmin) return <Navigate to="/" replace />;
+  if (!isAdmin)
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center px-6 text-center text-foreground">
+        <div>
+          <h1 className="font-display text-2xl font-bold">Acesso restrito</h1>
+          <p className="mt-2 text-muted-foreground">O Painel de Migração só abre com a conta de admin (admin@upplin.com).</p>
+        </div>
+      </div>
+    );
 
   const bundle = functions.map((f) => `// ═══ ${f.name} ═══\n${f.code}`).join("\n\n");
 
