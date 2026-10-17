@@ -113,13 +113,26 @@ export default function PainelMigracao() {
             </li>
           ))}
         </ul>
+        <Button
+          className="mt-4"
+          onClick={() => {
+            const obj = Object.fromEntries(CUSTOM_SECRETS.map((s) => [s.name, ""]));
+            download(
+              "secrets.ts",
+              `export const SECRETS = ${JSON.stringify(obj, null, 2)} as const;\nexport type SecretKey = keyof typeof SECRETS;\n`
+            );
+          }}
+        >
+          Baixar secrets.ts (modelo)
+        </Button>
+        <p className="mt-2 text-xs text-muted-foreground">Preencha os valores no seu computador antes de anexar na CloneSupa.</p>
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5">
         <h2 className="text-lg font-semibold">Passo 3 — Conferência dos complementos</h2>
         <p className="mt-2 text-sm">Edge Functions: <b>{functions.length}</b> · Secrets personalizados: <b>{CUSTOM_SECRETS.length}</b></p>
         <p className="mt-3 text-sm text-muted-foreground">
-          Na extensão CloneSupa, anexe o .backup em Arquivo EXPORT do Lovable e o arquivo edge-functions.ts em Executar a clonagem. Desmarque a opção de secrets e cadastre-os manualmente no destino.
+          Na extensão CloneSupa, anexe o .backup em Arquivo EXPORT do Lovable e o arquivo edge-functions.ts em Executar a clonagem. Anexe também o secrets.ts depois de preencher os valores.
         </p>
         <h3 className="mt-4 font-semibold">Configurar no destino</h3>
         <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
