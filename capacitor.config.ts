@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.22b45c0d4c504b2a96fdf42cde095566',
-  appName: 'upplin',
+  appId: 'com.despia.upplin',
+  appName: 'UPPLIN',
   webDir: 'dist',
   // Cor de fundo nativa do WebView (preto, igual ao tema do app).
   // Evita "flash branco" entre a splash screen e o React montar —
@@ -31,9 +31,8 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'always',
     backgroundColor: '#000000',
-    // Criptografia padrão (HTTPS/TLS, JWT, Bcrypt) — isenta sob 5D992.c.
-    // Evita a pergunta de export compliance da Apple a cada build.
-    ITSAppUsesNonExemptEncryption: false,
+    // ITSAppUsesNonExemptEncryption (false) não é chave do Capacitor: vai no
+    // Info.plist quando o projeto iOS for gerado.
     // Permite scroll inercial e gestos nativos no WebKit.
     scrollEnabled: true,
     // Não bloquear o WebView mesmo se a tela demorar para responder

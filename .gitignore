@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Segredos de assinatura (nunca no repositório)
+keystore.properties
+key.properties
+*.jks
+*.keystore
