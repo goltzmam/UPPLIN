@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Camera, MapPin, X, Users, Loader2, Upload, Video, Image, ChevronDown, Wand2 } from "lucide-react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getPublicAppOrigin } from "@/lib/public-origin";
 import { useAuth } from "@/lib/auth";
 import { triggerHaptic } from "@/hooks/use-haptic";
 import { Button } from "@/components/ui/button";
@@ -125,7 +126,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
       : {
           title: "UP - Descubra eventos incríveis",
           text: "Vem descobrir os melhores rolês perto de você! 🎉",
-          url: window.location.origin,
+          url: getPublicAppOrigin(),
         };
 
     const copyToClipboard = async () => {

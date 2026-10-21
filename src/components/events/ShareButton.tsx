@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Share2, Check, MessageCircle, Facebook, Twitter, Link2, Mail } from "lucide-react";
+import { getPublicAppOrigin } from "@/lib/public-origin";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -67,7 +68,7 @@ export function ShareButton({
   const [open, setOpen] = useState(false);
 
   const getEventUrl = () => {
-    const baseUrl = window.location.origin;
+    const baseUrl = getPublicAppOrigin();
     return `${baseUrl}/evento/${eventId}`;
   };
 
