@@ -28,6 +28,8 @@
 	<string>Para ler o QR code dos ingressos no check-in e tirar fotos para eventos e posts.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Para mostrar eventos perto de você na aba Por perto.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Para gravar o áudio dos vídeos que você publica.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Para escolher fotos e vídeos para eventos, perfil e posts.</string>
 	<key>LSRequiresIPhoneOS</key>
