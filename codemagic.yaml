@@ -1,0 +1,51 @@
+# Build iOS do UPPLIN no Codemagic: gera o .ipa assinado e manda para o TestFlight.
+workflows:
+  ios-testflight:
+    name: iOS TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      # Nome da chave da API do App Store Connect cadastrada no Codemagic.
+      app_store_connect: UPPLIN ASC
+    environment:
+      node: 22
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.despia.upplin
+      vars:
+        # ID numérico do app no App Store Connect (Informações do app > ID da Apple).
+        APP_STORE_APPLE_ID: 0000000000
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Gerar o build web
+        script: npm run build
+      - name: Sincronizar o projeto iOS
+        script: npx cap sync ios
+      - name: Número do build (maior que o último do TestFlight)
+        script: |
+          # O App Store Connect já conhece o build 7272023; nunca ficar abaixo de 7272024.
+          MIN_BUILD=7272024
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          NEXT=$((LATEST + 1))
+          if [ "$NEXT" -lt "$MIN_BUILD" ]; then NEXT=$MIN_BUILD; fi
+          echo "Build number: $NEXT"
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $NEXT;/" "$XCODE_PROJECT/project.pbxproj"
+      - name: Aplicar perfis de assinatura
+        script: xcode-project use-profiles
+      - name: Gerar o .ipa
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Só testadores internos; sem grupos beta nem revisão externa.
+        submit_to_testflight: true
