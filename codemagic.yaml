@@ -15,7 +15,7 @@ workflows:
         bundle_identifier: com.despia.upplin
       vars:
         # ID numérico do app no App Store Connect (Informações do app > ID da Apple).
-        APP_STORE_APPLE_ID: 0000000000
+        APP_STORE_APPLE_ID: 6772288825
         XCODE_PROJECT: ios/App/App.xcodeproj
         XCODE_SCHEME: App
     scripts:
