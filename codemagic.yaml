@@ -1,4 +1,4 @@
-# Build iOS do UPPLIN no Codemagic: gera o .ipa assinado e manda para o TestFlight.
+# Builds do UPPLIN no Codemagic: o iOS vai para o TestFlight e o Android para o teste interno da Play, como rascunho.
 workflows:
   ios-testflight:
     name: iOS TestFlight
@@ -50,3 +50,56 @@ workflows:
         # Só sobe o build: os testadores internos do TestFlight recebem sem revisão da Apple.
         # true mandaria o build para a revisão beta do TestFlight.
         submit_to_testflight: false
+
+  android-play:
+    name: Android Play (teste interno)
+    # Mac, não Linux: a conta pessoal só tem minutos grátis em macOS M2.
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 22
+      java: 21
+      android_signing:
+        # Reference name do keystore de upload em Code signing identities.
+        - upplin_upload
+      groups:
+        # GCLOUD_SERVICE_ACCOUNT_CREDENTIALS: JSON da conta de serviço com permissão de release na Play.
+        - google_play
+      vars:
+        PACKAGE_NAME: com.despia.upplin
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Gerar o build web
+        script: npm run build
+      - name: Sincronizar o projeto Android
+        script: npx cap sync android
+      - name: Arquivo de assinatura
+        script: |
+          cat > "$CM_BUILD_DIR/android/keystore.properties" <<EOF
+          storeFile=$CM_KEYSTORE_PATH
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          keyPassword=$CM_KEY_PASSWORD
+          EOF
+      - name: Número do build (maior que o último da Play)
+        script: |
+          # A Play já recebeu o 6071837; nunca ficar abaixo de 6071838.
+          MIN_BUILD=6071838
+          LATEST=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" || echo 0)
+          NEXT=$((LATEST + 1))
+          if [ "$NEXT" -lt "$MIN_BUILD" ]; then NEXT=$MIN_BUILD; fi
+          echo "versionCode: $NEXT"
+          sed -i '' "s/versionCode [0-9]*/versionCode $NEXT/" android/app/build.gradle
+      - name: Gerar o .aab
+        script: |
+          chmod +x android/gradlew
+          cd android && ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        # Rascunho: a versão só chega aos testadores quando alguém lançar no Play Console.
+        submit_as_draft: true
