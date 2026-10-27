@@ -199,7 +199,7 @@ serve(async (req) => {
   </table>
 
   <div class="footer">
-    <p>UPPLIN — Plataforma de Eventos · upplin.lovable.app</p>
+    <p>UPPLIN — Plataforma de Eventos · upplin.com</p>
     <p style="margin-top:4px">Documento gerado automaticamente. Não constitui nota fiscal.</p>
   </div>
 </body>

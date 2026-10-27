@@ -1,4 +1,4 @@
-project_id = "pyhlsgfsunjcjbaqjcwn"
+project_id = "ermhzlthjlolqsbtjawf"
 
 [functions]
   [functions.auth-email-hook]
@@ -28,4 +28,15 @@ project_id = "pyhlsgfsunjcjbaqjcwn"
   [functions.process-email-queue]
     verify_jwt = true
   [functions.send-email]
+    verify_jwt = false
+
+  [functions.request-password-reset]
+    verify_jwt = false
+  [functions.expire-pending-orders]
+    verify_jwt = true
+  [functions.mp-refund]
+    verify_jwt = false
+  [functions.notify-refund]
+    verify_jwt = false
+  [functions.generate-receipt]
     verify_jwt = false

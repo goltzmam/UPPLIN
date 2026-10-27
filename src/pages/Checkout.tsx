@@ -562,11 +562,24 @@ export default function Checkout() {
 
                   {finalTotal === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-muted-foreground mb-4">Seu pedido é gratuito com o cupom aplicado!</p>
+                      <p className="text-muted-foreground mb-4">Seu pedido é gratuito.</p>
                       <Button
-                        onClick={() => {
-                          toast({ title: "Ingressos emitidos!", description: "Seus ingressos gratuitos foram gerados." });
-                          navigate("/pagamento-sucesso?status=approved");
+                        disabled={processing}
+                        onClick={async () => {
+                          if (!orderId) return;
+                          setProcessing(true);
+                          setPaymentError(null);
+                          try {
+                            const { error } = await supabase.rpc("confirm_free_order", { p_order_id: orderId });
+                            if (error) throw error;
+                            await queryClient.invalidateQueries({ queryKey: ["my-tickets"] });
+                            toast({ title: "Ingressos emitidos!", description: "Seus ingressos gratuitos foram gerados." });
+                            navigate("/pagamento-sucesso?status=approved");
+                          } catch {
+                            setPaymentError("Não foi possível confirmar o pedido gratuito. Tente novamente.");
+                          } finally {
+                            setProcessing(false);
+                          }
                         }}
                         className="bg-primary hover:bg-primary/90 text-primary-foreground"
                       >

@@ -1,16 +1,13 @@
-const PREVIEW_HOST_PATTERNS = [".lovableproject.com", ".lovable.app"];
+import { Capacitor } from "@capacitor/core";
 
-const PUBLIC_APP_ORIGIN = "https://www.upplin.com";
+const PUBLIC_APP_ORIGIN = import.meta.env.VITE_APP_URL || "https://www.upplin.com";
 
 export const getPublicAppOrigin = () => {
-  if (typeof window === "undefined") {
+  if (typeof window === "undefined" || Capacitor.isNativePlatform()) {
     return PUBLIC_APP_ORIGIN;
   }
 
-  const { origin, hostname } = window.location;
-  const isPreviewHost = PREVIEW_HOST_PATTERNS.some((pattern) => hostname.includes(pattern));
-
-  return isPreviewHost ? PUBLIC_APP_ORIGIN : origin;
+  return window.location.origin;
 };
 
 export const buildPublicAppUrl = (path = "/") => {

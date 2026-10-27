@@ -119,9 +119,9 @@ serve(async (req) => {
       },
       marketplace_fee: commissionCents / 100, // MP expects in reais
       back_urls: {
-        success: `${req.headers.get("origin") || "https://upplin.lovable.app"}/pagamento-sucesso?status=approved`,
-        failure: `${req.headers.get("origin") || "https://upplin.lovable.app"}/checkout/${order_id}?status=rejected`,
-        pending: `${req.headers.get("origin") || "https://upplin.lovable.app"}/checkout/${order_id}?status=pending`,
+        success: `${Deno.env.get("SITE_URL") || "https://www.upplin.com"}/pagamento-sucesso?status=approved`,
+        failure: `${Deno.env.get("SITE_URL") || "https://www.upplin.com"}/checkout/${order_id}?status=rejected`,
+        pending: `${Deno.env.get("SITE_URL") || "https://www.upplin.com"}/checkout/${order_id}?status=pending`,
       },
       auto_return: "approved",
       external_reference: order_id,

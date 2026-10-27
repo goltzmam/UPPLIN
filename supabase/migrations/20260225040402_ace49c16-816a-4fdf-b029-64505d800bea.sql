@@ -1,6 +1,6 @@
 
 -- Table for check-in collaborators
-CREATE TABLE public.checkin_collaborators (
+CREATE TABLE IF NOT EXISTS public.checkin_collaborators (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   organizer_id uuid NOT NULL REFERENCES public.organizer_accounts(id) ON DELETE CASCADE,
   event_id uuid REFERENCES public.events(id) ON DELETE CASCADE,
@@ -12,10 +12,10 @@ CREATE TABLE public.checkin_collaborators (
 );
 
 -- Unique constraint: one collaborator per event (or global if event_id is null)
-CREATE UNIQUE INDEX idx_checkin_collab_unique ON public.checkin_collaborators (organizer_id, user_id, COALESCE(event_id, '00000000-0000-0000-0000-000000000000'));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_checkin_collab_unique ON public.checkin_collaborators (organizer_id, user_id, COALESCE(event_id, '00000000-0000-0000-0000-000000000000'));
 
 -- Track who performed each check-in
-ALTER TABLE public.tickets ADD COLUMN checked_in_by uuid;
+ALTER TABLE public.tickets ADD COLUMN IF NOT EXISTS checked_in_by uuid;
 
 -- Enable RLS
 ALTER TABLE public.checkin_collaborators ENABLE ROW LEVEL SECURITY;
@@ -69,4 +69,8 @@ USING (
 );
 
 -- Enable realtime for collaborators table
-ALTER PUBLICATION supabase_realtime ADD TABLE public.checkin_collaborators;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND schemaname = 'public' AND tablename = 'checkin_collaborators') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.checkin_collaborators;
+  END IF;
+END $$;

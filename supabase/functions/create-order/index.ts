@@ -1,3 +1,4 @@
+import { validateOrderItems, isSaleOpen } from "../_shared/order-validation.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -60,14 +61,11 @@ serve(async (req) => {
       );
     }
 
-    // Validate per-item quantity limits (max 10 per ticket type)
-    for (const item of items) {
-      if (!item.ticket_type_id || typeof item.qty !== "number" || item.qty < 1 || item.qty > 10) {
-        return new Response(
-          JSON.stringify({ error: "Invalid item: qty must be between 1 and 10" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+    const itemError = validateOrderItems(items);
+    if (itemError) {
+      return new Response(JSON.stringify({ error: itemError }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     // Use service role for admin operations
@@ -126,6 +124,12 @@ serve(async (req) => {
           JSON.stringify({ error: `Ticket type ${ticketType.name} is not available` }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
+      }
+
+      if (!isSaleOpen(ticketType.sale_start_at, ticketType.sale_end_at)) {
+        return new Response(JSON.stringify({ error: "Ticket sales window is closed" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
       const available = ticketType.quantity_total - (ticketType.quantity_sold || 0);

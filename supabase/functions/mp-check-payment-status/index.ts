@@ -126,7 +126,10 @@ serve(async (req) => {
     }
 
     if (payment.status === "rejected" || payment.status === "cancelled") {
-      await admin.from("orders").update({ status: "failed" }).eq("id", order.id).eq("status", "pending");
+      const { error: releaseError } = await admin.rpc("release_pending_order", {
+        p_order_id: order.id, p_target_status: "failed", p_payment_id: String(payment.id),
+      });
+      if (releaseError) throw releaseError;
       return new Response(JSON.stringify({ status: "failed" }), {
         status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

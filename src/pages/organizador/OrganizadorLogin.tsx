@@ -19,7 +19,7 @@ import { useAuth, translateAuthError } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import { isValidEmail } from "@/lib/validation";
 import { checkSessionConflict } from "@/lib/session-guard";
-import { lovable } from "@/integrations/lovable/index";
+import { signInWithOAuth } from "@/lib/oauth";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPublicAppUrl } from "@/lib/public-origin";
 
@@ -46,7 +46,7 @@ export default function OrganizadorLogin() {
   const [googleLoading, setGoogleLoading] = useState(false);
   const [conflictEmail, setConflictEmail] = useState<string | null>(null);
   const [signingOut, setSigningOut] = useState(false);
-  const { user, signIn, signOut } = useAuth();
+  const { user, signIn, signOut, googleEnabled } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -102,7 +102,7 @@ export default function OrganizadorLogin() {
   const handleGoogleLogin = async () => {
     setGoogleLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
+      const { error } = await signInWithOAuth("google", {
         redirect_uri: buildPublicAppUrl("/organizador/onboarding"),
       });
       if (error) {
@@ -315,7 +315,7 @@ export default function OrganizadorLogin() {
             variant="outline"
             className="w-full h-11 sm:h-12 text-xs sm:text-sm font-medium gap-2"
             onClick={handleGoogleLogin}
-            disabled={googleLoading}
+            disabled={googleLoading || !googleEnabled}
           >
             {googleLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />

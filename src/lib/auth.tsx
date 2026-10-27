@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { signInWithOAuth } from "@/lib/oauth";
 import { buildPublicAppUrl, getPublicAppOrigin } from "@/lib/public-origin";
 
 interface Profile {
@@ -23,6 +23,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   authReady: boolean;
+  googleEnabled: boolean;
   onboardingStatus: OnboardingStatus | null;
   hasCompletedParticipantOnboarding: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null; user: User | null; needsEmailConfirmation: boolean }>;
@@ -95,6 +96,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
+  const [googleEnabled, setGoogleEnabled] = useState(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/settings`, {
+      headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+      signal: controller.signal,
+    }).then(async response => {
+      if (!response.ok) return;
+      const settings = await response.json() as { external?: { google?: boolean } };
+      if (!controller.signal.aborted) setGoogleEnabled(settings.external?.google === true);
+    }).catch(() => undefined);
+    return () => controller.abort();
+  }, []);
+
 
   const fetchProfile = useCallback(async (currentUser: User) => {
     // Nunca deixa o boot preso: se o backend não responder em 6s, seguimos
@@ -292,7 +307,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async (redirectUri?: string) => {
-    const result = await lovable.auth.signInWithOAuth("google", {
+    const result = await signInWithOAuth("google", {
       redirect_uri: redirectUri ?? getPublicAppOrigin(),
     });
 
@@ -373,6 +388,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         loading,
         authReady,
+        googleEnabled,
         onboardingStatus,
         hasCompletedParticipantOnboarding,
         signUp,

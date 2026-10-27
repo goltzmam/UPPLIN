@@ -68,7 +68,6 @@ const PrivacidadeOrganizador = lazy(() => import("./pages/PrivacidadeOrganizador
 const Termos = lazy(() => import("./pages/Termos"));
 const TermosParticipante = lazy(() => import("./pages/TermosParticipante"));
 const TermosOrganizador = lazy(() => import("./pages/TermosOrganizador"));
-const PainelMigracao = lazy(() => import("./pages/PainelMigracao"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -239,7 +238,6 @@ function AnimatedRoutes() {
           <Route path="/pagamento-pendente/:orderId" element={<ProtectedRoute><PagamentoPendente /></ProtectedRoute>} />
           <Route path="/eventos-salvos" element={<ProtectedRoute><EventosSalvos /></ProtectedRoute>} />
           <Route path="/scan/:eventId" element={<ProtectedRoute><CollaboratorScanner /></ProtectedRoute>} />
-          <Route path="/painel-migracao" element={<ProtectedRoute><PainelMigracao /></ProtectedRoute>} />
 
           {/* ============================================ */}
           {/* ORGANIZER AUTH ROUTES                        */}
@@ -302,7 +300,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <BrowserRouter>
           <AnimatedRoutes />
           <Toaster />
         </BrowserRouter>

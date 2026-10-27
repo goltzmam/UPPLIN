@@ -3,6 +3,7 @@
 -- Refund state machine
 -- =========================================================================
 
+DO $enum$ BEGIN
 CREATE TYPE public.refund_status AS ENUM (
   'requested',       -- buyer created the request
   'approved',        -- organizer (or admin) approved; MP call will be made
@@ -12,6 +13,7 @@ CREATE TYPE public.refund_status AS ENUM (
   'refunded',        -- final: webhook confirmed, tickets cancelled
   'failed'           -- MP call failed permanently
 );
+EXCEPTION WHEN duplicate_object THEN NULL; END $enum$;
 
 -- =========================================================================
 -- refund_requests table

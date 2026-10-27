@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.22b45c0d4c504b2a96fdf42cde095566',
+  appId: 'com.upplin.app',
   appName: 'upplin',
   webDir: 'dist',
   // Cor de fundo nativa do WebView (preto, igual ao tema do app).
@@ -12,7 +12,7 @@ const config: CapacitorConfig = {
   // IMPORTANTE: NÃO adicionar bloco `server: { url: ... }` aqui.
   // Em builds de produção (App Store / Play Store) o app DEVE carregar os
   // arquivos empacotados em `dist/` (webDir). Apontar `server.url` para a
-  // URL do sandbox da Lovable faz o app abrir uma tela em branco quando
+  // URL de um servidor temporário faz o app abrir uma tela em branco quando
   // a URL não está acessível no dispositivo do revisor (foi a causa da
   // rejeição 2.1(a) da Apple no iPad Air M3 / iPadOS 26.5).
   //

@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,7 +28,14 @@ serve(async (req) => {
   try {
     // Verify webhook signature (HMAC-SHA256)
     const webhookSecret = Deno.env.get("WEBHOOK_SECRET");
-    if (webhookSecret) {
+    if (!webhookSecret) {
+      console.error("WEBHOOK_SECRET is required");
+      return new Response(JSON.stringify({ error: "Webhook not configured" }), {
+        status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    let payload: WebhookPayload;
+    {
       const signature = req.headers.get("X-Webhook-Signature");
       const body = await req.text();
       
@@ -62,11 +69,7 @@ serve(async (req) => {
       }
 
       // Parse body from already-read text
-      var payload: WebhookPayload = JSON.parse(body);
-    } else {
-      // Fallback: no secret configured, parse normally but log warning
-      console.warn("WEBHOOK_SECRET not configured — webhook signature verification disabled");
-      var payload: WebhookPayload = await req.json();
+      payload = JSON.parse(body);
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -196,29 +199,10 @@ serve(async (req) => {
     }
 
     if (status === "failed") {
-      // Update order status
-      await adminClient
-        .from("orders")
-        .update({ status: "failed" })
-        .eq("id", order_id);
-
-      // Release reserved tickets
-      for (const item of order.order_items || []) {
-        const { data: ticketType } = await adminClient
-          .from("ticket_types")
-          .select("quantity_sold")
-          .eq("id", item.ticket_type_id)
-          .single();
-
-        if (ticketType) {
-          await adminClient
-            .from("ticket_types")
-            .update({ 
-              quantity_sold: Math.max(0, (ticketType.quantity_sold || 0) - item.qty) 
-            })
-            .eq("id", item.ticket_type_id);
-        }
-      }
+      const { error: releaseError } = await adminClient.rpc("release_pending_order", {
+        p_order_id: order_id, p_target_status: "failed",
+      });
+      if (releaseError) throw releaseError;
 
       await updateWebhookStatus(adminClient, webhookEvent?.id, "processed");
 
@@ -294,7 +278,7 @@ serve(async (req) => {
 });
 
 async function updateWebhookStatus(
-  client: any,
+  client: SupabaseClient,
   webhookId: string | undefined,
   status: "processed" | "failed",
   error?: string

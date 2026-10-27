@@ -1,3 +1,4 @@
+import { initializeNativeAuth } from "./lib/oauth";
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
@@ -10,6 +11,7 @@ import {
 import "./index.css";
 
 logBootEvent("boot_start", { request_id_source: "session" });
+void initializeNativeAuth().catch(() => console.error("Native auth initialization failed"));
 
 
 /**

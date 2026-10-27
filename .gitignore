@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local credentials and deployment links
+.env
+.env.*
+!.env.example
+.vercel/
+
+__pycache__/
+*.py[cod]
