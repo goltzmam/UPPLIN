@@ -673,7 +673,7 @@
 }
 
 /* Keep map credits clear of the legend and mobile bottom navigation. */
-.nearby-map .leaflet-control-attribution {
+.leaflet-container.nearby-map .leaflet-control-attribution {
   margin-top: 9rem;
 }
 
