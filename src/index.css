@@ -672,11 +672,6 @@
   100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }
 
-/* Keep map credits clear of the legend and mobile bottom navigation. */
-.leaflet-container.nearby-map .leaflet-control-attribution {
-  margin-top: 9rem;
-}
-
 .leaflet-popup-content-wrapper {
   border-radius: 12px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;

@@ -4,7 +4,7 @@ Atualizado em 27/10/2026. Stack: GitHub, Vercel, Supabase, Mercado Pago, Resend 
 
 ## Banco e backend aplicados
 
-Projeto: `ermhzlthjlolqsbtjawf`. O histórico possui 79 migrations aplicadas, com 40 tabelas públicas e RLS habilitado em todas. As 25 colunas exigidas pelo frontend foram verificadas no catálogo real e não estão mais ausentes.
+Projeto: `ermhzlthjlolqsbtjawf`. O histórico possui 80 migrations aplicadas, com 40 tabelas públicas e RLS habilitado em todas. As 25 colunas exigidas pelo frontend foram verificadas no catálogo real e não estão mais ausentes.
 
 A auditoria inicial contou 15 tabelas históricas ausentes. Dez eram necessárias e foram restauradas pela sequência de migrations. Cinco pertenciam a módulos que a última migration do próprio repositório remove; elas não fazem parte do modelo atual e não devem ser recriadas.
 
@@ -38,7 +38,7 @@ O domínio observado é `https://www.upplin.com`, com `https://upplin.com` tamb�
 
 O build aceita os aliases públicos fornecidos pela integração Supabase da Vercel (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_ANON_KEY`). Chaves de serviço nunca são usadas como fallback público. URL antiga, JWT de outro projeto e chave privilegiada no campo público fazem o build falhar, preservando o último deploy bem-sucedido.
 
-Os acessos Supabase/Vercel agora funcionam. Os logs confirmaram que o deploy anterior falhou pela URL de Supabase incorreta/ausente; as três variáveis VITE foram configuradas explicitamente. Atenção: a Vercel mantém `link.productionBranch=main`, mas a branch padrão do GitHub é `master`. Ajuste Production Branch para `master` nas configurações Git da Vercel para os próximos pushes publicarem em produção. A publicação atual foi solicitada explicitamente com target production.
+Os acessos Supabase/Vercel agora funcionam. Os logs confirmaram que o deploy anterior falhou pela URL de Supabase incorreta/ausente; as três variáveis VITE foram configuradas explicitamente. A branch de produção da Vercel foi corrigida para `master` em Environments → Production → Branch Tracking, acompanhando a branch padrão do GitHub. A publicação atual foi solicitada explicitamente com target production.
 
 ## Auth e email
 
@@ -98,3 +98,11 @@ Os scripts usam `SUPABASE_ACCESS_TOKEN` por HTTPS sem expor valores. São compat
 Nunca use `db reset` em produção. Não há necessidade de executar novamente migrations já registradas. O lint do código legado ainda tem pendências; build, tipos, testes e auditoria de dependências são resultados separados.
 
 Rotinas configuradas: liberação de pedidos vencidos a cada minuto e revisão de assinaturas às 12h UTC (09h de São Paulo). A fila de email está ativa após configurar o Resend; sua chamada autenticada retornou HTTP 200 e a anônima foi rejeitada com 401. Credenciais das tarefas são armazenadas no Vault criptografado. O script preserva a ativação de tarefas já existentes.
+
+## Por perto — interface revisada
+
+Mapa escuro, marcadores com a capa do evento e navegação direta à página. A lista acompanha a região visível, com filtros por data e distância a partir da posição autorizada. Desktop/tablet usam painel lateral; celular usa painel inferior acima da navegação. Os créditos obrigatórios ficam discretos no rodapé, sem o prefixo Leaflet.
+
+As tabelas events e ticket_types foram adicionadas à publicação Realtime, preservando RLS. O cliente invalida consultas nas alterações e verifica atualizações a cada 30 segundos como fallback. Busca de cidade/endereço acontece ao enviar o formulário, sem consultas por digitação. Falhas, ausência de resultados e permissões têm estados próprios. Eventos exibidos em produção são somente dados reais publicados com coordenadas.
+
+Verificação de interface com fixtures isoladas no navegador (sem gravar eventos de demonstração): desktop, tablet, celular e tela estreita; filtros, sincronização mapa/lista, busca e navegação por card/marcador passaram.
