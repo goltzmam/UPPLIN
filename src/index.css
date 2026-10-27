@@ -672,6 +672,17 @@
   100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }
 
+/* Keep map attribution above the mobile navigation. */
+.nearby-map .leaflet-bottom.leaflet-left {
+  bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 1024px) {
+  .nearby-map .leaflet-bottom.leaflet-left {
+    bottom: 0;
+  }
+}
+
 .leaflet-popup-content-wrapper {
   border-radius: 12px !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2) !important;

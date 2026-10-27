@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
+import { AttributionControl, MapContainer, Marker, Popup, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { format, isToday, isThisWeek } from "date-fns";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MapSearch } from "@/components/map/MapSearch";
 import { MarkerCluster } from "@/components/map/MarkerCluster";
+import { BaseMapTiles } from "@/components/map/BaseMapTiles";
 
 // ── Custom marker icons ──────────────────────────────────────────────
 function createMarkerIcon(color: string) {
@@ -144,7 +145,7 @@ export default function PorPerto() {
         setUserPos([pos.coords.latitude, pos.coords.longitude]);
         setGeoState("granted");
       },
-      () => setGeoState("denied"),
+      (error) => setGeoState(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable"),
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }, []);
@@ -270,14 +271,12 @@ export default function PorPerto() {
           <MapContainer
             center={defaultCenter}
             zoom={userPos ? 11 : 10}
-            className="h-full w-full"
+            className="nearby-map h-full w-full"
             zoomControl={false}
             attributionControl={false}
           >
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
-            />
+            <BaseMapTiles />
+            <AttributionControl position="bottomleft" />
 
             <FlyToUser position={userPos} />
             <MapSearch />
@@ -433,6 +432,7 @@ export default function PorPerto() {
             variant="secondary"
             className="rounded-full shadow-lg pointer-events-auto"
             onClick={requestLocation}
+            aria-label="Usar minha localização"
             disabled={geoState === "loading"}
           >
             {geoState === "loading" ? (
@@ -452,13 +452,17 @@ export default function PorPerto() {
               </div>
             )}
 
-            {geoState === "denied" && (
+            {(geoState === "denied" || geoState === "unavailable") && (
               <div className="bg-destructive/10 border border-destructive/30 backdrop-blur-md rounded-xl px-3 py-2 flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-destructive">Localização negada</p>
+                  <p className="text-xs font-medium text-destructive">
+                    {geoState === "denied" ? "Localização negada" : "Localização indisponível"}
+                  </p>
                   <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
-                    Permita o acesso à localização nas configurações do navegador.
+                    {geoState === "denied"
+                      ? "Permita o acesso à localização nas configurações do navegador ou aplicativo."
+                      : "Não foi possível obter sua posição. Tente novamente ou explore o mapa manualmente."}
                   </p>
                 </div>
               </div>
