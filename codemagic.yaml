@@ -86,6 +86,8 @@ workflows:
         script: |
           # A Play já recebeu o 6071837; nunca ficar abaixo de 6071838.
           MIN_BUILD=6071838
+          # A CLI chama a credencial de GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS; o nome antigo está obsoleto.
+          export GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS="$GCLOUD_SERVICE_ACCOUNT_CREDENTIALS"
           LATEST=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" || echo 0)
           NEXT=$((LATEST + 1))
           if [ "$NEXT" -lt "$MIN_BUILD" ]; then NEXT=$MIN_BUILD; fi
