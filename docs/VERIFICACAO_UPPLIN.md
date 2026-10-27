@@ -34,11 +34,10 @@ O build usa npm e Vite, sem dependências do provedor anterior. A integração S
 
 ## Limites atuais
 
-- O commit `6a5ae46` foi enviado ao `master`. O deploy automático da Vercel falhou (`dpl_CzoNSyK9zoNH4DzJZwPxZ5YusPok`); a versão pública inspecionada ainda apontava ao banco antigo.
-- A API de logs da Vercel retornou 403 sem autenticação. Falta disponibilizar `VERCEL_TOKEN` nas configurações seguras para diagnosticar a falha, corrigir o deploy e verificar a troca no domínio. Não há evidência suficiente para atribuir uma causa ao erro.
-- Os secrets Mercado Pago e `RESEND_API_KEY` não estavam cadastrados. Não houve cobrança, assinatura financeira ou estorno real. Entrega de email não foi validada.
-- O hook Resend foi preparado e permanece desativado até a chave e o domínio remetente estarem prontos. Google/Apple dependem de configuração de provedores.
-- O primeiro administrador aguarda o email indicado pelo responsável. Não há conta/senha fixa nem usuário técnico mantido.
+- Vercel: novo deploy READY e os dois domínios verificados com o novo Supabase. Seis rotas passaram no navegador. A branch de produção ainda está como `main`; deve ser ajustada para `master` nas configurações Git para os próximos pushes.
+- Mercado Pago: secrets salvos e conta validada pelo backend (HTTP 200). Webhook válido aceito e assinatura inválida rejeitada. Não houve cobrança, assinatura financeira, repasse ou estorno real.
+- Resend: chave aceita, SPF/DKIM verificados, hook ativo e convite de admin aceito pelo serviço. Entrega final na caixa postal não confirmada. Recursos adicionais de recebimento/rastreamento estão pendentes.
+- Primeiro administrador `admin@upplin.com` provisionado explicitamente; sem senha fixa. Google/Apple ainda dependem de configuração de provedores.
 - Expiração de PIX, renovação de tokens de vendedores, liquidação, assinaturas e fluxo financeiro completo exigem validação com o provedor configurado.
 - Logs de execução e respostas foram inspecionados. A consulta agregada de logs pela API do serviço retornou erros de backend/esquema; não foi declarada uma varredura completa dos logs internos.
 - O lint legado ainda tem pendências; tipos, build, testes e auditoria de dependências passaram separadamente.
@@ -48,4 +47,4 @@ Instruções e requisitos detalhados: [PRODUCAO.md](PRODUCAO.md).
 
 Os artefatos de auditoria e resultados detalhados ficam em `/workspace/upplin-audit`, fora do checkout. Nenhum valor de secret foi incluído neste relatório.
 
-As rotinas de expiração de pedidos (a cada minuto) e revisão de assinaturas (diariamente às 09h de São Paulo) foram configuradas no cron. A fila de email está agendada, mas inativa enquanto falta o Resend. A autenticação das tarefas fica no Vault criptografado, sem chave no código ou comando do cron.
+As rotinas de expiração de pedidos (a cada minuto) e revisão de assinaturas (diariamente às 09h de São Paulo) foram configuradas no cron. A fila de email está ativa; chamada autenticada retornou 200, chamada anônima 401. A autenticação das tarefas fica no Vault criptografado, sem chave no código ou comando do cron.
