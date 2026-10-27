@@ -672,15 +672,9 @@
   100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }
 
-/* Keep map attribution above the mobile navigation. */
-.nearby-map .leaflet-bottom.leaflet-left {
-  bottom: calc(4rem + env(safe-area-inset-bottom, 0px));
-}
-
-@media (min-width: 1024px) {
-  .nearby-map .leaflet-bottom.leaflet-left {
-    bottom: 0;
-  }
+/* Keep map credits clear of the legend and mobile bottom navigation. */
+.nearby-map .leaflet-control-attribution {
+  margin-top: 9rem;
 }
 
 .leaflet-popup-content-wrapper {

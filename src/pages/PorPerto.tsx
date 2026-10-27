@@ -276,7 +276,7 @@ export default function PorPerto() {
             attributionControl={false}
           >
             <BaseMapTiles />
-            <AttributionControl position="bottomleft" />
+            <AttributionControl position="topleft" />
 
             <FlyToUser position={userPos} />
             <MapSearch />
