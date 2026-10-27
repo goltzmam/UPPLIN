@@ -89,8 +89,12 @@ python3 scripts/migrate-supabase.py          # lista somente o que ainda não fo
 python3 scripts/migrate-supabase.py --apply  # executar após revisão e backup
 python3 scripts/deploy-functions.py         # lista as funções
 python3 scripts/deploy-functions.py --apply
+python3 scripts/configure-supabase-automation.py          # lista rotinas
+python3 scripts/configure-supabase-automation.py --apply  # configura usando Vault
 ```
 
 Os scripts usam `SUPABASE_ACCESS_TOKEN` por HTTPS sem expor valores. São compatíveis com credenciais gerenciadas que não passam pela validação local de formato de versões antigas da CLI. A auditoria exporta apenas metadados selecionados, nomes de secrets e configurações públicas de Auth.
 
 Nunca use `db reset` em produção. Não há necessidade de executar novamente migrations já registradas. O lint do código legado ainda tem pendências; build, tipos, testes e auditoria de dependências são resultados separados.
+
+Rotinas configuradas: liberação de pedidos vencidos a cada minuto e revisão de assinaturas às 12h UTC (09h de São Paulo). A fila de email fica inativa até configurar o Resend; depois habilite `upplin-process-email-queue` em `cron.job`. Credenciais das tarefas são armazenadas no Vault criptografado. O script preserva a ativação de tarefas já existentes.

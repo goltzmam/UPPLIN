@@ -34,8 +34,8 @@ O build usa npm e Vite, sem dependências do provedor anterior. A integração S
 
 ## Limites atuais
 
-- A versão pública da Vercel inicialmente inspecionada apontava ao banco antigo. É necessário confirmar o novo deploy e suas variáveis no domínio após publicar o commit.
-- `VERCEL_TOKEN` não estava disponível na última checagem; integração GitHub pode publicar quando as variáveis do projeto estiverem configuradas.
+- O commit `6a5ae46` foi enviado ao `master`. O deploy automático da Vercel falhou (`dpl_CzoNSyK9zoNH4DzJZwPxZ5YusPok`); a versão pública inspecionada ainda apontava ao banco antigo.
+- A API de logs da Vercel retornou 403 sem autenticação. Falta disponibilizar `VERCEL_TOKEN` nas configurações seguras para diagnosticar a falha, corrigir o deploy e verificar a troca no domínio. Não há evidência suficiente para atribuir uma causa ao erro.
 - Os secrets Mercado Pago e `RESEND_API_KEY` não estavam cadastrados. Não houve cobrança, assinatura financeira ou estorno real. Entrega de email não foi validada.
 - O hook Resend foi preparado e permanece desativado até a chave e o domínio remetente estarem prontos. Google/Apple dependem de configuração de provedores.
 - O primeiro administrador aguarda o email indicado pelo responsável. Não há conta/senha fixa nem usuário técnico mantido.
@@ -47,3 +47,5 @@ O build usa npm e Vite, sem dependências do provedor anterior. A integração S
 Instruções e requisitos detalhados: [PRODUCAO.md](PRODUCAO.md).
 
 Os artefatos de auditoria e resultados detalhados ficam em `/workspace/upplin-audit`, fora do checkout. Nenhum valor de secret foi incluído neste relatório.
+
+As rotinas de expiração de pedidos (a cada minuto) e revisão de assinaturas (diariamente às 09h de São Paulo) foram configuradas no cron. A fila de email está agendada, mas inativa enquanto falta o Resend. A autenticação das tarefas fica no Vault criptografado, sem chave no código ou comando do cron.

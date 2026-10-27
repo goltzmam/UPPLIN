@@ -33,7 +33,7 @@ project_id = "ermhzlthjlolqsbtjawf"
   [functions.request-password-reset]
     verify_jwt = false
   [functions.expire-pending-orders]
-    verify_jwt = true
+    verify_jwt = false
   [functions.mp-refund]
     verify_jwt = false
   [functions.notify-refund]

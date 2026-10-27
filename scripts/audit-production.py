@@ -15,7 +15,8 @@ def get_json(url, token, payload=None):
         data=json.dumps(payload).encode() if payload is not None else None)
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
-            return json.load(response)
+            body = response.read()
+            return json.loads(body) if body else None
     except urllib.error.HTTPError as error:
         raise RuntimeError(f"Management request rejected: HTTP {error.code}") from None
 

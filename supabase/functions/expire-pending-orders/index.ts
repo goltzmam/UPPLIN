@@ -13,7 +13,10 @@ serve(async (req) => {
   }
 
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!serviceKey || req.headers.get("Authorization") !== `Bearer ${serviceKey}`) {
+  const cronKey = Deno.env.get("CRON_SECRET");
+  const authorization = req.headers.get("Authorization");
+  if (!(serviceKey && authorization === `Bearer ${serviceKey}`) &&
+      !(cronKey && authorization === `Bearer ${cronKey}`)) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
