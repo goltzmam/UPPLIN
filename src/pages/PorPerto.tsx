@@ -165,8 +165,8 @@ export default function PorPerto() {
     <main className="nearby-layout">
       <section className="nearby-canvas" aria-label="Mapa de eventos próximos">
         <MapContainer center={[-23.5505, -46.6333]} zoom={11} className="nearby-map h-full w-full" zoomControl={false} attributionControl={false}>
-          <BaseMapTiles dark />
           <AttributionControl prefix={false} position="bottomleft" />
+          <BaseMapTiles dark />
           <MapPosition position={userPos} />
           <BoundsTracker onChange={setBounds} />
           <MapTools onLocate={requestLocation} locating={geoState === "loading"} />
