@@ -212,6 +212,8 @@ workflows:
                 echo "AVISO: não deu para apontar o app para /$ROUTE; seguindo."
                 continue
               fi
+              # O Capacitor fecha o app se public/<rota> não existir; a pasta vazia basta e o roteador entrega o index.html.
+              mkdir -p "$ROUTE_APP/public/$ROUTE"
               xcrun simctl install "$UDID" "$ROUTE_APP" || continue
               # Localização liberada e em Fortaleza, para o "Por perto" não parar no pedido de permissão.
               xcrun simctl privacy "$UDID" grant location "$BUNDLE_ID" || true
