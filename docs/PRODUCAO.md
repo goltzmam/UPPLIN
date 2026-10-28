@@ -1,10 +1,10 @@
 # Produção UPPLIN
 
-Atualizado em 27/10/2026. Stack: GitHub, Vercel, Supabase, Mercado Pago, Resend e Capacitor.
+Atualizado em 28/10/2026. Stack: GitHub, Vercel, Supabase, Mercado Pago, Resend e Capacitor.
 
 ## Banco e backend aplicados
 
-Projeto: `ermhzlthjlolqsbtjawf`. O histórico possui 81 migrations aplicadas, com 40 tabelas públicas e RLS habilitado em todas. As 25 colunas exigidas pelo frontend foram verificadas no catálogo real e não estão mais ausentes.
+Projeto: `ermhzlthjlolqsbtjawf`. O histórico possui 84 migrations aplicadas, com 40 tabelas públicas e RLS habilitado em todas. As 25 colunas exigidas pelo frontend foram verificadas no catálogo real e não estão mais ausentes.
 
 A auditoria inicial contou 15 tabelas históricas ausentes. Dez eram necessárias e foram restauradas pela sequência de migrations. Cinco pertenciam a módulos que a última migration do próprio repositório remove; elas não fazem parte do modelo atual e não devem ser recriadas.
 
@@ -110,3 +110,13 @@ Verificação de interface com fixtures isoladas no navegador (sem gravar evento
 O mapa utiliza somente OpenStreetMap, sem chave de API, na web e nos aplicativos nativos. O visual escuro de Por perto, os marcadores e a lista de eventos foram mantidos.
 
 As áreas web usam admin.upplin.com e planos.upplin.com. Os fluxos de recuperação de participante e organizador têm rotas próprias; admin não tem recuperação pública. Detalhes em [WEB_SUBDOMINIOS.md](WEB_SUBDOMINIOS.md).
+
+## Central de mensagens e evidências de reembolso
+
+Chat corrigido para participante, organizador e suporte, com nomes/fotos por remetente, perfis e respostas identificadas como Suporte UPPLIN. Conversas antigas sem perfil não causam mais exceção. O botão de envio fica livre da navegação inferior no celular. Ver `CHAT_SUPORTE.md`.
+
+O bucket privado `refund-attachments` aceita imagens/PDF de até 5 MB. Comprador, organizador responsável e suporte autorizado podem abrir os anexos; terceiros são bloqueados. Evidências já submetidas não podem ser removidas pelo cliente. O suporte também possui botões para inspecionar os anexos.
+
+Pedidos/itens não aceitam escrita econômica direta pelo cliente. Comissão, situação e titularidade do organizador são protegidas contra alterações pelo próprio titular. As funções internas de fila de email são exclusivas do backend.
+
+Verificação de 28/10: contas técnicas, mensagens nos dois sentidos, intervenção do suporte, leitura/perfis, upload e autorização de anexos, permissões negativas e navegação autenticada nas áreas de participante, organizador e gestão passaram. Fixtures removidos, sem cobrança nem estorno de provedor. Isso não substitui homologação financeira integrada nem teste de build nativo.

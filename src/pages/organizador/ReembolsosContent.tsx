@@ -1,3 +1,4 @@
+import { RefundAttachmentLink } from "@/components/tickets/RefundAttachmentLink";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useOrganizerContext } from "@/components/organizador/OrganizerLayout";
@@ -158,7 +159,7 @@ export default function ReembolsosContent() {
                   {r.attachments && Array.isArray(r.attachments) && r.attachments.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {r.attachments.map((path: string, i: number) => (
-                        <AttachmentLink key={i} path={path} index={i} />
+                        <RefundAttachmentLink key={i} path={path} index={i} />
                       ))}
                     </div>
                   )}
@@ -223,23 +224,5 @@ export default function ReembolsosContent() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function AttachmentLink({ path, index }: { path: string; index: number }) {
-  const [url, setUrl] = useState<string | null>(null);
-  const load = async () => {
-    const { data } = await supabase.storage
-      .from("refund-attachments")
-      .createSignedUrl(path, 300);
-    if (data?.signedUrl) {
-      setUrl(data.signedUrl);
-      window.open(data.signedUrl, "_blank");
-    }
-  };
-  return (
-    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={load}>
-      📎 Anexo {index + 1}
-    </Button>
   );
 }

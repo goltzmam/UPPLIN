@@ -23,3 +23,5 @@ Migration `20261028150000_chat_support_and_identity`:
 Testes com identidades temporárias e evento privado: troca nos dois sentidos, intervenção do suporte, perfis/fotos, criação e reutilização de atendimento, recibos de leitura, histórico órfão e envio em viewport móvel. Testes de API negaram acesso externo à conversa, falsificação de remetente, edição de mensagens e leitura de dados privados. Fixtures removidos ao final; não houve cobrança nem envio de emails a pessoas.
 
 Essas verificações não certificam transações financeiras reais nem builds nativos. Android, iOS, Capacitor e identificadores de loja são mantidos pelo desenvolvedor nativo, sem alterações nesta entrega.
+
+As migrations `20261028160000` e `20261028161000` corrigem o armazenamento privado dos anexos de reembolso e preservam evidências submetidas, além de proteger a escrita de pedidos, campos de gestão de organizador e funções internas de fila. Os testes confirmaram upload e abertura autorizada dos anexos e rejeição de terceiros. O registro técnico de reembolso usado no teste foi removido sem invocar o provedor.

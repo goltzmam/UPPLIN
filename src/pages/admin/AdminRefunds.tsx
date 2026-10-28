@@ -1,3 +1,4 @@
+import { RefundAttachmentLink } from "@/components/tickets/RefundAttachmentLink";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,7 +54,7 @@ export default function AdminRefunds() {
     try {
       const { error } = await (supabase as any).rpc("admin_force_refund", {
         p_request_id: refund.id,
-        p_note: "Forçado pelo admin",
+        p_note: "Autorizado pela equipe de suporte",
       });
       if (error) throw error;
 
@@ -152,6 +153,8 @@ export default function AdminRefunds() {
                   <p className="text-xs text-muted-foreground mb-1">Motivo:</p>
                   <p className="whitespace-pre-wrap">{r.reason}</p>
                 </div>
+
+                {Array.isArray(r.attachments) && r.attachments.length > 0 && <div className="flex gap-2 flex-wrap">{r.attachments.filter((path: unknown): path is string => typeof path === "string").map((path: string, index: number) => <RefundAttachmentLink key={path} path={path} index={index} />)}</div>}
 
                 {r.decision_note && (
                   <p className="text-xs text-muted-foreground italic">Nota: {r.decision_note}</p>
