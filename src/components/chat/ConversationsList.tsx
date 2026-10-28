@@ -1,5 +1,5 @@
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageCircle, User, Building2, Shield, Ticket } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -10,33 +10,7 @@ import { cn } from "@/lib/utils";
 import { format, isToday, isYesterday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface Conversation {
-  id: string;
-  type: string;
-  subject: string | null;
-  event_id: string | null;
-  participant_1_id: string;
-  participant_2_id: string;
-  created_at: string;
-  updated_at: string;
-  other_participant?: {
-    id: string;
-    full_name: string | null;
-    photo_url: string | null;
-    subtitle?: string | null;
-    is_organizer?: boolean;
-    is_support?: boolean;
-  };
-  last_message?: {
-    content: string;
-    created_at: string;
-    sender_id: string;
-  };
-  unread_count?: number;
-  event?: {
-    title: string;
-  };
-}
+import { loadConversations, type ChatConversation as Conversation } from "@/lib/chat";
 
 interface ConversationsListProps {
   onSelectConversation: (conv: Conversation) => void;
@@ -55,134 +29,21 @@ export function ConversationsList({
 }: ConversationsListProps) {
   const { user } = useAuth();
 
-  const { data: conversations = [], isLoading } = useQuery({
+  const client = useQueryClient();
+  const { data: conversations = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["conversations", user?.id, filter],
-    queryFn: async () => {
-      if (!user) return [];
-
-      let query = supabase
-        .from("conversations")
-        .select(`*, events(title)`)
-        .or(`participant_1_id.eq.${user.id},participant_2_id.eq.${user.id}`)
-        .order("updated_at", { ascending: false });
-
-      if (filter !== "all") {
-        query = query.eq("type", filter);
-      }
-
-      const { data: convs, error } = await query;
-      if (error) throw error;
-
-      const enrichedConvs = await Promise.all(
-        (convs || []).map(async (conv) => {
-          const otherParticipantId =
-            conv.participant_1_id === user.id ? conv.participant_2_id : conv.participant_1_id;
-
-          let enrichedParticipant: Conversation["other_participant"] = {
-            id: otherParticipantId,
-            full_name: null,
-            photo_url: null,
-            subtitle: "Online",
-          };
-
-          if (conv.type === "user_organizer") {
-            // Fetch event + organizer brand to determine which side is the organizer
-            let org: { owner_user_id: string; display_name: string | null; logo_url: string | null } | null = null;
-            let coverFallback: string | null = null;
-            let eventTitle: string | null = conv.events?.title ?? null;
-            if (conv.event_id) {
-              const { data: ev } = await supabase
-                .from("events")
-                .select("cover_image_url, title, organizer_accounts!inner(owner_user_id, display_name, logo_url)")
-                .eq("id", conv.event_id)
-                .maybeSingle();
-              coverFallback = (ev as any)?.cover_image_url || null;
-              eventTitle = eventTitle || (ev as any)?.title || null;
-              org = (ev as any)?.organizer_accounts || null;
-            }
-            if (!org) {
-              const { data: orgByOwner } = await supabase
-                .from("organizer_accounts")
-                .select("owner_user_id, display_name, logo_url")
-                .eq("owner_user_id", otherParticipantId)
-                .maybeSingle();
-              org = orgByOwner;
-            }
-
-            const currentUserIsOrganizer = org?.owner_user_id === user.id;
-
-            if (currentUserIsOrganizer) {
-              const { data: p } = await supabase
-                .from("profiles_public")
-                .select("id, full_name, photo_url")
-                .eq("id", otherParticipantId)
-                .maybeSingle();
-              enrichedParticipant = {
-                id: otherParticipantId,
-                full_name: p?.full_name || "Participante",
-                photo_url: p?.photo_url || null,
-                subtitle: eventTitle ? `Participante • ${eventTitle}` : "Participante do evento",
-              };
-            } else {
-              enrichedParticipant = {
-                id: otherParticipantId,
-                full_name: org?.display_name || "Organizador",
-                photo_url: org?.logo_url || coverFallback,
-                subtitle: eventTitle ? `Organizador • ${eventTitle}` : "Organizador do evento",
-                is_organizer: true,
-              };
-            }
-          } else if (conv.type === "user_admin" || conv.type === "organizer_admin") {
-            enrichedParticipant = {
-              id: otherParticipantId,
-              full_name: "Suporte UPPLIN",
-              photo_url: null,
-              subtitle: "Equipe oficial",
-              is_support: true,
-            };
-          } else {
-            const { data: p } = await supabase
-              .from("profiles_public")
-              .select("id, full_name, photo_url")
-              .eq("id", otherParticipantId)
-              .maybeSingle();
-            enrichedParticipant = {
-              id: otherParticipantId,
-              full_name: p?.full_name || "Usuário",
-              photo_url: p?.photo_url || null,
-              subtitle: "Online",
-            };
-          }
-
-          const { data: lastMsg } = await supabase
-            .from("messages")
-            .select("content, created_at, sender_id")
-            .eq("conversation_id", conv.id)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-
-          const { count } = await supabase
-            .from("messages")
-            .select("*", { count: "exact", head: true })
-            .eq("conversation_id", conv.id)
-            .neq("sender_id", user.id)
-            .is("read_at", null);
-
-          return {
-            ...conv,
-            other_participant: enrichedParticipant,
-            last_message: lastMsg,
-            unread_count: count || 0,
-          };
-        })
-      );
-
-      return enrichedConvs as Conversation[];
-    },
+    queryFn: () => loadConversations(user!.id, { type: filter }),
     enabled: !!user,
     refetchInterval: 10000,
   });
+  useEffect(() => {
+    if (!user) return;
+    const refresh = () => { void client.invalidateQueries({ queryKey: ["conversations", user.id] }); };
+    const channel = supabase.channel(`conversation-list:${user.id}:${filter}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, refresh)
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, refresh).subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [user, filter, client]);
 
   const filteredConvs = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -252,6 +113,8 @@ export function ConversationsList({
   if (isLoading) {
     return <div className="p-4 text-center text-muted-foreground text-sm">Carregando conversas...</div>;
   }
+
+  if (isError) return <div role="alert" className="p-6 text-sm text-center"><p>Não foi possível carregar as conversas.</p><button className="mt-2 text-primary" onClick={() => void refetch()}>Tentar novamente</button></div>;
 
   if (filteredConvs.length === 0) {
     return (

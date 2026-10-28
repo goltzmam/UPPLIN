@@ -68,7 +68,7 @@ export function AdminLayout() {
             </div>
             <div>
               <span className="font-display text-lg font-bold">UPPLIN</span>
-              <p className="text-xs text-muted-foreground">Admin Panel</p>
+              <p className="text-xs text-muted-foreground">Painel UPPLIN</p>
             </div>
           </Link>
         </div>
@@ -131,7 +131,7 @@ export function AdminLayout() {
                     <Shield className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <div>
-                    <p className="font-semibold">Admin Panel</p>
+                    <p className="font-semibold">Painel UPPLIN</p>
                     <p className="text-sm text-muted-foreground">UPPLIN</p>
                   </div>
                 </div>
