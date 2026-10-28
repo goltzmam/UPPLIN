@@ -10,7 +10,7 @@ export function RouteSeo() {
   const page = PUBLIC_PAGES.find(p => p.path === (surface === "plans" ? "/planos/organizador" : pathname));
   if (surface === "admin") return <Helmet><title>Administração | UPPLIN</title><meta name="robots" content="noindex,nofollow" /><link rel="canonical" href={ADMIN_ORIGIN + pathname} /></Helmet>;
   const dynamic = pathname.startsWith("/evento/") || pathname.startsWith("/o/");
-  const indexable = Boolean(page || dynamic) && !search;
+  const indexable = Boolean(page || dynamic) && (surface === "plans" || !search);
   return <Helmet>
     <meta name="robots" content={indexable ? "index,follow,max-image-preview:large" : "noindex,follow"} />
     {page && <title>{page.title}</title>}

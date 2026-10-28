@@ -2,7 +2,7 @@ import { PUBLIC_PAGES, SITE_URL, escapeHtml } from "../src/lib/seo.ts";
 import { type PublicEvent, type PublicOrganizer } from "./public-content.ts";
 export function renderSitemap(events: PublicEvent[], organizers: PublicOrganizer[]) {
   const entries = [
-    ...PUBLIC_PAGES.map(p => ({ path: p.path, updated_at: "", url: p.canonicalUrl || SITE_URL + p.path })),
+    ...PUBLIC_PAGES.filter(p => !p.canonicalUrl || new URL(p.canonicalUrl).origin === SITE_URL).map(p => ({ path: p.path, updated_at: "", url: p.canonicalUrl || SITE_URL + p.path })),
     ...events.map(e => ({ path: `/evento/${encodeURIComponent(e.slug || e.id)}`, updated_at: e.updated_at, url: SITE_URL + `/evento/${encodeURIComponent(e.slug || e.id)}` })),
     ...organizers.map(o => ({ path: `/o/${encodeURIComponent(o.slug || o.id)}`, updated_at: o.updated_at, url: SITE_URL + `/o/${encodeURIComponent(o.slug || o.id)}` })),
   ];
