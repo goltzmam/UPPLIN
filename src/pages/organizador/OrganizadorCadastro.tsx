@@ -10,7 +10,7 @@ import { ValidatedInput } from "@/components/ui/validated-input";
 import { PasswordRequirementsChecklist } from "@/components/auth/PasswordRequirementsChecklist";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
+import { signInWithOAuth } from "@/lib/oauth";
 import { useAuth, translateAuthError } from "@/lib/auth";
 import { useLogout } from "@/hooks/use-logout";
 import { buildPublicAppUrl } from "@/lib/public-origin";
@@ -55,7 +55,7 @@ export default function OrganizadorCadastro() {
   const [useExistingAccount, setUseExistingAccount] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, profile } = useAuth();
+  const { user, profile, googleEnabled } = useAuth();
   const { logout, loggingOut } = useLogout({ redirectTo: "/organizador/cadastro", showToast: false });
 
   const triggerConfetti = useCallback(() => {
@@ -150,7 +150,7 @@ export default function OrganizadorCadastro() {
   const handleGoogleSignUp = async () => {
     setGoogleLoading(true);
     try {
-      const { error } = await lovable.auth.signInWithOAuth("google", {
+      const { error } = await signInWithOAuth("google", {
         redirect_uri: buildPublicAppUrl("/organizador/onboarding"),
       });
       if (error) {
@@ -572,7 +572,7 @@ export default function OrganizadorCadastro() {
                     variant="outline"
                     className="w-full h-10 sm:h-11 text-xs sm:text-sm gap-2"
                     onClick={handleGoogleSignUp}
-                    disabled={googleLoading}
+                    disabled={googleLoading || !googleEnabled}
                   >
                     {googleLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />

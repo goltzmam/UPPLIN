@@ -12,6 +12,16 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const cronKey = Deno.env.get("CRON_SECRET");
+  const authorization = req.headers.get("Authorization");
+  if (!(serviceKey && authorization === `Bearer ${serviceKey}`) &&
+      !(cronKey && authorization === `Bearer ${cronKey}`)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -42,29 +52,12 @@ serve(async (req) => {
     let expiredCount = 0;
 
     for (const order of expiredOrders) {
-      // Update order status to cancelled
-      await adminClient
-        .from("orders")
-        .update({ status: "cancelled" })
-        .eq("id", order.id);
-
-      // Release reserved tickets
-      for (const item of order.order_items || []) {
-        const { data: ticketType } = await adminClient
-          .from("ticket_types")
-          .select("quantity_sold")
-          .eq("id", item.ticket_type_id)
-          .single();
-
-        if (ticketType) {
-          await adminClient
-            .from("ticket_types")
-            .update({
-              quantity_sold: Math.max(0, (ticketType.quantity_sold || 0) - item.qty),
-            })
-            .eq("id", item.ticket_type_id);
-        }
-      }
+      const { data: released, error: releaseError } = await adminClient.rpc("release_pending_order", {
+        p_order_id: order.id,
+        p_target_status: "cancelled",
+      });
+      if (releaseError) throw releaseError;
+      if (!released) continue;
 
       // Notify buyer that order expired
       try {

@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { z } from "https://esm.sh/zod@3.25.76";
+import { z } from "https://esm.sh/zod@4.6.7";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
@@ -18,7 +18,7 @@ const requestSchema = z.object({
 });
 
 const allowedOrigins = new Set([
-  "https://upplin.lovable.app",
+  "https://www.upplin.com",
   "https://www.upplin.com",
   "https://upplin.com",
   "https://upplin.com.br",
@@ -29,7 +29,6 @@ function isAllowedOrigin(origin: string) {
     const parsed = new URL(origin);
     return (
       allowedOrigins.has(parsed.origin) ||
-      parsed.hostname.endsWith(".lovable.app") ||
       parsed.hostname === "localhost" ||
       parsed.hostname === "127.0.0.1"
     );

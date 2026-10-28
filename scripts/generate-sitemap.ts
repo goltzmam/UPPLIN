@@ -6,9 +6,8 @@ import { resolve } from "path";
 
 const BASE_URL = "https://upplin.com";
 
-const SUPABASE_URL = "https://pyhlsgfsunjcjbaqjcwn.supabase.co";
-const SUPABASE_ANON =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5aGxzZ2ZzdW5qY2piYXFqY3duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgyNjA5MjYsImV4cCI6MjA4MzgzNjkyNn0.OF88fysuE_84-yV1jSUjcVQy1QzkwdOnN1Zy7AgqElc";
+const SUPABASE_URL = "https://ermhzlthjlolqsbtjawf.supabase.co";
+const SUPABASE_ANON = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 
 interface SitemapEntry {
   path: string;

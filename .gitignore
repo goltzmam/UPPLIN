@@ -28,3 +28,12 @@ keystore.properties
 key.properties
 *.jks
 *.keystore
+
+# Local credentials and deployment links
+.env
+.env.*
+!.env.example
+.vercel/
+
+__pycache__/
+*.py[cod]

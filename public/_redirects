@@ -1,4 +1,0 @@
-# Well-known files must be served as static assets (Digital Asset Links, etc.)
-/.well-known/*    /.well-known/:splat   200
-# Netlify SPA redirect - all routes to index.html
-/*    /index.html   200

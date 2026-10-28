@@ -1,4 +1,11 @@
 # Builds do UPPLIN no Codemagic: o iOS vai para o TestFlight e o Android para o teste interno da Play, como rascunho.
+# O build web precisa do Supabase de produção (o .env saiu do git em 28/10). A chave publishable é pública por
+# desenho: vai em todo bundle do site. O vite.config.ts recusa outro projeto ou chave de servidor.
+definitions:
+  supabase_vars: &supabase_vars
+    VITE_SUPABASE_URL: https://ermhzlthjlolqsbtjawf.supabase.co
+    VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_2NH-BIiNgWir_VgmwWWG8g_EJpcDChi
+    VITE_APP_URL: https://www.upplin.com
 workflows:
   ios-testflight:
     name: iOS TestFlight
@@ -8,12 +15,13 @@ workflows:
       # Nome da chave da API do App Store Connect cadastrada no Codemagic.
       app_store_connect: UPPLIN ASC
     environment:
-      node: 22
+      node: 24
       xcode: latest
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.despia.upplin
       vars:
+        <<: *supabase_vars
         # ID numérico do app no App Store Connect (Informações do app > ID da Apple).
         APP_STORE_APPLE_ID: 6772288825
         XCODE_PROJECT: ios/App/App.xcodeproj
@@ -57,7 +65,7 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
-      node: 22
+      node: 24
       java: 21
       android_signing:
         # Reference name do keystore de upload em Code signing identities.
@@ -66,6 +74,7 @@ workflows:
         # GCLOUD_SERVICE_ACCOUNT_CREDENTIALS: JSON da conta de serviço com permissão de release na Play.
         - google_play
       vars:
+        <<: *supabase_vars
         PACKAGE_NAME: com.despia.upplin
     scripts:
       - name: Instalar dependências
@@ -110,8 +119,10 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 30
     environment:
-      node: 22
+      node: 24
       xcode: latest
+      vars:
+        <<: *supabase_vars
     scripts:
       - name: Instalar dependências
         script: npm ci

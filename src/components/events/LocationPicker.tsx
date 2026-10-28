@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import { MapContainer, Marker, useMapEvents, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin, Search, Loader2, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { BaseMapTiles } from "@/components/map/BaseMapTiles";
 
 function createPickerIcon() {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="46" viewBox="0 0 32 46">
@@ -60,7 +61,7 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
   const [showResults, setShowResults] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout>>();
 
-  const position: [number, number] | null = lat && lng ? [lat, lng] : null;
+  const position: [number, number] | null = lat != null && lng != null ? [lat, lng] : null;
   const defaultCenter: [number, number] = position || [-23.5505, -46.6333];
 
   const handlePositionChange = useCallback(
@@ -152,12 +153,8 @@ export function LocationPicker({ lat, lng, onLocationChange }: LocationPickerPro
           zoom={position ? 15 : 11}
           className="h-full w-full"
           zoomControl={false}
-          attributionControl={false}
         >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; OSM &copy; CARTO'
-          />
+          <BaseMapTiles />
           <MapClickHandler onPositionChange={handlePositionChange} />
           <FlyTo position={position} />
           {position && <Marker position={position} icon={pickerIcon} />}

@@ -204,7 +204,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${mpAccount.mp_access_token}`,
         "X-Idempotency-Key": isPixPayment
           ? `order-${order_id}-pix`
-          : `order-${order_id}-card-${crypto.randomUUID()}`,
+          : `order-${order_id}-card`,
       },
       body: JSON.stringify(paymentPayload),
     });
@@ -303,7 +303,7 @@ serve(async (req) => {
               pixQrCodeBase64: pixData?.qr_code_base64 || undefined,
               pixCopyPaste: pixData?.qr_code || undefined,
               pixExpiration: expirationDate,
-              paymentLink: `${Deno.env.get("SITE_URL") || "https://upplin.lovable.app"}/pagamento-pendente/${order_id}`,
+              paymentLink: `${Deno.env.get("SITE_URL") || "https://www.upplin.com"}/pagamento-pendente/${order_id}`,
             },
           }),
         });
@@ -342,22 +342,6 @@ async function handleApprovedPayment(adminClient: any, order: any, orderId: stri
 }
 
 async function handleRejectedPayment(adminClient: any, order: any, orderId: string) {
-  await adminClient.from("orders").update({ status: "failed" }).eq("id", orderId);
-
-  for (const item of order.order_items || []) {
-    const { data: ticketType } = await adminClient
-      .from("ticket_types")
-      .select("quantity_sold")
-      .eq("id", (item as any).ticket_type_id)
-      .single();
-
-    if (ticketType) {
-      await adminClient
-        .from("ticket_types")
-        .update({
-          quantity_sold: Math.max(0, (ticketType.quantity_sold || 0) - (item as any).qty),
-        })
-        .eq("id", (item as any).ticket_type_id);
-    }
-  }
+  const { error } = await adminClient.rpc("release_pending_order", { p_order_id: orderId, p_target_status: "failed" });
+  if (error) throw error;
 }

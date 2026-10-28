@@ -12,6 +12,16 @@ serve(async (req: Request) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const cronKey = Deno.env.get("CRON_SECRET");
+  const authorization = req.headers.get("Authorization");
+  if (!(serviceKey && authorization === `Bearer ${serviceKey}`) &&
+      !(cronKey && authorization === `Bearer ${cronKey}`)) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     const adminClient = createClient(
       Deno.env.get("SUPABASE_URL")!,

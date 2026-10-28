@@ -1,3 +1,4 @@
+import { createOAuthState, verifyOAuthState } from "../_shared/oauth-state.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -46,7 +47,8 @@ serve(async (req) => {
       const clientId = Deno.env.get("MP_CLIENT_ID")!;
       const redirectUri = `${supabaseUrl}/functions/v1/mp-connect?action=callback`;
 
-      const authUrl = `https://auth.mercadopago.com.br/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${user.id}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+      const state = await createOAuthState(user.id, Deno.env.get("MP_CLIENT_SECRET") || "");
+      const authUrl = `https://auth.mercadopago.com.br/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${encodeURIComponent(state)}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 
       return new Response(
         JSON.stringify({ auth_url: authUrl }),
@@ -57,7 +59,8 @@ serve(async (req) => {
     // ACTION: OAuth callback from Mercado Pago
     if (action === "callback") {
       const code = url.searchParams.get("code");
-      const userId = url.searchParams.get("state");
+      const state = url.searchParams.get("state") || "";
+      const userId = await verifyOAuthState(state, Deno.env.get("MP_CLIENT_SECRET") || "");
 
       if (!code || !userId) {
         return new Response("Missing code or state", { status: 400 });
@@ -128,7 +131,7 @@ serve(async (req) => {
       }
 
       // Redirect back to organizer settings
-      const origin = req.headers.get("origin") || "https://upplin.lovable.app";
+      const origin = Deno.env.get("SITE_URL") || "https://upplin.com";
       return new Response(null, {
         status: 302,
         headers: {

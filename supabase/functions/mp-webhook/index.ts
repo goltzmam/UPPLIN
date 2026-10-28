@@ -1,3 +1,4 @@
+import { verifyMPSignature } from "../_shared/mp-signature.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -7,77 +8,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Mercado Pago webhook signature verification
-async function verifyMPSignature(req: Request, rawBody: string): Promise<boolean> {
-  const webhookSecret = Deno.env.get("WEBHOOK_SECRET");
-  if (!webhookSecret) {
-    console.warn("WEBHOOK_SECRET not set, skipping MP signature verification");
-    return true; // Allow if secret not configured (development)
-  }
-
-  const xSignature = req.headers.get("x-signature");
-  const xRequestId = req.headers.get("x-request-id");
-
-  if (!xSignature || !xRequestId) {
-    console.error("Missing x-signature or x-request-id headers");
-    return false;
-  }
-
-  // Parse x-signature: "ts=TIMESTAMP,v1=HASH"
-  const parts: Record<string, string> = {};
-  for (const part of xSignature.split(",")) {
-    const [key, value] = part.split("=", 2);
-    if (key && value) parts[key.trim()] = value.trim();
-  }
-
-  const ts = parts["ts"];
-  const v1 = parts["v1"];
-  if (!ts || !v1) {
-    console.error("Invalid x-signature format");
-    return false;
-  }
-
-  // Reject signatures older than 5 minutes (replay attack prevention)
-  const signatureAge = Date.now() - parseInt(ts) * 1000;
-  if (signatureAge > 5 * 60 * 1000) {
-    console.error("Webhook signature too old, possible replay attack");
-    return false;
-  }
-
-  // Parse data.id from body for signature template
-  let dataId = "";
-  try {
-    const parsed = JSON.parse(rawBody);
-    dataId = parsed?.data?.id?.toString() || "";
-  } catch {
-    // ignore parse errors
-  }
-
-  // Build the manifest string per MP docs
-  // Template: id:[data.id];request-id:[x-request-id];ts:[ts];
-  const manifest = `id:${dataId};request-id:${xRequestId};ts:${ts};`;
-
-  // Compute HMAC-SHA256
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(webhookSecret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(manifest));
-  const computedHash = Array.from(new Uint8Array(signature))
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-
-  if (computedHash !== v1) {
-    console.error("Webhook signature mismatch");
-    return false;
-  }
-
-  return true;
-}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -89,7 +19,7 @@ serve(async (req) => {
     const rawBody = await req.text();
 
     // Verify Mercado Pago webhook signature
-    const isValid = await verifyMPSignature(req, rawBody);
+    const isValid = await verifyMPSignature(req, rawBody, Deno.env.get("WEBHOOK_SECRET") || "");
     if (!isValid) {
       console.error("Invalid webhook signature - rejecting request");
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
@@ -380,28 +310,12 @@ serve(async (req) => {
 
       console.log(`Order ${orderId} paid, ${confirmedTicketsCount} tickets issued`);
     } else if (payment.status === "rejected" || payment.status === "cancelled") {
-      await adminClient
-        .from("orders")
-        .update({ status: "failed", mp_payment_id: payment.id.toString() })
-        .eq("id", orderId);
-
-      // Release reserved tickets
-      for (const item of order.order_items || []) {
-        const { data: ticketType } = await adminClient
-          .from("ticket_types")
-          .select("quantity_sold")
-          .eq("id", item.ticket_type_id)
-          .single();
-
-        if (ticketType) {
-          await adminClient
-            .from("ticket_types")
-            .update({
-              quantity_sold: Math.max(0, (ticketType.quantity_sold || 0) - item.qty),
-            })
-            .eq("id", item.ticket_type_id);
-        }
-      }
+      const { error: releaseError } = await adminClient.rpc("release_pending_order", {
+        p_order_id: orderId,
+        p_target_status: "failed",
+        p_payment_id: payment.id.toString(),
+      });
+      if (releaseError) throw releaseError;
 
       console.log(`Order ${orderId} failed/cancelled, tickets released`);
     } else if (payment.status === "refunded") {

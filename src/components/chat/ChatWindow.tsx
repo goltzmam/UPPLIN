@@ -63,8 +63,7 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const bottomAnchorRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const broadcastChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const publishPresenceRef = useRef<((typing: boolean) => void) | null>(null);
   const lastTypingSentAtRef = useRef<number>(0);
 
   // ---------- Load + realtime messages ----------
@@ -117,40 +116,38 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
     };
   }, [conversationId]);
 
-  // ---------- Broadcast: typing + presence ----------
+  // Presence is scoped to conversation participants by database RLS.
   useEffect(() => {
     if (!user) return;
-    const ch = supabase.channel(`chat-presence:${conversationId}`, {
-      config: { presence: { key: user.id } },
-    });
-
-    ch.on("broadcast", { event: "typing" }, (payload) => {
-      if (payload?.payload?.userId && payload.payload.userId !== user.id) {
-        setOtherTyping(true);
-        if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        typingTimeoutRef.current = setTimeout(() => setOtherTyping(false), TYPING_TIMEOUT_MS);
-      }
-    });
-
-    ch.on("presence", { event: "sync" }, () => {
-      const state = ch.presenceState() as Record<string, Array<{ online_at?: string }>>;
-      const otherId = otherParticipant.id;
-      const presences = state[otherId];
-      setOtherOnline(!!presences && presences.length > 0);
-      if (presences && presences[0]?.online_at) setOtherLastSeen(presences[0].online_at);
-    });
-
-    ch.subscribe(async (status) => {
-      if (status === "SUBSCRIBED") {
-        await ch.track({ online_at: new Date().toISOString() });
-      }
-    });
-
-    broadcastChannelRef.current = ch;
+    let active = true;
+    let other: { updated_at: string; online_until: string; typing_until: string | null } | null = null;
+    const refresh = () => {
+      if (!active) return;
+      setOtherOnline(!!other && Date.parse(other.online_until) > Date.now());
+      setOtherTyping(!!other?.typing_until && Date.parse(other.typing_until) > Date.now());
+      if (other) setOtherLastSeen(other.updated_at);
+    };
+    const publish = (typing: boolean) => {
+      void supabase.rpc("set_chat_presence", { p_conversation_id: conversationId, p_typing: typing }).then(() => undefined);
+    };
+    publishPresenceRef.current = publish;
+    publish(false);
+    void supabase.from("chat_presence").select("*")
+      .eq("conversation_id", conversationId).eq("user_id", otherParticipant.id).maybeSingle()
+      .then(({ data }) => { if (active) { other = data; refresh(); } });
+    const channel = supabase.channel(`chat-presence:${conversationId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "chat_presence", filter: `conversation_id=eq.${conversationId}` }, payload => {
+        const row = payload.new as { user_id?: string; updated_at: string; online_until: string; typing_until: string | null };
+        if (row.user_id === otherParticipant.id) { other = row; refresh(); }
+      }).subscribe();
+    const heartbeat = setInterval(() => publish(false), 10000);
+    const expiry = setInterval(refresh, 1000);
     return () => {
-      if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      supabase.removeChannel(ch);
-      broadcastChannelRef.current = null;
+      active = false;
+      clearInterval(heartbeat); clearInterval(expiry);
+      publishPresenceRef.current = null;
+      void supabase.removeChannel(channel);
+      void supabase.rpc("set_chat_presence", { p_conversation_id: conversationId, p_online: false }).then(() => undefined);
     };
   }, [conversationId, user?.id, otherParticipant.id]);
 
@@ -251,13 +248,10 @@ export function ChatWindow({ conversationId, otherParticipant, onClose, classNam
       ta.style.height = "auto";
       ta.style.height = Math.min(ta.scrollHeight, 140) + "px";
     }
-    // typing broadcast (throttled)
     const now = Date.now();
-    if (broadcastChannelRef.current && now - lastTypingSentAtRef.current > 1500) {
+    if (publishPresenceRef.current && now - lastTypingSentAtRef.current > 1500) {
       lastTypingSentAtRef.current = now;
-      broadcastChannelRef.current.send({
-        type: "broadcast", event: "typing", payload: { userId: user?.id },
-      }).catch(() => {});
+      publishPresenceRef.current(v.length > 0);
     }
   };
 

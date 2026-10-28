@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
-import { z } from "https://esm.sh/zod@3.25.76";
+import { z } from "https://esm.sh/zod@4.6.7";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -12,9 +12,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Update this with your verified Resend domain, or keep resend.dev for testing
-const FROM_EMAIL = "UPPLIN <onboarding@resend.dev>";
-const SITE_URL = Deno.env.get("SITE_URL") || "https://upplin.lovable.app";
+// EMAIL_FROM must use a verified sending domain.
+const FROM_EMAIL = Deno.env.get("EMAIL_FROM");
+const SITE_URL = Deno.env.get("SITE_URL") || "https://www.upplin.com";
 const ALLOWED_APP_ORIGINS = [
   SITE_URL,
   "https://www.upplin.com",
@@ -29,7 +29,6 @@ function isAllowedAppOrigin(origin: string) {
 
     return (
       ALLOWED_APP_ORIGINS.includes(parsed.origin) ||
-      parsed.hostname.endsWith(".lovable.app") ||
       parsed.hostname === "localhost" ||
       parsed.hostname === "127.0.0.1"
     );
@@ -85,7 +84,7 @@ const emailRequestSchema = z.object({
 });
 
 
-const clientAllowedTypes = new Set([
+const clientAllowedTypes = new Set<string>([
   "welcome",
   "welcome_organizer",
 ] as const);
@@ -733,8 +732,8 @@ const handler = async (req: Request): Promise<Response> => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  if (!RESEND_API_KEY || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    return jsonResponse(500, { error: "Email service is not configured" });
+  if (!RESEND_API_KEY || !FROM_EMAIL || !SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    return jsonResponse(503, { error: "Email service is not configured" });
   }
 
   try {

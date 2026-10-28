@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.18"
   }
   public: {
     Tables: {
@@ -47,6 +47,38 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_presence: {
+        Row: {
+          conversation_id: string
+          online_until: string
+          typing_until: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          online_until?: string
+          typing_until?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          online_until?: string
+          typing_until?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_presence_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       checkin_collaborators: {
         Row: {
           created_at: string
@@ -78,36 +110,7 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "checkin_collaborators_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checkin_collaborators_organizer_id_fkey"
-            columns: ["organizer_id"]
-            isOneToOne: false
-            referencedRelation: "organizer_accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checkin_collaborators_organizer_id_fkey"
-            columns: ["organizer_id"]
-            isOneToOne: false
-            referencedRelation: "organizer_accounts_feed"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "checkin_collaborators_organizer_id_fkey"
-            columns: ["organizer_id"]
-            isOneToOne: false
-            referencedRelation: "organizer_accounts_public"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       conversations: {
         Row: {
@@ -1951,6 +1954,7 @@ export type Database = {
         Args: { p_event_id?: string; p_ticket_code: string }
         Returns: Json
       }
+      confirm_free_order: { Args: { p_order_id: string }; Returns: Json }
       confirm_paid_order: {
         Args: {
           p_amount_cents: number
@@ -2074,10 +2078,26 @@ export type Database = {
           read_ct: number
         }[]
       }
+      release_pending_order: {
+        Args: {
+          p_order_id: string
+          p_payment_id?: string
+          p_target_status: string
+        }
+        Returns: boolean
+      }
       remove_coupon_from_order: { Args: { p_order_id: string }; Returns: Json }
       request_refund: {
         Args: { p_attachments?: Json; p_order_id: string; p_reason: string }
         Returns: Json
+      }
+      set_chat_presence: {
+        Args: {
+          p_conversation_id: string
+          p_online?: boolean
+          p_typing?: boolean
+        }
+        Returns: undefined
       }
       touch_last_seen: { Args: never; Returns: undefined }
     }

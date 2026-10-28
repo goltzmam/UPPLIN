@@ -97,7 +97,7 @@ serve(async (req) => {
 
     // Paid plan - create MP preapproval (recurring subscription)
     const mpAccessToken = Deno.env.get("MP_ACCESS_TOKEN")!;
-    const origin = req.headers.get("origin") || "https://upplin.lovable.app";
+    const origin = Deno.env.get("SITE_URL") || "https://www.upplin.com";
 
     const preapprovalPayload = {
       reason: `UPPLIN ${plan.name} - ${organizer.display_name}`,
