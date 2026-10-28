@@ -221,7 +221,7 @@ export default function OrganizerPublicProfile() {
     { id: "sobre", label: "Sobre", icon: <MessageCircle className="h-4 w-4" /> },
   ];
 
-  const orgCanonical = `https://upplin.com/o/${organizer.slug || organizer.id}`;
+  const orgCanonical = `https://www.upplin.com/o/${organizer.slug || organizer.id}`;
   const orgTitle = `${organizer.display_name} — Organizador no UPPLIN`.slice(0, 70);
   const rawOrgDesc = (organizer.description || `Conheça os eventos de ${organizer.display_name} no UPPLIN.`).replace(/\s+/g, " ").trim();
   const orgDesc = rawOrgDesc.length > 160 ? rawOrgDesc.slice(0, 157) + "..." : rawOrgDesc;

@@ -694,7 +694,7 @@ function validateResetLink(link: string) {
     throw new Error("Reset link origin is not allowed");
   }
 
-  const allowedPaths = new Set(["/redefinir-senha"]);
+  const allowedPaths = new Set(["/redefinir-senha", "/organizador/redefinir-senha"]);
   if (!allowedPaths.has(parsed.pathname)) {
     throw new Error("Reset link path is not allowed");
   }

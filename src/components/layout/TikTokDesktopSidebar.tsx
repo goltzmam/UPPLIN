@@ -113,9 +113,8 @@ export function TikTokDesktopSidebar() {
 
   // REGRA DE NEGÓCIO:
   // - Admin NUNCA vê botão "Painel" do organizador (mesmo se tiver conta)
-  // - Admin só vê botão "Admin"
+  // - Administração usa apenas o subdomínio dedicado.
   // - Organizador (não-admin) vê apenas "Painel"
-  const showAdminButton = !rolesLoading && isAdmin;
   const showOrganizerButton = !rolesLoading && !isAdmin && isOrganizer && !!organizerId;
 
   return (
@@ -175,17 +174,9 @@ export function TikTokDesktopSidebar() {
         </nav>
         
         {/* Bottom section - Role-specific (only ONE button max) */}
-        {(showAdminButton || showOrganizerButton) && (
+        {showOrganizerButton && (
           <div className="flex-shrink-0 flex flex-col items-center py-4 border-t border-sidebar-border">
-            {showAdminButton && (
-              <NavItem 
-                to="/admin" 
-                icon={<LayoutDashboard className="h-5 w-5" strokeWidth={1.5} />} 
-                label="Admin" 
-                isActive={isActive("/admin")}
-                highlight
-              />
-            )}
+
             
             {showOrganizerButton && (
               <NavItem 

@@ -6,7 +6,7 @@ export default function TermosOrganizador() {
       title="Termos de Uso — Organizador"
       metaTitle="Termos de Uso do Organizador — Upplin"
       metaDescription="Regras, comissões, repasses e obrigações para organizadores que publicam eventos na Upplin."
-      canonical="https://upplin.com/termos/organizador"
+      canonical="https://www.upplin.com/termos/organizador"
       badge="Termos · Organizador"
       updatedAt="07 de junho de 2026"
       backTo="/termos"

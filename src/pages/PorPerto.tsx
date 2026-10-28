@@ -160,7 +160,7 @@ export default function PorPerto() {
   })), [filtered, navigate]);
 
   return <div className="nearby-page bg-black text-white">
-    <Helmet><title>Por perto · UPPLIN</title><meta name="description" content="Descubra eventos perto de você. Explore o mapa e encontre sua próxima experiência." /></Helmet>
+    <Helmet><title>Eventos perto de mim: explore o mapa | UPPLIN</title><meta name="description" content="Descubra eventos perto de você. Explore o mapa e encontre sua próxima experiência." /></Helmet>
     <TikTokDesktopSidebar />
     <main className="nearby-layout">
       <section className="nearby-canvas" aria-label="Mapa de eventos próximos">

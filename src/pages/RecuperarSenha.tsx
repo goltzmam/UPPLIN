@@ -1,5 +1,6 @@
+import { recoveryRoutes, type RecoveryAudience } from "@/lib/web-surfaces";
 import { useState, useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Mail, Loader2, Ticket, Building2, CheckCircle, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { isValidEmail } from "@/lib/validation";
 import { getPublicAppOrigin } from "@/lib/public-origin";
 
-export default function RecuperarSenha() {
-  const [searchParams] = useSearchParams();
-  const isOrganizer = searchParams.get("tipo") === "organizador";
+export default function RecuperarSenha({ audience = "participant" }: { audience?: RecoveryAudience }) {
+  const isOrganizer = audience === "organizer";
+  const routes = recoveryRoutes(audience);
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -55,7 +56,7 @@ export default function RecuperarSenha() {
     setSent(true);
   };
 
-  const loginPath = isOrganizer ? "/organizador/login" : "/login";
+  const loginPath = routes.login;
   const Icon = isOrganizer ? Building2 : Ticket;
   const label = isOrganizer ? "Área do Organizador" : "Participante";
 
@@ -159,7 +160,7 @@ export default function RecuperarSenha() {
               >
                 <div className="text-center lg:text-left space-y-2">
                   <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground">
-                    Redefinir sua senha
+                    {isOrganizer ? "Recuperar acesso do organizador" : "Recuperar acesso do participante"}
                   </h2>
                   <p className="text-sm sm:text-base text-muted-foreground">
                     Informe o e-mail da sua conta {accountLabel} para receber um link seguro e continuar a redefinição da sua senha.

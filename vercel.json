@@ -4,19 +4,142 @@
   "installCommand": "npm ci",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }],
+  "rewrites": [
+    {
+      "source": "/eventos",
+      "destination": "/seo/eventos.html"
+    },
+    {
+      "source": "/por-perto",
+      "destination": "/seo/por-perto.html"
+    },
+    {
+      "source": "/explorar-organizadores",
+      "destination": "/seo/explorar-organizadores.html"
+    },
+    {
+      "source": "/organizadores",
+      "destination": "/seo/organizadores.html"
+    },
+    {
+      "source": "/precos",
+      "destination": "/seo/precos.html"
+    },
+    {
+      "source": "/planos/organizador",
+      "destination": "/seo/planos/organizador.html"
+    },
+    {
+      "source": "/suporte",
+      "destination": "/seo/suporte.html"
+    },
+    {
+      "source": "/privacidade",
+      "destination": "/seo/privacidade.html"
+    },
+    {
+      "source": "/privacidade/participante",
+      "destination": "/seo/privacidade/participante.html"
+    },
+    {
+      "source": "/privacidade/organizador",
+      "destination": "/seo/privacidade/organizador.html"
+    },
+    {
+      "source": "/termos",
+      "destination": "/seo/termos.html"
+    },
+    {
+      "source": "/termos/participante",
+      "destination": "/seo/termos/participante.html"
+    },
+    {
+      "source": "/termos/organizador",
+      "destination": "/seo/termos/organizador.html"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/evento/:slug",
+      "destination": "/api/seo?path=/evento/:slug"
+    },
+    {
+      "source": "/o/:slug",
+      "destination": "/api/seo?path=/o/:slug"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/app-shell.html"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
       ]
     },
     {
       "source": "/assets/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/favicon.ico",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(upplin-icon.svg|favicon-48.png|apple-touch-icon.png|pwa-192x192.png|pwa-512x512.png)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
+      ]
     }
-  ]
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "upplin.com"
+        }
+      ],
+      "destination": "https://www.upplin.com/:path*",
+      "permanent": true
+    }
+  ],
+  "functions": {
+    "api/seo.ts": {
+      "includeFiles": "dist/app-shell.html"
+    }
+  },
+  "proxy": {
+    "entrypoint": "proxy.ts",
+    "matcher": "/:path*"
+  }
 }

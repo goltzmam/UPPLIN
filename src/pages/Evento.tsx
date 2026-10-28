@@ -222,6 +222,7 @@ export default function Evento() {
   if (error || !event) {
     return (
       <div className="min-h-screen bg-background">
+        <Helmet><title>Evento não encontrado | UPPLIN</title><meta name="robots" content="noindex,follow" /></Helmet>
         <TikTokDesktopSidebar />
         <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe flex items-center justify-center">
           <EmptyState
@@ -251,17 +252,17 @@ export default function Evento() {
   ];
 
   const canonicalSlug = event.slug || event.id;
-  const canonicalUrl = `https://upplin.com/evento/${canonicalSlug}`;
+  const canonicalUrl = `https://www.upplin.com/evento/${canonicalSlug}`;
   const seoTitle = `${event.title} — UPPLIN`.slice(0, 70);
   const rawDesc = (event.description || `Ingressos e detalhes do evento ${event.title}${event.venue_name ? ` em ${event.venue_name}` : ""}.`).replace(/\s+/g, " ").trim();
   const seoDesc = rawDesc.length > 160 ? rawDesc.slice(0, 157) + "..." : rawDesc;
   const ogImage = event.cover_image_url || "";
-  const offers = (event.ticket_types || []).map((t: any) => ({
+  const offers = (event.ticket_types || []).filter((t: any) => t.status === "active").map((t: any) => ({
     "@type": "Offer",
     name: t.name,
     price: ((t.price_cents || 0) / 100).toFixed(2),
     priceCurrency: "BRL",
-    availability: "https://schema.org/InStock",
+    availability: (t.quantity_sold ?? 0) >= t.quantity_total ? "https://schema.org/SoldOut" : "https://schema.org/InStock",
     url: canonicalUrl,
     validFrom: event.created_at || undefined,
   }));
@@ -294,7 +295,7 @@ export default function Evento() {
       "@type": "Organization",
       name: event.organizer_accounts.display_name,
       ...(event.organizer_accounts.slug
-        ? { url: `https://upplin.com/o/${event.organizer_accounts.slug}` }
+        ? { url: `https://www.upplin.com/o/${event.organizer_accounts.slug}` }
         : {}),
     };
   }

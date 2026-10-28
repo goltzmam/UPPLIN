@@ -1917,6 +1917,12 @@ export type Database = {
       }
     }
     Functions: {
+      get_chat_identities: {
+        Args: { p_conversation_ids: string[] }
+        Returns: { conversation_id: string; user_id: string; full_name: string; photo_url: string | null; cover_photo_url: string | null; is_support: boolean; is_organizer: boolean; profile_path: string | null }[]
+      }
+      start_chat: { Args: { p_type: string; p_event_id?: string }; Returns: string }
+      mark_chat_read: { Args: { p_conversation_id: string }; Returns: undefined }
       _refund_log: {
         Args: {
           p_actor: string

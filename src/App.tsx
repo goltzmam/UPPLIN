@@ -1,3 +1,6 @@
+import { Capacitor } from "@capacitor/core";
+import { webSurface, legacyAdminUrl, legacyRecoveryDestination, PLANS_ORIGIN, APP_ORIGIN } from "@/lib/web-surfaces";
+import { RouteSeo } from "@/components/seo/RouteSeo";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -172,6 +175,11 @@ function AppBootFallback() {
 
 
 
+function ExternalNavigation({ target }: { target: string }) {
+  useEffect(() => { window.location.replace(target); }, [target]);
+  return <AppBootFallback />;
+}
+
 // Simplified routes wrapper - removed heavy AnimatePresence for mobile performance
 function AnimatedRoutes() {
   const location = useLocation();
@@ -190,8 +198,36 @@ function AnimatedRoutes() {
     prevPathRef.current = location.pathname;
   }, [location.pathname, location.search, location.hash]);
 
+  const surface = webSurface(window.location.hostname, Capacitor.isNativePlatform());
+  const legacyRecovery = legacyRecoveryDestination(location.pathname, location.search, location.hash);
+  if (legacyRecovery) return <Navigate to={legacyRecovery} replace />;
+  if (surface === "admin") return <Suspense fallback={<AppBootFallback />}>
+    <RouteSeo />
+    <Routes>
+      <Route path="/login" element={<AdminLogin />} />
+      <Route path="/" element={<AdminLayout />}>
+        <Route index element={<AdminDashboard />} />
+        <Route path="chats" element={<AdminChats />} />
+        <Route path="users" element={<AdminUsers />} />
+        <Route path="events" element={<AdminEvents />} />
+        <Route path="orders" element={<AdminOrders />} />
+        <Route path="cpf" element={<AdminCpf />} />
+        <Route path="analytics" element={<AdminAnalytics />} />
+        <Route path="subscriptions" element={<AdminSubscriptions />} />
+        <Route path="settings" element={<AdminSettings />} />
+        <Route path="refunds" element={<AdminRefunds />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  </Suspense>;
+  if (surface === "plans") return <Suspense fallback={<AppBootFallback />}>
+    <RouteSeo />
+    <Routes><Route path="/" element={<LpOrganizador />} /><Route path="*" element={<ExternalNavigation target={APP_ORIGIN + location.pathname + location.search + location.hash} />} /></Routes>
+  </Suspense>;
+
   return (
     <div style={{ minHeight: '100vh' }}>
+      <RouteSeo />
       <Suspense fallback={<AppBootFallback />}>
         <Routes location={location}>
           {/* ============================================ */}
@@ -202,14 +238,16 @@ function AnimatedRoutes() {
           <Route path="/cadastro" element={<Cadastro />} />
           <Route path="/email-confirmado" element={<EmailConfirmado />} />
           <Route path="/recuperar-senha" element={<RecuperarSenha />} />
+          <Route path="/organizador/recuperar-senha" element={<RecuperarSenha audience="organizer" />} />
           <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+          <Route path="/organizador/redefinir-senha" element={<RedefinirSenha audience="organizer" />} />
           <Route path="/eventos" element={<Eventos />} />
           <Route path="/evento/:id" element={<Evento />} />
           <Route path="/precos" element={<Precos />} />
           <Route path="/organizadores" element={<Organizadores />} />
           <Route path="/explorar-organizadores" element={<ExplorarOrganizadores />} />
           <Route path="/por-perto" element={<PorPerto />} />
-          <Route path="/planos/organizador" element={<LpOrganizador />} />
+          <Route path="/planos/organizador" element={Capacitor.isNativePlatform() ? <NotFound /> : <ExternalNavigation target={PLANS_ORIGIN} />} />
           <Route path="/politica/:slug" element={<PoliticaPlano />} />
           <Route path="/suporte" element={<Suporte />} />
           <Route path="/privacidade" element={<Privacidade />} />
@@ -272,22 +310,7 @@ function AnimatedRoutes() {
           <Route path="/organizador/configuracoes" element={<Navigate to="/organizador/painel/configuracoes" replace />} />
           <Route path="/organizador/relatorios" element={<Navigate to="/organizador/painel/relatorios" replace />} />
 
-          {/* ============================================ */}
-          {/* ADMIN ROUTES                                 */}
-          {/* ============================================ */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="chats" element={<AdminChats />} />
-            <Route path="users" element={<AdminUsers />} />
-            <Route path="events" element={<AdminEvents />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="cpf" element={<AdminCpf />} />
-            <Route path="analytics" element={<AdminAnalytics />} />
-            <Route path="subscriptions" element={<AdminSubscriptions />} />
-            <Route path="settings" element={<AdminSettings />} />
-            <Route path="refunds" element={<AdminRefunds />} />
-          </Route>
+          <Route path="/admin/*" element={Capacitor.isNativePlatform() ? <NotFound /> : <ExternalNavigation target={legacyAdminUrl(location.pathname)} />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

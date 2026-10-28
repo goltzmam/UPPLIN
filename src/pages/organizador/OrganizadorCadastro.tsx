@@ -1,3 +1,4 @@
+import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 import { useState, useCallback, useMemo, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, User, Loader2, Building2, Phone, Globe, Instagram, Facebook, FileText, ChevronRight, ChevronLeft, Check, PartyPopper, ArrowLeft, LogOut, UserCheck } from "lucide-react";
@@ -572,7 +573,7 @@ export default function OrganizadorCadastro() {
                     variant="outline"
                     className="w-full h-10 sm:h-11 text-xs sm:text-sm gap-2"
                     onClick={handleGoogleSignUp}
-                    disabled={googleLoading || !googleEnabled}
+                    disabled={loading || googleLoading || !googleEnabled}
                   >
                     {googleLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
@@ -586,6 +587,7 @@ export default function OrganizadorCadastro() {
                     )}
                     Cadastrar com Google
                   </Button>
+          <AppleSignInButton redirectTo={buildPublicAppUrl("/organizador/onboarding")} disabled={loading || googleLoading} />
                 </motion.form>
               )}
 

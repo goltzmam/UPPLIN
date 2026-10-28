@@ -25,3 +25,21 @@ Deno.test('auth email rejects missing verification tokens', () => {
   try { authEmailDeliveries({user:{email:'user@example.test'},email_data:{email_action_type:'signup'}},url,site); } catch { rejected = true; }
   equal(rejected,true);
 });
+Deno.test('recovery links keep organizer context and tokens in the fragment', () => {
+  const [delivery] = authEmailDeliveries({user:{email:'organizer@example.test'},email_data:{email_action_type:'recovery',token_hash:'private-recovery-hash',redirect_to:site+'/organizador/redefinir-senha'}},url,site);
+  const link=new URL(delivery.confirmationUrl);
+  equal(link.origin,site); equal(link.pathname,'/organizador/redefinir-senha'); equal(link.search,'');
+  equal(new URLSearchParams(link.hash.slice(1)).get('token_hash'),'private-recovery-hash');
+});
+Deno.test('participant recovery and legacy organizer links stay in their own flow', () => {
+  for(const [target,expected] of [[site+'/redefinir-senha','/redefinir-senha'],[site+'/redefinir-senha?tipo=organizador','/organizador/redefinir-senha']]) {
+    const [delivery]=authEmailDeliveries({user:{email:'user@example.test'},email_data:{email_action_type:'recovery',token_hash:'hash',redirect_to:target}},url,site);
+    equal(new URL(delivery.confirmationUrl).pathname,expected);
+  }
+});
+Deno.test('recovery cannot redirect into admin or a different site', () => {
+  for(const redirect_to of ['https://admin.upplin.com/login','https://external.example/redefinir-senha',site+'/admin']) {
+    let blocked=false;try {authEmailDeliveries({user:{email:'user@example.test'},email_data:{email_action_type:'recovery',token_hash:'hash',redirect_to}},url,site);}catch{blocked=true;}
+    equal(blocked,true);
+  }
+});

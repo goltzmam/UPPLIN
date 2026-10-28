@@ -11,22 +11,22 @@ import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/admin/chats", label: "Central de Mensagens", icon: MessageCircle },
-  { href: "/admin/users", label: "Usuários", icon: Users },
-  { href: "/admin/events", label: "Eventos", icon: Calendar },
-  { href: "/admin/orders", label: "Pedidos", icon: CreditCard },
-  { href: "/admin/refunds", label: "Reembolsos", icon: Undo2 },
-  { href: "/admin/subscriptions", label: "Assinaturas", icon: Crown },
-  { href: "/admin/cpf", label: "Solicitações CPF", icon: FileText },
-  { href: "/admin/settings", label: "Configurações", icon: Settings },
+  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/analytics", label: "Analytics", icon: BarChart3 },
+  { href: "/chats", label: "Central de Mensagens", icon: MessageCircle },
+  { href: "/users", label: "Usuários", icon: Users },
+  { href: "/events", label: "Eventos", icon: Calendar },
+  { href: "/orders", label: "Pedidos", icon: CreditCard },
+  { href: "/refunds", label: "Reembolsos", icon: Undo2 },
+  { href: "/subscriptions", label: "Assinaturas", icon: Crown },
+  { href: "/cpf", label: "Solicitações CPF", icon: FileText },
+  { href: "/settings", label: "Configurações", icon: Settings },
 ];
 
 export function AdminLayout() {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, isLoading: rolesLoading } = useUserRoles();
-  const { logout, loggingOut } = useLogout({ redirectTo: "/admin/login" });
+  const { logout, loggingOut } = useLogout({ redirectTo: "/login" });
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -34,9 +34,9 @@ export function AdminLayout() {
   useEffect(() => {
     if (!authLoading && !rolesLoading) {
       if (!user) {
-        navigate("/admin/login");
+        navigate("/login");
       } else if (!isAdmin) {
-        navigate("/");
+        navigate("/login");
       }
     }
   }, [authLoading, rolesLoading, user, isAdmin, navigate]);
@@ -52,7 +52,7 @@ export function AdminLayout() {
   }
 
   const isActive = (path: string) => {
-    if (path === "/admin") return location.pathname === "/admin";
+    if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
   };
 
@@ -62,13 +62,13 @@ export function AdminLayout() {
       <aside className="hidden lg:flex w-64 flex-col fixed inset-y-0 left-0 z-40 bg-card border-r border-border">
         {/* Logo - Fixed at top */}
         <div className="p-6 border-b border-border shrink-0">
-          <Link to="/admin" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
               <Shield className="h-5 w-5 text-primary-foreground" />
             </div>
             <div>
               <span className="font-display text-lg font-bold">UPPLIN</span>
-              <p className="text-xs text-muted-foreground">Admin Panel</p>
+              <p className="text-xs text-muted-foreground">Painel UPPLIN</p>
             </div>
           </Link>
         </div>
@@ -110,7 +110,7 @@ export function AdminLayout() {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link to="/admin" className="flex items-center gap-2">
+          <Link to="/" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
               <Shield className="h-4 w-4 text-primary-foreground" />
             </div>
@@ -131,7 +131,7 @@ export function AdminLayout() {
                     <Shield className="h-5 w-5 text-primary-foreground" />
                   </div>
                   <div>
-                    <p className="font-semibold">Admin Panel</p>
+                    <p className="font-semibold">Painel UPPLIN</p>
                     <p className="text-sm text-muted-foreground">UPPLIN</p>
                   </div>
                 </div>

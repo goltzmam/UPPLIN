@@ -50,13 +50,15 @@ export function RefundRequestDialog({ open, onOpenChange, order, onSuccess }: Pr
     if (!user) return;
 
     setSubmitting(true);
+    const uploaded: string[] = [];
+    let accepted = false;
     try {
       // Upload attachments
-      const uploaded: string[] = [];
       if (files.length > 0) {
         setUploading(true);
         for (const file of files) {
-          const path = `${user.id}/${order.id}/${Date.now()}-${file.name}`;
+          const extension = (file.name.split(".").pop() || "bin").replace(/[^a-z0-9]/gi, "").slice(0, 10) || "bin";
+          const path = `${user.id}/${order.id}/${crypto.randomUUID()}.${extension}`;
           const { error: upErr } = await supabase.storage
             .from("refund-attachments")
             .upload(path, file, { upsert: false });
@@ -73,6 +75,7 @@ export function RefundRequestDialog({ open, onOpenChange, order, onSuccess }: Pr
       });
 
       if (error) throw error;
+      accepted = true;
 
       // Fire-and-forget email + admin notification
       const requestId = (data as any)?.id;
@@ -93,6 +96,7 @@ export function RefundRequestDialog({ open, onOpenChange, order, onSuccess }: Pr
       setReason("");
       setFiles([]);
     } catch (e: any) {
+      if (!accepted && uploaded.length) await supabase.storage.from("refund-attachments").remove(uploaded);
       const msg = e?.message || "";
       let friendly = "Não foi possível enviar sua solicitação.";
       if (/refund_already_requested/.test(msg)) friendly = "Já existe uma solicitação para este pedido.";

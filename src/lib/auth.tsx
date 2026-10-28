@@ -1,7 +1,10 @@
+import { Capacitor } from "@capacitor/core";
+import { webSurface, ADMIN_ORIGIN } from "@/lib/web-surfaces";
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithOAuth } from "@/lib/oauth";
+import { socialProviderAvailability, type SocialProviderSettings } from "@/lib/social-providers";
 import { buildPublicAppUrl, getPublicAppOrigin } from "@/lib/public-origin";
 
 interface Profile {
@@ -24,6 +27,7 @@ interface AuthContextType {
   loading: boolean;
   authReady: boolean;
   googleEnabled: boolean;
+  appleEnabled: boolean;
   onboardingStatus: OnboardingStatus | null;
   hasCompletedParticipantOnboarding: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null; user: User | null; needsEmailConfirmation: boolean }>;
@@ -97,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [appleEnabled, setAppleEnabled] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
     void fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/settings`, {
@@ -104,8 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signal: controller.signal,
     }).then(async response => {
       if (!response.ok) return;
-      const settings = await response.json() as { external?: { google?: boolean } };
-      if (!controller.signal.aborted) setGoogleEnabled(settings.external?.google === true);
+      const settings = await response.json() as SocialProviderSettings;
+      if (!controller.signal.aborted) {
+        const available = socialProviderAvailability(settings, Capacitor.getPlatform());
+        setGoogleEnabled(available.googleEnabled);
+        setAppleEnabled(available.appleEnabled);
+      }
     }).catch(() => undefined);
     return () => controller.abort();
   }, []);
@@ -231,6 +240,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         const incomingUserId = currentSession?.user?.id ?? null;
+        if (event === "PASSWORD_RECOVERY" && incomingUserId) {
+          sessionStorage.setItem("upplin:password-recovery-user", incomingUserId);
+        }
+        if (event === "SIGNED_OUT") sessionStorage.removeItem("upplin:password-recovery-user");
+
 
         if (event === "SIGNED_IN" && incomingUserId) {
           localStorage.setItem(AUTH_USER_KEY, incomingUserId);
@@ -300,6 +314,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const normalizedEmail = email.trim().toLowerCase();
     const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    if (!error && data.user) {
+      const { data: admin, error: roleError } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+      const surface = webSurface(window.location.hostname, Capacitor.isNativePlatform());
+      if (roleError || (admin && surface !== "admin") || (!admin && surface === "admin")) {
+        await supabase.auth.signOut({ scope: "local" });
+        return { error: new Error(roleError ? "Não foi possível validar o acesso. Tente novamente." : admin ? `Use o acesso administrativo em ${ADMIN_ORIGIN}.` : "Esta conta não tem acesso à administração."), user: null };
+      }
+    }
+
     return {
       error: error ? new Error(translateAuthError(error.message)) : null,
       user: data.user ?? null,
@@ -389,6 +412,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         authReady,
         googleEnabled,
+        appleEnabled,
         onboardingStatus,
         hasCompletedParticipantOnboarding,
         signUp,

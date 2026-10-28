@@ -19,7 +19,6 @@ const requestSchema = z.object({
 
 const allowedOrigins = new Set([
   "https://www.upplin.com",
-  "https://www.upplin.com",
   "https://upplin.com",
   "https://upplin.com.br",
 ]);
@@ -38,7 +37,9 @@ function isAllowedOrigin(origin: string) {
 }
 
 function buildRedirectTo(origin: string, isOrganizer: boolean) {
-  return `${origin}/redefinir-senha${isOrganizer ? "?tipo=organizador" : ""}`;
+  const parsed = new URL(origin);
+  const targetOrigin = parsed.hostname === "upplin.com" ? "https://www.upplin.com" : parsed.origin;
+  return `${targetOrigin}${isOrganizer ? "/organizador/redefinir-senha" : "/redefinir-senha"}`;
 }
 
 function jsonResponse(status: number, payload: Record<string, unknown>) {
@@ -91,13 +92,16 @@ serve(async (req) => {
 
     const publicClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const adminClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data: recoveryAllowed, error: recoveryPolicyError } = await adminClient.rpc("can_request_password_reset", { p_email: normalizedEmail });
+    if (recoveryPolicyError) return jsonResponse(503, { error: "Password recovery temporarily unavailable" });
+    if (!recoveryAllowed) return jsonResponse(200, { success: true, redirectTo });
+
 
     const nativeAttempt = await publicClient.auth.resetPasswordForEmail(normalizedEmail, { redirectTo });
 
     if (!nativeAttempt.error) {
       return jsonResponse(200, {
         success: true,
-        delivery: "native",
         redirectTo,
       });
     }
@@ -107,7 +111,6 @@ serve(async (req) => {
     if (isUserNotFoundError(nativeAttempt.error.message)) {
       return jsonResponse(200, {
         success: true,
-        delivery: "silent",
         redirectTo,
       });
     }
@@ -128,7 +131,6 @@ serve(async (req) => {
       if (isUserNotFoundError(linkResult.error.message)) {
         return jsonResponse(200, {
           success: true,
-          delivery: "silent",
           redirectTo,
         });
       }
@@ -136,11 +138,11 @@ serve(async (req) => {
       throw linkResult.error;
     }
 
-    const actionLink = linkResult.data.properties?.action_link;
-
-    if (!actionLink) {
-      throw new Error("Recovery link could not be generated");
-    }
+    const tokenHash = linkResult.data.properties?.hashed_token;
+    if (!tokenHash) throw new Error("Recovery link could not be generated");
+    const recoveryLink = new URL(redirectTo);
+    recoveryLink.hash = new URLSearchParams({ token_hash: tokenHash, type: "recovery" }).toString();
+    const actionLink = recoveryLink.toString();
 
     const fallbackResponse = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
       method: "POST",
@@ -172,7 +174,6 @@ serve(async (req) => {
 
     return jsonResponse(200, {
       success: true,
-      delivery: "fallback",
       redirectTo,
     });
   } catch (error) {

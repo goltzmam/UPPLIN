@@ -35,13 +35,13 @@ export default function Suporte() {
           name="description"
           content="Central de suporte da UPPLIN. Tire dúvidas, resolva problemas com ingressos, eventos ou sua conta. Atendimento por e-mail, WhatsApp e telefone."
         />
-        <link rel="canonical" href="https://upplin.com/suporte" />
+        <link rel="canonical" href="https://www.upplin.com/suporte" />
         <meta property="og:title" content="Suporte UPPLIN" />
         <meta
           property="og:description"
           content="Fale com o time da UPPLIN. Ajuda para participantes e organizadores."
         />
-        <meta property="og:url" content="https://upplin.com/suporte" />
+        <meta property="og:url" content="https://www.upplin.com/suporte" />
         <meta property="og:type" content="website" />
       </Helmet>
 

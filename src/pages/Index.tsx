@@ -391,12 +391,12 @@ export default function Index() {
   return (
     <>
       <Helmet>
-        <title>UPPLIN — Descubra e Compre Ingressos para os Melhores Eventos</title>
+        <title>UPPLIN | Eventos, shows e ingressos perto de você</title>
         <meta name="description" content="Feed social de eventos do Brasil: shows, festas, conferências e experiências. Descubra perto de você e compre ingressos em segundos." />
-        <link rel="canonical" href="https://upplin.com/" />
+        <link rel="canonical" href="https://www.upplin.com/" />
         <meta property="og:title" content="UPPLIN — Descubra os melhores eventos do Brasil" />
         <meta property="og:description" content="Feed social de eventos: shows, festas, conferências e experiências únicas." />
-        <meta property="og:url" content="https://upplin.com/" />
+        <meta property="og:url" content="https://www.upplin.com/" />
         <meta property="og:type" content="website" />
       </Helmet>
       <h1 className="sr-only">UPPLIN — Descubra os melhores eventos do Brasil</h1>

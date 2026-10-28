@@ -1,3 +1,4 @@
+import { RefundAttachmentLink } from "@/components/tickets/RefundAttachmentLink";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +29,7 @@ export default function AdminRefunds() {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { data: refunds = [], isLoading } = useQuery({
+  const { data: refunds = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["admin-refunds"],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
@@ -38,9 +39,10 @@ export default function AdminRefunds() {
       if (error) throw error;
       const rows = data || [];
       const requesterIds = [...new Set(rows.map((r: any) => r.requester_user_id).filter(Boolean))];
-      const { data: profiles } = requesterIds.length
+      const { data: profiles, error: profileError } = requesterIds.length
         ? await (supabase as any).from("profiles").select("id, full_name, email").in("id", requesterIds)
-        : { data: [] };
+        : { data: [], error: null };
+      if (profileError) throw profileError;
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
       return rows.map((r: any) => ({ ...r, profiles: profileMap.get(r.requester_user_id) || null }));
     },
@@ -53,7 +55,7 @@ export default function AdminRefunds() {
     try {
       const { error } = await (supabase as any).rpc("admin_force_refund", {
         p_request_id: refund.id,
-        p_note: "Forçado pelo admin",
+        p_note: "Autorizado pela equipe de suporte",
       });
       if (error) throw error;
 
@@ -99,6 +101,8 @@ export default function AdminRefunds() {
     requested: refunds.filter((r) => r.status === "requested").length,
     failed: refunds.filter((r) => r.status === "failed").length,
   };
+
+  if (isError) return <div role="alert" className="p-6 border rounded-xl space-y-3"><h1 className="text-lg font-semibold">Reembolsos</h1><p className="text-sm">Não foi possível carregar as solicitações.</p><Button variant="outline" onClick={() => void refetch()}>Tentar novamente</Button></div>;
 
   return (
     <div className="space-y-6">
@@ -152,6 +156,8 @@ export default function AdminRefunds() {
                   <p className="text-xs text-muted-foreground mb-1">Motivo:</p>
                   <p className="whitespace-pre-wrap">{r.reason}</p>
                 </div>
+
+                {Array.isArray(r.attachments) && r.attachments.length > 0 && <div className="flex gap-2 flex-wrap">{r.attachments.filter((path: unknown): path is string => typeof path === "string").map((path: string, index: number) => <RefundAttachmentLink key={path} path={path} index={index} />)}</div>}
 
                 {r.decision_note && (
                   <p className="text-xs text-muted-foreground italic">Nota: {r.decision_note}</p>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageCircle, ArrowLeft, Plus, Users, Building2, Shield, Search, Ticket } from "lucide-react";
 import { Breadcrumb } from "@/components/navigation/Breadcrumb";
 import { TikTokDesktopSidebar } from "@/components/layout/TikTokDesktopSidebar";
@@ -30,32 +30,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { PageLoading } from "@/components/ui/loading";
 import { cn } from "@/lib/utils";
 
-interface Conversation {
-  id: string;
-  type: string;
-  subject: string | null;
-  event_id: string | null;
-  participant_1_id: string;
-  participant_2_id: string;
-  other_participant?: {
-    id: string;
-    full_name: string | null;
-    photo_url: string | null;
-    subtitle?: string | null;
-    is_organizer?: boolean;
-    is_support?: boolean;
-  };
-}
+import { loadConversations, startChat, type ChatConversation as Conversation } from "@/lib/chat";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Mensagens() {
   const { user, loading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const client = useQueryClient();
+  const [starting, setStarting] = useState(false);
   const { isAdmin, isOrganizer } = useUserRoles();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [showNewChat, setShowNewChat] = useState(false);
-  const [newChatType, setNewChatType] = useState<string>("");
-  const [searchUser, setSearchUser] = useState("");
+
+
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
@@ -70,43 +59,21 @@ export default function Mensagens() {
     if (!user || !requestedConvId) return;
     if (selectedConversation?.id === requestedConvId) return;
     (async () => {
-      const { data: conv } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("id", requestedConvId)
-        .maybeSingle();
-      if (!conv) return;
-      const otherId = conv.participant_1_id === user.id ? conv.participant_2_id : conv.participant_1_id;
-      const other = await resolveOtherParticipant(conv.type, otherId, conv.event_id);
-      setSelectedConversation({ ...conv, other_participant: other } as Conversation);
+      try {
+        const [conv] = await loadConversations(user.id, { id: requestedConvId });
+        if (!conv) return;
+        setSelectedConversation(conv);
+      } catch {
+        toast({ title: "Não foi possível abrir a conversa", description: "Tente novamente.", variant: "destructive" });
+        return;
+      }
       // Clean up the query param so refreshes don't keep forcing selection
       const next = new URLSearchParams(searchParams);
       next.delete("c");
       setSearchParams(next, { replace: true });
     })();
-  }, [user, requestedConvId]);
+  }, [user, requestedConvId, searchParams, selectedConversation?.id, setSearchParams, toast]);
 
-
-  // Fetch admin users for support chat
-  const { data: adminUsers = [] } = useQuery({
-    queryKey: ["admin-users-for-chat"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("user_roles")
-        .select("user_id")
-        .eq("role", "admin");
-      
-      if (!data || data.length === 0) return [];
-
-      const { data: profiles } = await supabase
-        .from("profiles_public")
-        .select("id, full_name, photo_url")
-        .in("id", data.map(r => r.user_id));
-
-      return profiles || [];
-    },
-    enabled: !!user,
-  });
 
   // Fetch events for organizer chat
   const { data: userEvents = [] } = useQuery({
@@ -114,126 +81,26 @@ export default function Mensagens() {
     queryFn: async () => {
       const { data } = await supabase
         .from("events")
-        .select("id, title, organizer_id, organizer_accounts(owner_user_id, display_name)")
+        .select("id, title")
         .eq("status", "published");
       return data || [];
     },
     enabled: !!user && !isOrganizer && !isAdmin,
   });
 
-  const resolveOtherParticipant = async (
-    type: string,
-    participantId: string,
-    eventId?: string | null
-  ): Promise<Conversation["other_participant"]> => {
-    if (type === "user_organizer") {
-      let org: { owner_user_id: string; display_name: string | null; logo_url: string | null } | null = null;
-      let coverFallback: string | null = null;
-      let eventTitle: string | null = null;
-      if (eventId) {
-        const { data: ev } = await supabase
-          .from("events")
-          .select("cover_image_url, title, organizer_accounts!inner(owner_user_id, display_name, logo_url)")
-          .eq("id", eventId)
-          .maybeSingle();
-        coverFallback = (ev as any)?.cover_image_url || null;
-        eventTitle = (ev as any)?.title || null;
-        org = (ev as any)?.organizer_accounts || null;
-      }
-      if (!org) {
-        const { data: orgByOwner } = await supabase
-          .from("organizer_accounts")
-          .select("owner_user_id, display_name, logo_url")
-          .eq("owner_user_id", participantId)
-          .maybeSingle();
-        org = orgByOwner;
-      }
-
-      const currentUserIsOrganizer = !!user && org?.owner_user_id === user.id;
-
-      if (currentUserIsOrganizer) {
-        const { data: p } = await supabase
-          .from("profiles_public")
-          .select("id, full_name, photo_url")
-          .eq("id", participantId)
-          .maybeSingle();
-        return {
-          id: participantId,
-          full_name: p?.full_name || "Participante",
-          photo_url: p?.photo_url || null,
-          subtitle: eventTitle ? `Participante • ${eventTitle}` : "Participante do evento",
-        };
-      }
-
-      return {
-        id: participantId,
-        full_name: org?.display_name || "Organizador",
-        photo_url: org?.logo_url || coverFallback,
-        subtitle: eventTitle ? `Organizador • ${eventTitle}` : "Organizador do evento",
-        is_organizer: true,
-      };
-    }
-    if (type === "user_admin" || type === "organizer_admin") {
-      return {
-        id: participantId,
-        full_name: "Suporte UPPLIN",
-        photo_url: null,
-        subtitle: "Equipe oficial",
-        is_support: true,
-      };
-    }
-    const { data: profile } = await supabase
-      .from("profiles_public")
-      .select("id, full_name, photo_url")
-      .eq("id", participantId)
-      .maybeSingle();
-    return {
-      id: participantId,
-      full_name: profile?.full_name || "Usuário",
-      photo_url: profile?.photo_url || null,
-      subtitle: "Online",
-    };
-  };
-
-  const startNewConversation = async (type: string, participantId: string, eventId?: string) => {
-    if (!user) return;
-
+  const startNewConversation = async (type: string, eventId?: string) => {
+    if (!user || starting) return;
+    setStarting(true);
     try {
-      const other_participant = await resolveOtherParticipant(type, participantId, eventId);
-
-      // Check if conversation already exists
-      const { data: existing } = await supabase
-        .from("conversations")
-        .select("*")
-        .eq("type", type)
-        .or(`and(participant_1_id.eq.${user.id},participant_2_id.eq.${participantId}),and(participant_1_id.eq.${participantId},participant_2_id.eq.${user.id})`)
-        .maybeSingle();
-
-      if (existing) {
-        setSelectedConversation({ ...existing, other_participant });
-        setShowNewChat(false);
-        return;
-      }
-
-      // Create new conversation
-      const { data: newConv, error } = await supabase
-        .from("conversations")
-        .insert({
-          type,
-          participant_1_id: user.id,
-          participant_2_id: participantId,
-          event_id: eventId || null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setSelectedConversation({ ...newConv, other_participant });
+      const id = await startChat(type, eventId);
+      const [conversation] = await loadConversations(user.id, { id });
+      if (!conversation) throw new Error("Conversation unavailable");
+      setSelectedConversation(conversation);
       setShowNewChat(false);
-    } catch (err: any) {
-      console.error("Erro ao iniciar conversa:", err.message);
-    }
+      void client.invalidateQueries({ queryKey: ["conversations", user.id] });
+    } catch {
+      toast({ title: "Não foi possível iniciar a conversa", description: "O contato pode estar indisponível. Tente novamente.", variant: "destructive" });
+    } finally { setStarting(false); }
   };
 
   if (authLoading) return (
@@ -242,7 +109,7 @@ export default function Mensagens() {
       <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe">
         <PageLoading />
       </main>
-      <BottomNav />
+      {!selectedConversation && <BottomNav />}
     </div>
   );
 
@@ -386,7 +253,9 @@ export default function Mensagens() {
             >
               {selectedConversation ? (
                 <ChatWindow
+                  key={selectedConversation.id}
                   conversationId={selectedConversation.id}
+                  identities={selectedConversation.participants}
                   otherParticipant={{
                     id: selectedConversation.other_participant?.id || "",
                     name: selectedConversation.other_participant?.full_name || "Usuário",
@@ -394,6 +263,8 @@ export default function Mensagens() {
                     subtitle: selectedConversation.other_participant?.subtitle,
                     is_organizer: selectedConversation.other_participant?.is_organizer,
                     is_support: selectedConversation.other_participant?.is_support,
+                    profile_path: selectedConversation.other_participant?.profile_path,
+                    cover_photo_url: selectedConversation.other_participant?.cover_photo_url,
                   }}
                   onClose={() => setSelectedConversation(null)}
                   className="h-full border-0 rounded-none"
@@ -427,14 +298,9 @@ export default function Mensagens() {
                   variant="outline"
                   className="w-full justify-start h-auto p-4"
                   onClick={() => {
-                    if (adminUsers.length > 0) {
-                      startNewConversation(
-                        isOrganizer ? "organizer_admin" : "user_admin",
-                        adminUsers[0].id
-                      );
-                    }
+                    void startNewConversation(isOrganizer ? "organizer_admin" : "user_admin");
                   }}
-                  disabled={adminUsers.length === 0}
+                  disabled={starting}
                 >
                   <Shield className="h-5 w-5 mr-3 text-primary" />
                   <div className="text-left">
@@ -442,18 +308,16 @@ export default function Mensagens() {
                       {isOrganizer ? "Suporte para Organizadores" : "Suporte UPPLIN"}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {adminUsers.length === 0
-                        ? "Suporte indisponível no momento"
-                        : "Fale com a equipe oficial: problemas, bugs, conflitos ou dúvidas"}
+                      Fale com a equipe oficial: problemas, bugs, conflitos ou dúvidas
                     </p>
                   </div>
                 </Button>
 
-                {isOrganizer && adminUsers.length > 0 && (
+                {isOrganizer && (
                   <Button
                     variant="outline"
                     className="w-full justify-start h-auto p-4"
-                    onClick={() => startNewConversation("user_admin", adminUsers[0].id)}
+                    onClick={() => startNewConversation("user_admin")}
                   >
                     <Shield className="h-5 w-5 mr-3 text-success" />
                     <div className="text-left">
@@ -468,14 +332,13 @@ export default function Mensagens() {
                 {!isOrganizer && userEvents.length > 0 && (
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Conversar sobre um evento:</p>
-                    {userEvents.slice(0, 5).map((event: any) => (
+                    {userEvents.slice(0, 5).map((event) => (
                       <Button
                         key={event.id}
                         variant="outline"
                         className="w-full justify-start h-auto p-3"
                         onClick={() => startNewConversation(
                           "user_organizer",
-                          event.organizer_accounts?.owner_user_id,
                           event.id
                         )}
                       >
@@ -483,7 +346,7 @@ export default function Mensagens() {
                         <div className="text-left">
                           <p className="font-medium text-sm">{event.title}</p>
                           <p className="text-xs text-muted-foreground">
-                            {event.organizer_accounts?.display_name}
+                            Fale com o organizador
                           </p>
                         </div>
                       </Button>
@@ -495,14 +358,14 @@ export default function Mensagens() {
 
             {isAdmin && (
               <p className="text-sm text-muted-foreground text-center">
-                Como administrador, você pode ver todas as conversas no painel admin.
+                A equipe de suporte acompanha as conversas na central de atendimento.
               </p>
             )}
           </div>
         </DialogContent>
       </Dialog>
 
-      <BottomNav />
+      {!selectedConversation && <BottomNav />}
     </div>
   );
 }

@@ -6,7 +6,7 @@ export default function TermosParticipante() {
       title="Termos de Uso — Participante"
       metaTitle="Termos de Uso do Participante — Upplin"
       metaDescription="Regras de uso da plataforma Upplin para participantes que compram ingressos e interagem no feed."
-      canonical="https://upplin.com/termos/participante"
+      canonical="https://www.upplin.com/termos/participante"
       badge="Termos · Participante"
       updatedAt="07 de junho de 2026"
       backTo="/termos"
