@@ -1,6 +1,6 @@
 # UPPLIN — Preparação dos aplicativos nativos
 
-- Bundle ID e applicationId aprovados: `com.upplin.app`.
+- Identificador informado pelo responsável para os apps registrados: `com.despia.upplin`. A configuração e a publicação nativa são mantidas pelo desenvolvedor nativo; tarefas web não devem alterar os arquivos nativos nem executar cap sync.
 - Arquivos locais empacotados de `dist/`; sem servidor de desenvolvimento remoto.
 - HTTPS/TLS e autenticação Supabase; uso de criptografia padrão, com `ITSAppUsesNonExemptEncryption=false` no Info.plist.
 - Android declara câmera e localização opcionais, sem exigir câmera para instalar; backup do aplicativo desabilitado.

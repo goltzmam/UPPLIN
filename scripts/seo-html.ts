@@ -1,7 +1,7 @@
 import { PUBLIC_PAGES, SITE_URL, SOCIAL_IMAGE, escapeHtml, safeJson, type PublicPage } from "../src/lib/seo.ts";
 export interface SeoPage extends PublicPage { image?: string; schema?: Record<string, unknown>; indexable?: boolean }
 export function renderSeoHtml(template: string, page: SeoPage) {
-  const canonical = SITE_URL + page.path;
+  const canonical = page.canonicalUrl || SITE_URL + page.path;
   const image = page.image || SOCIAL_IMAGE;
   const identity = { "@context": "https://schema.org", "@graph": [
     { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: "UPPLIN", url: SITE_URL + "/", logo: { "@type": "ImageObject", url: `${SITE_URL}/pwa-512x512.png`, width: 512, height: 512 } },

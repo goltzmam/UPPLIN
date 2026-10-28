@@ -16,3 +16,7 @@ output("seo/sitemap.xml", renderSitemap(content.events, content.organizers));
 // Avoid a static file shadowing the authoritative live sitemap rewrite.
 rmSync(resolve("dist/sitemap.xml"), { force: true });
 console.log(`SEO: ${PUBLIC_PAGES.length} public pages rendered; private routes use noindex app shell.`);
+
+const plans = PUBLIC_PAGES.find(p => p.path === "/planos/organizador")!;
+output("plans-entry.html", renderSeoHtml(template, plans));
+output("admin-entry.html", renderSeoHtml(template, { path: "/login", canonicalUrl: "https://admin.upplin.com/login", title: "Administração | UPPLIN", heading: "Administração UPPLIN", description: "Acesso restrito à administração UPPLIN.", body: "Entre com sua conta administrativa.", indexable: false }));

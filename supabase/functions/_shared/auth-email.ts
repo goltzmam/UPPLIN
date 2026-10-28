@@ -16,6 +16,17 @@ export function authEmailDeliveries(payload: AuthEmailPayload, supabaseUrl: stri
   const action = data.email_action_type;
   const build = (to: string, hash: string | undefined, token: string | undefined, recipient: string) => {
     if (action !== "reauthentication" && !hash) throw new Error("Missing verification token");
+    if (action === "recovery") {
+      const target = new URL(data.redirect_to || "/redefinir-senha", siteUrl);
+      const allowedOrigin = new URL(siteUrl).origin;
+      if (target.origin !== allowedOrigin || !["/redefinir-senha", "/organizador/redefinir-senha"].includes(target.pathname)) {
+        throw new Error("Invalid recovery destination");
+      }
+      if (target.searchParams.get("tipo") === "organizador") target.pathname = "/organizador/redefinir-senha";
+      target.search = "";
+      target.hash = new URLSearchParams({ token_hash: hash || "", type: "recovery" }).toString();
+      return { to, token: token || "", confirmationUrl: target.toString(), recipient };
+    }
     const url = new URL("/auth/v1/verify", supabaseUrl);
     url.searchParams.set("token", hash || "");
     url.searchParams.set("type", action);

@@ -53,11 +53,11 @@ export default function AdminDashboard() {
   const formatPrice = (cents: number) => `R$ ${(cents / 100).toFixed(2).replace(".", ",")}`;
 
   const quickLinks = [
-    { href: "/admin/users", label: "Gerenciar Usuários", icon: Users, description: "Editar, suspender e banir" },
-    { href: "/admin/events", label: "Gerenciar Eventos", icon: Calendar, description: "Moderar e destacar" },
-    { href: "/admin/orders", label: "Ver Pedidos", icon: Ticket, description: "Acompanhar vendas" },
-    { href: "/admin/cpf", label: "Solicitações CPF", icon: AlertCircle, description: `${stats?.pendingCpf || 0} pendentes`, highlight: (stats?.pendingCpf || 0) > 0 },
-    { href: "/admin/analytics", label: "Analytics", icon: BarChart3, description: "Gráficos e métricas" },
+    { href: "/users", label: "Gerenciar Usuários", icon: Users, description: "Editar, suspender e banir" },
+    { href: "/events", label: "Gerenciar Eventos", icon: Calendar, description: "Moderar e destacar" },
+    { href: "/orders", label: "Ver Pedidos", icon: Ticket, description: "Acompanhar vendas" },
+    { href: "/cpf", label: "Solicitações CPF", icon: AlertCircle, description: `${stats?.pendingCpf || 0} pendentes`, highlight: (stats?.pendingCpf || 0) > 0 },
+    { href: "/analytics", label: "Analytics", icon: BarChart3, description: "Gráficos e métricas" },
   ];
 
   return (

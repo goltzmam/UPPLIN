@@ -1,5 +1,6 @@
+import { recoveryRoutes, type RecoveryAudience } from "@/lib/web-surfaces";
 import { useEffect, useState, useMemo } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Lock, Loader2, Ticket, Building2, CheckCircle, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -10,9 +11,9 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { isValidPassword } from "@/lib/validation";
 
-export default function RedefinirSenha() {
-  const [searchParams] = useSearchParams();
-  const isOrganizer = searchParams.get("tipo") === "organizador";
+export default function RedefinirSenha({ audience = "participant" }: { audience?: RecoveryAudience }) {
+  const isOrganizer = audience === "organizer";
+  const routes = recoveryRoutes(audience);
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -48,7 +49,8 @@ export default function RedefinirSenha() {
 
       try {
         if (type === "recovery" && accessToken && refreshToken) {
-          const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          const { data, error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          if (data.user) sessionStorage.setItem("upplin:password-recovery-user", data.user.id);
 
           if (error) throw error;
 
@@ -58,7 +60,8 @@ export default function RedefinirSenha() {
         }
 
         if (type === "recovery" && tokenHash) {
-          const { error } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
+          const { data, error } = await supabase.auth.verifyOtp({ type: "recovery", token_hash: tokenHash });
+          if (data.user) sessionStorage.setItem("upplin:password-recovery-user", data.user.id);
 
           if (error) throw error;
 
@@ -68,7 +71,7 @@ export default function RedefinirSenha() {
         }
 
         const { data: { session } } = await supabase.auth.getSession();
-        setRecoveryReady(Boolean(session));
+        setRecoveryReady(Boolean(session && sessionStorage.getItem("upplin:password-recovery-user") === session.user.id));
       } catch {
         setRecoveryReady(false);
         toast({
@@ -121,14 +124,14 @@ export default function RedefinirSenha() {
         variant: "destructive"
       });
     } else {
+      sessionStorage.removeItem("upplin:password-recovery-user");
+      await supabase.auth.signOut({ scope: "local" });
       setSuccess(true);
-      setTimeout(() => {
-        navigate(isOrganizer ? "/organizador" : "/");
-      }, 2000);
+      setTimeout(() => { navigate(routes.login, { replace: true }); }, 1500);
     }
   };
 
-  const loginPath = isOrganizer ? "/organizador/login" : "/login";
+  const loginPath = routes.login;
   const Icon = isOrganizer ? Building2 : Ticket;
   const label = isOrganizer ? "Área do Organizador" : "Participante";
 

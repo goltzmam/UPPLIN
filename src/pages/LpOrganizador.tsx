@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { APP_ORIGIN } from "@/lib/web-surfaces";
+import { AppDownloadSection } from "@/components/marketing/AppDownloadSection";
 import { motion } from "framer-motion";
 import { useCallback, useRef } from "react";
 import {
@@ -109,11 +110,10 @@ const stats = [
 ];
 
 export default function LpOrganizador() {
-  const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  const goRegister = () => navigate("/organizador/cadastro");
-  const goLogin = () => navigate("/organizador/login");
+  const goRegister = () => window.location.assign(APP_ORIGIN + "/organizador/cadastro");
+  const goLogin = () => window.location.assign(APP_ORIGIN + "/organizador/login");
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
@@ -602,9 +602,9 @@ export default function LpOrganizador() {
                     {faq.a === "FAQ_REPASSE" ? (
                       <span>
                         Variam de acordo com o plano aderido. Veja as condições dos planos{" "}
-                        <a href="/politica/standart" className="text-[#FF2D2D] underline font-medium">Standart</a>,{" "}
-                        <a href="/politica/pro" className="text-[#FF2D2D] underline font-medium">Pro</a> e{" "}
-                        <a href="/politica/enterprise" className="text-[#FF2D2D] underline font-medium">Enterprise</a>.
+                        <a href="https://www.upplin.com/politica/standart" className="text-[#FF2D2D] underline font-medium">Standart</a>,{" "}
+                        <a href="https://www.upplin.com/politica/pro" className="text-[#FF2D2D] underline font-medium">Pro</a> e{" "}
+                        <a href="https://www.upplin.com/politica/enterprise" className="text-[#FF2D2D] underline font-medium">Enterprise</a>.
                       </span>
                     ) : faq.a}
                   </div>
@@ -627,7 +627,7 @@ export default function LpOrganizador() {
               </span>
             </h2>
             <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-              Junte-se a centenas de organizadores que já confiam na UPPLIN. Comece grátis, sem cartão.
+              Conheça as ferramentas para organizar seus eventos. Comece pelo plano gratuito.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <Button
@@ -649,6 +649,8 @@ export default function LpOrganizador() {
           </motion.div>
         </div>
       </section>
+
+      <AppDownloadSection />
 
       {/* ── FOOTER ── */}
       <footer className="border-t border-border/40 py-8 px-4">

@@ -137,5 +137,9 @@
     "api/seo.ts": {
       "includeFiles": "dist/app-shell.html"
     }
+  },
+  "proxy": {
+    "entrypoint": "proxy.ts",
+    "matcher": "/:path*"
   }
 }

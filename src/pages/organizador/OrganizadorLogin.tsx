@@ -276,7 +276,7 @@ export default function OrganizadorLogin() {
             <div className="space-y-1.5 sm:space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password" className="text-xs sm:text-sm font-medium">Senha</Label>
-                <Link to="/recuperar-senha?tipo=organizador" className="text-[10px] sm:text-xs text-primary hover:underline">
+                <Link to="/organizador/recuperar-senha" className="text-[10px] sm:text-xs text-primary hover:underline">
                   Esqueceu a senha?
                 </Link>
               </div>

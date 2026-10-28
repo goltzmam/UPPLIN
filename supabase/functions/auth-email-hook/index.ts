@@ -44,6 +44,16 @@ Deno.serve(async (req) => {
   const Template = templates[action]
   if (!Template) return json(400, { error: 'Unsupported auth email action' })
   try {
+    if (action === 'recovery') {
+      const service = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+      if (!service) return json(503, { error: 'Recovery policy unavailable' })
+      const check = await fetch(`${supabaseUrl}/rest/v1/rpc/can_request_password_reset`, {
+        method: 'POST', headers: { apikey: service, Authorization: `Bearer ${service}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_email: payload.user.email }),
+      })
+      if (!check.ok) return json(503, { error: 'Recovery policy unavailable' })
+      if (await check.json() !== true) return json(403, { error: 'Self-service recovery is unavailable for this account' })
+    }
     const deliveries = authEmailDeliveries(payload, supabaseUrl, siteUrl)
     for (const delivery of deliveries) {
       const element = React.createElement(Template, {

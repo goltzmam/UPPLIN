@@ -1,3 +1,5 @@
+import { Capacitor } from "@capacitor/core";
+import { webSurface, ADMIN_ORIGIN } from "@/lib/web-surfaces";
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -231,6 +233,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, currentSession) => {
         const incomingUserId = currentSession?.user?.id ?? null;
+        if (event === "PASSWORD_RECOVERY" && incomingUserId) {
+          sessionStorage.setItem("upplin:password-recovery-user", incomingUserId);
+        }
+        if (event === "SIGNED_OUT") sessionStorage.removeItem("upplin:password-recovery-user");
+
 
         if (event === "SIGNED_IN" && incomingUserId) {
           localStorage.setItem(AUTH_USER_KEY, incomingUserId);
@@ -300,6 +307,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const normalizedEmail = email.trim().toLowerCase();
     const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
+    if (!error && data.user) {
+      const { data: admin, error: roleError } = await supabase.rpc("has_role", { _user_id: data.user.id, _role: "admin" });
+      const surface = webSurface(window.location.hostname, Capacitor.isNativePlatform());
+      if (roleError || (admin && surface !== "admin") || (!admin && surface === "admin")) {
+        await supabase.auth.signOut({ scope: "local" });
+        return { error: new Error(roleError ? "Não foi possível validar o acesso. Tente novamente." : admin ? `Use o acesso administrativo em ${ADMIN_ORIGIN}.` : "Esta conta não tem acesso à administração."), user: null };
+      }
+    }
+
     return {
       error: error ? new Error(translateAuthError(error.message)) : null,
       user: data.user ?? null,

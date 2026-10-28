@@ -4,7 +4,7 @@ Atualizado em 27/10/2026. Stack: GitHub, Vercel, Supabase, Mercado Pago, Resend 
 
 ## Banco e backend aplicados
 
-Projeto: `ermhzlthjlolqsbtjawf`. O histórico possui 80 migrations aplicadas, com 40 tabelas públicas e RLS habilitado em todas. As 25 colunas exigidas pelo frontend foram verificadas no catálogo real e não estão mais ausentes.
+Projeto: `ermhzlthjlolqsbtjawf`. O histórico possui 81 migrations aplicadas, com 40 tabelas públicas e RLS habilitado em todas. As 25 colunas exigidas pelo frontend foram verificadas no catálogo real e não estão mais ausentes.
 
 A auditoria inicial contou 15 tabelas históricas ausentes. Dez eram necessárias e foram restauradas pela sequência de migrations. Cinco pertenciam a módulos que a última migration do próprio repositório remove; elas não fazem parte do modelo atual e não devem ser recriadas.
 
@@ -48,7 +48,7 @@ O envio usa Resend. `RESEND_API_KEY`, `SITE_URL`, `EMAIL_FROM` e `SEND_EMAIL_HOO
 
 Hook: `https://ermhzlthjlolqsbtjawf.supabase.co/functions/v1/auth-email-hook`.
 
-O primeiro administrador `admin@upplin.com` foi provisionado explicitamente com papel admin. O convite foi aceito pelo Auth com o hook ativo, para definir a própria senha. Não há senha fixa nem promoção automática por cadastro. Nenhum usuário técnico foi mantido.
+O primeiro administrador `admin@upplin.com` foi provisionado explicitamente com papel admin. O login por senha e a autorização administrativa foram verificados. A senha é gerenciada no Supabase e não está no repositório; a recuperação pública da conta administrativa está desativada. Não há senha fixa nem promoção automática por cadastro. Nenhum usuário técnico foi mantido.
 
 ## Mercado Pago
 
@@ -69,7 +69,7 @@ A política de expiração de PIX e a renovação dos tokens OAuth de organizado
 
 ## Android e iOS
 
-Identificador aprovado: `com.upplin.app`. Projetos nativos, permissões e retorno OAuth foram preparados. Login nativo usa navegador do sistema, PKCE e callback `com.upplin.app://auth/callback`, autorizado no Supabase. O deep link aceita somente esse destino.
+Identificador das lojas informado pelo responsável: `com.despia.upplin`. A configuração nativa é mantida separadamente; atualizações web não devem alterar android/, ios/ ou capacitor.config.*. Projetos nativos, permissões e retorno OAuth foram preparados. Login nativo usa navegador do sistema, PKCE e callback `com.upplin.app://auth/callback`, autorizado no Supabase. O deep link aceita somente esse destino.
 
 ```sh
 npm ci
@@ -108,3 +108,5 @@ As tabelas events e ticket_types foram adicionadas à publicação Realtime, pre
 Verificação de interface com fixtures isoladas no navegador (sem gravar eventos de demonstração): desktop, tablet, celular e tela estreita; filtros, sincronização mapa/lista, busca e navegação por card/marcador passaram.
 
 O mapa utiliza somente OpenStreetMap, sem chave de API, na web e nos aplicativos nativos. O visual escuro de Por perto, os marcadores e a lista de eventos foram mantidos.
+
+As áreas web usam admin.upplin.com e planos.upplin.com. Os fluxos de recuperação de participante e organizador têm rotas próprias; admin não tem recuperação pública. Detalhes em [WEB_SUBDOMINIOS.md](WEB_SUBDOMINIOS.md).
