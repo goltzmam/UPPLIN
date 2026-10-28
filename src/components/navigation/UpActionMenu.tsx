@@ -270,7 +270,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
               })}
             </div>
 
-            <div className="h-[env(safe-area-inset-bottom)]" />
+            <div className="h-[var(--safe-bottom)]" />
           </motion.div>
         </>
       )}

@@ -723,7 +723,7 @@ export function TikTokFeed({
     <div className="relative w-full h-full" style={{ height: containerHeight }}>
       {/* Pull to refresh indicator */}
       {onRefresh && (
-        <div className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20" style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}>
+        <div className="pointer-events-none absolute top-0 left-0 right-0 flex justify-center z-20" style={{ paddingTop: "var(--safe-top)" }}>
           <div className={cn("mt-2 rounded-full bg-background/80 backdrop-blur px-3 py-1.5 border border-border/50 transition-all duration-200", pullDistance > 0 || isRefreshing ? "opacity-100" : "opacity-0")}
             style={{ transform: `translateY(${Math.min(pullDistance, 60)}px)` }}>
             {isRefreshing ? (

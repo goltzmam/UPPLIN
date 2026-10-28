@@ -251,7 +251,7 @@ export function OrganizerLayout() {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 pt-[var(--safe-top)] bg-card/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
             <span 
@@ -345,7 +345,7 @@ export function OrganizerLayout() {
         "flex-1 min-w-0 transition-all duration-300",
         isCollapsed ? "lg:ml-[72px]" : "lg:ml-[240px]"
       )}>
-        <div className="p-4 pt-[72px] lg:pt-8 lg:p-8 min-h-[100dvh]">
+        <div className="p-4 pt-[calc(var(--safe-top)_+_72px)] lg:pt-8 lg:p-8 min-h-[100dvh]">
           <Outlet context={{ organizer }} />
         </div>
       </main>

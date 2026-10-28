@@ -164,7 +164,7 @@ export default function OrganizadorLogin() {
       {/* Back Button */}
       <Link
         to="/"
-        className="fixed top-3 left-3 sm:top-4 sm:left-4 z-50 flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-foreground hover:bg-muted transition-colors"
+        className="fixed top-[calc(var(--safe-top)_+_0.75rem)] left-3 sm:top-[calc(var(--safe-top)_+_1rem)] sm:left-4 z-50 flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-full bg-background/80 backdrop-blur-sm border border-border text-foreground hover:bg-muted transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         <span className="text-xs sm:text-sm font-medium">Voltar</span>

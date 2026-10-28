@@ -129,8 +129,8 @@ export default function Mensagens() {
             "w-full mx-auto",
             // Full-bleed on mobile when chat selected; normal padding otherwise
             selectedConversation
-              ? "max-w-6xl px-0 sm:px-4 py-0 sm:py-6"
-              : "max-w-6xl px-3 sm:px-4 py-4 sm:py-6"
+              ? "max-w-6xl px-0 sm:px-4 py-0 sm:py-6 pt-[var(--safe-top)] sm:pt-[calc(var(--safe-top)_+_1.5rem)]"
+              : "max-w-6xl px-3 sm:px-4 py-4 sm:py-6 pt-[calc(var(--safe-top)_+_1rem)] sm:pt-[calc(var(--safe-top)_+_1.5rem)]"
           )}
         >
           {/* Breadcrumb - desktop only */}
@@ -170,8 +170,8 @@ export default function Mensagens() {
               "flex flex-col lg:grid lg:grid-cols-[350px_1fr] gap-0 lg:gap-6",
               // Mobile full-height when chat open; otherwise let list scroll naturally
               selectedConversation
-                ? "h-[100dvh] lg:h-[calc(100vh-220px)]"
-                : "h-[calc(100dvh-160px)] lg:h-[calc(100vh-220px)]"
+                ? "h-[calc(100dvh_-_var(--safe-top))] lg:h-[calc(100vh-220px)]"
+                : "h-[calc(100dvh_-_160px_-_var(--safe-top))] lg:h-[calc(100vh-220px)]"
             )}
           >
             {/* Conversations List - hide on mobile when chat is selected */}

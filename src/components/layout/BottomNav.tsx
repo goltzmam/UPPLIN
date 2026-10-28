@@ -94,7 +94,7 @@ export function BottomNav() {
         <div className="absolute inset-0 bg-black/90 backdrop-blur-md" />
 
         {/* Content */}
-        <div className="relative px-2 pt-4 pb-[calc(env(safe-area-inset-bottom,0px)+10px)]">
+        <div className="relative px-2 pt-4 pb-[calc(var(--safe-bottom)+10px)]">
           <div className="flex items-center justify-around">
             {navItems.map((item) => {
               const Icon = item.icon;

@@ -414,7 +414,7 @@ export default function Checkout() {
     <div className="min-h-screen bg-muted/30">
       <TikTokDesktopSidebar />
 
-      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe py-6 sm:py-8">
+      <main className="lg:ml-[72px] min-h-screen pb-app-bottom-safe py-6 sm:py-8 pt-[calc(var(--safe-top)_+_1.5rem)] sm:pt-[calc(var(--safe-top)_+_2rem)]">
         <div className="container max-w-4xl px-4">
           <Breadcrumb
             items={[

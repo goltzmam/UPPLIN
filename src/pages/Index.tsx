@@ -215,7 +215,7 @@ export default function Index() {
     <div className={cn(
       "absolute top-0 left-0 right-0 z-30 pointer-events-none"
     )}>
-      <div className="h-[env(safe-area-inset-top,0px)]" />
+      <div className="h-[var(--safe-top)]" />
       
       <div className={cn(
         "flex items-center justify-between px-3 py-3 pointer-events-auto transition-colors duration-300",
