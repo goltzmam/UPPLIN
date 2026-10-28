@@ -6,7 +6,7 @@ export default function PrivacidadeParticipante() {
       title="Política de Privacidade — Participante"
       metaTitle="Política de Privacidade do Participante — Upplin"
       metaDescription="Como a Upplin trata os dados de participantes que compram ingressos e usam o feed social."
-      canonical="https://upplin.com/privacidade/participante"
+      canonical="https://www.upplin.com/privacidade/participante"
       badge="LGPD · Participante"
       updatedAt="07 de junho de 2026"
       backTo="/privacidade"

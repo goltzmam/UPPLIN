@@ -11,7 +11,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.app.json && tsc --noEmit -p tsconfig.node.json",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
-    "sitemap": "node --experimental-strip-types scripts/generate-sitemap.ts"
+    "sitemap": "node --experimental-strip-types scripts/generate-sitemap.ts",
+    "postbuild": "node --experimental-strip-types scripts/generate-seo.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",

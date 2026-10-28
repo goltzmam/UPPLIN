@@ -1,3 +1,4 @@
+import { RouteSeo } from "@/components/seo/RouteSeo";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -192,6 +193,7 @@ function AnimatedRoutes() {
 
   return (
     <div style={{ minHeight: '100vh' }}>
+      <RouteSeo />
       <Suspense fallback={<AppBootFallback />}>
         <Routes location={location}>
           {/* ============================================ */}

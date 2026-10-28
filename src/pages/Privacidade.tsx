@@ -7,7 +7,7 @@ export default function Privacidade() {
       subtitle="Selecione o seu perfil para ver a política aplicável."
       metaTitle="Política de Privacidade — Upplin"
       metaDescription="Escolha seu perfil (participante ou organizador) para ver a Política de Privacidade aplicável."
-      canonical="https://upplin.com/privacidade"
+      canonical="https://www.upplin.com/privacidade"
       participantHref="/privacidade/participante"
       organizerHref="/privacidade/organizador"
     />

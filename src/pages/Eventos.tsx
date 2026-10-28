@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Calendar, SlidersHorizontal, X } from "lucide-react";
 import { useState } from "react";
@@ -34,7 +35,13 @@ const CATEGORIES = [
 ];
 
 export default function Eventos() {
-  const [search, setSearch] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const search = searchParams.get("q") || "";
+  const setSearch = (value: string) => setSearchParams(previous => {
+    const next = new URLSearchParams(previous);
+    if (value) next.set("q", value); else next.delete("q");
+    return next;
+  }, { replace: true });
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
 

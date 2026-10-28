@@ -6,7 +6,7 @@ export default function PrivacidadeOrganizador() {
       title="Política de Privacidade — Organizador"
       metaTitle="Política de Privacidade do Organizador — Upplin"
       metaDescription="Como a Upplin trata os dados de organizadores que publicam eventos e vendem ingressos."
-      canonical="https://upplin.com/privacidade/organizador"
+      canonical="https://www.upplin.com/privacidade/organizador"
       badge="LGPD · Organizador"
       updatedAt="07 de junho de 2026"
       backTo="/privacidade"

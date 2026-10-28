@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useEffect, useCallback, useRef } from "react";
+import { useCallback, useRef } from "react";
 import {
   Zap, BarChart3, QrCode, Tag, Shield, Smartphone,
   Users, TrendingUp, ArrowRight, Check, Star, ChevronDown,
@@ -102,10 +102,10 @@ const faqs = [
 ];
 
 const stats = [
-  { value: "10K+", label: "Ingressos vendidos" },
-  { value: "500+", label: "Eventos criados" },
-  { value: "98%", label: "Satisfação" },
-  { value: "< 5min", label: "Para começar" },
+  { value: "QR Code", label: "Check-in" },
+  { value: "Eventos", label: "Publicação" },
+  { value: "Cupons", label: "Descontos" },
+  { value: "Relatórios", label: "Gestão" },
 ];
 
 export default function LpOrganizador() {
@@ -114,91 +114,6 @@ export default function LpOrganizador() {
 
   const goRegister = () => navigate("/organizador/cadastro");
   const goLogin = () => navigate("/organizador/login");
-
-  // SEO: dynamic meta tags
-  useEffect(() => {
-    document.title = "Venda Ingressos Online | UPPLIN para Organizadores";
-    
-    const setMeta = (name: string, content: string, property = false) => {
-      const attr = property ? "property" : "name";
-      let el = document.querySelector(`meta[${attr}="${name}"]`) as HTMLMetaElement;
-      if (!el) {
-        el = document.createElement("meta");
-        el.setAttribute(attr, name);
-        document.head.appendChild(el);
-      }
-      el.content = content;
-    };
-
-    setMeta("description", "Plataforma completa para venda de ingressos online. Crie eventos, venda com PIX e cartão, check-in QR Code. Comece grátis!");
-    setMeta("keywords", "venda ingressos online, plataforma eventos, check-in QR code, organizador de eventos, ingressos PIX");
-    setMeta("og:title", "Venda Ingressos Online | UPPLIN para Organizadores", true);
-    setMeta("og:description", "Plataforma completa para venda de ingressos online. Crie eventos, venda com PIX e cartão, check-in QR Code.", true);
-    setMeta("og:image", window.location.origin + "/og-organizador.jpg", true);
-    setMeta("og:url", window.location.href, true);
-    setMeta("og:type", "website", true);
-    setMeta("twitter:title", "Venda Ingressos Online | UPPLIN para Organizadores");
-    setMeta("twitter:description", "Plataforma completa para venda de ingressos. Comece grátis!");
-    setMeta("twitter:image", window.location.origin + "/og-organizador.jpg");
-
-    // JSON-LD
-    const jsonLd = document.createElement("script");
-    jsonLd.type = "application/ld+json";
-    jsonLd.id = "lp-jsonld";
-    jsonLd.textContent = JSON.stringify({
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "UPPLIN",
-      "applicationCategory": "BusinessApplication",
-      "operatingSystem": "Web",
-      "description": "Plataforma completa para organizadores de eventos. Venda ingressos online com PIX, cartão, check-in QR Code e dashboard analítico.",
-      "offers": [
-        { "@type": "Offer", "name": "Free", "price": "0", "priceCurrency": "BRL" },
-        { "@type": "Offer", "name": "Pro", "price": "49", "priceCurrency": "BRL" },
-        { "@type": "Offer", "name": "Enterprise", "price": "199", "priceCurrency": "BRL" }
-      ],
-      "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "reviewCount": "500" }
-    });
-    document.head.appendChild(jsonLd);
-
-    return () => {
-      document.getElementById("lp-jsonld")?.remove();
-    };
-  }, []);
-
-  // ── LIVE COUNTER (persisted, never decreases) ──
-  const getPersistedCount = () => {
-    try {
-      const saved = localStorage.getItem("upplin_org_counter");
-      const savedTs = localStorage.getItem("upplin_org_counter_ts");
-      if (saved && savedTs) {
-        const elapsed = (Date.now() - Number(savedTs)) / 1000;
-        const offlineGrowth = Math.floor(elapsed / 60);
-        return Math.max(Number(saved), 127) + offlineGrowth;
-      }
-    } catch {}
-    return 127;
-  };
-
-  const [orgCount, setOrgCount] = useState(getPersistedCount);
-
-  useEffect(() => {
-    localStorage.setItem("upplin_org_counter", String(orgCount));
-    localStorage.setItem("upplin_org_counter_ts", String(Date.now()));
-  }, [orgCount]);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout>;
-    const tick = () => {
-      const delay = (30 + Math.random() * 60) * 1000;
-      timer = setTimeout(() => {
-        setOrgCount(prev => prev + 1);
-        tick();
-      }, delay);
-    };
-    tick();
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
@@ -210,18 +125,7 @@ export default function LpOrganizador() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
             </span>
-            <strong>
-              <motion.span
-                key={orgCount}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, ease: "easeOut" }}
-                className="inline-block"
-              >
-                {orgCount}+
-              </motion.span>
-              {" "}organizadores
-            </strong> já estão vendendo na UPPLIN
+            <strong>Crie eventos e conecte seu público com a UPPLIN</strong>
           </span>
         </p>
       </div>
