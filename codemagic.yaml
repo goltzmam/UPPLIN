@@ -105,3 +105,99 @@ workflows:
         track: internal
         # Rascunho: a versão só chega aos testadores quando alguém lançar no Play Console.
         submit_as_draft: true
+  ios-simulador:
+    name: iOS no simulador (prints)
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      node: 22
+      xcode: latest
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Gerar o build web
+        script: npm run build
+      - name: Sincronizar o projeto iOS
+        script: npx cap sync ios
+      - name: Compilar para o simulador (sem assinatura)
+        script: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build
+          APP="build/sim/Build/Products/Release-iphonesimulator/App.app"
+          if [ ! -d "$APP" ]; then
+            echo "ERRO: $APP não foi gerado."
+            exit 1
+          fi
+      - name: Rodar no iPad e no iPhone e salvar prints
+        script: |
+          APP="$CM_BUILD_DIR/build/sim/Build/Products/Release-iphonesimulator/App.app"
+          BUNDLE_ID=com.despia.upplin
+          mkdir -p screenshots
+
+          # Escolhe o simulador pela lista; o python3 imprime "UDID|nome|runtime" ou nada.
+          pick_device() {
+            xcrun simctl list devices available -j | KIND="$1" python3 -c '
+          import json, os, re, sys
+          kind = os.environ["KIND"]
+          data = json.load(sys.stdin)
+          devs = []
+          for runtime, items in data["devices"].items():
+              for d in items:
+                  if d.get("isAvailable", True):
+                      devs.append((d["udid"], d["name"], runtime.split(".")[-1]))
+          def best(cands, prefs):
+              for pref in prefs:
+                  for c in cands:
+                      if pref(c[1]):
+                          return c
+              return cands[0] if cands else None
+          def gen(name):
+              m = re.match(r"iPhone (\d+)", name)
+              return int(m.group(1)) if m else 0
+          if kind == "ipad":
+              cands = [d for d in devs if "iPad Air" in d[1]]
+              pick = best(cands, [lambda n: "11-inch" in n])
+          else:
+              cands = [d for d in devs if d[1].startswith("iPhone")]
+              cands.sort(key=lambda d: gen(d[1]), reverse=True)
+              pick = best(cands, [lambda n: gen(n) >= 16])
+          if pick:
+              print("|".join(pick))
+          '
+          }
+
+          run_device() {
+            LABEL="$1"
+            PICK=$(pick_device "$LABEL")
+            if [ -z "$PICK" ]; then
+              echo "AVISO: nenhum simulador de $LABEL disponível; seguindo."
+              return 1
+            fi
+            UDID=$(echo "$PICK" | cut -d'|' -f1)
+            echo "Simulador de $LABEL: $(echo "$PICK" | cut -d'|' -f2) ($(echo "$PICK" | cut -d'|' -f3))"
+            xcrun simctl boot "$UDID" || return 1
+            xcrun simctl bootstatus "$UDID" -b || return 1
+            xcrun simctl install "$UDID" "$APP" || return 1
+            xcrun simctl launch "$UDID" "$BUNDLE_ID" || return 1
+            sleep 20
+            xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-20s.png"
+            sleep 25
+            xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-45s.png"
+            # O log não pode derrubar o build.
+            xcrun simctl spawn "$UDID" log show --last 3m --style compact --predicate 'process == "App"' > "screenshots/$LABEL.log" || true
+            xcrun simctl shutdown "$UDID" || true
+            return 0
+          }
+
+          RAN=0
+          for LABEL in ipad iphone; do
+            if run_device "$LABEL"; then RAN=$((RAN + 1)); fi
+          done
+          if [ "$RAN" -eq 0 ]; then
+            echo "ERRO: nem o iPad nem o iPhone rodaram."
+            exit 1
+          fi
+    artifacts:
+      - screenshots/*.png
+      - screenshots/*.log
