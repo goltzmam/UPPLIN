@@ -4,7 +4,7 @@ Atualizado em 28/10/2026. Stack: GitHub, Vercel, Supabase, Mercado Pago, Resend 
 
 ## Banco e backend aplicados
 
-Projeto: `ermhzlthjlolqsbtjawf`. O histórico possui 84 migrations aplicadas, com 40 tabelas públicas e RLS habilitado em todas. As 25 colunas exigidas pelo frontend foram verificadas no catálogo real e não estão mais ausentes.
+Projeto: `ermhzlthjlolqsbtjawf`. O histórico possui 86 migrations aplicadas, com 40 tabelas públicas e RLS habilitado em todas. As 25 colunas exigidas pelo frontend foram verificadas no catálogo real e não estão mais ausentes.
 
 A auditoria inicial contou 15 tabelas históricas ausentes. Dez eram necessárias e foram restauradas pela sequência de migrations. Cinco pertenciam a módulos que a última migration do próprio repositório remove; elas não fazem parte do modelo atual e não devem ser recriadas.
 

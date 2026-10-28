@@ -17,7 +17,7 @@ const STATUS_LABEL: Record<string, { label: string; variant: any; icon: any }> =
   requested: { label: "Pendente", variant: "default", icon: Clock },
   approved: { label: "Aprovado", variant: "secondary", icon: CheckCircle },
   rejected: { label: "Recusado", variant: "destructive", icon: XCircle },
-  disputed: { label: "Em disputa (admin)", variant: "outline", icon: AlertCircle },
+  disputed: { label: "Em análise pelo suporte", variant: "outline", icon: AlertCircle },
   pending_refund: { label: "Processando estorno", variant: "outline", icon: RefreshCw },
   refunded: { label: "Estornado", variant: "secondary", icon: CheckCircle },
   failed: { label: "Falhou", variant: "destructive", icon: XCircle },
@@ -31,7 +31,7 @@ export default function ReembolsosContent() {
   const [rejectNote, setRejectNote] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const { data: refunds = [], isLoading } = useQuery({
+  const { data: refunds = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["organizer-refunds", organizer.id],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
@@ -42,9 +42,10 @@ export default function ReembolsosContent() {
       if (error) throw error;
       const rows = data || [];
       const requesterIds = [...new Set(rows.map((r: any) => r.requester_user_id).filter(Boolean))];
-      const { data: profiles } = requesterIds.length
-        ? await (supabase as any).from("profiles").select("id, full_name, email").in("id", requesterIds)
-        : { data: [] };
+      const { data: profiles, error: profileError } = requesterIds.length
+        ? await (supabase as any).from("profiles_public").select("id, full_name, photo_url").in("id", requesterIds)
+        : { data: [], error: null };
+      if (profileError) throw profileError;
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
       return rows.map((r: any) => ({ ...r, profiles: profileMap.get(r.requester_user_id) || null }));
     },
@@ -86,7 +87,7 @@ export default function ReembolsosContent() {
         p_note: rejectNote.trim(),
       });
       if (error) throw error;
-      toast({ title: "Recusado", description: "Solicitação enviada ao admin para análise." });
+      toast({ title: "Recusado", description: "Solicitação enviada ao suporte para análise." });
       queryClient.invalidateQueries({ queryKey: ["organizer-refunds"] });
       setRejecting(null);
       setRejectNote("");
@@ -100,6 +101,8 @@ export default function ReembolsosContent() {
   const filtered = refunds.filter((r) =>
     tab === "requested" ? r.status === "requested" : tab === "all" ? true : r.status === tab
   );
+
+  if (isError) return <div role="alert" className="p-6 border rounded-xl space-y-3"><h1 className="text-lg font-semibold">Reembolsos</h1><p className="text-sm">Não foi possível carregar as solicitações.</p><Button variant="outline" onClick={() => void refetch()}>Tentar novamente</Button></div>;
 
   return (
     <div className="space-y-6">

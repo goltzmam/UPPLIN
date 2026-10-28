@@ -29,7 +29,7 @@ export default function AdminRefunds() {
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const { data: refunds = [], isLoading } = useQuery({
+  const { data: refunds = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["admin-refunds"],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
@@ -39,9 +39,10 @@ export default function AdminRefunds() {
       if (error) throw error;
       const rows = data || [];
       const requesterIds = [...new Set(rows.map((r: any) => r.requester_user_id).filter(Boolean))];
-      const { data: profiles } = requesterIds.length
+      const { data: profiles, error: profileError } = requesterIds.length
         ? await (supabase as any).from("profiles").select("id, full_name, email").in("id", requesterIds)
-        : { data: [] };
+        : { data: [], error: null };
+      if (profileError) throw profileError;
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
       return rows.map((r: any) => ({ ...r, profiles: profileMap.get(r.requester_user_id) || null }));
     },
@@ -100,6 +101,8 @@ export default function AdminRefunds() {
     requested: refunds.filter((r) => r.status === "requested").length,
     failed: refunds.filter((r) => r.status === "failed").length,
   };
+
+  if (isError) return <div role="alert" className="p-6 border rounded-xl space-y-3"><h1 className="text-lg font-semibold">Reembolsos</h1><p className="text-sm">Não foi possível carregar as solicitações.</p><Button variant="outline" onClick={() => void refetch()}>Tentar novamente</Button></div>;
 
   return (
     <div className="space-y-6">
