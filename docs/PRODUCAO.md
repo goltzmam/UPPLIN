@@ -107,10 +107,4 @@ As tabelas events e ticket_types foram adicionadas à publicação Realtime, pre
 
 Verificação de interface com fixtures isoladas no navegador (sem gravar eventos de demonstração): desktop, tablet, celular e tela estreita; filtros, sincronização mapa/lista, busca e navegação por card/marcador passaram.
 
-## MapTiler
-
-`VITE_MAPTILER_KEY` está configurada na Vercel para Production, Preview e Development; o valor não está no Git. A chave pública usa restrições de origem. A API respondeu 200 para o domínio da UPPLIN e 403 para as origens nativas; o preview em outro domínio também pode ser bloqueado pelas restrições da conta.
-
-O mapa usa Streets v2 Dark em Por perto e Streets v2 no seletor de endereço, com raster de 512 pixels e zoom ajustado. Sem chave ou em falha de carregamento, mantém OpenStreetMap como alternativa. A versão nativa utiliza somente `VITE_MAPTILER_NATIVE_KEY`, uma chave separada autorizada para o app; enquanto ela não existe, continua com o mapa alternativo. Não reutilize a chave web restrita nos nativos.
-
-A chave padrão não é autorização para retirar atribuição. Os créditos MapTiler e OpenStreetMap permanecem visíveis. A opção Planet Lite exige outra fonte de dados e autorização escrita para remoção, ainda não fornecidas.
+O mapa utiliza somente OpenStreetMap, sem chave de API, na web e nos aplicativos nativos. O visual escuro de Por perto, os marcadores e a lista de eventos foram mantidos.
