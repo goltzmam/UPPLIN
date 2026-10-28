@@ -11,7 +11,7 @@
 
 ## Validação
 
-Executar npm run typecheck, npm test e npm run build. O postbuild gera o HTML estático e o sitemap de fallback. npm run sitemap atualiza o arquivo público usando o catálogo atual. As rotas dinâmicas e rewrites devem ser verificadas em uma implantação Vercel; vite preview não executa funções serverless.
+Executar npm run typecheck, npm test e npm run build. O postbuild gera o HTML estático e um sitemap de fallback em /seo/sitemap.xml; o caminho público /sitemap.xml usa a função atualizada. npm run sitemap atualiza o arquivo público usando o catálogo atual. As rotas dinâmicas e rewrites devem ser verificadas em uma implantação Vercel; vite preview não executa funções serverless.
 
 ## Indexação e conteúdo
 

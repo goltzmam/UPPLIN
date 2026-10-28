@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { PUBLIC_PAGES } from "../src/lib/seo.ts";
 import { renderSeoHtml } from "./seo-html.ts";
@@ -12,5 +12,7 @@ output("app-shell.html", template);
 for (const page of PUBLIC_PAGES) output(page.path === "/" ? "index.html" : `seo${page.path}.html`, renderSeoHtml(template, page));
 let content: Awaited<ReturnType<typeof listPublicContent>> = { events: [], organizers: [] };
 try { content = await listPublicContent(env); } catch { console.warn("SEO: public content unavailable at build time; live sitemap endpoint remains authoritative."); }
-output("sitemap.xml", renderSitemap(content.events, content.organizers));
+output("seo/sitemap.xml", renderSitemap(content.events, content.organizers));
+// Avoid a static file shadowing the authoritative live sitemap rewrite.
+rmSync(resolve("dist/sitemap.xml"), { force: true });
 console.log(`SEO: ${PUBLIC_PAGES.length} public pages rendered; private routes use noindex app shell.`);
