@@ -1,4 +1,4 @@
-import { PUBLIC_PAGES, SITE_URL, SOCIAL_IMAGE, escapeHtml, safeJson, type PublicPage } from "../src/lib/seo.ts";
+import { SITE_URL, SOCIAL_IMAGE, escapeHtml, safeJson, type PublicPage } from "../src/lib/seo.ts";
 export interface SeoPage extends PublicPage { image?: string; schema?: Record<string, unknown>; indexable?: boolean }
 export function renderSeoHtml(template: string, page: SeoPage) {
   const canonical = page.canonicalUrl || SITE_URL + page.path;
@@ -28,8 +28,7 @@ export function renderSeoHtml(template: string, page: SeoPage) {
     .replace(/<meta\b[^>]*(?:name=["'](?:description|robots|twitter:[^"']+)["']|property=["']og:[^"']+["'])[^>]*>/gi, "")
     .replace(/<link\b[^>]*rel=["']canonical["'][^>]*>/gi, "")
     .replace(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi, "");
-  const nav = PUBLIC_PAGES.filter(p => ["/eventos", "/por-perto", "/organizadores", "/suporte"].includes(p.path))
-    .map(p => `<a href="${p.path}">${escapeHtml(p.heading)}</a>`).join(" · ");
-  const body = `<main style="max-width:960px;margin:0 auto;padding:64px 24px;font-family:system-ui;line-height:1.7"><a href="/" style="color:#ff5733;font-size:28px;font-weight:800">UPPLIN</a><h1>${escapeHtml(page.heading)}</h1><p>${escapeHtml(page.description)}</p><p>${escapeHtml(page.body)}</p><nav aria-label="Explore a UPPLIN">${nav}</nav></main>`;
-  return stripped.replace("</head>", head + "\n</head>").replace(/<div id="root">[\s\S]*?<\/div>/, `<div id="root">${body}</div>`);
+  // Preserve the app's branded loading screen. Metadata belongs in the head;
+  // route content is rendered by React, rather than flashing a second page at boot.
+  return stripped.replace("</head>", head + "\n</head>");
 }
