@@ -1,3 +1,4 @@
+import { AppleSignInButton } from "@/components/auth/AppleSignInButton";
 import { useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Mail, Lock, Loader2, Building2, ArrowLeft, LogOut, User } from "lucide-react";
@@ -315,7 +316,7 @@ export default function OrganizadorLogin() {
             variant="outline"
             className="w-full h-11 sm:h-12 text-xs sm:text-sm font-medium gap-2"
             onClick={handleGoogleLogin}
-            disabled={googleLoading || !googleEnabled}
+            disabled={loading || googleLoading || !googleEnabled}
           >
             {googleLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -329,6 +330,7 @@ export default function OrganizadorLogin() {
             )}
             Entrar com Google
           </Button>
+          <AppleSignInButton redirectTo={buildPublicAppUrl("/organizador/onboarding")} disabled={loading || googleLoading} />
 
 
           {/* Footer Links */}

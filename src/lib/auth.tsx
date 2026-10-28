@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { signInWithOAuth } from "@/lib/oauth";
+import { socialProviderAvailability, type SocialProviderSettings } from "@/lib/social-providers";
 import { buildPublicAppUrl, getPublicAppOrigin } from "@/lib/public-origin";
 
 interface Profile {
@@ -26,6 +27,7 @@ interface AuthContextType {
   loading: boolean;
   authReady: boolean;
   googleEnabled: boolean;
+  appleEnabled: boolean;
   onboardingStatus: OnboardingStatus | null;
   hasCompletedParticipantOnboarding: boolean;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null; user: User | null; needsEmailConfirmation: boolean }>;
@@ -99,6 +101,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
   const [googleEnabled, setGoogleEnabled] = useState(false);
+  const [appleEnabled, setAppleEnabled] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
     void fetch(`${import.meta.env.VITE_SUPABASE_URL}/auth/v1/settings`, {
@@ -106,8 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signal: controller.signal,
     }).then(async response => {
       if (!response.ok) return;
-      const settings = await response.json() as { external?: { google?: boolean } };
-      if (!controller.signal.aborted) setGoogleEnabled(settings.external?.google === true);
+      const settings = await response.json() as SocialProviderSettings;
+      if (!controller.signal.aborted) {
+        const available = socialProviderAvailability(settings, Capacitor.getPlatform());
+        setGoogleEnabled(available.googleEnabled);
+        setAppleEnabled(available.appleEnabled);
+      }
     }).catch(() => undefined);
     return () => controller.abort();
   }, []);
@@ -405,6 +412,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         authReady,
         googleEnabled,
+        appleEnabled,
         onboardingStatus,
         hasCompletedParticipantOnboarding,
         signUp,
