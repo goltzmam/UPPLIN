@@ -6,6 +6,20 @@ definitions:
     VITE_SUPABASE_URL: https://ermhzlthjlolqsbtjawf.supabase.co
     VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_2NH-BIiNgWir_VgmwWWG8g_EJpcDChi
     VITE_APP_URL: https://www.upplin.com
+  scripts:
+    # O @capacitor/geolocation 8.2.4 chama o pedido de localização numa fila .background, que o iOS pode adiar por
+    # dezenas de segundos (issue 105 de ionic-team/capacitor-geolocation, aberta). Só essa fila muda, e só no build iOS.
+    - &geolocation_qos
+      name: Plugin de localização com o pedido em prioridade de usuário
+      script: |
+        F=node_modules/@capacitor/geolocation/ios/Sources/GeolocationPlugin/GeolocationPlugin.swift
+        test -f "$F"
+        sed -i '' 's/DispatchQueue.global(qos: \.background)/DispatchQueue.global(qos: .userInitiated)/' "$F"
+        if grep -q 'qos: \.background' "$F"; then
+          echo "ERRO: a fila .background continua em $F."
+          exit 1
+        fi
+        grep -n 'DispatchQueue' "$F" || true
 workflows:
   ios-testflight:
     name: iOS TestFlight
@@ -29,6 +43,7 @@ workflows:
     scripts:
       - name: Instalar dependências
         script: npm ci
+      - *geolocation_qos
       - name: Gerar o build web
         script: npm run build
       - name: Sincronizar o projeto iOS
@@ -126,6 +141,7 @@ workflows:
     scripts:
       - name: Instalar dependências
         script: npm ci
+      - *geolocation_qos
       - name: Gerar o build web
         script: npm run build
       - name: Sincronizar o projeto iOS
@@ -222,12 +238,15 @@ workflows:
               sleep 15
               xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-$ROUTE.png"
             done
-            # "Por perto" sem permissão: o pedido na tela tem de ser o do iOS, não o do WebView ("localhost").
+            # "Por perto" sem permissão: o pedido na tela tem de ser o do iOS, não o do WebView ("localhost"),
+            # e tem de aparecer logo; os dois prints medem a demora.
             xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
             xcrun simctl privacy "$UDID" reset location "$BUNDLE_ID" || true
             if xcrun simctl launch "$UDID" "$BUNDLE_ID"; then
-              sleep 15
-              xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-por-perto-sem-permissao.png"
+              sleep 10
+              xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-por-perto-sem-permissao-10s.png"
+              sleep 35
+              xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-por-perto-sem-permissao-45s.png"
             fi
             # O log não pode derrubar o build.
             xcrun simctl spawn "$UDID" log show --last 5m --style compact --predicate 'process == "App"' > "screenshots/$LABEL.log" || true
