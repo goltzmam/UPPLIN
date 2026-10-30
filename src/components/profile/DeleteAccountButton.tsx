@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { Loader2, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ export function DeleteAccountButton() {
   const [password, setPassword] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
-  const location = useLocation();const navigate = useNavigate();
+  const location = useLocation();
   const emailLogin = user?.identities?.some(identity => identity.provider === "email");
   const social = user?.identities?.some(identity => identity.provider === "apple") ? "apple" : user?.identities?.some(identity => identity.provider === "google") ? "google" : null;
   const needsPassword = emailLogin && !social;
@@ -54,8 +54,9 @@ export function DeleteAccountButton() {
         throw new Error("Não foi possível iniciar a exclusão. Tente novamente ou entre em contato com o suporte.");
       }
       sessionStorage.setItem("upplin:deletion-receipt", JSON.stringify({ job_id: result.data.job_id, receipt: result.data.receipt }));
-      void supabase.auth.signOut({ scope: "local" });
-      navigate("/excluir-conta?solicitacao=1", { replace: true });
+      await supabase.auth.signOut({ scope: "local" });
+      // Start the public page with no protected-route effects left in flight.
+      window.location.replace("/excluir-conta?solicitacao=1");
     } catch (failure) { setError(failure instanceof Error ? failure.message : "Tente novamente."); }
     finally { setPending(false);setPassword(""); }
   };
