@@ -121,7 +121,7 @@ export default function Precos() {
     <div className="min-h-screen bg-background">
       <Header />
 
-      <main className="pt-24">
+      <main className="pt-[calc(var(--safe-top)_+_6rem)]">
         {/* Hero */}
         <section className="py-20">
           <div className="container">

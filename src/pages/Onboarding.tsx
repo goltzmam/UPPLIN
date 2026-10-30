@@ -148,7 +148,7 @@ export default function Onboarding() {
           size="sm"
           onClick={handleGoBack}
           aria-label="Voltar para o feed"
-          className="fixed top-3 left-3 z-50 h-10 px-3 rounded-full bg-background/70 backdrop-blur-md border border-border/50 text-foreground hover:bg-background/90"
+          className="fixed top-[calc(var(--safe-top)_+_0.75rem)] left-3 z-50 h-10 px-3 rounded-full bg-background/70 backdrop-blur-md border border-border/50 text-foreground hover:bg-background/90"
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Voltar

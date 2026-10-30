@@ -425,7 +425,7 @@ export default function MeusIngressos() {
       )}
 
       <main className="pb-app-bottom-safe lg:ml-[72px]">
-        <PullToRefresh onRefresh={handleRefresh} className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <PullToRefresh onRefresh={handleRefresh} className="w-full max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 pt-[calc(var(--safe-top)_+_1.5rem)] sm:pt-[calc(var(--safe-top)_+_2rem)]">
           {/* Breadcrumb - desktop only */}
           <div className="hidden lg:block">
             <Breadcrumb 

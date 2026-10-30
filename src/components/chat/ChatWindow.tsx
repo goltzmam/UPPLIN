@@ -156,7 +156,7 @@ export function ChatWindow({ conversationId, otherParticipant, identities = {}, 
       {typing && <p className="text-xs text-muted-foreground">{other.full_name} está digitando…</p>}
       <div ref={bottom} />
     </div>
-    <form className="p-3 border-t flex gap-2 items-end shrink-0" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }} onSubmit={e => { e.preventDefault(); void send(draft); }}>
+    <form className="p-3 border-t flex gap-2 items-end shrink-0" style={{ paddingBottom: "max(0.75rem, var(--safe-bottom))" }} onSubmit={e => { e.preventDefault(); void send(draft); }}>
       <label htmlFor={`chat-draft-${conversationId}`} className="sr-only">Mensagem</label>
       <textarea id={`chat-draft-${conversationId}`} rows={2} maxLength={4000} value={draft} disabled={sending} placeholder="Escreva uma mensagem…" className="flex-1 min-w-0 max-h-32 resize-y bg-muted rounded-xl p-3 text-sm outline-none focus:ring-2 ring-primary"
         onChange={e => { setDraft(e.target.value); if (Date.now() - lastTyping.current > 1500) { publishRef.current?.(!!e.target.value); lastTyping.current = Date.now(); } }}

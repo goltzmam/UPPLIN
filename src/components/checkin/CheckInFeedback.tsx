@@ -67,7 +67,7 @@ export function CheckInFeedback({ result, className }: CheckInFeedbackProps) {
             initial={{ opacity: 0, y: -18, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -18, scale: 0.96 }}
-            className="fixed inset-x-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-50 md:hidden"
+            className="fixed inset-x-3 top-[calc(var(--safe-top)+0.75rem)] z-50 md:hidden"
           >
             <FeedbackCard result={result} compact />
           </motion.div>

@@ -192,7 +192,7 @@ export default function OrganizerPublicProfile() {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-1 container py-12">
+        <main className="flex-1 container py-12 pt-[calc(var(--safe-top)_+_3rem)]">
           <EmptyState
             icon={<Building2 className="h-8 w-8 text-accent" />}
             title="Organizador não encontrado"
@@ -253,7 +253,7 @@ export default function OrganizerPublicProfile() {
       </Helmet>
       <Header />
 
-      <main className="flex-1 pt-14">
+      <main className="flex-1 pt-[calc(var(--safe-top)_+_3.5rem)]">
         {/* Hero Cover Section */}
         <div className="relative h-48 md:h-64 bg-gradient-to-br from-accent/30 via-primary/20 to-pink-500/30 overflow-hidden">
           {/* Animated background pattern */}

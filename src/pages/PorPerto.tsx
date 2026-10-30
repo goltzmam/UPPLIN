@@ -16,6 +16,7 @@ import { MapSearch } from "@/components/map/MapSearch";
 import { MarkerCluster } from "@/components/map/MarkerCluster";
 import { BaseMapTiles } from "@/components/map/BaseMapTiles";
 import { cn } from "@/lib/utils";
+import { getCurrentCoords, LocationError } from "@/lib/geolocation";
 
 type GeoState = "loading" | "granted" | "denied" | "unavailable";
 type Period = "all" | "today" | "week";
@@ -112,13 +113,10 @@ export default function PorPerto() {
   const [period, setPeriod] = useState<Period>("all");
   const [live, setLive] = useState(false);
   const requestLocation = useCallback(() => {
-    if (!navigator.geolocation) { setGeoState("unavailable"); return; }
     setGeoState("loading");
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => { setUserPos([coords.latitude, coords.longitude]); setGeoState("granted"); },
-      error => setGeoState(error.code === error.PERMISSION_DENIED ? "denied" : "unavailable"),
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
-    );
+    getCurrentCoords({ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 })
+      .then(({ lat, lng }) => { setUserPos([lat, lng]); setGeoState("granted"); })
+      .catch(error => setGeoState(error instanceof LocationError && error.reason === "denied" ? "denied" : "unavailable"));
   }, []);
   useEffect(() => { requestLocation(); }, [requestLocation]);
   useEffect(() => {

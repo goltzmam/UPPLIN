@@ -99,7 +99,7 @@ export default function PoliticaPlano() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className={`bg-gradient-to-br ${plan.color} py-16 px-4`}>
+      <div className={`bg-gradient-to-br ${plan.color} py-16 pt-[calc(var(--safe-top)_+_4rem)] px-4`}>
         <div className="max-w-3xl mx-auto">
           <Button variant="ghost" size="sm" className="mb-6 text-foreground/70" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-4 w-4 mr-2" />

@@ -27,7 +27,7 @@ const CATEGORIES = [
   { id: "show", label: "Shows", icon: "🎸" },
   { id: "teatro", label: "Teatro", icon: "🎭" },
   { id: "workshop", label: "Workshops", icon: "📚" },
-  { id: "esporte", label: "Esportes", icon: "⚽" },
+  { id: "esportes", label: "Esportes", icon: "⚽" },
   { id: "gastronomia", label: "Gastronomia", icon: "🍽️" },
   { id: "tecnologia", label: "Tecnologia", icon: "💻" },
   { id: "arte", label: "Arte", icon: "🎨" },
@@ -100,7 +100,7 @@ export default function Eventos() {
       {/* Main Content - offset for fixed sidebar on desktop */}
       <main className="min-w-0 pb-app-bottom-safe lg:ml-[72px]">
         {/* Search Header */}
-        <section className="bg-gradient-to-b from-muted/60 to-transparent border-b border-border py-4 sm:py-6 lg:py-8 pt-4 sm:pt-6 lg:pt-8">
+        <section className="bg-gradient-to-b from-muted/60 to-transparent border-b border-border py-4 sm:py-6 lg:py-8 pt-[calc(var(--safe-top)_+_1rem)] sm:pt-[calc(var(--safe-top)_+_1.5rem)] lg:pt-[calc(var(--safe-top)_+_2rem)]">
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4">
             <h1 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2 text-foreground">
               Explorar Eventos

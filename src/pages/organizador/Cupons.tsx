@@ -177,7 +177,7 @@ export default function Cupons() {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 py-6 sm:py-8 pt-20 sm:pt-24">
+      <main className="flex-1 py-6 sm:py-8 pt-[calc(var(--safe-top)_+_5rem)] sm:pt-[calc(var(--safe-top)_+_6rem)]">
         <div className="container px-4">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">

@@ -69,7 +69,7 @@ export default function EventosSalvos() {
       <TikTokDesktopSidebar />
       
       <main className="flex-1 pb-app-bottom-safe lg:ml-[72px]">
-        <div className="max-w-4xl mx-auto py-4 px-3 sm:px-4">
+        <div className="max-w-4xl mx-auto py-4 px-3 sm:px-4 pt-[calc(var(--safe-top)_+_1rem)]">
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
             <Button

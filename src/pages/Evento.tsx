@@ -674,7 +674,7 @@ export default function Evento() {
         </div>
 
         {/* Counter badge */}
-        <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-xs font-medium">
+        <div className="absolute top-[calc(var(--safe-top)_+_0.75rem)] right-3 px-2.5 py-1 rounded-full bg-black/60 text-white text-xs font-medium">
           {currentIndex + 1}/{media.length}
         </div>
       </div>

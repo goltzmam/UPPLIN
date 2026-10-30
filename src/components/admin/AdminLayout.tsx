@@ -108,7 +108,7 @@ export function AdminLayout() {
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 pt-[var(--safe-top)] bg-card/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 py-3">
           <Link to="/" className="flex items-center gap-2">
             <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
@@ -180,7 +180,7 @@ export function AdminLayout() {
 
       {/* Main Content - Offset for fixed sidebar */}
       <main className="flex-1 lg:ml-64 min-w-0 overflow-y-auto scrollbar-thin">
-        <div className="p-4 pt-[72px] lg:pt-8 lg:p-8">
+        <div className="p-4 pt-[calc(var(--safe-top)_+_72px)] lg:pt-8 lg:p-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={location.pathname}

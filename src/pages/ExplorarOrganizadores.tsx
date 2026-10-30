@@ -118,7 +118,7 @@ export default function ExplorarOrganizadores() {
       {/* Main Content - offset for fixed sidebar on desktop */}
       <main className="min-w-0 pb-app-bottom-safe lg:ml-[72px]">
         {/* Hero */}
-        <section className="py-6 sm:py-8 lg:py-10 bg-gradient-to-b from-muted/50 to-transparent">
+        <section className="py-6 sm:py-8 lg:py-10 pt-[calc(var(--safe-top)_+_1.5rem)] sm:pt-[calc(var(--safe-top)_+_2rem)] lg:pt-10 bg-gradient-to-b from-muted/50 to-transparent">
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -150,7 +150,7 @@ export default function ExplorarOrganizadores() {
         </section>
 
         {/* Categories */}
-        <section className="border-b border-border sticky top-0 z-30 bg-background/80 backdrop-blur-xl">
+        <section className="border-b border-border sticky top-0 pt-[var(--safe-top)] z-30 bg-background/80 backdrop-blur-xl">
           <div className="w-full max-w-4xl mx-auto px-3 sm:px-4">
             <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3 -mx-3 sm:-mx-4 px-3 sm:px-4">
               {categories.map((cat) => (
