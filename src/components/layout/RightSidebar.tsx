@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Flame, Search, Sparkles } from "lucide-react";
@@ -172,7 +173,7 @@ export function RightSidebar() {
             <span>·</span>
             <Link to="#" className="hover:text-muted-foreground hover:underline">Ajuda</Link>
             <span>·</span>
-            <Link to="/precos" className="hover:text-muted-foreground hover:underline">Preços</Link>
+            {!Capacitor.isNativePlatform() && <Link to="/precos" className="hover:text-muted-foreground hover:underline">Preços</Link>}
             <span>·</span>
             <Link to="#" className="hover:text-muted-foreground hover:underline">Termos</Link>
             <span>·</span>

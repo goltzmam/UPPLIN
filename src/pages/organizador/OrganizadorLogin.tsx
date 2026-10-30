@@ -74,7 +74,7 @@ export default function OrganizadorLogin() {
     if (error) {
       toast({ title: "Erro ao entrar", description: error.message, variant: "destructive" });
     } else {
-      const destination = signedUser ? await getOrganizerDestination(signedUser.id) : "/organizador/onboarding";
+      const destination = signedUser?.app_metadata?.store_review_account === true ? "/organizador/painel" : signedUser ? await getOrganizerDestination(signedUser.id) : "/organizador/onboarding";
       navigate(destination);
     }
   };

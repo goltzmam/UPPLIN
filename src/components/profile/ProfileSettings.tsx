@@ -1,3 +1,4 @@
+import { DeleteAccountButton } from "@/components/profile/DeleteAccountButton";
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus, MapPin, Shield, FileText } from "lucide-react";
@@ -391,6 +392,8 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
       </div>
 
 
+
+      <DeleteAccountButton />
 
       {/* Documentos legais */}
       <div className="space-y-2">

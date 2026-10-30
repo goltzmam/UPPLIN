@@ -41,6 +41,7 @@ import { ptBR } from "date-fns/locale";
 
 interface OrderWithDetails {
   id: string;
+  buyer_user_id: string | null;
   status: string | null;
   total_cents: number;
   created_at: string | null;
@@ -74,17 +75,17 @@ export default function AdminOrders() {
       if (!ordersData || ordersData.length === 0) return [];
 
       // Fetch buyer profiles
-      const buyerIds = [...new Set(ordersData.map((o) => o.buyer_user_id))];
-      const { data: profilesData } = await supabase
+      const buyerIds = [...new Set(ordersData.map((o) => o.buyer_user_id))].filter((id): id is string => !!id);
+      const { data: profilesData } = buyerIds.length ? await supabase
         .from("profiles")
         .select("id, full_name, email")
-        .in("id", buyerIds);
+        .in("id", buyerIds) : { data: [] };
 
-      const profilesMap = new Map(profilesData?.map((p) => [p.id, p]) || []);
+      const profilesMap = new Map<string, { id: string; full_name: string | null; email: string }>((profilesData || []).map((p: { id: string; full_name: string | null; email: string }) => [p.id, p] as const));
 
       let result = ordersData.map((o) => ({
         ...o,
-        profiles: profilesMap.get(o.buyer_user_id) || null,
+        profiles: o.buyer_user_id ? profilesMap.get(o.buyer_user_id) || null : null,
       }));
 
       // Filter by search (client-side for event title / buyer)
@@ -255,7 +256,7 @@ export default function AdminOrders() {
                       </TableCell>
                       <TableCell>
                         <div>
-                          <p className="text-sm">{order.profiles?.full_name || "-"}</p>
+                          <p className="text-sm">{order.profiles?.full_name || (order.buyer_user_id ? "-" : "Conta excluída")}</p>
                           <p className="text-xs text-muted-foreground">{order.profiles?.email}</p>
                         </div>
                       </TableCell>
@@ -314,7 +315,7 @@ export default function AdminOrders() {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Comprador</p>
-                  <p>{viewDialog.order.profiles?.full_name || "-"}</p>
+                  <p>{viewDialog.order.profiles?.full_name || (viewDialog.order.buyer_user_id ? "-" : "Conta excluída")}</p>
                   <p className="text-sm text-muted-foreground">{viewDialog.order.profiles?.email}</p>
                 </div>
                 <div>

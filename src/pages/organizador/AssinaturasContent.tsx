@@ -439,7 +439,7 @@ export default function AssinaturasContent() {
             </a>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <a href="mailto:contato@upplin.com">
+            <a href="mailto:suporte@upplin.com">
               Enviar e-mail
             </a>
           </Button>

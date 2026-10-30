@@ -40,3 +40,13 @@ project_id = "ermhzlthjlolqsbtjawf"
     verify_jwt = false
   [functions.generate-receipt]
     verify_jwt = false
+  [functions.privacy-admin]
+    verify_jwt = false
+  [functions.delete-account]
+    verify_jwt = false
+  [functions.store-apple-token]
+    verify_jwt = false
+  [functions.privacy-worker]
+    verify_jwt = false
+  [functions.record-access]
+    verify_jwt = false

@@ -532,6 +532,8 @@ export type Database = {
       }
       events: {
         Row: {
+          is_store_review: boolean
+          review_owner_id: string | null
           address_text: string | null
           category: string | null
           checkout_banner_url: string | null
@@ -555,6 +557,8 @@ export type Database = {
           venue_name: string | null
         }
         Insert: {
+          is_store_review?: boolean
+          review_owner_id?: string | null
           address_text?: string | null
           category?: string | null
           checkout_banner_url?: string | null
@@ -578,6 +582,8 @@ export type Database = {
           venue_name?: string | null
         }
         Update: {
+          is_store_review?: boolean
+          review_owner_id?: string | null
           address_text?: string | null
           category?: string | null
           checkout_banner_url?: string | null
@@ -782,7 +788,7 @@ export type Database = {
       }
       orders: {
         Row: {
-          buyer_user_id: string
+          buyer_user_id: string | null
           commission_cents: number | null
           coupon_id: string | null
           created_at: string | null
@@ -798,7 +804,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          buyer_user_id: string
+          buyer_user_id: string | null
           commission_cents?: number | null
           coupon_id?: string | null
           created_at?: string | null
@@ -814,7 +820,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          buyer_user_id?: string
+          buyer_user_id?: string | null
           commission_cents?: number | null
           coupon_id?: string | null
           created_at?: string | null
@@ -848,6 +854,7 @@ export type Database = {
       }
       organizer_accounts: {
         Row: {
+          is_store_review: boolean
           cep: string | null
           chat_available: boolean
           city: string | null
@@ -862,7 +869,7 @@ export type Database = {
           id: string
           logo_url: string | null
           neighborhood: string | null
-          owner_user_id: string
+          owner_user_id: string | null
           phone: string | null
           slug: string | null
           social_facebook: string | null
@@ -875,6 +882,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          is_store_review?: boolean
           cep?: string | null
           chat_available?: boolean
           city?: string | null
@@ -889,7 +897,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           neighborhood?: string | null
-          owner_user_id: string
+          owner_user_id: string | null
           phone?: string | null
           slug?: string | null
           social_facebook?: string | null
@@ -902,6 +910,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          is_store_review?: boolean
           cep?: string | null
           chat_available?: boolean
           city?: string | null
@@ -916,7 +925,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           neighborhood?: string | null
-          owner_user_id?: string
+          owner_user_id?: string | null
           phone?: string | null
           slug?: string | null
           social_facebook?: string | null
@@ -1202,7 +1211,7 @@ export type Database = {
           reason: string
           refund_amount_cents: number
           refunded_at: string | null
-          requester_user_id: string
+          requester_user_id: string | null
           status: Database["public"]["Enums"]["refund_status"]
           updated_at: string
           within_guarantee: boolean
@@ -1224,7 +1233,7 @@ export type Database = {
           reason: string
           refund_amount_cents?: number
           refunded_at?: string | null
-          requester_user_id: string
+          requester_user_id: string | null
           status?: Database["public"]["Enums"]["refund_status"]
           updated_at?: string
           within_guarantee?: boolean
@@ -1246,7 +1255,7 @@ export type Database = {
           reason?: string
           refund_amount_cents?: number
           refunded_at?: string | null
-          requester_user_id?: string
+          requester_user_id?: string | null
           status?: Database["public"]["Enums"]["refund_status"]
           updated_at?: string
           within_guarantee?: boolean
@@ -1589,7 +1598,7 @@ export type Database = {
       }
       tickets: {
         Row: {
-          buyer_user_id: string
+          buyer_user_id: string | null
           checked_in_by: string | null
           event_id: string
           id: string
@@ -1603,7 +1612,7 @@ export type Database = {
           used_at: string | null
         }
         Insert: {
-          buyer_user_id: string
+          buyer_user_id: string | null
           checked_in_by?: string | null
           event_id: string
           id?: string
@@ -1617,7 +1626,7 @@ export type Database = {
           used_at?: string | null
         }
         Update: {
-          buyer_user_id?: string
+          buyer_user_id?: string | null
           checked_in_by?: string | null
           event_id?: string
           id?: string
@@ -1917,6 +1926,7 @@ export type Database = {
       }
     }
     Functions: {
+      account_is_active: { Args: Record<PropertyKey, never>; Returns: boolean }
       get_chat_identities: {
         Args: { p_conversation_ids: string[] }
         Returns: { conversation_id: string; user_id: string; full_name: string; photo_url: string | null; cover_photo_url: string | null; is_support: boolean; is_organizer: boolean; profile_path: string | null }[]

@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { useEffect, useState } from "react";
 import { useNavigate, Outlet, Link, useLocation, useOutletContext } from "react-router-dom";
 import { 
@@ -191,7 +192,7 @@ export function OrganizerLayout() {
         {/* Navigation - Scrollable */}
         <ScrollArea className="flex-1 py-4">
           <nav className={cn("flex flex-col gap-1", isCollapsed ? "px-2" : "px-4")}>
-            {navItems.map((item) => (
+            {navItems.filter(item => !Capacitor.isNativePlatform() || item.href !== "/organizador/painel/assinaturas").map((item) => (
               <Link
                 key={item.href}
                 to={item.href}
@@ -301,7 +302,7 @@ export function OrganizerLayout() {
                   {/* Mobile Navigation - Scrollable */}
                   <ScrollArea className="flex-1">
                     <nav className="p-4 space-y-1">
-                      {navItems.map((item) => (
+                      {navItems.filter(item => !Capacitor.isNativePlatform() || item.href !== "/organizador/painel/assinaturas").map((item) => (
                         <Link
                           key={item.href}
                           to={item.href}

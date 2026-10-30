@@ -92,7 +92,7 @@ export default function Checkout() {
       const result = await resp.json();
       return result.public_key as string;
     },
-    enabled: !!orderId && !!user,
+    enabled: !!orderId && !!user && user.app_metadata?.store_review_account !== true,
   });
 
   useEffect(() => {
@@ -585,6 +585,12 @@ export default function Checkout() {
                       >
                         Confirmar Pedido Gratuito
                       </Button>
+                    </div>
+                  ) : user?.app_metadata?.store_review_account === true ? (
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-6 space-y-4">
+                      <h3 className="font-semibold text-lg">Checkout de demonstração</h3><p className="text-sm text-muted-foreground">Este ingresso pago permite conhecer o checkout. Nenhuma cobrança será feita e nenhum dado de cartão é solicitado.</p>
+                      <div className="flex gap-3"><Button variant="outline" disabled><CreditCard className="h-4 w-4 mr-2" />Cartão</Button><Button variant="outline" disabled><QrCode className="h-4 w-4 mr-2" />PIX</Button></div>
+                      <p className="font-semibold">Total demonstrativo: {formatPrice(finalTotal)}</p><Button variant="outline" onClick={() => navigate(`/evento/${order.event_id}`)}>Voltar e testar o ingresso gratuito</Button>
                     </div>
                   ) : (
                     <Tabs value={paymentTab} onValueChange={handleTabChange}>

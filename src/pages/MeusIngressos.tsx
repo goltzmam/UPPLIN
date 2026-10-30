@@ -58,7 +58,7 @@ export default function MeusIngressos() {
   useEffect(() => {
     if (!loading && !user) {
       navigate("/login");
-    } else if (!loading && user && !profile?.cpf) {
+    } else if (!loading && user && !profile?.cpf && user.app_metadata?.store_review_account !== true) {
       navigate("/onboarding");
     }
   }, [loading, user, profile, navigate]);

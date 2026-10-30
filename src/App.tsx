@@ -1,3 +1,4 @@
+import { isOrganizerPlanPath } from "@/lib/store-platform";
 import { Capacitor } from "@capacitor/core";
 import { webSurface, legacyAdminUrl, legacyRecoveryDestination, PLANS_ORIGIN, APP_ORIGIN } from "@/lib/web-surfaces";
 import { RouteSeo } from "@/components/seo/RouteSeo";
@@ -41,6 +42,7 @@ const RelatoriosContent = lazy(() => import("./pages/organizador/RelatoriosConte
 const CompradoresContent = lazy(() => import("./pages/organizador/CompradoresContent"));
 const AssinaturasContent = lazy(() => import("./pages/organizador/AssinaturasContent"));
 const ReembolsosContent = lazy(() => import("./pages/organizador/ReembolsosContent"));
+const ExcluirConta = lazy(() => import("./pages/ExcluirConta"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then((m) => ({ default: m.AdminLayout })));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -199,6 +201,7 @@ function AnimatedRoutes() {
   }, [location.pathname, location.search, location.hash]);
 
   const surface = webSurface(window.location.hostname, Capacitor.isNativePlatform());
+  if (Capacitor.isNativePlatform() && isOrganizerPlanPath(location.pathname)) return <Navigate to="/organizador/painel" replace />;
   const legacyRecovery = legacyRecoveryDestination(location.pathname, location.search, location.hash);
   if (legacyRecovery) return <Navigate to={legacyRecovery} replace />;
   if (surface === "admin") return <Suspense fallback={<AppBootFallback />}>
@@ -250,6 +253,7 @@ function AnimatedRoutes() {
           <Route path="/planos/organizador" element={Capacitor.isNativePlatform() ? <NotFound /> : <ExternalNavigation target={PLANS_ORIGIN} />} />
           <Route path="/politica/:slug" element={<PoliticaPlano />} />
           <Route path="/suporte" element={<Suporte />} />
+          <Route path="/excluir-conta" element={<ExcluirConta />} />
           <Route path="/privacidade" element={<Privacidade />} />
           <Route path="/privacidade/participante" element={<PrivacidadeParticipante />} />
           <Route path="/privacidade/organizador" element={<PrivacidadeOrganizador />} />

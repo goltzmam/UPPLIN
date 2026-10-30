@@ -945,6 +945,7 @@ export default function Evento() {
                         variant="outline"
                         size="icon"
                         className="h-7 w-7"
+                        aria-label={`Diminuir ingressos de ${tt.name}`}
                         onClick={() => {
                           triggerFeedback({ haptic: "selection", sound: "tap" });
                           updateSelection(tt.id, -1);
@@ -958,6 +959,7 @@ export default function Evento() {
                         variant="outline"
                         size="icon"
                         className="h-7 w-7"
+                        aria-label={`Aumentar ingressos de ${tt.name}`}
                         onClick={() => {
                           triggerFeedback({ haptic: "selection", sound: "tap" });
                           updateSelection(tt.id, 1);

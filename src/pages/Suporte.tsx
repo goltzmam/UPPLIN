@@ -6,9 +6,9 @@ const channels = [
   {
     icon: Mail,
     title: "E-mail",
-    value: "contato@upplin.com",
+    value: "suporte@upplin.com",
     description: "Resposta em até 24h úteis",
-    href: "mailto:contato@upplin.com",
+    href: "mailto:suporte@upplin.com",
   },
   {
     icon: MessageCircle,
@@ -119,10 +119,10 @@ export default function Suporte() {
                 Acessar painel
               </Link>
               <a
-                href="mailto:organizadores@upplin.com"
+                href="mailto:suporte@upplin.com"
                 className="px-6 py-3 rounded-2xl border border-border font-semibold text-center hover:bg-muted transition"
               >
-                organizadores@upplin.com
+                suporte@upplin.com
               </a>
             </div>
           </div>
