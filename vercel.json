@@ -6,6 +6,10 @@
   "outputDirectory": "dist",
   "rewrites": [
     {
+      "source": "/excluir-conta",
+      "destination": "/seo/excluir-conta.html"
+    },
+    {
       "source": "/eventos",
       "destination": "/seo/eventos.html"
     },

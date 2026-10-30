@@ -72,7 +72,7 @@ export default function Login() {
     } else {
       setAttemptCount(0);
       setLoginError(null);
-      const destination = user ? await getParticipantDestination(user.id) : "/";
+      const destination = user?.app_metadata?.store_review_account === true ? "/eventos" : user ? await getParticipantDestination(user.id) : "/";
       setLoading(false);
       navigate(destination);
     }

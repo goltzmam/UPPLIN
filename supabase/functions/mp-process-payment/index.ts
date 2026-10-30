@@ -34,6 +34,10 @@ serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+    if (user.app_metadata?.store_review_account === true) {
+      return new Response(JSON.stringify({ error: "review_payments_disabled" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
+
 
     const body = await req.json();
     const {

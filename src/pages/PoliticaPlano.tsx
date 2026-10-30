@@ -184,7 +184,7 @@ export default function PoliticaPlano() {
               WhatsApp
             </a>{" "}
             ou por{" "}
-            <a href="mailto:contato@upplin.com" className="text-primary underline">
+            <a href="mailto:suporte@upplin.com" className="text-primary underline">
               e-mail
             </a>.
           </p>

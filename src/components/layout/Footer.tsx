@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import { Link } from "react-router-dom";
 import { Instagram, Twitter, Mail, Heart, Phone, MessageCircle } from "lucide-react";
 
@@ -55,11 +56,13 @@ export function Footer() {
                   Para Organizadores
                 </Link>
               </li>
+              {!Capacitor.isNativePlatform() && <>
               <li>
                 <Link to="/precos" className="text-foreground/80 hover:text-foreground transition-colors">
                   Preços
                 </Link>
               </li>
+              </>}
             </ul>
           </div>
 
@@ -67,9 +70,9 @@ export function Footer() {
             <h4 className="font-semibold text-sm mb-6 uppercase tracking-wider text-muted-foreground">Suporte</h4>
             <ul className="space-y-4 text-sm">
               <li>
-                <a href="mailto:contato@upplin.com" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-2">
+                <a href="mailto:suporte@upplin.com" className="text-foreground/80 hover:text-foreground transition-colors flex items-center gap-2">
                   <Mail className="h-4 w-4" />
-                  contato@upplin.com
+                  suporte@upplin.com
                 </a>
               </li>
               <li>
@@ -115,6 +118,8 @@ export function Footer() {
                   Cookies
                 </Link>
               </li>
+              <li><Link to="/excluir-conta" className="text-foreground/80 hover:text-foreground transition-colors">Excluir conta</Link></li>
+              {!Capacitor.isNativePlatform() && <>
               <li>
                 <Link to="/politica/standart" className="text-foreground/80 hover:text-foreground transition-colors">
                   Termos Standart
@@ -130,6 +135,7 @@ export function Footer() {
                   Termos Enterprise
                 </Link>
               </li>
+              </>}
             </ul>
           </div>
         </div>

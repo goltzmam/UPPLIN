@@ -75,7 +75,7 @@ serve(async (req) => {
     // Verify event exists and is published
     const { data: event, error: eventError } = await adminClient
       .from("events")
-      .select("id, status, title")
+      .select("id, status, title, is_store_review, review_owner_id, organizer_accounts!organizer_id(status, owner_user_id)")
       .eq("id", event_id)
       .single();
 
@@ -84,6 +84,12 @@ serve(async (req) => {
         JSON.stringify({ error: "Event not found or not available" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const organizer = event.organizer_accounts as unknown as { status: string; owner_user_id: string | null } | null;
+    if (!organizer || organizer.status !== "active" || !organizer.owner_user_id) return new Response(JSON.stringify({ error: "organizer_unavailable" }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if ((event.is_store_review && event.review_owner_id !== user.id) || (user.app_metadata?.store_review_account === true && (!event.is_store_review || event.review_owner_id !== user.id))) {
+      return new Response(JSON.stringify({ error: "review_event_restricted" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // Fetch ticket types and validate availability

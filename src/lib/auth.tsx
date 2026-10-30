@@ -183,7 +183,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (createError) {
-      console.error("Error creating missing profile:", createError);
+      const { data: active, error: activeError } = await supabase.rpc("account_is_active", {});
+      if (!activeError && active === false) await supabase.auth.signOut({ scope: "local" });
+      else console.error("Error creating missing profile:", createError);
       return null;
     }
 
@@ -280,7 +282,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchProfile, loadProfileForSession]);
 
-  const hasCompletedParticipantOnboarding = useMemo(() => Boolean(profile?.cpf), [profile?.cpf]);
+  const accessUserId = session?.user?.id;
+  const appleRefreshToken = session?.provider_refresh_token;
+  const appleSession = session?.user?.identities?.some(identity => identity.provider === "apple");
+  useEffect(() => {
+    if (!accessUserId) return;
+    void supabase.functions.invoke("record-access", { body: {} }).catch(() => undefined);
+    if (appleRefreshToken && appleSession) {
+      void supabase.functions.invoke("store-apple-token", { body: { refresh_token: appleRefreshToken } }).catch(() => undefined);
+    }
+  }, [accessUserId, appleRefreshToken, appleSession]);
+
+  const hasCompletedParticipantOnboarding = useMemo(() => Boolean(profile?.cpf || user?.app_metadata?.store_review_account === true), [profile?.cpf, user?.app_metadata?.store_review_account]);
   const onboardingStatus = useMemo<OnboardingStatus | null>(() => {
     if (!user) return null;
     return hasCompletedParticipantOnboarding ? "participant_complete" : "participant_pending";
@@ -335,7 +348,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return {
-      error: result.error ? new Error(translateAuthError(String((result.error as any)?.message ?? result.error))) : null,
+      error: result.error ? new Error(translateAuthError(String(result.error instanceof Error ? result.error.message : result.error))) : null,
     };
   };
 

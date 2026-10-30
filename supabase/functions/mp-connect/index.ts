@@ -44,6 +44,8 @@ serve(async (req) => {
         );
       }
 
+      if (user.app_metadata?.store_review_account === true) return new Response(JSON.stringify({ error: "review_payments_disabled" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
       const clientId = Deno.env.get("MP_CLIENT_ID")!;
       const redirectUri = `${supabaseUrl}/functions/v1/mp-connect?action=callback`;
 

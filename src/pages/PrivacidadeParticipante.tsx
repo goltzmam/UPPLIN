@@ -8,7 +8,7 @@ export default function PrivacidadeParticipante() {
       metaDescription="Como a Upplin trata os dados de participantes que compram ingressos e usam o feed social."
       canonical="https://www.upplin.com/privacidade/participante"
       badge="LGPD · Participante"
-      updatedAt="07 de junho de 2026"
+      updatedAt="30 de outubro de 2026"
       backTo="/privacidade"
     >
       <LegalSection title="1. Quem somos">
@@ -80,6 +80,11 @@ export default function PrivacidadeParticipante() {
 
       <LegalSection title="8. Menores de 18 anos">
         <p>O app é destinado a maiores de 18 anos. Contas de menores serão removidas.</p>
+      </LegalSection>
+      <LegalSection title="Exclusão de conta e retenção legal">
+        <p>Solicite em Perfil → Configurações → Excluir conta ou pelo email suporte@upplin.com, com o assunto “Excluir minha conta”. Respondemos em até 2 dias úteis e concluímos em até 30 dias corridos.</p>
+        <p>Dados pessoais e conteúdo são apagados. Registros financeiros mínimos, incluindo o CPF do comprador, são retidos por 5 anos; registros de acesso, por 6 meses. Cópias de segurança seguem o ciclo de retenção, em até 90 dias após a exclusão, exceto a guarda legal financeira.</p>
+        <p><a href="/excluir-conta" className="text-primary underline">Veja o passo a passo e a lista completa de dados e prazos.</a></p>
       </LegalSection>
     </LegalLayout>
   );

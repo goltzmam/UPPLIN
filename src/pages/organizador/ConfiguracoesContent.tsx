@@ -1,3 +1,6 @@
+import { useAuth } from "@/lib/auth";
+import { OrderCommissionDisclosure } from "@/components/organizador/OrderCommissionDisclosure";
+import { DeleteAccountButton } from "@/components/profile/DeleteAccountButton";
 import { useState, useCallback, useEffect } from "react";
 import { Link, useOutletContext, useSearchParams } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -523,11 +526,15 @@ export default function ConfiguracoesContent() {
           Salvar Configurações
         </Button>
       </div>
+      <OrderCommissionDisclosure organizerId={organizer.id} />
+      <DeleteAccountButton />
     </div>
   );
 }
 
 function MercadoPagoCard() {
+  const { user } = useAuth();
+  const review = user?.app_metadata?.store_review_account === true;
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const [connecting, setConnecting] = useState(false);
@@ -535,11 +542,6 @@ function MercadoPagoCard() {
   const { data: mpStatus, isLoading } = useQuery({
     queryKey: ["mp-status"],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("mp-connect", {
-        body: {},
-        headers: {},
-      });
-      // Use query params approach
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mp-connect?action=status`,
         {
@@ -552,6 +554,7 @@ function MercadoPagoCard() {
       if (!res.ok) throw new Error("Failed to check status");
       return res.json();
     },
+    enabled: !review,
   });
 
   useEffect(() => {
@@ -594,7 +597,7 @@ function MercadoPagoCard() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {review ? <p className="text-sm text-muted-foreground">Conta de revisão: o ingresso gratuito funciona normalmente. O ingresso pago mostra apenas o checkout, sem conexão financeira ou cobranças.</p> : isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
             Verificando conexão...
