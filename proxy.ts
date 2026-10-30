@@ -7,10 +7,13 @@ const rewrite = (destination: URL, init: ResponseInit = {}) => {
   return new Response(null, { ...init, headers });
 };
 const adminRoutes = new Set(["/", "/login", "/analytics", "/chats", "/users", "/events", "/orders", "/refunds", "/subscriptions", "/cpf", "/settings"]);
-const asset = (path: string) => path.startsWith("/assets/") || path.startsWith("/badges/") || /^\/(?:upplin-icon\.svg|favicon(?:-48\.png|\.ico)|apple-touch-icon\.png|pwa-\d+x\d+\.png|og-[\w-]+\.(?:jpg|png)|site\.webmanifest)$/.test(path);
+const asset = (path: string) => path.startsWith("/assets/") || path.startsWith("/badges/") || /^\/(?:upplin-icon\.svg|favicon(?:-48\.png|-upplin\.png|\.ico)|apple-touch-icon\.png|pwa-\d+x\d+\.png|og-[\w-]+\.(?:jpg|png)|site\.webmanifest)$/.test(path);
 export default function proxy(request: Request) {
   const url = new URL(request.url);
+  // Enforce the canonical host before filesystem hits (including the homepage).
+  if (url.hostname === "upplin.com") return Response.redirect(new URL(url.pathname + url.search, APP_ORIGIN), 308);
   const surface = webSurface(url.hostname);
+  if (surface === "app" && ["/index", "/index.html", "/index.htm"].includes(url.pathname)) return Response.redirect(new URL("/" + url.search, APP_ORIGIN), 308);
   if (asset(url.pathname)) return next();
   if (surface === "admin") {
     const headers = { "X-Robots-Tag": "noindex, nofollow", "Cache-Control": "private, no-store" };

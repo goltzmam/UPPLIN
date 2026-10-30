@@ -67,3 +67,13 @@ test("live sitemap includes newly published records and reads only the public or
   const { data, res } = response(); await sitemap({ method: "GET" } as IncomingMessage, res);
   assert.equal(data.statusCode, 200); assert.ok(data.body.includes("/evento/evento-teste")); assert.equal(data.headers["content-type"], "application/xml; charset=utf-8");
 });
+test("site identity explicitly names UPPLIN and public homepage metadata stays indexable", () => {
+  const home = PUBLIC_PAGES.find(page => page.path === "/")!;
+  const html = renderSeoHtml(template, home);
+  const schema = JSON.parse(html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)![1]);
+  const website = schema['@graph'].find((item: Record<string, unknown>) => item['@type'] === 'WebSite');
+  assert.equal(website.name, 'UPPLIN');
+  assert.equal(website.url, 'https://www.upplin.com/');
+  assert.ok(html.includes('content="index,follow,max-image-preview:large"'));
+  assert.ok(!html.includes('noindex'));
+});

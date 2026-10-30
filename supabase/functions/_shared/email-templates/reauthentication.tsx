@@ -50,8 +50,8 @@ const container = {
   margin: '0 auto',
   padding: '32px',
   borderRadius: '16px',
-  border: '1px solid hsl(0 0% 90%)',
-  borderTop: '6px solid hsl(0 85% 56%)',
+  border: '1px solid #E6E6E6',
+  borderTop: '6px solid #EE2F2F',
   boxShadow: '0 18px 40px rgba(0, 0, 0, 0.08)',
 }
 
@@ -60,7 +60,7 @@ const eyebrow = {
   fontWeight: '700' as const,
   letterSpacing: '1.6px',
   textTransform: 'uppercase' as const,
-  color: 'hsl(0 85% 56%)',
+  color: '#EE2F2F',
   margin: '0 0 16px',
 }
 
@@ -69,13 +69,13 @@ const h1 = {
   fontSize: '28px',
   lineHeight: '1.2',
   fontWeight: '700' as const,
-  color: 'hsl(0 0% 6%)',
+  color: '#0F0F0F',
   margin: '0 0 16px',
 }
 
 const text = {
   fontSize: '15px',
-  color: 'hsl(0 0% 22%)',
+  color: '#383838',
   lineHeight: '1.7',
   margin: '0 0 18px',
 }
@@ -84,14 +84,14 @@ const codeStyle = {
   fontFamily: 'Courier, monospace',
   fontSize: '28px',
   fontWeight: '700' as const,
-  color: 'hsl(0 0% 6%)',
+  color: '#0F0F0F',
   letterSpacing: '4px',
   margin: '0 0 24px',
 }
 
 const footer = {
   fontSize: '13px',
-  color: 'hsl(0 0% 38%)',
+  color: '#616161',
   lineHeight: '1.6',
   margin: '24px 0 0',
 }

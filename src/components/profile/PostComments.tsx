@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -56,7 +57,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
     enabled: !!postId,
   });
 
-  const { data: comments = [], isLoading } = useQuery({
+  const { data: comments = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["post-comments", postId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -68,6 +69,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
       if (error) throw error;
 
       // Fetch profiles for comments
+      if (!data.length) return [];
       const userIds = [...new Set(data.map((c) => c.user_id))];
       const { data: profiles } = await supabase
         .from("profiles_public")
@@ -109,14 +111,14 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
       setNewComment("");
       await refreshComments();
     } catch (error) {
-      console.error("Erro ao adicionar comentário:", error);
+      toast.error("Não foi possível publicar o comentário. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteComment = async (commentId: string) => {
-    if (deletingCommentId) return;
+    if (!user || deletingCommentId) return;
 
     setDeletingCommentId(commentId);
 
@@ -124,13 +126,15 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
       const { error } = await supabase
         .from("user_post_comments")
         .delete()
-        .eq("id", commentId);
+        .eq("id", commentId)
+        .eq("user_id", user!.id)
+        .select("id").single();
 
       if (error) throw error;
 
       await refreshComments();
     } catch (error) {
-      console.error("Erro ao excluir comentário:", error);
+      toast.error("Não foi possível excluir o comentário. Tente novamente.");
     } finally {
       setDeletingCommentId(null);
     }
@@ -142,6 +146,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
         variant="ghost"
         size="sm"
         className="h-9 min-w-[3.25rem] shrink-0 gap-1.5 rounded-full px-2.5 text-muted-foreground hover:text-primary sm:px-3"
+        aria-label="Comentários do post"
         onClick={onToggle}
       >
         <MessageCircle className="h-4 w-4" />
@@ -155,6 +160,8 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
             <div className="flex justify-center py-4">
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
+          ) : isError ? (
+            <div role="alert" className="space-y-2"><p className="text-sm">Não foi possível carregar os comentários.</p><Button size="sm" variant="outline" onClick={() => void refetch()}>Tentar novamente</Button></div>
           ) : comments.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               Seja o primeiro a comentar!
@@ -188,7 +195,8 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                       {comment.user_id === user?.id && (
                         <button
                           onClick={() => handleDeleteComment(comment.id)}
-                          className="text-xs text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                          disabled={deletingCommentId === comment.id}
+                          className="text-xs text-destructive min-h-9 px-1"
                         >
                           Excluir
                         </button>
@@ -225,6 +233,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                 />
                 <Button
                   size="icon"
+                  aria-label="Enviar comentário"
                   className="h-9 w-9 flex-shrink-0 self-end btn-gradient"
                   onClick={handleAddComment}
                   disabled={!newComment.trim() || isSubmitting}

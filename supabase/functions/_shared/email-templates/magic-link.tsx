@@ -1,10 +1,10 @@
+import { EmailButton } from './email-button.tsx'
 /// <reference types="npm:@types/react@18.3.1" />
 
 import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -32,9 +32,9 @@ export const MagicLinkEmail = ({
         <Text style={text}>
           Use o botão abaixo para entrar na {siteName} sem precisar digitar sua senha.
         </Text>
-        <Button style={button} href={confirmationUrl}>
+        <EmailButton href={confirmationUrl}>
           Entrar agora
-        </Button>
+        </EmailButton>
         <Text style={footer}>
           Esse link expira em breve. Se você não pediu esse acesso, ignore este e-mail.
         </Text>
@@ -57,8 +57,8 @@ const container = {
   margin: '0 auto',
   padding: '32px',
   borderRadius: '16px',
-  border: '1px solid hsl(0 0% 90%)',
-  borderTop: '6px solid hsl(0 85% 56%)',
+  border: '1px solid #E6E6E6',
+  borderTop: '6px solid #EE2F2F',
   boxShadow: '0 18px 40px rgba(0, 0, 0, 0.08)',
 }
 
@@ -67,7 +67,7 @@ const eyebrow = {
   fontWeight: '700' as const,
   letterSpacing: '1.6px',
   textTransform: 'uppercase' as const,
-  color: 'hsl(0 85% 56%)',
+  color: '#EE2F2F',
   margin: '0 0 16px',
 }
 
@@ -76,31 +76,21 @@ const h1 = {
   fontSize: '28px',
   lineHeight: '1.2',
   fontWeight: '700' as const,
-  color: 'hsl(0 0% 6%)',
+  color: '#0F0F0F',
   margin: '0 0 16px',
 }
 
 const text = {
   fontSize: '15px',
-  color: 'hsl(0 0% 22%)',
+  color: '#383838',
   lineHeight: '1.7',
   margin: '0 0 24px',
 }
 
-const button = {
-  backgroundColor: 'hsl(0 85% 56%)',
-  color: 'hsl(0 0% 100%)',
-  fontSize: '15px',
-  fontWeight: '700' as const,
-  borderRadius: '16px',
-  padding: '14px 24px',
-  textDecoration: 'none',
-  display: 'inline-block',
-}
 
 const footer = {
   fontSize: '13px',
-  color: 'hsl(0 0% 38%)',
+  color: '#616161',
   lineHeight: '1.6',
   margin: '24px 0 0',
 }

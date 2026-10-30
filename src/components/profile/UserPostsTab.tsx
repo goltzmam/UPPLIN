@@ -1,3 +1,6 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageLoading } from "@/components/ui/loading";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Send, Trash2, MoreVertical, Loader2 } from "lucide-react";
+import { Camera, Send, Trash2, MoreVertical, Loader2, Pencil } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,7 +24,7 @@ import { PostLikeButton } from "./PostLikeButton";
 import { PostComments } from "./PostComments";
 import { MentionInput, renderTextWithMentions } from "@/components/ui/mention-input";
 import { PostMedia } from "./PostMedia";
-import { createUserPost, getPostMediaValidationError, invalidateSocialQueries } from "@/lib/social-posts";
+import { createUserPost, deleteUserPost, getPostMediaValidationError, invalidateSocialQueries } from "@/lib/social-posts";
 interface UserPost {
   id: string;
   user_id: string;
@@ -42,6 +45,9 @@ export function UserPostsTab() {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const [editingPost, setEditingPost] = useState<UserPost | null>(null);
+  const [editContent, setEditContent] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
   const [content, setContent] = useState("");
   const [mediaUrl, setMediaUrl] = useState<string | null>(null);
   const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
@@ -57,7 +63,7 @@ export function UserPostsTab() {
   const handleMentionClick = (slug: string) => {
     navigate(`/o/${slug}`);
   };
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: posts = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["user-posts", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -82,7 +88,7 @@ export function UserPostsTab() {
 
   const resetComposer = () => {
     setContent("");
-    setMediaUrl(null);
+    setMediaUrl(previous => { if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous); return null; });
     setMediaType(null);
     setSelectedFile(null);
     setIsCreating(false);
@@ -106,7 +112,7 @@ export function UserPostsTab() {
       await invalidateSocialQueries(queryClient, user.id);
       resetComposer();
     } catch (error) {
-      console.error("Erro ao criar post:", error);
+      toast.error(error instanceof Error ? error.message : "Não foi possível publicar o post.");
     } finally {
       setSubmittingPost(false);
     }
@@ -118,15 +124,28 @@ export function UserPostsTab() {
     setDeletingPostId(postId);
 
     try {
-      const { error } = await supabase.from("user_posts").delete().eq("id", postId);
-      if (error) throw error;
+      await deleteUserPost(postId, user.id);
 
       await invalidateSocialQueries(queryClient, user.id);
     } catch (error) {
-      console.error("Erro ao excluir post:", error);
+      toast.error(error instanceof Error ? error.message : "Não foi possível excluir o post.");
+      await invalidateSocialQueries(queryClient, user.id);
     } finally {
       setDeletingPostId(null);
     }
+  };
+
+  const saveEdit = async () => {
+    if (!user || !editingPost || savingEdit || (!editContent.trim() && !editingPost.media_url)) return;
+    setSavingEdit(true);
+    try {
+      const { error } = await supabase.from("user_posts").update({ content: editContent.trim() || null }).eq("id", editingPost.id).eq("user_id", user.id).select("id").single();
+      if (error) throw error;
+      await invalidateSocialQueries(queryClient, user.id);
+      setEditingPost(null);
+      toast.success("Post atualizado.");
+    } catch { toast.error("Não foi possível salvar o post. Tente novamente."); }
+    finally { setSavingEdit(false); }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,14 +154,14 @@ export function UserPostsTab() {
 
     const validationError = getPostMediaValidationError(file);
     if (validationError) {
-      console.error(validationError);
+      toast.error(validationError);
       return;
     }
 
     try {
       setUploading(true);
       setSelectedFile(file);
-      setMediaUrl(URL.createObjectURL(file));
+      setMediaUrl(previous => { if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous); return URL.createObjectURL(file); });
       setMediaType(file.type.startsWith("image/") ? "image" : "video");
     } catch (error) {
       console.error("Upload error:", error);
@@ -152,9 +171,16 @@ export function UserPostsTab() {
   };
 
   if (isLoading) return <PageLoading />;
+  if (isError) return <div role="alert" className="p-4 space-y-3 text-center"><p>Não foi possível carregar seus posts.</p><Button variant="outline" onClick={() => void refetch()}>Tentar novamente</Button></div>;
 
   return (
     <div className="space-y-4">
+      <Dialog open={!!editingPost} onOpenChange={open => { if (!open && !savingEdit) setEditingPost(null); }}>
+        <DialogContent><DialogHeader><DialogTitle>Editar post</DialogTitle><DialogDescription>Atualize o texto da sua publicação. A mídia será preservada.</DialogDescription></DialogHeader>
+          <Textarea aria-label="Texto do post" value={editContent} onChange={e => setEditContent(e.target.value)} disabled={savingEdit} />
+          <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={savingEdit} onClick={() => setEditingPost(null)}>Cancelar</Button><Button type="button" disabled={savingEdit || (!editContent.trim() && !editingPost?.media_url)} onClick={() => void saveEdit()}>Salvar alterações</Button></div>
+        </DialogContent>
+      </Dialog>
       {/* Create Post Card */}
       <Card className="bg-card border-border">
         <CardContent className="p-4">
@@ -180,7 +206,7 @@ export function UserPostsTab() {
                     variant="destructive"
                     className="absolute top-2 right-2"
                     onClick={() => {
-                      setMediaUrl(null);
+                      setMediaUrl(previous => { if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous); return null; });
                       setMediaType(null);
                       setSelectedFile(null);
                     }}
@@ -230,7 +256,7 @@ export function UserPostsTab() {
                     size="sm"
                     className="btn-gradient gap-2"
                     onClick={handleCreatePost}
-                    disabled={submittingPost}
+                    disabled={submittingPost || (!content.trim() && !selectedFile)}
                   >
                     {submittingPost ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                     Publicar
@@ -301,11 +327,12 @@ export function UserPostsTab() {
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" aria-label="Opções do post">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => { setEditingPost(post); setEditContent(post.content || ""); }}><Pencil className="h-4 w-4 mr-2" />Editar</DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-destructive"
                           onClick={() => handleDeletePost(post.id)}
@@ -318,7 +345,7 @@ export function UserPostsTab() {
                 </div>
 
                 {post.content && (
-                  <p className="text-sm mb-3 whitespace-pre-wrap">
+                  <p className="text-sm mb-3 whitespace-pre-wrap break-words">
                     {renderTextWithMentions(post.content, handleMentionClick)}
                   </p>
                 )}

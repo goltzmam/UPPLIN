@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,7 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data: likeData } = useQuery({
-    queryKey: ["post-likes", postId],
+    queryKey: ["post-likes", postId, user?.id],
     queryFn: async () => {
       const { data: likes, error } = await supabase
         .from("user_post_likes")
@@ -64,7 +65,7 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
         invalidateSocialQueries(queryClient, user.id),
       ]);
     } catch (error) {
-      console.error("Erro ao curtir post:", error);
+      toast.error("Não foi possível atualizar a curtida. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -79,7 +80,8 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
         isLiked && "text-destructive hover:text-destructive"
       )}
       onClick={handleToggleLike}
-      disabled={isSubmitting}
+      aria-label={isLiked ? "Descurtir post" : "Curtir post"}
+      disabled={isSubmitting || !user}
     >
       {isSubmitting ? (
         <Loader2 className="h-4 w-4 animate-spin" />

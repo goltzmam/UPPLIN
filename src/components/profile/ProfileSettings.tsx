@@ -1,3 +1,4 @@
+import { PasswordSecurityCard } from "@/components/profile/PasswordSecurityCard";
 import { DeleteAccountButton } from "@/components/profile/DeleteAccountButton";
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
@@ -393,6 +394,7 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
 
 
 
+      <PasswordSecurityCard />
       <DeleteAccountButton />
 
       {/* Documentos legais */}

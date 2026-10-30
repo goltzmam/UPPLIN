@@ -27,7 +27,7 @@ import { buildPublicAppUrl } from "@/lib/public-origin";
 const getOrganizerDestination = async (userId: string) => {
   const { data, error } = await supabase
     .from("organizer_accounts")
-    .select("id, cnpj, display_name")
+    .select("id, cnpj, cpf, display_name")
     .eq("owner_user_id", userId)
     .maybeSingle();
 
@@ -37,7 +37,7 @@ const getOrganizerDestination = async (userId: string) => {
   }
 
   if (!data) return "/organizador/onboarding";
-  return data.cnpj && data.display_name ? "/organizador/painel" : "/organizador/onboarding";
+  return (data.cnpj || data.cpf) && data.display_name ? "/organizador/painel" : "/organizador/onboarding";
 };
 
 export default function OrganizadorLogin() {

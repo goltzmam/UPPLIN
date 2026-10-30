@@ -822,3 +822,12 @@
 .scrollbar-minimal:hover::-webkit-scrollbar-thumb {
   background-color: hsl(var(--muted-foreground) / 0.35);
 }
+
+/* iOS Safari zooms focused controls below 16px and can retain that scale after
+   blur. Keep controls readable without disabling pinch zoom/accessibility. */
+@media (max-width: 1023px), (pointer: coarse) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  textarea, select, [contenteditable="true"] {
+    font-size: 16px !important;
+  }
+}

@@ -51,6 +51,7 @@ export async function uploadUserPostMedia(userId: string, file: File) {
   return {
     mediaUrl: data.publicUrl,
     mediaType: file.type.startsWith("image/") ? "image" : "video",
+    storagePath: fileName,
   } as const;
 }
 
@@ -73,11 +74,13 @@ export async function createUserPost({
 
   let mediaUrl: string | null = null;
   let mediaType: "image" | "video" | null = null;
+  let storagePath: string | null = null;
 
   if (file) {
     const upload = await uploadUserPostMedia(userId, file);
     mediaUrl = upload.mediaUrl;
     mediaType = upload.mediaType;
+    storagePath = upload.storagePath;
   }
 
   const { data, error } = await supabase
@@ -93,6 +96,7 @@ export async function createUserPost({
     .single();
 
   if (error) {
+    if (storagePath) await supabase.storage.from("user-posts").remove([storagePath]);
     throw new Error("Não foi possível publicar agora. Tente novamente.");
   }
 
@@ -111,4 +115,21 @@ export async function invalidateSocialQueries(queryClient: QueryClient, userId?:
       ? queryClient.invalidateQueries({ queryKey: ["user-posts", userId] })
       : Promise.resolve(),
   ]);
+}
+export async function deleteUserPost(postId: string, userId: string) {
+  const { data: post, error: lookupError } = await supabase.from("user_posts").select("id, media_url").eq("id", postId).eq("user_id", userId).single();
+  if (lookupError || !post) throw new Error("Não foi possível localizar seu post.");
+  const { data, error } = await supabase.from("user_posts").delete().eq("id", postId).eq("user_id", userId).select("id").single();
+  if (error || !data) throw new Error("Não foi possível excluir seu post.");
+  if (post.media_url) {
+    const url = new URL(post.media_url);
+    const prefix = "/storage/v1/object/public/user-posts/";
+    if (url.origin === new URL(import.meta.env.VITE_SUPABASE_URL).origin && url.pathname.startsWith(prefix)) {
+      const path = decodeURIComponent(url.pathname.slice(prefix.length));
+      if (path.startsWith(userId + "/")) {
+        const { error: storageError } = await supabase.storage.from("user-posts").remove([path]);
+        if (storageError) throw new Error("Post excluído, mas não conseguimos remover a mídia. Fale com o suporte.");
+      }
+    }
+  }
 }
