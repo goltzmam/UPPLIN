@@ -4,8 +4,8 @@ export function renderSeoHtml(template: string, page: SeoPage) {
   const canonical = page.canonicalUrl || SITE_URL + page.path;
   const image = page.image || SOCIAL_IMAGE;
   const identity = { "@context": "https://schema.org", "@graph": [
-    { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: "UPPLIN", url: SITE_URL + "/", logo: { "@type": "ImageObject", url: `${SITE_URL}/pwa-512x512.png`, width: 512, height: 512 } },
-    { "@type": "WebSite", "@id": `${SITE_URL}/#website`, name: "UPPLIN", url: SITE_URL + "/", inLanguage: "pt-BR", publisher: { "@id": `${SITE_URL}/#organization` } },
+    { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: "UPPLIN", legalName: "UPPLIN LTDA", url: SITE_URL + "/", logo: { "@type": "ImageObject", url: `${SITE_URL}/pwa-512x512.png`, width: 512, height: 512 } },
+    { "@type": "WebSite", "@id": `${SITE_URL}/#website`, name: "UPPLIN", alternateName: "UPPLIN Eventos", url: SITE_URL + "/", inLanguage: "pt-BR", publisher: { "@id": `${SITE_URL}/#organization` } },
     ...(page.schema ? [page.schema] : [{ "@type": "WebPage", name: page.title, url: canonical, description: page.description, inLanguage: "pt-BR", isPartOf: { "@id": `${SITE_URL}/#website` } }]),
   ] };
   const head = `<title data-rh="true">${escapeHtml(page.title)}</title>

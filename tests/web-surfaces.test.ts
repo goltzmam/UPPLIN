@@ -24,3 +24,15 @@ test('landing host preserves campaign parameters and organizer actions leave for
   const legacy=proxy(new Request('https://www.upplin.com/planos/organizador?utm_source=campaign'));assert.equal(legacy.headers.get('location'),'https://planos.upplin.com/?utm_source=campaign');
   assert.equal(legacyAdminUrl('/admin/users'),'https://admin.upplin.com/users');
 });
+test('canonical domain and legacy index aliases permanently redirect without losing campaign parameters',()=>{
+  for(const path of ['/', '/evento/show?utm_source=google', '/favicon.ico']) {
+    const redirect=proxy(new Request('https://upplin.com'+path));
+    assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'https://www.upplin.com'+path);
+  }
+  for(const path of ['/index','/index.html','/index.htm']) {
+    const redirect=proxy(new Request('https://www.upplin.com'+path+'?utm_source=google'));
+    assert.equal(redirect.status,308);assert.equal(redirect.headers.get('location'),'https://www.upplin.com/?utm_source=google');
+  }
+  const icon=proxy(new Request('https://www.upplin.com/favicon-upplin.png'));
+  assert.equal(icon.headers.get('x-middleware-next'),'1');
+});

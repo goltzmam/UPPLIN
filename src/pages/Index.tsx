@@ -1,3 +1,4 @@
+import { HOME_PAGE } from "@/lib/seo";
 import { Capacitor } from "@capacitor/core";
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -392,15 +393,15 @@ export default function Index() {
   return (
     <>
       <Helmet>
-        <title>UPPLIN | Eventos, shows e ingressos perto de você</title>
-        <meta name="description" content="Feed social de eventos do Brasil: shows, festas, conferências e experiências. Descubra perto de você e compre ingressos em segundos." />
+        <title>{HOME_PAGE.title}</title>
+        <meta name="description" content={HOME_PAGE.description} />
         <link rel="canonical" href="https://www.upplin.com/" />
-        <meta property="og:title" content="UPPLIN — Descubra os melhores eventos do Brasil" />
-        <meta property="og:description" content="Feed social de eventos: shows, festas, conferências e experiências únicas." />
+        <meta property="og:title" content={HOME_PAGE.title} />
+        <meta property="og:description" content={HOME_PAGE.description} />
         <meta property="og:url" content="https://www.upplin.com/" />
         <meta property="og:type" content="website" />
       </Helmet>
-      <h1 className="sr-only">UPPLIN — Descubra os melhores eventos do Brasil</h1>
+      <h1 className="sr-only">{HOME_PAGE.heading}</h1>
       <MobileFeed />
       <DesktopLayout />
       <BottomNav />
