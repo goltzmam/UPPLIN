@@ -27,7 +27,7 @@ const CATEGORIES = [
   { id: "show", label: "Shows", icon: "🎸" },
   { id: "teatro", label: "Teatro", icon: "🎭" },
   { id: "workshop", label: "Workshops", icon: "📚" },
-  { id: "esporte", label: "Esportes", icon: "⚽" },
+  { id: "esportes", label: "Esportes", icon: "⚽" },
   { id: "gastronomia", label: "Gastronomia", icon: "🍽️" },
   { id: "tecnologia", label: "Tecnologia", icon: "💻" },
   { id: "arte", label: "Arte", icon: "🎨" },
