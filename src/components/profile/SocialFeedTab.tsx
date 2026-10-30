@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -38,26 +39,29 @@ export function SocialFeedTab() {
   const { user } = useAuth();
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
 
-  const { data: posts = [], isLoading } = useQuery({
+  const { data: posts = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["social-feed", user?.id],
     queryFn: async () => {
       // Get organizers the user follows
-      const { data: follows } = await supabase
+      const { data: follows, error: followsError } = await supabase
         .from("follows")
         .select("organizer_id")
         .eq("user_id", user!.id);
 
+      if (followsError) throw followsError;
       if (!follows?.length) return [];
 
       // Get owner user IDs of those organizers
-      const { data: organizers } = await supabase
+      const { data: organizers, error: organizerError } = await supabase
         .from("organizer_accounts_feed")
         .select("owner_user_id")
         .in("id", follows.map((f) => f.organizer_id));
 
+      if (organizerError) throw organizerError;
       if (!organizers?.length) return [];
 
-      const ownerIds = organizers.map((o) => o.owner_user_id);
+      const ownerIds = organizers.map((o) => o.owner_user_id).filter((id): id is string => !!id);
+      if (!ownerIds.length) return [];
 
       // Get posts from those users
       const { data: postsData, error } = await supabase
@@ -107,6 +111,8 @@ export function SocialFeedTab() {
   };
 
   if (isLoading) return <PageLoading />;
+
+  if (isError) return <div role="alert" className="p-4 space-y-3 text-center"><p>Não foi possível carregar o feed.</p><Button variant="outline" onClick={() => void refetch()}>Tentar novamente</Button></div>;
 
   if (posts.length === 0) {
     return (

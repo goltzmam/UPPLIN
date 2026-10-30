@@ -73,6 +73,7 @@ export default function RedefinirSenha({ audience = "participant" }: { audience?
         const { data: { session } } = await supabase.auth.getSession();
         setRecoveryReady(Boolean(session && sessionStorage.getItem("upplin:password-recovery-user") === session.user.id));
       } catch {
+        clearRecoveryParamsFromUrl();
         setRecoveryReady(false);
         toast({
           title: "Link inválido ou expirado",
@@ -254,13 +255,13 @@ export default function RedefinirSenha({ audience = "participant" }: { audience?
                   </div>
                   {!recoveryReady && !recoveryChecking ? (
                     <p className="text-xs text-muted-foreground">
-                      Abra o link mais recente enviado para seu e-mail para liberar a troca de senha.
+                      Abra o link mais recente enviado para seu email para liberar a troca de senha. <Link className="underline text-primary" to={routes.request}>Solicitar novo link</Link>
                     </p>
                   ) : null}
                   <Button
                     type="submit"
                     className="w-full h-11 sm:h-12 text-sm sm:text-base"
-                    disabled={loading || recoveryChecking || !isValidPassword(password) || password !== confirmPassword}
+                    disabled={loading || recoveryChecking || !recoveryReady || !isValidPassword(password) || password !== confirmPassword}
                   >
                     {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar nova senha"}
                   </Button>

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 interface ImageUploadProps {
   bucket: "event-images" | "avatars";
   folder?: string;
+  deferDelete?: boolean;
   value?: string | null;
   onChange: (url: string | null) => void;
   aspectRatio?: "square" | "video" | "banner";
@@ -17,6 +18,7 @@ interface ImageUploadProps {
 export function ImageUpload({
   bucket,
   folder = "",
+  deferDelete = false,
   value,
   onChange,
   aspectRatio = "video",
@@ -97,7 +99,7 @@ export function ImageUpload({
   };
 
   const removeImage = async () => {
-    if (value) {
+    if (value && !deferDelete) {
       // Extract file path from URL
       const url = new URL(value);
       const pathParts = url.pathname.split("/");

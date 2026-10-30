@@ -14,6 +14,7 @@ import { VideoUpload } from "@/components/events/VideoUpload";
 import { ImageUpload } from "@/components/ui/image-upload";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { toLocalDateTimeInput } from "@/lib/event-dates";
 import { geocodeAddress } from "@/lib/geocode";
 
 interface MediaItem {
@@ -36,7 +37,7 @@ export default function EventoForm() {
   const { eventId } = useParams<{ eventId: string }>();
   const isEditing = eventId && eventId !== "novo";
   const navigate = useNavigate();
-  const { organizer } = useOutletContext<{ organizer: any }>();
+  const { organizer } = useOutletContext<{ organizer: { id: string } | null }>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -88,8 +89,8 @@ export default function EventoForm() {
       setTitle(event.title);
       setDescription(event.description || "");
       setCategory(event.category || "");
-      setStartAt(event.start_at?.slice(0, 16) || "");
-      setEndAt(event.end_at?.slice(0, 16) || "");
+      setStartAt(toLocalDateTimeInput(event.start_at));
+      setEndAt(toLocalDateTimeInput(event.end_at));
       setVenueName(event.venue_name || "");
       setAddressText(event.address_text || "");
       setLat(event.lat ? Number(event.lat) : null);
@@ -97,7 +98,7 @@ export default function EventoForm() {
       setCheckoutBannerUrl(event.checkout_banner_url || null);
       setStatus(event.status === "published" || event.status === "pending_review" ? "pending_review" : "draft");
       setTicketTypes(
-        event.ticket_types?.map((t: any) => ({
+        event.ticket_types?.filter(t => t.status !== "paused").map((t) => ({
           id: t.id,
           name: t.name,
           price_cents: t.price_cents,
@@ -105,7 +106,7 @@ export default function EventoForm() {
         })) || []
       );
       setMedia(
-        event.event_media?.filter((m: any) => m.type === "image").map((m: any) => ({
+        event.event_media?.filter((m) => m.type === "image").map((m) => ({
           id: m.id,
           url: m.url,
           type: m.type,
@@ -113,7 +114,7 @@ export default function EventoForm() {
         })) || []
       );
       // Get feed video (first video in event_media)
-      const feedVideo = event.event_media?.find((m: any) => m.type === "video");
+      const feedVideo = event.event_media?.find((m) => m.type === "video");
       setFeedVideoUrl(feedVideo?.url || null);
     }
   }, [event]);
@@ -122,7 +123,7 @@ export default function EventoForm() {
     setTicketTypes([...ticketTypes, { name: "", price_cents: 0, quantity_total: 100, isNew: true }]);
   };
 
-  const updateTicketType = (index: number, field: keyof TicketTypeForm, value: any) => {
+  const updateTicketType = (index: number, field: keyof TicketTypeForm, value: string | number) => {
     const updated = [...ticketTypes];
     updated[index] = { ...updated[index], [field]: value };
     setTicketTypes(updated);
@@ -139,6 +140,7 @@ export default function EventoForm() {
   };
 
   const handleSave = async () => {
+    if (saving || !organizer) return;
     // Validate required fields
     if (!title.trim() || !startAt) {
       toast({ title: "Preencha os campos obrigatórios", description: "Título e data de início são obrigatórios.", variant: "destructive" });
@@ -155,7 +157,11 @@ export default function EventoForm() {
       return;
     }
 
+    if (endAt && new Date(endAt) <= new Date(startAt)) {
+      toast({ title: "Confira as datas", description: "O término deve ser depois do início.", variant: "destructive" });return;
+    }
     setSaving(true);
+    try {
 
     // Geocodificação automática se houver endereço e faltar lat/lng
     let finalLat = lat;
@@ -171,141 +177,44 @@ export default function EventoForm() {
       }
     }
 
-    try {
-      let eventIdToUse = eventId;
       
       // Get cover image: prefer first image, leave null if only video exists
       const coverImageUrl = media.length > 0 && media[0].type === "image" 
         ? media[0].url 
         : null;
 
-      if (isEditing) {
-        // Update event
-        const { error } = await supabase
-          .from("events")
-          .update({
-            title,
-            description,
-            category: category || null,
-            start_at: startAt,
-            end_at: endAt || null,
-            venue_name: venueName || null,
-            address_text: addressText || null,
-            lat: finalLat,
-            lng: finalLng,
-            cover_image_url: coverImageUrl,
-            checkout_banner_url: checkoutBannerUrl,
-            status,
-          })
-          .eq("id", eventId);
+      const existingVideo = event?.event_media?.find(m => m.type === "video");
+      const eventMedia = media.map((m, index) => ({ existing_id: m.id.startsWith("new-") ? null : m.id, url: m.url, type: "image", sort_order: index }));
+      if (feedVideoUrl) eventMedia.push({ existing_id: existingVideo?.id || null, url: feedVideoUrl, type: "video", sort_order: -1 });
+      const { error } = await supabase.rpc("save_organizer_event", {
+        p_event_id: isEditing ? eventId! : null,
+        p_event: { organizer_id: organizer.id, title, description, category, start_at: new Date(startAt).toISOString(), end_at: endAt ? new Date(endAt).toISOString() : null, venue_name: venueName, address_text: addressText, lat: finalLat, lng: finalLng, cover_image_url: coverImageUrl, checkout_banner_url: checkoutBannerUrl, status },
+        p_tickets: ticketTypes.map(tt => ({ id: tt.id || null, name: tt.name, price_cents: tt.price_cents, quantity_total: tt.quantity_total, toDelete: !!tt.toDelete })),
+        p_media: eventMedia,
+      });
+      if (error) throw error;
 
-        if (error) throw error;
-      } else {
-        // Create event
-        const { data, error } = await supabase
-          .from("events")
-          .insert({
-            organizer_id: organizer!.id,
-            title,
-            description,
-            category: category || null,
-            start_at: startAt,
-            end_at: endAt || null,
-            venue_name: venueName || null,
-            address_text: addressText || null,
-            lat: finalLat,
-            lng: finalLng,
-            cover_image_url: coverImageUrl,
-            checkout_banner_url: checkoutBannerUrl,
-            status,
-          })
-          .select()
-          .single();
-
-        if (error) throw error;
-        eventIdToUse = data.id;
+      // Files are removed only after the database transaction commits, never
+      // while the organizer is still editing/could cancel.
+      const retainedUrls = new Set([...eventMedia.map(m => m.url), checkoutBannerUrl, coverImageUrl]);
+      const previousUrls = [...(event?.event_media?.map(m => m.url) || []), event?.checkout_banner_url].filter((url): url is string => !!url);
+      const paths = [...new Set(previousUrls.filter(url => !retainedUrls.has(url)).flatMap(value => {
+        try {
+          const url = new URL(value);const prefix = "/storage/v1/object/public/event-images/";
+          if (url.origin !== new URL(import.meta.env.VITE_SUPABASE_URL).origin || !url.pathname.startsWith(prefix)) return [];
+          const path = decodeURIComponent(url.pathname.slice(prefix.length));
+          return path.startsWith(organizer.id + "/") ? [path] : [];
+        } catch { return []; }
+      }))];
+      if (paths.length) {
+        const { error: cleanupError } = await supabase.storage.from("event-images").remove(paths);
+        if (cleanupError) toast({ title: "Evento salvo", description: "Alguns arquivos antigos não puderam ser removidos. Avise o suporte.", variant: "destructive" });
       }
-
-      // Handle ticket types
-      for (const tt of ticketTypes) {
-        if (tt.toDelete && tt.id) {
-          await supabase.from("ticket_types").delete().eq("id", tt.id);
-        } else if (tt.isNew && !tt.toDelete) {
-          await supabase.from("ticket_types").insert({
-            event_id: eventIdToUse,
-            name: tt.name,
-            price_cents: tt.price_cents,
-            quantity_total: tt.quantity_total,
-          });
-        } else if (tt.id && !tt.toDelete) {
-          await supabase
-            .from("ticket_types")
-            .update({
-              name: tt.name,
-              price_cents: tt.price_cents,
-              quantity_total: tt.quantity_total,
-            })
-            .eq("id", tt.id);
-        }
-      }
-
-      // Handle media - delete removed, add new
-      if (isEditing) {
-        // Get existing media IDs
-        const existingIds = event?.event_media?.map((m: any) => m.id) || [];
-        const currentIds = media.filter(m => !m.id.startsWith("new-")).map(m => m.id);
-        
-        // Delete removed media
-        const toDelete = existingIds.filter((id: string) => !currentIds.includes(id));
-        if (toDelete.length > 0) {
-          await supabase.from("event_media").delete().in("id", toDelete);
-        }
-      }
-
-      // Insert new image media
-      const newMedia = media.filter(m => m.id.startsWith("new-"));
-      if (newMedia.length > 0) {
-        await supabase.from("event_media").insert(
-          newMedia.map((m, idx) => ({
-            event_id: eventIdToUse,
-            url: m.url,
-            type: "image" as const,
-            sort_order: media.indexOf(m),
-          }))
-        );
-      }
-
-      // Handle feed video
-      const existingVideo = event?.event_media?.find((m: any) => m.type === "video");
-      
-      if (feedVideoUrl && !existingVideo) {
-        // Add new video
-        await supabase.from("event_media").insert({
-          event_id: eventIdToUse,
-          url: feedVideoUrl,
-          type: "video",
-          sort_order: -1, // Videos come first
-        });
-      } else if (feedVideoUrl && existingVideo && existingVideo.url !== feedVideoUrl) {
-        // Update existing video
-        await supabase.from("event_media").update({ url: feedVideoUrl }).eq("id", existingVideo.id);
-      } else if (!feedVideoUrl && existingVideo) {
-        // Remove video
-        await supabase.from("event_media").delete().eq("id", existingVideo.id);
-      }
-      const existingMedia = media.filter(m => !m.id.startsWith("new-"));
-      for (const m of existingMedia) {
-        await supabase
-          .from("event_media")
-          .update({ sort_order: media.indexOf(m) })
-          .eq("id", m.id);
-      }
-
       queryClient.invalidateQueries({ queryKey: ["organizer-events"] });
       toast({ title: isEditing ? "Evento atualizado!" : "Evento criado!" });
       navigate("/organizador/painel/eventos");
-    } catch (err: any) {
-      toast({ title: "Erro", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Erro", description: err && typeof err === "object" && "message" in err ? String(err.message) : "Não foi possível salvar o evento.", variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -391,7 +300,7 @@ export default function EventoForm() {
               Opcional. Essa imagem aparece só no checkout e não precisa ser a mesma do feed ou da capa do evento.
             </p>
           </div>
-          <ImageUpload
+          <ImageUpload deferDelete
             bucket="event-images"
             folder={eventId === "novo" ? organizer?.id || "" : `${organizer?.id || ""}/${eventId}`}
             value={checkoutBannerUrl}
@@ -501,7 +410,7 @@ export default function EventoForm() {
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Preço (R$)</Label>
-                        <Input type="number" value={tt.price_cents / 100} onChange={(e) => updateTicketType(index, "price_cents", parseFloat(e.target.value) * 100 || 0)} placeholder="0.00" step="0.01" />
+                        <Input type="number" value={tt.price_cents / 100} onChange={(e) => updateTicketType(index, "price_cents", Math.round(parseFloat(e.target.value) * 100) || 0)} placeholder="0.00" step="0.01" />
                       </div>
                       <div className="space-y-1">
                         <Label className="text-xs">Quantidade</Label>

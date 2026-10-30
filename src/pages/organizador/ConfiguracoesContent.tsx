@@ -1,3 +1,4 @@
+import { PasswordSecurityCard } from "@/components/profile/PasswordSecurityCard";
 import { useAuth } from "@/lib/auth";
 import { OrderCommissionDisclosure } from "@/components/organizador/OrderCommissionDisclosure";
 import { DeleteAccountButton } from "@/components/profile/DeleteAccountButton";
@@ -527,6 +528,7 @@ export default function ConfiguracoesContent() {
         </Button>
       </div>
       <OrderCommissionDisclosure organizerId={organizer.id} />
+      <PasswordSecurityCard organizer />
       <DeleteAccountButton />
     </div>
   );

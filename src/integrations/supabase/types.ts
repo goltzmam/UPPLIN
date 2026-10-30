@@ -1926,6 +1926,10 @@ export type Database = {
       }
     }
     Functions: {
+      save_organizer_event: {
+        Args: { p_event_id: string | null; p_event: Json; p_tickets: Json; p_media: Json }
+        Returns: string
+      }
       account_is_active: { Args: Record<PropertyKey, never>; Returns: boolean }
       get_chat_identities: {
         Args: { p_conversation_ids: string[] }

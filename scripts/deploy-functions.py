@@ -22,7 +22,7 @@ def main():
     parser.add_argument("--function")
     args = parser.parse_args()
     config = tomllib.loads((ROOT / "supabase/config.toml").read_text())["functions"]
-    shared = [p for p in (ROOT / "supabase/functions/_shared").rglob("*") if p.is_file() and p.suffix in [".ts", ".tsx"] and not p.name.endswith(".test.ts")]
+    shared = [p for p in (ROOT / "supabase/functions/_shared").rglob("*") if p.is_file() and p.suffix in [".ts", ".tsx"] and not p.name.endswith((".test.ts", ".test.tsx"))]
     for entry in sorted((ROOT / "supabase/functions").glob("*/index.ts")):
         slug = entry.parent.name
         if args.function and slug != args.function:

@@ -125,19 +125,7 @@ export function MultiMediaUpload({
   };
 
   const removeMedia = async (item: MediaItem) => {
-    // Remove from storage
-    try {
-      const url = new URL(item.url);
-      const pathParts = url.pathname.split("/");
-      const bucketIndex = pathParts.indexOf("event-images");
-      if (bucketIndex !== -1) {
-        const filePath = pathParts.slice(bucketIndex + 1).join("/");
-        await supabase.storage.from("event-images").remove([filePath]);
-      }
-    } catch (e) {
-      console.error("Error removing file:", e);
-    }
-
+    // Defer storage deletion until the parent successfully saves the event.
     // Update state
     const updated = media.filter((m) => m.id !== item.id);
     onChange(updated.map((m, i) => ({ ...m, sort_order: i })));
@@ -214,6 +202,7 @@ export function MultiMediaUpload({
                   size="icon"
                   variant="destructive"
                   className="h-8 w-8 rounded-full"
+                  aria-label="Remover mídia do evento"
                   onClick={() => removeMedia(item)}
                 >
                   <X className="h-4 w-4" />

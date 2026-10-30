@@ -170,18 +170,7 @@ export function VideoUpload({
   const handleRemove = async () => {
     if (!videoUrl) return;
     
-    try {
-      const url = new URL(videoUrl);
-      const pathParts = url.pathname.split("/");
-      const bucketIndex = pathParts.indexOf("event-images");
-      if (bucketIndex !== -1) {
-        const filePath = pathParts.slice(bucketIndex + 1).join("/");
-        await supabase.storage.from("event-images").remove([filePath]);
-      }
-    } catch (e) {
-      console.error("Error removing file:", e);
-    }
-    
+    // Keep the saved video available if the organizer cancels editing.
     onChange(null);
     setVideoDuration(null);
   };
@@ -214,7 +203,8 @@ export function VideoUpload({
             size="icon"
             variant="destructive"
             className="absolute top-3 right-3 h-8 w-8 rounded-full shadow-lg"
-            onClick={handleRemove}
+            aria-label="Remover vídeo do evento"
+                  onClick={handleRemove}
             disabled={disabled}
           >
             <X className="h-4 w-4" />

@@ -60,7 +60,7 @@ export default function OnboardingOrganizador() {
 
   // If organizer account already exists with company data, go to dashboard
   useEffect(() => {
-    if (organizer && organizer.cnpj && organizer.display_name) {
+    if (organizer && (organizer.cnpj || organizer.cpf) && organizer.display_name) {
       navigate("/organizador/painel", { replace: true });
     }
   }, [organizer, navigate]);

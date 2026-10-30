@@ -1,3 +1,4 @@
+import { emailButtonHtml } from '../_shared/email-button.ts';
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.4";
 import { z } from "https://esm.sh/zod@4.6.7";
@@ -144,7 +145,6 @@ const emailTemplates = {
           .ticket-info { background: #fff7ed; border-radius: 8px; padding: 15px; margin: 15px 0; border: 1px solid #fed7aa; }
           .total { font-size: 24px; font-weight: bold; color: #FF2D2D; text-align: center; margin: 20px 0; }
           .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px 0; }
           .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -1px; }
         </style>
       </head>
@@ -172,7 +172,7 @@ const emailTemplates = {
             <div class="total">Total: ${data.totalAmount}</div>
             
             <p style="text-align: center;">
-              <a href="${SITE_URL}/meus-ingressos" class="btn">Ver Meus Ingressos</a>
+              ${emailButtonHtml(`${SITE_URL}/meus-ingressos`, 'Ver Meus Ingressos')}
             </p>
             
             <p style="color: #64748b; font-size: 14px; text-align: center;">
@@ -205,7 +205,6 @@ const emailTemplates = {
           .event-card { background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #FF6A00; }
           .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
           .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -1px; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; }
         </style>
       </head>
       <body>
@@ -229,7 +228,7 @@ const emailTemplates = {
               <li>Leve um documento de identificação</li>
             </ul>
             <p style="text-align: center; margin-top: 24px;">
-              <a href="${SITE_URL}/meus-ingressos" class="btn">Ver Meu Ingresso</a>
+              ${emailButtonHtml(`${SITE_URL}/meus-ingressos`, 'Ver Meu Ingresso')}
             </p>
           </div>
           <div class="footer">
@@ -295,7 +294,6 @@ const emailTemplates = {
           .title { margin: 14px 0 0; color: #ffffff; font-family: 'Space Grotesk', 'Inter', sans-serif; font-size: 30px; line-height: 1.1; }
           .lead { color: #4b5563; font-size: 16px; line-height: 1.7; margin: 0 0 16px; }
           .cta-wrap { text-align: center; margin: 30px 0 26px; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: #ffffff !important; padding: 16px 34px; text-decoration: none; border-radius: 16px; font-weight: 800; font-size: 16px; }
           .info-box { background: #fff7ed; border: 1px solid #fed7aa; border-radius: 14px; padding: 16px 18px; margin: 0 0 22px; color: #9a3412; font-size: 14px; line-height: 1.6; }
           .note { color: #6b7280; font-size: 14px; line-height: 1.7; margin: 0 0 10px; }
           .link-fallback { word-break: break-all; color: #e11d48; font-size: 13px; line-height: 1.7; }
@@ -315,7 +313,7 @@ const emailTemplates = {
             <p class="lead">Recebemos uma solicitação para redefinir a senha da sua conta na UPPLIN. Para continuar com segurança, clique no botão abaixo.</p>
             
             <div class="cta-wrap">
-              <a href="${data.resetLink}" class="btn">Redefinir minha senha</a>
+              ${emailButtonHtml(`${data.resetLink}`, 'Redefinir minha senha')}
             </div>
             
             <div class="info-box">
@@ -352,7 +350,6 @@ const emailTemplates = {
           .feature-icon { font-size: 24px; margin-right: 12px; min-width: 32px; }
           .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
           .logo { font-size: 32px; font-weight: 900; color: white; letter-spacing: -1px; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 16px 36px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
         </style>
       </head>
       <body>
@@ -379,7 +376,7 @@ const emailTemplates = {
             </div>
             
             <p style="text-align: center; margin-top: 32px;">
-              <a href="${SITE_URL}" class="btn">Explorar Eventos</a>
+              ${emailButtonHtml(`${SITE_URL}`, 'Explorar Eventos')}
             </p>
           </div>
           <div class="footer">
@@ -409,7 +406,6 @@ const emailTemplates = {
           .feature-icon { font-size: 24px; margin-right: 12px; min-width: 32px; }
           .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
           .logo { font-size: 32px; font-weight: 900; color: white; letter-spacing: -1px; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 16px 36px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
         </style>
       </head>
       <body>
@@ -440,7 +436,7 @@ const emailTemplates = {
             </div>
             
             <p style="text-align: center; margin-top: 32px;">
-              <a href="${SITE_URL}/organizador/dashboard" class="btn">Acessar Meu Painel</a>
+              ${emailButtonHtml(`${SITE_URL}/organizador/painel`, 'Acessar Meu Painel')}
             </p>
           </div>
           <div class="footer">
@@ -472,7 +468,6 @@ const emailTemplates = {
           .info-box { background: #fef9ec; border: 1px solid #fde68a; border-radius: 12px; padding: 16px; margin: 20px 0; color: #92400e; font-size: 14px; }
           .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
           .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -1px; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; }
         </style>
       </head>
       <body>
@@ -502,7 +497,7 @@ const emailTemplates = {
             </div>
             
             <p style="text-align: center; margin-top: 24px;">
-              <a href="${data.paymentLink || SITE_URL + "/meus-ingressos"}" class="btn">Ver Pedido</a>
+              ${emailButtonHtml(data.paymentLink || SITE_URL + "/meus-ingressos", "Ver Pedido")}
             </p>
             
             <p style="color: #64748b; font-size: 14px; text-align: center; margin-top: 16px;">
@@ -538,7 +533,6 @@ const emailTemplates = {
           .ticket-info { background: #ecfdf5; border-radius: 8px; padding: 15px; margin: 15px 0; border: 1px solid #a7f3d0; }
           .total { font-size: 24px; font-weight: bold; color: #059669; text-align: center; margin: 20px 0; }
           .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white !important; padding: 14px 32px; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 10px 0; }
           .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -1px; }
         </style>
       </head>
@@ -566,7 +560,7 @@ const emailTemplates = {
             <div class="total">Total: ${data.totalAmount}</div>
             
             <p style="text-align: center;">
-              <a href="${SITE_URL}/meus-ingressos" class="btn">Ver Meus Ingressos</a>
+              ${emailButtonHtml(`${SITE_URL}/meus-ingressos`, 'Ver Meus Ingressos')}
             </p>
             
             <p style="color: #64748b; font-size: 14px; text-align: center;">
@@ -599,7 +593,6 @@ const emailTemplates = {
           .info-card { background: #f8fafc; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #FF6A00; }
           .footer { background: #1e293b; color: #94a3b8; padding: 20px; text-align: center; font-size: 12px; }
           .logo { font-size: 24px; font-weight: 900; color: white; letter-spacing: -1px; }
-          .btn { display: inline-block; background: linear-gradient(135deg, #FF6A00, #FF2D2D); color: white !important; padding: 16px 36px; text-decoration: none; border-radius: 10px; font-weight: bold; font-size: 16px; }
         </style>
       </head>
       <body>
@@ -621,7 +614,7 @@ const emailTemplates = {
             <p>Use o link abaixo no seu celular para acessar o scanner de QR Code e validar ingressos na entrada:</p>
             
             <p style="text-align: center; margin-top: 24px;">
-              <a href="${data.scannerLink || SITE_URL}" class="btn">Abrir Scanner</a>
+              ${emailButtonHtml(`${data.scannerLink || SITE_URL}`, 'Abrir Scanner')}
             </p>
             
             <p style="color: #64748b; font-size: 13px; margin-top: 20px;">
