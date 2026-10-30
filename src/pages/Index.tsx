@@ -1,3 +1,4 @@
+import { Capacitor } from "@capacitor/core";
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -222,8 +223,8 @@ export default function Index() {
         isDesktop && "px-5 md:px-6 lg:px-8 xl:px-10",
         activeTab === "following" && "bg-background"
       )}>
-        {/* Logo left - with gradient - larger on mobile/tablet */}
-        <Link 
+        {/* The desktop web sidebar already displays the UP brand. */}
+        {(!isDesktop || Capacitor.isNativePlatform()) && <Link
           to="/" 
           className={cn(
             "font-display text-xl md:text-2xl font-bold tracking-tight shrink-0 transition-colors"
@@ -236,7 +237,7 @@ export default function Index() {
           }}
         >
           UPPLIN
-        </Link>
+        </Link>}
         
         {/* Centered tabs */}
         <div className={cn("flex items-center gap-4", isDesktop ? "mx-auto" : "mx-4")}>
