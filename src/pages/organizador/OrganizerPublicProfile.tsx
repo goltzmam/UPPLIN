@@ -24,7 +24,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { PageLoading } from "@/components/ui/loading";
@@ -189,7 +188,7 @@ export default function OrganizerPublicProfile() {
   const eventCount = events.length;
   const photoCount = galleryImages.length;
 
-  if (isLoading) return <><Header /><PageLoading /><Footer /></>;
+  if (isLoading) return <><Header /><PageLoading /></>;
 
   if (!organizer) {
     return (
@@ -204,7 +203,7 @@ export default function OrganizerPublicProfile() {
             action={<Button asChild><Link to="/eventos">Ver eventos</Link></Button>}
           />
         </main>
-        <Footer />
+
       </div>
     );
   }
@@ -752,7 +751,6 @@ export default function OrganizerPublicProfile() {
         </div>
       </main>
 
-      <Footer />
       <BottomNav />
     </div>
   );

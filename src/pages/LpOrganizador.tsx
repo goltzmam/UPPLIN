@@ -652,17 +652,7 @@ export default function LpOrganizador() {
 
       <AppDownloadSection />
 
-      {/* ── FOOTER ── */}
-      <footer className="border-t border-border/40 py-8 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-sm font-bold bg-gradient-to-r from-[#FF6A00] to-[#FF007A] bg-clip-text text-transparent">
-            UPPLIN
-          </span>
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} UPPLIN. Todos os direitos reservados.
-          </p>
-        </div>
-      </footer>
+
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { 
   Check, 
@@ -339,7 +338,7 @@ export default function Precos() {
         </section>
       </main>
 
-      <Footer />
+
     </div>
   );
 }
