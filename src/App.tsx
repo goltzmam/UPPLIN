@@ -1,3 +1,4 @@
+import { OrganizerLandingFooter } from "@/components/layout/OrganizerLandingFooter";
 import { Footer } from "@/components/layout/Footer";
 import { isOrganizerPlanPath } from "@/lib/store-platform";
 import { Capacitor } from "@capacitor/core";
@@ -229,7 +230,7 @@ function AnimatedRoutes() {
   if (surface === "plans") return <Suspense fallback={<AppBootFallback />}>
     <RouteSeo />
     <Routes><Route path="/" element={<LpOrganizador />} /><Route path="*" element={<ExternalNavigation target={APP_ORIGIN + location.pathname + location.search + location.hash} />} /></Routes>
-    <Footer />
+    <OrganizerLandingFooter />
   </Suspense>;
 
   const publicFooter = ["/eventos", "/explorar-organizadores", "/organizadores", "/precos", "/suporte", "/excluir-conta", "/privacidade", "/termos"].includes(location.pathname)
