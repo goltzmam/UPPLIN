@@ -92,7 +92,7 @@ export async function createUserPost({
       media_type: mediaType,
       event_id: eventId || null,
     })
-    .select("id, event_id")
+    .select("id, event_id, moderation_status")
     .single();
 
   if (error) {

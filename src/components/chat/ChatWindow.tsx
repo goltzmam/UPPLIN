@@ -25,6 +25,10 @@ const timeLabel = (date: string) => Number.isFinite(Date.parse(date)) ? format(n
 export function ChatWindow({ conversationId, otherParticipant, identities = {}, observer = false, onClose, className }: ChatWindowProps) {
   const { user } = useAuth();
   const client = useQueryClient();
+  const { data: blocked = false, isError: blockCheckError } = useQuery({
+    queryKey:["chat-user-blocked",user?.id,otherParticipant.id],enabled:!!user && !observer && !otherParticipant.is_support,
+    queryFn:async()=>{const {data,error}=await supabase.rpc("ugc_user_blocked",{p_other:otherParticipant.id});if(error)throw error;return data===true;},refetchInterval:15000,
+  });
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState<PendingMessage[]>([]);
   const [sending, setSending] = useState(false);
@@ -110,7 +114,7 @@ export function ChatWindow({ conversationId, otherParticipant, identities = {}, 
 
   const send = async (content: string, id: string = crypto.randomUUID()) => {
     content = content.trim();
-    if (!content || content.length > 4000 || !user || sending) return;
+    if (!content || content.length > 4000 || !user || sending || blocked || blockCheckError) return;
     const row: PendingMessage = { id, conversation_id: conversationId, sender_id: user.id, content, created_at: new Date().toISOString(), read_at: null };
     setPending(old => [...old.filter(m => m.id !== id), row]); setDraft(""); setSending(true); nearBottom.current = true; publishRef.current?.(false);
     try {
@@ -156,12 +160,14 @@ export function ChatWindow({ conversationId, otherParticipant, identities = {}, 
       {typing && <p className="text-xs text-muted-foreground">{other.full_name} está digitando…</p>}
       <div ref={bottom} />
     </div>
+    {blocked && <p role="status" className="px-3 py-2 text-sm text-muted-foreground border-t">Conversa indisponível por bloqueio. O suporte UPPLIN continua disponível.</p>}
+    {blockCheckError && <p role="alert" className="px-3 py-2 text-sm text-destructive">Não foi possível verificar a disponibilidade da conversa. Tente novamente.</p>}
     <form className="p-3 border-t flex gap-2 items-end shrink-0" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }} onSubmit={e => { e.preventDefault(); void send(draft); }}>
       <label htmlFor={`chat-draft-${conversationId}`} className="sr-only">Mensagem</label>
-      <textarea id={`chat-draft-${conversationId}`} rows={2} maxLength={4000} value={draft} disabled={sending} placeholder="Escreva uma mensagem…" className="flex-1 min-w-0 max-h-32 resize-y bg-muted rounded-xl p-3 text-sm outline-none focus:ring-2 ring-primary"
+      <textarea id={`chat-draft-${conversationId}`} rows={2} maxLength={4000} value={draft} disabled={sending || blocked || blockCheckError} placeholder="Escreva uma mensagem…" className="flex-1 min-w-0 max-h-32 resize-y bg-muted rounded-xl p-3 text-sm outline-none focus:ring-2 ring-primary"
         onChange={e => { setDraft(e.target.value); if (Date.now() - lastTyping.current > 1500) { publishRef.current?.(!!e.target.value); lastTyping.current = Date.now(); } }}
         onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(draft); } }} />
-      <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={!draft.trim() || sending}>{sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</Button>
+      <Button type="submit" size="icon" aria-label="Enviar mensagem" disabled={!draft.trim() || sending || blocked || blockCheckError}>{sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</Button>
     </form>
     <ChatProfileDialog identity={profile} onClose={() => setProfile(null)} />
   </div>;

@@ -85,7 +85,7 @@ export default function Index() {
     hasNextPage,
     isFetchingNextPage
   } = useInfiniteQuery({
-    queryKey: ["homepage-events-infinite"],
+    queryKey: ["homepage-events-infinite", user?.id],
     queryFn: async ({ pageParam = 0, signal }) => {
       const from = pageParam * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;

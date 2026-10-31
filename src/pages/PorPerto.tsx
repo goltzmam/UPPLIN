@@ -1,3 +1,4 @@
+import { useAuth } from "@/lib/auth";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -104,6 +105,7 @@ const eventColor = (date: string) => isToday(new Date(date)) ? "#4ade80" : isThi
 const priceLabel = (price: number | null) => price == null ? "Ver ingressos" : price === 0 ? "Grátis" : `A partir de ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 }).format(price / 100)}`;
 
 export default function PorPerto() {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const client = useQueryClient();
   const [userPos, setUserPos] = useState<[number, number] | null>(null);
@@ -131,7 +133,7 @@ export default function PorPerto() {
   }, [client]);
 
   const { data: events = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["nearby-events"],
+    queryKey: ["nearby-events", user?.id],
     queryFn: async (): Promise<NearbyEvent[]> => {
       const now = new Date().toISOString();
       const { data, error } = await supabase.from("events")

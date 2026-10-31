@@ -111,7 +111,7 @@ export function VideoUpload({
 
     try {
       const fileExt = file.name.split(".").pop();
-      const fileName = `feed-video-${Date.now()}.${fileExt}`;
+      const fileName = `feed-video-${Date.now()}-${crypto.randomUUID()}.${fileExt}`;
       const folderPath = eventId === "novo" ? organizerId : `${organizerId}/${eventId}`;
       const filePath = `${folderPath}/${fileName}`;
 
@@ -124,7 +124,7 @@ export function VideoUpload({
         .from("event-images")
         .upload(filePath, file, {
           cacheControl: "3600",
-          upsert: true,
+          upsert: false,
         });
 
       clearInterval(progressInterval);

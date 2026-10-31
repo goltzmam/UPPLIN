@@ -1,3 +1,4 @@
+import { BlockedUsers } from "@/components/safety/BlockedUsers";
 import { PasswordSecurityCard } from "@/components/profile/PasswordSecurityCard";
 import { DeleteAccountButton } from "@/components/profile/DeleteAccountButton";
 import { useState, useRef } from "react";
@@ -100,11 +101,11 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
   const uploadAvatarFile = async (file: File) => {
     setUploadingPhoto(true);
     try {
-      const fileName = `${profile.id}/avatar.jpg`;
+      const fileName = `${profile.id}/avatar-${crypto.randomUUID()}.jpg`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true, contentType: 'image/jpeg' });
+        .upload(fileName, file, { upsert: false, contentType: 'image/jpeg' });
 
       if (uploadError) throw uploadError;
 
@@ -159,11 +160,11 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
     setUploadingCover(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}/cover.${fileExt}`;
+      const fileName = `${profile.id}/cover-${crypto.randomUUID()}.${fileExt}`;
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { upsert: false });
 
       if (uploadError) throw uploadError;
 
@@ -395,6 +396,7 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
 
 
       <PasswordSecurityCard />
+      <BlockedUsers />
       <DeleteAccountButton />
 
       {/* Documentos legais */}

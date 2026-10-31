@@ -81,7 +81,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
     
     setIsSubmitting(true);
     try {
-      await createUserPost({
+      const post = await createUserPost({
         userId: user.id,
         content: postContent,
         file: selectedFile,
@@ -90,7 +90,7 @@ export function UpActionMenu({ isOpen, onClose }: UpActionMenuProps) {
 
       await invalidateSocialQueries(queryClient, user.id);
 
-      toast({ title: "Momento compartilhado! 🎉" });
+      toast({ title: post.moderation_status === "pending" ? "Publicação em análise" : "Momento compartilhado! 🎉", description: post.moderation_status === "pending" ? "O suporte revisará o conteúdo antes de ele ficar público." : undefined });
       setShowPostDialog(false);
       setPostContent("");
       setSelectedFile(null);

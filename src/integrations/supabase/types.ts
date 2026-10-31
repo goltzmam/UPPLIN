@@ -456,6 +456,7 @@ export type Database = {
       }
       event_reviews: {
         Row: {
+          moderation_status: string
           comment: string | null
           created_at: string
           event_id: string
@@ -465,6 +466,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          moderation_status?: string
           comment?: string | null
           created_at?: string
           event_id: string
@@ -474,6 +476,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          moderation_status?: string
           comment?: string | null
           created_at?: string
           event_id?: string
@@ -854,6 +857,7 @@ export type Database = {
       }
       organizer_accounts: {
         Row: {
+          moderation_status: string
           is_store_review: boolean
           cep: string | null
           chat_available: boolean
@@ -882,6 +886,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          moderation_status?: string
           is_store_review?: boolean
           cep?: string | null
           chat_available?: boolean
@@ -910,6 +915,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          moderation_status?: string
           is_store_review?: boolean
           cep?: string | null
           chat_available?: boolean
@@ -1111,6 +1117,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          moderation_status: string
           city: string | null
           cover_photo_url: string | null
           cpf: string | null
@@ -1129,6 +1136,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          moderation_status?: string
           city?: string | null
           cover_photo_url?: string | null
           cpf?: string | null
@@ -1147,6 +1155,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          moderation_status?: string
           city?: string | null
           cover_photo_url?: string | null
           cpf?: string | null
@@ -1665,6 +1674,7 @@ export type Database = {
       }
       user_post_comments: {
         Row: {
+          moderation_status: string
           content: string
           created_at: string
           id: string
@@ -1674,6 +1684,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          moderation_status?: string
           content: string
           created_at?: string
           id?: string
@@ -1683,6 +1694,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          moderation_status?: string
           content?: string
           created_at?: string
           id?: string
@@ -1739,6 +1751,7 @@ export type Database = {
       }
       user_posts: {
         Row: {
+          moderation_status: string
           content: string | null
           created_at: string
           event_id: string | null
@@ -1749,6 +1762,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          moderation_status?: string
           content?: string | null
           created_at?: string
           event_id?: string | null
@@ -1759,6 +1773,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          moderation_status?: string
           content?: string | null
           created_at?: string
           event_id?: string | null
@@ -1926,6 +1941,12 @@ export type Database = {
       }
     }
     Functions: {
+      ugc_user_blocked: { Args: { p_other: string }; Returns: boolean }
+      my_blocked_users: { Args: never; Returns: { user_id: string; display_name: string; created_at: string }[] }
+      set_user_block: { Args: { p_user_id: string; p_blocked: boolean }; Returns: undefined }
+      report_content: { Args: { p_kind: string; p_target: string; p_reason: string; p_details?: string }; Returns: string }
+      moderation_queue: { Args: never; Returns: Json }
+      review_ugc: { Args: { p_kind: string; p_id: string; p_action: string; p_report_id?: string; p_note?: string }; Returns: undefined }
       save_organizer_event: {
         Args: { p_event_id: string | null; p_event: Json; p_tickets: Json; p_media: Json }
         Returns: string

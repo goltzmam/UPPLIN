@@ -51,7 +51,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true });
+        .upload(fileName, file, { upsert: false });
 
       if (uploadError) throw uploadError;
 
@@ -71,11 +71,11 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
   const uploadAvatarFile = async (file: File) => {
     setUploadingAvatar(true);
     try {
-      const fileName = `${profile.id}/avatar.jpg`;
+      const fileName = `${profile.id}/avatar-${crypto.randomUUID()}.jpg`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(fileName, file, { upsert: true, contentType: 'image/jpeg' });
+        .upload(fileName, file, { upsert: false, contentType: 'image/jpeg' });
 
       if (uploadError) throw uploadError;
 

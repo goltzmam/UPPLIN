@@ -1,3 +1,4 @@
+import { ProtectedTicketCard } from "@/components/checkout/ProtectedTicketCard";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CreditCard, Clock, ShieldCheck, Loader2, Tag, Check, X, AlertCircle, QrCode, Copy } from "lucide-react";
@@ -544,12 +545,13 @@ export default function Checkout() {
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
                   <ShieldCheck className="h-3 w-3" />
-                  <span>Pagamento 100% seguro</span>
+                  <span>Pagamento processado pelo Mercado Pago</span>
                 </div>
               </div>
 
               {/* Payment Form */}
               <div className="md:col-span-2 space-y-4">
+                <ProtectedTicketCard />
                 <div className="bg-card rounded-2xl border border-border p-4 sm:p-6 animate-fade-up stagger-1">
                   <h2 className="font-display text-lg font-bold mb-4">Pagamento</h2>
 

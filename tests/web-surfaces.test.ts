@@ -36,3 +36,9 @@ test('canonical domain and legacy index aliases permanently redirect without los
   const icon=proxy(new Request('https://www.upplin.com/favicon-upplin.png'));
   assert.equal(icon.headers.get('x-middleware-next'),'1');
 });
+test('moderation is a private web support surface',()=>{
+  const response=proxy(new Request('https://admin.upplin.com/moderation'));
+  assert.ok(response.headers.get('x-middleware-rewrite')?.endsWith('/admin-entry.html'));
+  assert.ok(response.headers.get('x-robots-tag')?.includes('noindex'));
+  assert.equal(webSurface('admin.upplin.com',true),'app');
+});

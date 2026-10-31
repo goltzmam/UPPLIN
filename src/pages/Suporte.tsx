@@ -129,6 +129,12 @@ export default function Suporte() {
         </div>
       </section>
 
+      <section className="max-w-5xl mx-auto px-6 pb-12 space-y-3">
+        <h2 className="text-2xl font-bold">Denunciar conteúdo e bloquear usuários</h2>
+        <p className="text-muted-foreground leading-relaxed">Abra o menu de segurança da publicação, do comentário ou do perfil e escolha Denunciar. Informe o motivo e, se necessário, os detalhes. O relato é encaminhado à equipe de suporte para análise; a identidade de quem denunciou não é mostrada aos demais usuários.</p>
+        <p className="text-muted-foreground leading-relaxed">No mesmo menu, Bloquear usuário impede novas mensagens e oculta o conteúdo social entre as contas. Para desfazer, acesse Perfil → Configurações → Usuários bloqueados. Pedidos e ingressos continuam vinculados à sua conta.</p>
+        <p className="text-muted-foreground leading-relaxed">Fotos, vídeos, capas e logos são revisados antes da exibição pública. Conteúdo que viole os termos pode ser ocultado. Você também pode falar com o suporte pelo email <a href="mailto:suporte@upplin.com" className="text-primary underline">suporte@upplin.com</a>.</p>
+      </section>
       {/* Links úteis */}
       <section className="max-w-5xl mx-auto px-6 pb-16">
         <h2 className="text-2xl font-bold mb-6">Acesso rápido</h2>

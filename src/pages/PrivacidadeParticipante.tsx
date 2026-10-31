@@ -8,7 +8,7 @@ export default function PrivacidadeParticipante() {
       metaDescription="Como a Upplin trata os dados de participantes que compram ingressos e usam o feed social."
       canonical="https://www.upplin.com/privacidade/participante"
       badge="LGPD · Participante"
-      updatedAt="30 de outubro de 2026"
+      updatedAt="31 de outubro de 2026"
       backTo="/privacidade"
     >
       <LegalSection title="1. Quem somos">
@@ -22,7 +22,7 @@ export default function PrivacidadeParticipante() {
 
       <LegalSection title="2. Dados que coletamos de você">
         <ul className="list-disc space-y-2 pl-5">
-          <li><strong className="text-foreground">Cadastro:</strong> nome, e-mail, telefone, foto, data de nascimento, senha (hash).</li>
+          <li><strong className="text-foreground">Cadastro:</strong> nome, e-mail, foto, senha (hash).</li>
           <li><strong className="text-foreground">CPF:</strong> obrigatório para emissão de ingresso nominal.</li>
           <li><strong className="text-foreground">Pagamento:</strong> processado pelo Mercado Pago; não armazenamos cartão completo.</li>
           <li><strong className="text-foreground">Localização aproximada:</strong> com sua permissão, para mostrar eventos por perto.</li>

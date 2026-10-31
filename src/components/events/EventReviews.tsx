@@ -1,3 +1,4 @@
+import { SafetyActions } from "@/components/safety/SafetyActions";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,7 @@ interface Review {
   comment: string | null;
   user_id: string;
   created_at: string;
+  moderation_status?: string;
   profile?: {
     full_name: string | null;
     photo_url: string | null;
@@ -52,6 +54,7 @@ export function EventReviews({ eventId }: EventReviewsProps) {
         .eq("event_id", eventId)
         .eq("buyer_user_id", user.id)
         .eq("status", "used")
+        .limit(1)
         .maybeSingle();
 
       if (error) return false;
@@ -80,7 +83,7 @@ export function EventReviews({ eventId }: EventReviewsProps) {
 
   // Fetch all reviews
   const { data: reviews = [], isLoading } = useQuery({
-    queryKey: ["event-reviews", eventId],
+    queryKey: ["event-reviews", eventId, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("event_reviews")
@@ -91,6 +94,7 @@ export function EventReviews({ eventId }: EventReviewsProps) {
       if (error) throw error;
 
       // Fetch profiles
+      if (!data.length) return [];
       const userIds = [...new Set(data.map((r) => r.user_id))];
       const { data: profiles } = await supabase
         .from("profiles_public")
@@ -107,8 +111,9 @@ export function EventReviews({ eventId }: EventReviewsProps) {
   });
 
   // Calculate average rating
-  const averageRating = reviews.length > 0
-    ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
+  const approvedReviews = reviews.filter(review => !review.moderation_status || review.moderation_status === "approved");
+  const averageRating = approvedReviews.length > 0
+    ? approvedReviews.reduce((acc, r) => acc + r.rating, 0) / approvedReviews.length
     : 0;
 
   // Add review mutation
@@ -229,11 +234,11 @@ export function EventReviews({ eventId }: EventReviewsProps) {
           <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
           <h3 className="font-semibold">Avaliações</h3>
         </div>
-        {reviews.length > 0 && (
+        {approvedReviews.length > 0 && (
           <div className="flex items-center gap-2">
             <StarRating value={Math.round(averageRating)} readonly size="sm" />
             <span className="text-sm font-medium">{averageRating.toFixed(1)}</span>
-            <span className="text-xs text-muted-foreground">({reviews.length})</span>
+            <span className="text-xs text-muted-foreground">({approvedReviews.length})</span>
           </div>
         )}
       </div>
@@ -336,6 +341,7 @@ export function EventReviews({ eventId }: EventReviewsProps) {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
+                    <SafetyActions userId={review.user_id} kind="review" targetId={review.id} />
                     <StarRating value={review.rating} readonly size="sm" />
                     {user?.id === review.user_id && (
                       <DropdownMenu>
@@ -357,6 +363,8 @@ export function EventReviews({ eventId }: EventReviewsProps) {
                     )}
                   </div>
                 </div>
+                {review.moderation_status === "pending" && <p className="text-xs text-amber-400">Em análise pelo suporte · visível apenas para você</p>}
+                {review.moderation_status === "hidden" && <p className="text-xs text-muted-foreground">Avaliação oculta pelo suporte</p>}
                 {review.comment && (
                   <p className="text-sm text-muted-foreground">{review.comment}</p>
                 )}

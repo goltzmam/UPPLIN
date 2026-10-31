@@ -235,7 +235,7 @@ export function AvatarUpload({
         .from("avatars")
         .upload(filePath, file, {
           cacheControl: "3600",
-          upsert: true,
+          upsert: false,
         });
 
       if (uploadError) throw uploadError;

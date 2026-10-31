@@ -46,6 +46,7 @@ const ExcluirConta = lazy(() => import("./pages/ExcluirConta"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then((m) => ({ default: m.AdminLayout })));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminModeration = lazy(() => import("./pages/admin/AdminModeration"));
 const AdminChats = lazy(() => import("./pages/admin/AdminChats"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminEvents = lazy(() => import("./pages/admin/AdminEvents"));
@@ -211,6 +212,7 @@ function AnimatedRoutes() {
       <Route path="/" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
         <Route path="chats" element={<AdminChats />} />
+        <Route path="moderation" element={<AdminModeration />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="events" element={<AdminEvents />} />
         <Route path="orders" element={<AdminOrders />} />

@@ -1,3 +1,4 @@
+import { SafetyActions } from "@/components/safety/SafetyActions";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -134,6 +135,7 @@ export function SocialFeedTab() {
         <Card key={post.id} className="bg-card border-border overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-start gap-3 mb-3">
+              <div className="ml-auto order-last"><SafetyActions kind="post" targetId={post.id} userId={post.user_id} /></div>
               <Avatar className="h-10 w-10">
                 <AvatarImage src={post.profile?.photo_url || undefined} />
                 <AvatarFallback className="bg-primary/20 text-primary">

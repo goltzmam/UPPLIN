@@ -10,9 +10,10 @@ import { invalidateSocialQueries } from "@/lib/social-posts";
 
 interface PostLikeButtonProps {
   postId: string;
+  disabled?: boolean;
 }
 
-export function PostLikeButton({ postId }: PostLikeButtonProps) {
+export function PostLikeButton({ postId, disabled = false }: PostLikeButtonProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,7 +40,7 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
   const likeCount = likeData?.count ?? 0;
 
   const handleToggleLike = async () => {
-    if (!user || isSubmitting) return;
+    if (!user || isSubmitting || disabled) return;
 
     setIsSubmitting(true);
 
@@ -81,7 +82,7 @@ export function PostLikeButton({ postId }: PostLikeButtonProps) {
       )}
       onClick={handleToggleLike}
       aria-label={isLiked ? "Descurtir post" : "Curtir post"}
-      disabled={isSubmitting || !user}
+      disabled={disabled || isSubmitting || !user}
     >
       {isSubmitting ? (
         <Loader2 className="h-4 w-4 animate-spin" />

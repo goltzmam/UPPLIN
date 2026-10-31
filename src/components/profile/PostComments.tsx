@@ -1,3 +1,4 @@
+import { SafetyActions } from "@/components/safety/SafetyActions";
 import { toast } from "sonner";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -19,6 +20,7 @@ interface PostComment {
   user_id: string;
   content: string;
   created_at: string;
+  moderation_status?: string;
   profile?: {
     full_name: string | null;
     photo_url: string | null;
@@ -44,7 +46,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
   };
 
   const { data: commentCount = 0 } = useQuery({
-    queryKey: ["post-comments-count", postId],
+    queryKey: ["post-comments-count", postId, user?.id],
     queryFn: async () => {
       const { count, error } = await supabase
         .from("user_post_comments")
@@ -58,7 +60,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
   });
 
   const { data: comments = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["post-comments", postId],
+    queryKey: ["post-comments", postId, user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("user_post_comments")
@@ -100,15 +102,16 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
     setIsSubmitting(true);
 
     try {
-      const { error } = await supabase.from("user_post_comments").insert({
+      const { data: comment, error } = await supabase.from("user_post_comments").insert({
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
-      });
+      }).select("moderation_status").single();
 
       if (error) throw error;
 
       setNewComment("");
+      toast.success(comment?.moderation_status === "pending" ? "Comentário em análise antes de ficar público." : "Comentário publicado.");
       await refreshComments();
     } catch (error) {
       toast.error("Não foi possível publicar o comentário. Tente novamente.");
@@ -177,6 +180,8 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
+                    {comment.moderation_status === "pending" && <p className="text-xs text-amber-400">Em análise pelo suporte · visível apenas para você</p>}
+                    {comment.moderation_status === "hidden" && <p className="text-xs text-muted-foreground">Oculto pelo suporte</p>}
                     <div className="bg-muted rounded-lg px-3 py-2">
                       <p className="text-xs font-medium">
                         {comment.profile?.full_name || "Usuário"}
@@ -203,6 +208,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                       )}
                     </div>
                   </div>
+                  <SafetyActions kind="comment" targetId={comment.id} userId={comment.user_id} />
                 </div>
               ))}
             </div>
