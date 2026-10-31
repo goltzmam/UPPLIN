@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -129,7 +128,7 @@ export default function OrganizerDashboard() {
     },
   });
 
-  if (authLoading || orgLoading) return <><Header /><PageLoading /><Footer /></>;
+  if (authLoading || orgLoading) return <><Header /><PageLoading /></>;
 
   if (!organizer) {
     return (
@@ -176,7 +175,6 @@ export default function OrganizerDashboard() {
             </Dialog>
           </div>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -376,7 +374,6 @@ export default function OrganizerDashboard() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

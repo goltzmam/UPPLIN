@@ -1,5 +1,4 @@
 import { OrganizerLandingFooter } from "@/components/layout/OrganizerLandingFooter";
-import { Footer } from "@/components/layout/Footer";
 import { isOrganizerPlanPath } from "@/lib/store-platform";
 import { Capacitor } from "@capacitor/core";
 import { webSurface, legacyAdminUrl, legacyRecoveryDestination, PLANS_ORIGIN, APP_ORIGIN } from "@/lib/web-surfaces";
@@ -233,12 +232,6 @@ function AnimatedRoutes() {
     <OrganizerLandingFooter />
   </Suspense>;
 
-  const publicFooter = ["/eventos", "/explorar-organizadores", "/organizadores", "/precos", "/suporte", "/excluir-conta", "/privacidade", "/termos"].includes(location.pathname)
-    || /^\/(evento|o|politica)\/[^/]+$/.test(location.pathname)
-    || /^\/(privacidade|termos)\/(participante|organizador)$/.test(location.pathname)
-    || /^\/organizador\/[a-f0-9-]{36}$/i.test(location.pathname);
-  const footerInset = location.pathname === "/" || ["/eventos", "/explorar-organizadores", "/suporte"].includes(location.pathname) || /^\/(evento|termos|privacidade)(?:\/|$)/.test(location.pathname);
-  const footerBottomNavigation = ["/", "/eventos", "/explorar-organizadores"].includes(location.pathname) || /^\/(evento|o|organizador)\/[^/]+$/.test(location.pathname);
   return (
     <div style={{ minHeight: '100vh' }}>
       <RouteSeo />
@@ -329,7 +322,6 @@ function AnimatedRoutes() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-        {publicFooter && <Footer inset={footerInset} bottomNavigation={footerBottomNavigation} />}
       </Suspense>
     </div>
   );

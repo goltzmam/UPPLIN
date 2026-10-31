@@ -4,7 +4,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2, Percent, DollarSign, Loader2, Tag, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -166,7 +165,7 @@ export default function Cupons() {
     }
   };
 
-  if (authLoading || orgLoading) return <><Header /><PageLoading /><Footer /></>;
+  if (authLoading || orgLoading) return <><Header /><PageLoading /></>;
 
   if (!organizer) {
     navigate("/organizador");
@@ -349,7 +348,6 @@ export default function Cupons() {
         </div>
       </main>
 
-      <Footer />
     </div>
   );
 }

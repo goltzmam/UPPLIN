@@ -1,4 +1,3 @@
-import { Footer } from "@/components/layout/Footer";
 import { HOME_PAGE } from "@/lib/seo";
 import { Capacitor } from "@capacitor/core";
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
@@ -389,7 +388,6 @@ export default function Index() {
         {/* Header overlay */}
         {renderFeedHeader({ isDesktop: true })}
       </main>
-      <Footer inset feed />
     </div>
   );
 
