@@ -77,3 +77,19 @@ test("site identity explicitly names UPPLIN and public homepage metadata stays i
   assert.ok(html.includes('content="index,follow,max-image-preview:large"'));
   assert.ok(!html.includes('noindex'));
 });
+
+test("privacy HTML exposes the complete visible policy without scripts or profile selection", async () => {
+  const { PRIVACY_POLICY } = await import("../src/content/privacy-policy.ts");
+  const page = PUBLIC_PAGES.find(item => item.path === "/privacidade")!;
+  const html = renderSeoHtml(template, page);
+  const withoutScripts = html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "");
+  assert.ok(withoutScripts.includes('<main data-public-privacy'));
+  assert.ok(!withoutScripts.includes('<noscript>'));
+  assert.ok(withoutScripts.includes(PRIVACY_POLICY.title));
+  for (const section of PRIVACY_POLICY.sections) {
+    assert.ok(withoutScripts.includes(`<section id="${section.id}"`));
+    for (const paragraph of section.paragraphs) assert.ok(withoutScripts.includes(paragraph));
+  }
+  for (const href of ["/privacidade/participante", "/privacidade/organizador", "/termos", "mailto:suporte@upplin.com"]) assert.ok(withoutScripts.includes(`href="${href}"`));
+  assert.ok(!renderSeoHtml(template, PUBLIC_PAGES.find(item => item.path === "/")!).includes('data-public-privacy'));
+});

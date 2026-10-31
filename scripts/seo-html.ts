@@ -1,4 +1,5 @@
 import { SITE_URL, SOCIAL_IMAGE, escapeHtml, safeJson, type PublicPage } from "../src/lib/seo.ts";
+import { renderPrivacyHtml } from "./privacy-html.ts";
 export interface SeoPage extends PublicPage { image?: string; schema?: Record<string, unknown>; indexable?: boolean }
 export function renderSeoHtml(template: string, page: SeoPage) {
   const canonical = page.canonicalUrl || SITE_URL + page.path;
@@ -28,7 +29,9 @@ export function renderSeoHtml(template: string, page: SeoPage) {
     .replace(/<meta\b[^>]*(?:name=["'](?:description|robots|twitter:[^"']+)["']|property=["']og:[^"']+["'])[^>]*>/gi, "")
     .replace(/<link\b[^>]*rel=["']canonical["'][^>]*>/gi, "")
     .replace(/<script\b[^>]*type=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>/gi, "");
-  // Preserve the app's branded loading screen. Metadata belongs in the head;
-  // route content is rendered by React, rather than flashing a second page at boot.
-  return stripped.replace("</head>", head + "\n</head>");
+  // Other routes retain the branded boot screen; privacy is immediately readable without JavaScript.
+  const document = stripped.replace("</head>", head + "\n</head>");
+  return page.path === "/privacidade"
+    ? document.replace(/<div\b[^>]*id=["']root["'][^>]*><\/div>/, () => `<div id="root">${renderPrivacyHtml()}</div>`)
+    : document;
 }

@@ -66,15 +66,16 @@ export default function PrivacidadeParticipante() {
 
       <LegalSection title="6. Conteúdo público e exclusão">
         <p>
-          Curtidas, avaliações e comentários podem permanecer visíveis de forma anonimizada
-          após a exclusão da conta, pois fazem parte do histórico público dos eventos.
+          Seus posts, comentários, curtidas, avaliações e mensagens são removidos no fluxo de
+          exclusão da conta. Registros mínimos de transações sujeitos à guarda legal são
+          mantidos com acesso restrito, conforme a seção de retenção abaixo.
         </p>
       </LegalSection>
 
       <LegalSection title="7. Segurança">
         <p>
-          HTTPS/TLS, Row-Level Security no banco, verificação de senhas vazadas (HIBP) e
-          isolamento de sessões. Incidentes serão comunicados conforme ANPD.
+          HTTPS/TLS, regras de acesso no banco de dados e verificações de permissão
+          no servidor. Incidentes serão comunicados conforme ANPD.
         </p>
       </LegalSection>
 
