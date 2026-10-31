@@ -135,15 +135,15 @@ export function SocialFeedTab() {
         <Card key={post.id} className="bg-card border-border overflow-hidden">
           <CardContent className="p-4">
             <div className="flex items-start gap-3 mb-3">
-              <div className="ml-auto order-last"><SafetyActions kind="post" targetId={post.id} userId={post.user_id} /></div>
+              <div className="ml-auto order-last shrink-0"><SafetyActions kind="post" targetId={post.id} userId={post.user_id} /></div>
               <Avatar className="h-10 w-10">
                 <AvatarImage src={post.profile?.photo_url || undefined} />
                 <AvatarFallback className="bg-primary/20 text-primary">
                   {post.profile?.full_name?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
-              <div>
-                <p className="font-medium text-sm">{post.profile?.full_name}</p>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-sm truncate">{post.profile?.full_name}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatDistanceToNow(new Date(post.created_at), {
                     addSuffix: true,
@@ -154,7 +154,7 @@ export function SocialFeedTab() {
             </div>
 
             {post.content && (
-              <p className="text-sm mb-3 whitespace-pre-wrap">{post.content}</p>
+              <p className="text-sm mb-3 whitespace-pre-wrap break-words">{post.content}</p>
             )}
 
             {post.media_url && (

@@ -327,10 +327,10 @@ export function EventReviews({ eventId }: EventReviewsProps) {
                   {getInitials(review.profile?.full_name)}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1 space-y-1">
+              <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="font-medium text-sm">
+                  <div className="min-w-0 flex-1">
+                    <span className="font-medium text-sm break-words">
                       {review.profile?.full_name || "Usuário"}
                     </span>
                     <span className="text-xs text-muted-foreground ml-2">
@@ -340,7 +340,7 @@ export function EventReviews({ eventId }: EventReviewsProps) {
                       })}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     <SafetyActions userId={review.user_id} kind="review" targetId={review.id} />
                     <StarRating value={review.rating} readonly size="sm" />
                     {user?.id === review.user_id && (

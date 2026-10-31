@@ -183,7 +183,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
                     {comment.moderation_status === "pending" && <p className="text-xs text-amber-400">Em análise pelo suporte · visível apenas para você</p>}
                     {comment.moderation_status === "hidden" && <p className="text-xs text-muted-foreground">Oculto pelo suporte</p>}
                     <div className="bg-muted rounded-lg px-3 py-2">
-                      <p className="text-xs font-medium">
+                      <p className="text-xs font-medium break-words">
                         {comment.profile?.full_name || "Usuário"}
                       </p>
                       <p className="text-sm break-words">
