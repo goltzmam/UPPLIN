@@ -1,3 +1,5 @@
+import { Capacitor } from "@capacitor/core";
+import { Footer } from "@/components/layout/Footer";
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Home, MapPin, Bookmark, User } from "lucide-react";
@@ -131,6 +133,7 @@ export function BottomNav() {
               );
             })}
           </div>
+          {location.pathname === "/" && !Capacitor.isNativePlatform() && <Footer feed id="rodape-mobile" />}
         </div>
       </motion.nav>
 

@@ -1,3 +1,4 @@
+import { Footer } from "@/components/layout/Footer";
 import { HOME_PAGE } from "@/lib/seo";
 import { Capacitor } from "@capacitor/core";
 import React, { useState, useCallback, useRef, useEffect, useMemo } from "react";
@@ -213,7 +214,7 @@ export default function Index() {
     setIsSearchOpen(true);
   }, []);
 
-  const FeedHeader = ({ isDesktop = false }: { isDesktop?: boolean }) => (
+  const renderFeedHeader = ({ isDesktop = false }: { isDesktop?: boolean }) => (
     <div className={cn(
       "absolute top-0 left-0 right-0 z-30 pointer-events-none"
     )}>
@@ -304,7 +305,8 @@ export default function Index() {
   // =====================================================================
   // MOBILE: Fullscreen TikTok-style feed - Simplified transitions
   // =====================================================================
-  const MobileFeed = () => (
+  // Render helpers keep feed components mounted when pagination updates the page.
+  const renderMobileFeed = () => (
     <div className="fixed inset-0 z-0 lg:hidden w-full h-full overflow-hidden">
       {/* For You feed - always rendered, visibility controlled by CSS */}
       <div 
@@ -339,20 +341,20 @@ export default function Index() {
         </div>
       </div>
 
-      <FeedHeader />
+      {renderFeedHeader({})}
     </div>
   );
 
   // =====================================================================
   // DESKTOP/TABLET: TikTok-style layout with minimal sidebar
   // =====================================================================
-  const DesktopLayout = () => (
-    <div className="hidden lg:block h-screen w-full bg-background">
+  const renderDesktopLayout = () => (
+    <div className="hidden lg:flex lg:flex-col h-[100dvh] w-full overflow-hidden bg-background">
       {/* Left Sidebar - Fixed TikTok style */}
       <TikTokDesktopSidebar />
 
       {/* Main Content - Offset for fixed sidebar */}
-      <main className="h-full ml-[72px] relative">
+      <main className="min-h-0 flex-1 ml-[72px] relative">
         {/* For You feed - always rendered, visibility controlled by CSS */}
         <div 
           className={cn(
@@ -385,8 +387,9 @@ export default function Index() {
         </div>
 
         {/* Header overlay */}
-        <FeedHeader isDesktop />
+        {renderFeedHeader({ isDesktop: true })}
       </main>
+      <Footer inset feed />
     </div>
   );
 
@@ -402,8 +405,8 @@ export default function Index() {
         <meta property="og:type" content="website" />
       </Helmet>
       <h1 className="sr-only">{HOME_PAGE.heading}</h1>
-      <MobileFeed />
-      <DesktopLayout />
+      {renderMobileFeed()}
+      {renderDesktopLayout()}
       <BottomNav />
       <FeedSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 

@@ -232,7 +232,7 @@ function AnimatedRoutes() {
     <Footer />
   </Suspense>;
 
-  const publicFooter = ["/", "/eventos", "/explorar-organizadores", "/organizadores", "/precos", "/suporte", "/excluir-conta", "/privacidade", "/termos"].includes(location.pathname)
+  const publicFooter = ["/eventos", "/explorar-organizadores", "/organizadores", "/precos", "/suporte", "/excluir-conta", "/privacidade", "/termos"].includes(location.pathname)
     || /^\/(evento|o|politica)\/[^/]+$/.test(location.pathname)
     || /^\/(privacidade|termos)\/(participante|organizador)$/.test(location.pathname)
     || /^\/organizador\/[a-f0-9-]{36}$/i.test(location.pathname);
