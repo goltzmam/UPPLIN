@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { loadModerationQueue } from "@/lib/ugc-safety";
 import { useEffect, useState } from "react";
 import { useNavigate, Outlet, Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -14,6 +16,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/chats", label: "Central de Mensagens", icon: MessageCircle },
+  { href: "/moderation", label: "Moderação e denúncias", icon: Shield },
   { href: "/users", label: "Usuários", icon: Users },
   { href: "/events", label: "Eventos", icon: Calendar },
   { href: "/orders", label: "Pedidos", icon: CreditCard },
@@ -26,6 +29,8 @@ const navItems = [
 export function AdminLayout() {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, isLoading: rolesLoading } = useUserRoles();
+  const { data: safetyQueue } = useQuery({ queryKey:["moderation-queue"],queryFn:loadModerationQueue,enabled:isAdmin,refetchInterval:15000 });
+  const safetyCount=(safetyQueue?.reports.filter(r=>r.status==="open"||r.status==="reviewing").length || 0)+(safetyQueue?.pending.length || 0);
   const { logout, loggingOut } = useLogout({ redirectTo: "/login" });
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,7 +93,7 @@ export function AdminLayout() {
                 )}
               >
                 <item.icon className="h-5 w-5 shrink-0" />
-                {item.label}
+                {item.label}{item.href === "/moderation" && safetyCount > 0 && <span className="ml-auto rounded-full bg-destructive px-2 text-xs text-white">{safetyCount}</span>}
               </Link>
             ))}
           </nav>
@@ -152,7 +157,7 @@ export function AdminLayout() {
                         )}
                       >
                         <item.icon className="h-5 w-5 shrink-0" />
-                        {item.label}
+                        {item.label}{item.href === "/moderation" && safetyCount > 0 && <span className="ml-auto rounded-full bg-destructive px-2 text-xs text-white">{safetyCount}</span>}
                       </Link>
                     ))}
                   </nav>

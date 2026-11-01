@@ -1,3 +1,4 @@
+import { useAuth } from "@/lib/auth";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Search, Calendar, SlidersHorizontal, X } from "lucide-react";
@@ -35,6 +36,7 @@ const CATEGORIES = [
 ];
 
 export default function Eventos() {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get("q") || "";
   const setSearch = (value: string) => setSearchParams(previous => {
@@ -46,7 +48,7 @@ export default function Eventos() {
   const [showFilters, setShowFilters] = useState(false);
 
   const { data: events, isLoading, error } = useQuery({
-    queryKey: ["events", "published"],
+    queryKey: ["events", "published", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("events")

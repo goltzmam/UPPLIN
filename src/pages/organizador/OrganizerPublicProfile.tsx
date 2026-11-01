@@ -1,3 +1,5 @@
+import { useAuth } from "@/lib/auth";
+import { OrganizerSafetyActions } from "@/components/safety/OrganizerSafetyActions";
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
@@ -22,7 +24,6 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Button } from "@/components/ui/button";
 import { PageLoading } from "@/components/ui/loading";
@@ -36,6 +37,7 @@ import { cn } from "@/lib/utils";
 type TabType = "eventos" | "galeria" | "sobre";
 
 export default function OrganizerPublicProfile() {
+  const { user } = useAuth();
   // Support both /o/:slug and /organizador/:id (legacy)
   const { slug, id } = useParams<{ slug?: string; id?: string }>();
   const identifier = slug || id;
@@ -46,7 +48,7 @@ export default function OrganizerPublicProfile() {
 
   // Fetch organizer data - try by slug first, then by ID
   const { data: organizer, isLoading } = useQuery({
-    queryKey: ["organizer-public", identifier],
+    queryKey: ["organizer-public", identifier, user?.id],
     queryFn: async () => {
       // First try by slug
       const publicColumns = 'id, display_name, slug, description, logo_url, social_instagram, social_facebook, social_website, status, city, state, created_at, updated_at';
@@ -186,7 +188,7 @@ export default function OrganizerPublicProfile() {
   const eventCount = events.length;
   const photoCount = galleryImages.length;
 
-  if (isLoading) return <><Header /><PageLoading /><Footer /></>;
+  if (isLoading) return <><Header /><PageLoading /></>;
 
   if (!organizer) {
     return (
@@ -201,7 +203,7 @@ export default function OrganizerPublicProfile() {
             action={<Button asChild><Link to="/eventos">Ver eventos</Link></Button>}
           />
         </main>
-        <Footer />
+
       </div>
     );
   }
@@ -328,6 +330,7 @@ export default function OrganizerPublicProfile() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-3">
+                  <OrganizerSafetyActions organizerId={organizer.id} />
                   <FollowButton 
                     organizerId={organizerId!} 
                     variant="premium"
@@ -748,7 +751,6 @@ export default function OrganizerPublicProfile() {
         </div>
       </main>
 
-      <Footer />
       <BottomNav />
     </div>
   );

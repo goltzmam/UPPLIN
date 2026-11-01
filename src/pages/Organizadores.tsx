@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowRight, 
@@ -440,7 +439,7 @@ export default function Organizadores() {
         </section>
       </main>
 
-      <Footer />
+
     </div>
   );
 }

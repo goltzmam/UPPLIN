@@ -1,3 +1,4 @@
+import { useAuth } from "@/lib/auth";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -42,12 +43,13 @@ const categories = [
 ];
 
 export default function ExplorarOrganizadores() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
 
   // Fetch organizers with event and follower counts
   const { data: organizers = [], isLoading } = useQuery({
-    queryKey: ["explore-organizers", searchQuery],
+    queryKey: ["explore-organizers", searchQuery, user?.id],
     queryFn: async () => {
       let query = supabase
         .from("organizer_accounts_public")

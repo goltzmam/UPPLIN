@@ -6,7 +6,7 @@ const rewrite = (destination: URL, init: ResponseInit = {}) => {
   headers.set("x-middleware-rewrite", destination.toString());
   return new Response(null, { ...init, headers });
 };
-const adminRoutes = new Set(["/", "/login", "/analytics", "/chats", "/users", "/events", "/orders", "/refunds", "/subscriptions", "/cpf", "/settings"]);
+const adminRoutes = new Set(["/", "/login", "/analytics", "/chats", "/moderation", "/users", "/events", "/orders", "/refunds", "/subscriptions", "/cpf", "/settings"]);
 const asset = (path: string) => path.startsWith("/assets/") || path.startsWith("/badges/") || /^\/(?:upplin-icon\.svg|favicon(?:-48\.png|-upplin\.png|\.ico)|apple-touch-icon\.png|pwa-\d+x\d+\.png|og-[\w-]+\.(?:jpg|png)|site\.webmanifest)$/.test(path);
 export default function proxy(request: Request) {
   const url = new URL(request.url);

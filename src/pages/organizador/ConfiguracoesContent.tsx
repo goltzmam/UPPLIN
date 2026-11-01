@@ -1,3 +1,4 @@
+import { BlockedUsers } from "@/components/safety/BlockedUsers";
 import { PasswordSecurityCard } from "@/components/profile/PasswordSecurityCard";
 import { useAuth } from "@/lib/auth";
 import { OrderCommissionDisclosure } from "@/components/organizador/OrderCommissionDisclosure";
@@ -153,12 +154,12 @@ export default function ConfiguracoesContent() {
     setUploadingLogo(true);
     try {
       const fileExt = file.name.split(".").pop();
-      const fileName = `${organizer.id}-logo.${fileExt}`;
+      const fileName = `${organizer.id}-logo-${crypto.randomUUID()}.${fileExt}`;
       const filePath = `organizers/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from("event-images")
-        .upload(filePath, file, { upsert: true });
+        .upload(filePath, file, { upsert: false });
 
       if (uploadError) throw uploadError;
 
@@ -529,6 +530,7 @@ export default function ConfiguracoesContent() {
       </div>
       <OrderCommissionDisclosure organizerId={organizer.id} />
       <PasswordSecurityCard organizer />
+      <BlockedUsers />
       <DeleteAccountButton />
     </div>
   );

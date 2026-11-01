@@ -33,6 +33,7 @@ interface UserPost {
   media_url: string | null;
   media_type: string | null;
   created_at: string;
+  moderation_status?: string;
   events?: {
     id: string;
     slug: string | null;
@@ -103,7 +104,7 @@ export function UserPostsTab() {
     setSubmittingPost(true);
 
     try {
-      await createUserPost({
+      const post = await createUserPost({
         userId: user.id,
         content,
         file: selectedFile,
@@ -111,6 +112,7 @@ export function UserPostsTab() {
 
       await invalidateSocialQueries(queryClient, user.id);
       resetComposer();
+      toast.success(post.moderation_status === "pending" ? "Publicação em análise. O suporte revisará antes de ficar pública." : "Publicação criada.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Não foi possível publicar o post.");
     } finally {
@@ -248,6 +250,7 @@ export function UserPostsTab() {
                     size="sm"
                     onClick={() => {
                       resetComposer();
+
                     }}
                   >
                     Cancelar
@@ -307,15 +310,15 @@ export function UserPostsTab() {
             <Card key={post.id} className="bg-card border-border overflow-hidden">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={profile?.photo_url || undefined} />
                       <AvatarFallback className="bg-primary/20 text-primary">
                         {profile?.full_name?.charAt(0) || "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="font-medium text-sm">{profile?.full_name}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-sm truncate">{profile?.full_name}</p>
                       <p className="text-xs text-muted-foreground">
                         {formatDistanceToNow(new Date(post.created_at), {
                           addSuffix: true,
@@ -344,6 +347,8 @@ export function UserPostsTab() {
                   </DropdownMenu>
                 </div>
 
+                {post.moderation_status === "pending" && <p className="mb-3 text-xs text-amber-400">Em análise pelo suporte · visível apenas para você</p>}
+                {post.moderation_status === "hidden" && <p className="mb-3 text-xs text-muted-foreground">Oculto pelo suporte · revise o conteúdo ou entre em contato.</p>}
                 {post.content && (
                   <p className="text-sm mb-3 whitespace-pre-wrap break-words">
                     {renderTextWithMentions(post.content, handleMentionClick)}
@@ -378,7 +383,7 @@ export function UserPostsTab() {
 
                 {/* Like and Comment Actions */}
                 <div className="flex items-start gap-2 pt-3 border-t border-border">
-                  <PostLikeButton postId={post.id} />
+                  <PostLikeButton postId={post.id} disabled={!!post.moderation_status && post.moderation_status !== "approved"} />
                   <PostComments
                     postId={post.id}
                     isExpanded={expandedComments.has(post.id)}

@@ -1,3 +1,4 @@
+import { OrganizerLandingFooter } from "@/components/layout/OrganizerLandingFooter";
 import { isOrganizerPlanPath } from "@/lib/store-platform";
 import { Capacitor } from "@capacitor/core";
 import { webSurface, legacyAdminUrl, legacyRecoveryDestination, PLANS_ORIGIN, APP_ORIGIN } from "@/lib/web-surfaces";
@@ -46,6 +47,7 @@ const ExcluirConta = lazy(() => import("./pages/ExcluirConta"));
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 const AdminLayout = lazy(() => import("./components/admin/AdminLayout").then((m) => ({ default: m.AdminLayout })));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminModeration = lazy(() => import("./pages/admin/AdminModeration"));
 const AdminChats = lazy(() => import("./pages/admin/AdminChats"));
 const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
 const AdminEvents = lazy(() => import("./pages/admin/AdminEvents"));
@@ -211,6 +213,7 @@ function AnimatedRoutes() {
       <Route path="/" element={<AdminLayout />}>
         <Route index element={<AdminDashboard />} />
         <Route path="chats" element={<AdminChats />} />
+        <Route path="moderation" element={<AdminModeration />} />
         <Route path="users" element={<AdminUsers />} />
         <Route path="events" element={<AdminEvents />} />
         <Route path="orders" element={<AdminOrders />} />
@@ -226,6 +229,7 @@ function AnimatedRoutes() {
   if (surface === "plans") return <Suspense fallback={<AppBootFallback />}>
     <RouteSeo />
     <Routes><Route path="/" element={<LpOrganizador />} /><Route path="*" element={<ExternalNavigation target={APP_ORIGIN + location.pathname + location.search + location.hash} />} /></Routes>
+    <OrganizerLandingFooter />
   </Suspense>;
 
   return (

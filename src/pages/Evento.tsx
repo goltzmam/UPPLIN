@@ -46,7 +46,7 @@ export default function Evento() {
   const [savingEvent, setSavingEvent] = useState(false);
 
   const { data: event, isLoading, error } = useQuery({
-    queryKey: ["event", id],
+    queryKey: ["event", id, user?.id],
     queryFn: async () => {
       // Try to find by slug first, then by UUID
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id || '');
@@ -81,7 +81,7 @@ export default function Evento() {
 
   // Check-in counter (posts tagged with this event)
   const { data: checkinCount = 0 } = useQuery({
-    queryKey: ["event-checkins", event?.id],
+    queryKey: ["event-checkins", event?.id, user?.id],
     queryFn: async () => {
       const { count, error } = await supabase
         .from("user_posts")

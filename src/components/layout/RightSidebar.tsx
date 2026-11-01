@@ -169,15 +169,15 @@ export function RightSidebar() {
         {/* Footer Links */}
         <div className="pt-4 border-t border-border/50">
           <div className="flex flex-wrap gap-x-2 gap-y-1 text-[11px] text-muted-foreground/60">
-            <Link to="#" className="hover:text-muted-foreground hover:underline">Sobre</Link>
+            <a href={Capacitor.isNativePlatform() ? "/suporte" : "https://planos.upplin.com/#rodape"} className="hover:text-muted-foreground hover:underline">Sobre a UPPLIN</a>
             <span>·</span>
-            <Link to="#" className="hover:text-muted-foreground hover:underline">Ajuda</Link>
+            <Link to="/suporte" className="hover:text-muted-foreground hover:underline">Ajuda</Link>
             <span>·</span>
             {!Capacitor.isNativePlatform() && <Link to="/precos" className="hover:text-muted-foreground hover:underline">Preços</Link>}
             <span>·</span>
-            <Link to="#" className="hover:text-muted-foreground hover:underline">Termos</Link>
+            <Link to="/termos" className="hover:text-muted-foreground hover:underline">Termos</Link>
             <span>·</span>
-            <Link to="#" className="hover:text-muted-foreground hover:underline">Privacidade</Link>
+            <Link to="/privacidade" className="hover:text-muted-foreground hover:underline">Privacidade</Link>
           </div>
           <p className="text-[11px] text-muted-foreground/50 mt-3">
             © 2026 UPPLIN

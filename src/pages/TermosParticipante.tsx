@@ -8,7 +8,7 @@ export default function TermosParticipante() {
       metaDescription="Regras de uso da plataforma Upplin para participantes que compram ingressos e interagem no feed."
       canonical="https://www.upplin.com/termos/participante"
       badge="Termos · Participante"
-      updatedAt="07 de junho de 2026"
+      updatedAt="31 de outubro de 2026"
       backTo="/termos"
     >
       <LegalSection title="1. Aceitação">
@@ -64,6 +64,10 @@ export default function TermosParticipante() {
         </p>
       </LegalSection>
 
+      <LegalSection title="Segurança da comunidade">
+        <p>Conteúdo impróprio é submetido a filtros e revisão. Fotos e vídeos aguardam aprovação antes de ficarem públicos. Publicações e perfis que violem as regras podem ser ocultados pelo suporte.</p>
+        <p>Você pode denunciar publicações, comentários e perfis pelo menu de segurança e bloquear usuários. Os bloqueios podem ser desfeitos em Perfil → Configurações → Usuários bloqueados. Para ajuda, use os canais em <a href="/suporte" className="text-primary underline">Suporte UPPLIN</a>.</p>
+      </LegalSection>
       <LegalSection title="6. Check-in no evento">
         <p>
           A validação ocorre por QR Code do ingresso conferido contra o CPF cadastrado.
