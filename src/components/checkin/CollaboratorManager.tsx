@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { UserPlus, Trash2, Users, Copy, CheckCircle, XCircle, BarChart3, Link2 } from "lucide-react";
+import { getPublicAppOrigin } from "@/lib/public-origin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -109,10 +110,10 @@ export function CollaboratorManager({ organizerId, events, selectedEventId }: Co
       // Send email notification to collaborator
       const eventForScope = eventScope !== "all" ? events.find(e => e.id === eventScope) : null;
       const scannerLink = eventForScope
-        ? `${window.location.origin}/scan/${eventForScope.id}`
+        ? `${getPublicAppOrigin()}/scan/${eventForScope.id}`
         : selectedEventId
-          ? `${window.location.origin}/scan/${selectedEventId}`
-          : window.location.origin;
+          ? `${getPublicAppOrigin()}/scan/${selectedEventId}`
+          : getPublicAppOrigin();
 
       try {
         await supabase.functions.invoke("send-email", {
@@ -165,7 +166,7 @@ export function CollaboratorManager({ organizerId, events, selectedEventId }: Co
   };
 
   const scannerUrl = selectedEventId
-    ? `${window.location.origin}/scan/${selectedEventId}`
+    ? `${getPublicAppOrigin()}/scan/${selectedEventId}`
     : null;
 
   const copyLink = () => {

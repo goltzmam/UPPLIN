@@ -33,7 +33,7 @@ export function SafetyActions({ userId, kind = "profile", targetId, onBlocked }:
     } catch { toast.error("Não foi possível atualizar o bloqueio."); }finally { setPending(false); }
   };
   return <>
-    <DropdownMenu><DropdownMenuTrigger asChild><Button type="button" size="icon" variant="ghost" aria-label={`Segurança ${kind === "post" ? "da publicação" : kind === "comment" ? "do comentário" : kind === "review" ? "da avaliação" : "do perfil"}`} className="h-9 w-9 shrink-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+    <DropdownMenu><DropdownMenuTrigger asChild><Button type="button" size="icon" variant="ghost" aria-label={`Segurança ${kind === "post" ? "da publicação" : kind === "comment" || kind === "event_comment" ? "do comentário" : kind === "review" ? "da avaliação" : "do perfil"}`} className="h-9 w-9 shrink-0"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         {kind !== "profile" && <DropdownMenuItem onSelect={() => requireLogin(() => setReportKind(kind))}><Flag className="h-4 w-4 mr-2" />Denunciar {kind === "post" ? "publicação" : kind === "review" ? "avaliação" : "comentário"}</DropdownMenuItem>}
         <DropdownMenuItem onSelect={() => requireLogin(() => setReportKind("profile"))}><Flag className="h-4 w-4 mr-2" />Denunciar perfil</DropdownMenuItem>
@@ -41,7 +41,7 @@ export function SafetyActions({ userId, kind = "profile", targetId, onBlocked }:
       </DropdownMenuContent>
     </DropdownMenu>
     <Dialog open={!!reportKind} onOpenChange={open => { if (!open && !pending) setReportKind(null); }}><DialogContent className="max-h-[90dvh] overflow-y-auto">
-      <DialogHeader><DialogTitle>Denunciar {reportKind === "post" ? "publicação" : reportKind === "comment" ? "comentário" : reportKind === "review" ? "avaliação" : "perfil"}</DialogTitle><DialogDescription>A equipe de suporte UPPLIN recebe a denúncia para análise. A pessoa denunciada não vê quem enviou.</DialogDescription></DialogHeader>
+      <DialogHeader><DialogTitle>Denunciar {reportKind === "post" ? "publicação" : reportKind === "comment" || reportKind === "event_comment" ? "comentário" : reportKind === "review" ? "avaliação" : "perfil"}</DialogTitle><DialogDescription>A equipe de suporte UPPLIN recebe a denúncia para análise. A pessoa denunciada não vê quem enviou.</DialogDescription></DialogHeader>
       <Label htmlFor="report-reason">Motivo</Label><select id="report-reason" className="w-full rounded-xl border bg-background p-3" value={reason} onChange={e => setReason(e.target.value)}>{REPORT_REASONS.map(([id,label]) => <option value={id} key={id}>{label}</option>)}</select>
       <Label htmlFor="report-details">Detalhes (opcional)</Label><Textarea id="report-details" value={details} maxLength={1000} onChange={e => setDetails(e.target.value)} placeholder="Conte ao suporte o que aconteceu. Não inclua senhas ou dados de pagamento." />
       <Button type="button" disabled={pending} onClick={() => void report()}>{pending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Enviar denúncia</Button>

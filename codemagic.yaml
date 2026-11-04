@@ -1,0 +1,267 @@
+# Builds do UPPLIN no Codemagic: o iOS vai para o TestFlight e o Android para o teste interno da Play, como rascunho.
+# O build web precisa do Supabase de produção (o .env saiu do git em 28/10). A chave publishable é pública por
+# desenho: vai em todo bundle do site. O vite.config.ts recusa outro projeto ou chave de servidor.
+definitions:
+  supabase_vars: &supabase_vars
+    VITE_SUPABASE_URL: https://ermhzlthjlolqsbtjawf.supabase.co
+    VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_2NH-BIiNgWir_VgmwWWG8g_EJpcDChi
+    VITE_APP_URL: https://www.upplin.com
+  scripts:
+    # O @capacitor/geolocation 8.2.4 chama o pedido de localização numa fila .background, que o iOS pode adiar por
+    # dezenas de segundos (issue 105 de ionic-team/capacitor-geolocation, aberta). Só essa fila muda, e só no build iOS.
+    - &geolocation_qos
+      name: Plugin de localização com o pedido em prioridade de usuário
+      script: |
+        F=node_modules/@capacitor/geolocation/ios/Sources/GeolocationPlugin/GeolocationPlugin.swift
+        test -f "$F"
+        sed -i '' 's/DispatchQueue.global(qos: \.background)/DispatchQueue.global(qos: .userInitiated)/' "$F"
+        if grep -q 'qos: \.background' "$F"; then
+          echo "ERRO: a fila .background continua em $F."
+          exit 1
+        fi
+        grep -n 'DispatchQueue' "$F" || true
+workflows:
+  ios-testflight:
+    name: iOS TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    integrations:
+      # Nome da chave da API do App Store Connect cadastrada no Codemagic.
+      app_store_connect: UPPLIN ASC
+    environment:
+      node: 24
+      xcode: latest
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.despia.upplin
+      vars:
+        <<: *supabase_vars
+        # ID numérico do app no App Store Connect (Informações do app > ID da Apple).
+        APP_STORE_APPLE_ID: 6772288825
+        XCODE_PROJECT: ios/App/App.xcodeproj
+        XCODE_SCHEME: App
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - *geolocation_qos
+      - name: Gerar o build web
+        script: npm run build
+      - name: Sincronizar o projeto iOS
+        script: npx cap sync ios
+      - name: Número do build (maior que o último do TestFlight)
+        script: |
+          # O App Store Connect já conhece o build 7272023; nunca ficar abaixo de 7272024.
+          MIN_BUILD=7272024
+          LATEST=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" || echo 0)
+          NEXT=$((LATEST + 1))
+          if [ "$NEXT" -lt "$MIN_BUILD" ]; then NEXT=$MIN_BUILD; fi
+          echo "Build number: $NEXT"
+          sed -i '' "s/CURRENT_PROJECT_VERSION = [0-9]*;/CURRENT_PROJECT_VERSION = $NEXT;/" "$XCODE_PROJECT/project.pbxproj"
+      - name: Aplicar perfis de assinatura
+        script: xcode-project use-profiles
+      - name: Gerar o .ipa
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+    publishing:
+      app_store_connect:
+        auth: integration
+        # Só sobe o build: os testadores internos do TestFlight recebem sem revisão da Apple.
+        # true mandaria o build para a revisão beta do TestFlight.
+        submit_to_testflight: false
+
+  android-play:
+    name: Android Play (teste interno)
+    # Mac, não Linux: a conta pessoal só tem minutos grátis em macOS M2.
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      node: 24
+      java: 21
+      android_signing:
+        # Reference name do keystore de upload em Code signing identities.
+        - upplin_upload
+      groups:
+        # GCLOUD_SERVICE_ACCOUNT_CREDENTIALS: JSON da conta de serviço com permissão de release na Play.
+        - google_play
+      vars:
+        <<: *supabase_vars
+        PACKAGE_NAME: com.despia.upplin
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - name: Gerar o build web
+        script: npm run build
+      - name: Sincronizar o projeto Android
+        script: npx cap sync android
+      - name: Arquivo de assinatura
+        script: |
+          cat > "$CM_BUILD_DIR/android/keystore.properties" <<EOF
+          storeFile=$CM_KEYSTORE_PATH
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyAlias=$CM_KEY_ALIAS
+          keyPassword=$CM_KEY_PASSWORD
+          EOF
+      - name: Número do build (maior que o último da Play)
+        script: |
+          # A Play já recebeu o 6071837; nunca ficar abaixo de 6071838.
+          MIN_BUILD=6071838
+          # A CLI chama a credencial de GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS; o nome antigo está obsoleto.
+          export GOOGLE_PLAY_SERVICE_ACCOUNT_CREDENTIALS="$GCLOUD_SERVICE_ACCOUNT_CREDENTIALS"
+          LATEST=$(google-play get-latest-build-number --package-name "$PACKAGE_NAME" || echo 0)
+          NEXT=$((LATEST + 1))
+          if [ "$NEXT" -lt "$MIN_BUILD" ]; then NEXT=$MIN_BUILD; fi
+          echo "versionCode: $NEXT"
+          sed -i '' "s/versionCode [0-9]*/versionCode $NEXT/" android/app/build.gradle
+      - name: Gerar o .aab
+        script: |
+          chmod +x android/gradlew
+          cd android && ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+    publishing:
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        # Rascunho: a versão só chega aos testadores quando alguém lançar no Play Console.
+        submit_as_draft: true
+  ios-simulador:
+    name: iOS no simulador (prints)
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      node: 24
+      xcode: latest
+      vars:
+        <<: *supabase_vars
+    scripts:
+      - name: Instalar dependências
+        script: npm ci
+      - *geolocation_qos
+      - name: Gerar o build web
+        script: npm run build
+      - name: Sincronizar o projeto iOS
+        script: npx cap sync ios
+      - name: Compilar para o simulador (sem assinatura)
+        script: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build
+          APP="build/sim/Build/Products/Release-iphonesimulator/App.app"
+          if [ ! -d "$APP" ]; then
+            echo "ERRO: $APP não foi gerado."
+            exit 1
+          fi
+      - name: Rodar no iPad e no iPhone e salvar prints
+        script: |
+          APP="$CM_BUILD_DIR/build/sim/Build/Products/Release-iphonesimulator/App.app"
+          BUNDLE_ID=com.despia.upplin
+          mkdir -p screenshots
+
+          # Escolhe o simulador pela lista; o python3 imprime "UDID|nome|runtime" ou nada.
+          pick_device() {
+            xcrun simctl list devices available -j | KIND="$1" python3 -c '
+          import json, os, re, sys
+          kind = os.environ["KIND"]
+          data = json.load(sys.stdin)
+          devs = []
+          for runtime, items in data["devices"].items():
+              for d in items:
+                  if d.get("isAvailable", True):
+                      devs.append((d["udid"], d["name"], runtime.split(".")[-1]))
+          def best(cands, prefs):
+              for pref in prefs:
+                  for c in cands:
+                      if pref(c[1]):
+                          return c
+              return cands[0] if cands else None
+          def gen(name):
+              m = re.match(r"iPhone (\d+)", name)
+              return int(m.group(1)) if m else 0
+          if kind == "ipad":
+              cands = [d for d in devs if "iPad Air" in d[1]]
+              pick = best(cands, [lambda n: "11-inch" in n])
+          else:
+              cands = [d for d in devs if d[1].startswith("iPhone")]
+              cands.sort(key=lambda d: gen(d[1]), reverse=True)
+              pick = best(cands, [lambda n: gen(n) >= 16])
+          if pick:
+              print("|".join(pick))
+          '
+          }
+
+          run_device() {
+            LABEL="$1"
+            PICK=$(pick_device "$LABEL")
+            if [ -z "$PICK" ]; then
+              echo "AVISO: nenhum simulador de $LABEL disponível; seguindo."
+              return 1
+            fi
+            UDID=$(echo "$PICK" | cut -d'|' -f1)
+            echo "Simulador de $LABEL: $(echo "$PICK" | cut -d'|' -f2) ($(echo "$PICK" | cut -d'|' -f3))"
+            xcrun simctl boot "$UDID" || return 1
+            xcrun simctl bootstatus "$UDID" -b || return 1
+            xcrun simctl install "$UDID" "$APP" || return 1
+            xcrun simctl launch "$UDID" "$BUNDLE_ID" || return 1
+            sleep 20
+            xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-20s.png"
+            sleep 25
+            xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-45s.png"
+            # Telas internas: uma cópia do app com server.appStartPath, que o Capacitor abre direto na rota.
+            for ROUTE in login por-perto; do
+              xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
+              ROUTE_APP="$CM_BUILD_DIR/build/rotas/$ROUTE/App.app"
+              rm -rf "$ROUTE_APP" && mkdir -p "$(dirname "$ROUTE_APP")" && cp -R "$APP" "$ROUTE_APP"
+              if ! ROUTE="$ROUTE" python3 -c '
+          import json, os, sys
+          path = sys.argv[1]
+          with open(path) as f:
+              cfg = json.load(f)
+          cfg.setdefault("server", {})["appStartPath"] = os.environ["ROUTE"]
+          with open(path, "w") as f:
+              json.dump(cfg, f)
+          ' "$ROUTE_APP/capacitor.config.json"; then
+                echo "AVISO: não deu para apontar o app para /$ROUTE; seguindo."
+                continue
+              fi
+              # O Capacitor fecha o app se public/<rota> não existir; a pasta vazia basta e o roteador entrega o index.html.
+              mkdir -p "$ROUTE_APP/public/$ROUTE"
+              xcrun simctl install "$UDID" "$ROUTE_APP" || continue
+              # Localização liberada e em Fortaleza, para o "Por perto" não parar no pedido de permissão.
+              xcrun simctl privacy "$UDID" grant location "$BUNDLE_ID" || true
+              xcrun simctl location "$UDID" set -3.7319,-38.5267 || true
+              xcrun simctl launch "$UDID" "$BUNDLE_ID" || continue
+              sleep 15
+              xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-$ROUTE.png"
+            done
+            # "Por perto" sem permissão: o pedido na tela tem de ser o do iOS, não o do WebView ("localhost"),
+            # e tem de aparecer logo; os dois prints medem a demora.
+            xcrun simctl terminate "$UDID" "$BUNDLE_ID" || true
+            xcrun simctl privacy "$UDID" reset location "$BUNDLE_ID" || true
+            if xcrun simctl launch "$UDID" "$BUNDLE_ID"; then
+              sleep 10
+              xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-por-perto-sem-permissao-10s.png"
+              sleep 35
+              xcrun simctl io "$UDID" screenshot "screenshots/$LABEL-por-perto-sem-permissao-45s.png"
+            fi
+            # O log não pode derrubar o build.
+            xcrun simctl spawn "$UDID" log show --last 5m --style compact --predicate 'process == "App"' > "screenshots/$LABEL.log" || true
+            xcrun simctl shutdown "$UDID" || true
+            return 0
+          }
+
+          RAN=0
+          for LABEL in ipad iphone; do
+            if run_device "$LABEL"; then RAN=$((RAN + 1)); fi
+          done
+          if [ "$RAN" -eq 0 ]; then
+            echo "ERRO: nem o iPad nem o iPhone rodaram."
+            exit 1
+          fi
+    artifacts:
+      - screenshots/*.png
+      - screenshots/*.log

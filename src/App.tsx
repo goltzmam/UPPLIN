@@ -5,6 +5,7 @@ import { webSurface, legacyAdminUrl, legacyRecoveryDestination, PLANS_ORIGIN, AP
 import { RouteSeo } from "@/components/seo/RouteSeo";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
@@ -334,6 +335,7 @@ const App = () => (
         <BrowserRouter>
           <AnimatedRoutes />
           <Toaster />
+          <Sonner />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

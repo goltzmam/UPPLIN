@@ -27,7 +27,7 @@ export const FeedSkeleton = memo(function FeedSkeleton({ className }: FeedSkelet
       </div>
 
       {/* Top organizer skeleton */}
-      <div className="absolute top-[calc(env(safe-area-inset-top,0px)+80px)] left-3 right-16 z-10">
+      <div className="absolute top-[calc(var(--safe-top)+80px)] left-3 right-16 z-10">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-zinc-700/60 animate-pulse" />
           <div className="flex flex-col gap-1.5">

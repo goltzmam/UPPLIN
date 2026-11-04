@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { triggerFeedback } from "@/lib/feedback";
+import { SafetyActions } from "@/components/safety/SafetyActions";
 
 interface EventCommentsProps {
   eventId: string;
@@ -28,6 +29,7 @@ interface Comment {
   user_id: string;
   created_at: string;
   parent_id: string | null;
+  moderation_status?: string;
   profile?: {
     id: string;
     full_name: string | null;
@@ -134,23 +136,29 @@ export function EventComments({ eventId }: EventCommentsProps) {
   // Add comment mutation
   const addComment = useMutation({
     mutationFn: async ({ content: commentContent, parentId }: { content: string; parentId?: string }) => {
-      const { error } = await supabase.from("event_comments").insert({
+      const { data, error } = await supabase.from("event_comments").insert({
         event_id: eventId,
         user_id: user!.id,
         content: commentContent,
         parent_id: parentId || null,
-      });
+      }).select("moderation_status").single();
       if (error) throw error;
+      return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["event-comments", eventId] });
       queryClient.invalidateQueries({ queryKey: ["event-comment-count", eventId] });
       setContent("");
       setReplyTo(null);
       triggerFeedback({ haptic: "success", sound: "success" });
+      if (data?.moderation_status === "pending") {
+        toast({ title: "Comentário em análise antes de ficar público." });
+      }
     },
-    onError: () => {
-      toast({ title: "Erro ao adicionar comentário", variant: "destructive" });
+    onError: (error: Error) => {
+      const message = error?.message ?? "";
+      const showMessage = message.includes("conta está restrita") || message.includes("Não foi possível responder");
+      toast({ title: "Erro ao adicionar comentário", description: showMessage ? message : undefined, variant: "destructive" });
     },
   });
 
@@ -277,6 +285,8 @@ export function EventComments({ eventId }: EventCommentsProps) {
                             </span>
                             {renderContent(comment.content)}
                           </p>
+                          {comment.moderation_status === "pending" && <p className="text-xs text-amber-400">Em análise pelo suporte · visível apenas para você</p>}
+                          {comment.moderation_status === "hidden" && <p className="text-xs text-muted-foreground">Oculto pelo suporte</p>}
                           <div className="flex items-center gap-4 mt-1.5 text-xs text-muted-foreground">
                             <span>
                               {formatDistanceToNow(new Date(comment.created_at), {
@@ -299,7 +309,7 @@ export function EventComments({ eventId }: EventCommentsProps) {
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-6 w-6 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 transition-opacity"
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
@@ -314,6 +324,9 @@ export function EventComments({ eventId }: EventCommentsProps) {
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
+                        )}
+                        {user?.id !== comment.user_id && (
+                          <SafetyActions kind="event_comment" targetId={comment.id} userId={comment.user_id} />
                         )}
                       </div>
 
@@ -366,6 +379,8 @@ export function EventComments({ eventId }: EventCommentsProps) {
                                     </span>
                                     {renderContent(reply.content)}
                                   </p>
+                                  {reply.moderation_status === "pending" && <p className="text-xs text-amber-400">Em análise pelo suporte · visível apenas para você</p>}
+                                  {reply.moderation_status === "hidden" && <p className="text-xs text-muted-foreground">Oculto pelo suporte</p>}
                                   <div className="flex items-center gap-4 mt-1 text-[11px] text-muted-foreground">
                                     <span>
                                       {formatDistanceToNow(new Date(reply.created_at), {
@@ -388,7 +403,7 @@ export function EventComments({ eventId }: EventCommentsProps) {
                                       <Button 
                                         variant="ghost" 
                                         size="icon" 
-                                        className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        className="h-5 w-5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100 transition-opacity"
                                       >
                                         <MoreHorizontal className="h-3 w-3" />
                                       </Button>
@@ -403,6 +418,9 @@ export function EventComments({ eventId }: EventCommentsProps) {
                                       </DropdownMenuItem>
                                     </DropdownMenuContent>
                                   </DropdownMenu>
+                                )}
+                                {user?.id !== reply.user_id && (
+                                  <SafetyActions kind="event_comment" targetId={reply.id} userId={reply.user_id} />
                                 )}
                               </div>
                             </div>

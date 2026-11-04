@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { MapPin, Navigation, Loader2, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EventGridCard } from "./EventGridCard";
+import { getCurrentCoords, getLocationPermission, LocationError } from "@/lib/geolocation";
 
 interface NearbyEventsProps {
   limit?: number;
@@ -17,40 +18,34 @@ export function NearbyEvents({ limit = 4 }: NearbyEventsProps) {
   const [isRequestingLocation, setIsRequestingLocation] = useState(false);
 
   // Request geolocation
-  const requestLocation = () => {
-    if (!navigator.geolocation) {
-      setLocationError("Geolocalização não suportada pelo navegador");
-      return;
-    }
-
+  const requestLocation = async () => {
     setIsRequestingLocation(true);
     setLocationError(null);
 
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setLocation({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude,
-        });
-        setIsRequestingLocation(false);
-      },
-      (error) => {
-        setLocationError("Não foi possível obter sua localização");
-        setIsRequestingLocation(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
-    );
+    try {
+      const coords = await getCurrentCoords({
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000,
+      });
+      setLocation(coords);
+    } catch (error) {
+      setLocationError(
+        error instanceof LocationError && error.reason === "unavailable"
+          ? "Geolocalização não suportada pelo navegador"
+          : "Não foi possível obter sua localização"
+      );
+    }
+    setIsRequestingLocation(false);
   };
 
   // Auto-request on mount if permission was previously granted
   useEffect(() => {
-    if (navigator.permissions) {
-      navigator.permissions.query({ name: "geolocation" }).then((result) => {
-        if (result.state === "granted") {
-          requestLocation();
-        }
-      });
-    }
+    getLocationPermission().then((state) => {
+      if (state === "granted") {
+        requestLocation();
+      }
+    });
   }, []);
 
   // Fetch nearby events

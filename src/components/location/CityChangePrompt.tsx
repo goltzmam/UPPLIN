@@ -25,7 +25,7 @@ export function CityChangePrompt({
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -20, opacity: 0 }}
-          className="fixed inset-x-2 z-40 mx-auto max-w-[460px] top-[calc(env(safe-area-inset-top,0px)+64px)]"
+          className="fixed inset-x-2 z-40 mx-auto max-w-[460px] top-[calc(var(--safe-top)+64px)]"
         >
           <div className="relative rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-2xl p-3 sm:px-4 sm:py-3">
             <button

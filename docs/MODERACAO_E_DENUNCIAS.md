@@ -6,7 +6,7 @@ Acesse https://admin.upplin.com/moderation com a conta de suporte existente. A p
 
 Cada denúncia tem motivo, detalhes opcionais, evidência disponível no momento do envio, status e prazo operacional de 24h. O suporte pode iniciar análise, registrar uma nota interna, ocultar o conteúdo e resolver ou encerrar sem remoção. O denunciante não é exibido aos usuários comuns. A evidência não é pública. Relatos repetidos do mesmo usuário sobre o mesmo alvo aberto são deduplicados; o envio é limitado a 10 novas denúncias por usuário por hora.
 
-A equipe precisa acompanhar a fila e tomar as medidas dentro do prazo operacional. O código não substitui atendimento humano e não garante aprovação pelas lojas. Não há envio automático de alertas por email nem monitoramento humano permanente pelo Codex.
+A equipe precisa acompanhar a fila e tomar as medidas dentro do prazo operacional. O código não substitui atendimento humano e não garante aprovação pelas lojas. Cada denúncia nova gera uma notificação no aplicativo e um email para as contas administrativas, com o link da fila. Denúncia repetida do mesmo usuário sobre o mesmo alvo aberto não gera novo alerta. Se o alerta falhar, a denúncia continua registrada; o alerta avisa, mas não substitui o acompanhamento da fila.
 
 ## Filtro e aprovação
 
@@ -14,13 +14,13 @@ Texto passa por triagem lexical no banco, incluindo normalização de caixa, ace
 
 Fotos, vídeos, capas e logos novos/alterados aguardam aprovação. Conteúdo pendente só fica completo para o autor e o suporte. Perfis públicos recebem apresentação neutra durante a análise. Uma atualização não permite ao autor se autoaprovar ou publicar de novo um conteúdo ocultado sem revisão. Eventos continuam na fila de aprovação de eventos já existente; alterações por API também precisam respeitar essa revisão.
 
-Avaliações de eventos também podem ser denunciadas e entram na triagem de texto. Avaliações pendentes/ocultas não participam da média exibida.
+Avaliações de eventos também podem ser denunciadas e entram na triagem de texto. Avaliações pendentes/ocultas não participam da média exibida. Comentários de eventos seguem a mesma regra: entram na triagem de texto, podem ser denunciados e aparecem na fila como Comentário do evento.
 
 Abra todas as mídias, confira texto/nome/capa/logo e só então aprove. Arquivos têm URLs imutáveis: uma mídia revisada não pode ser substituída no mesmo endereço, inclusive por apagar e reenviar. Uploads de avatar/capa/logo usam novos nomes. O filtro não altera permissões de pagamento nem acrescenta taxas.
 
 ## Bloqueios
 
-O menu de segurança está em publicações, comentários, avaliações e perfis (incluindo o perfil aberto pelo chat). O bloqueio oculta o conteúdo social entre as duas contas e impede novas conversas/mensagens no servidor, inclusive contra chamadas diretas à API. Pode ser desfeito em Configurações → Usuários bloqueados, tanto no perfil participante quanto no painel organizador. Históricos privados necessários ao atendimento e os pedidos/ingressos continuam preservados. O suporte oficial permanece acessível. O suporte pode acompanhar os chats.
+O menu de segurança está em publicações, comentários de publicações, comentários de eventos, avaliações e perfis (incluindo o perfil aberto pelo chat). O bloqueio oculta o conteúdo social entre as duas contas e impede novas conversas/mensagens no servidor, inclusive contra chamadas diretas à API. Pode ser desfeito em Configurações → Usuários bloqueados, tanto no perfil participante quanto no painel organizador. Históricos privados necessários ao atendimento e os pedidos/ingressos continuam preservados. O suporte oficial permanece acessível. O suporte pode acompanhar os chats.
 
 Consultas de conteúdo personalizado usam a identidade da sessão no cache para não reutilizar conteúdo privado de outra conta.
 

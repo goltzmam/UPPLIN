@@ -58,7 +58,7 @@ export function CategoryPills() {
   }, []);
 
   return (
-    <section className="py-6 border-b border-border bg-background sticky top-16 z-40 relative">
+    <section className="py-6 border-b border-border bg-background sticky top-[calc(var(--safe-top)_+_4rem)] z-40 relative">
       <div className="container">
         <div
           ref={scrollRef}

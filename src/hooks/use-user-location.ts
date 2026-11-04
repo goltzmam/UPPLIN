@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { reverseGeocode } from "@/lib/reverse-geocode";
 import { normalizeCity } from "@/lib/geo";
+import { Capacitor } from "@capacitor/core";
+import { getCurrentCoords, getLocationPermission, LocationError } from "@/lib/geolocation";
 
 /**
  * Centralized hook for the user's active location.
@@ -139,6 +141,10 @@ export function useUserLocation(options: UseUserLocationOptions = {}) {
 
   // Initialize permission state
   useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      void getLocationPermission().then(setPermission);
+      return;
+    }
     if (typeof navigator === "undefined" || !navigator.permissions) return;
     navigator.permissions
       .query({ name: "geolocation" as PermissionName })
@@ -192,34 +198,29 @@ export function useUserLocation(options: UseUserLocationOptions = {}) {
     });
   }, [activeCity, profileCity, profileState]);
 
-  const requestLocation = useCallback(() => {
-    if (typeof navigator === "undefined" || !navigator.geolocation) {
-      return Promise.resolve(null as UserCoords | null);
-    }
+  const requestLocation = useCallback(async () => {
     setRequesting(true);
-    return new Promise<UserCoords | null>((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          const next: UserCoords = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-            ts: Date.now(),
-          };
-          writeCoords(next);
-          setCoords(next);
-          setPermission("granted");
-          setRequesting(false);
-          resolve(next);
-        },
-        (err) => {
-          console.warn("[useUserLocation] geolocation error:", err.message);
-          if (err.code === err.PERMISSION_DENIED) setPermission("denied");
-          setRequesting(false);
-          resolve(null);
-        },
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60_000 }
+    try {
+      const { lat, lng } = await getCurrentCoords({
+        enableHighAccuracy: false,
+        timeout: 10000,
+        maximumAge: 60_000,
+      });
+      const next: UserCoords = { lat, lng, ts: Date.now() };
+      writeCoords(next);
+      setCoords(next);
+      setPermission("granted");
+      setRequesting(false);
+      return next;
+    } catch (err) {
+      console.warn(
+        "[useUserLocation] geolocation error:",
+        err instanceof Error ? err.message : err,
       );
-    });
+      if (err instanceof LocationError && err.reason === "denied") setPermission("denied");
+      setRequesting(false);
+      return null;
+    }
   }, []);
 
   const dismissPrompt = useCallback(() => {

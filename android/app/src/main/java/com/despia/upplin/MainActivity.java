@@ -1,4 +1,4 @@
-package com.upplin.app;
+package com.despia.upplin;
 
 import com.getcapacitor.BridgeActivity;
 

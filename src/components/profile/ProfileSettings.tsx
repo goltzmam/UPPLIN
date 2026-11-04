@@ -3,7 +3,7 @@ import { PasswordSecurityCard } from "@/components/profile/PasswordSecurityCard"
 import { DeleteAccountButton } from "@/components/profile/DeleteAccountButton";
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus, MapPin, Shield, FileText } from "lucide-react";
+import { User, Mail, CreditCard, Loader2, AlertCircle, LogOut, RefreshCw, Ticket, Bookmark, Search, ChevronRight, Camera, ImageIcon, CalendarPlus, MapPin, Shield, FileText, LifeBuoy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -413,10 +413,18 @@ export function ProfileSettings({ profile, onProfileUpdate }: ProfileSettingsPro
           </Link>
           <Link
             to="/termos/participante"
-            className="flex items-center gap-3 px-4 py-3 hover:bg-card/70 transition-colors"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-card/70 transition-colors border-b border-border/60"
           >
             <FileText className="h-4 w-4 text-muted-foreground" />
             <span className="flex-1 text-sm text-foreground">Termos de Uso</span>
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </Link>
+          <Link
+            to="/suporte"
+            className="flex items-center gap-3 px-4 py-3 hover:bg-card/70 transition-colors"
+          >
+            <LifeBuoy className="h-4 w-4 text-muted-foreground" />
+            <span className="flex-1 text-sm text-foreground">Suporte</span>
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </Link>
         </div>

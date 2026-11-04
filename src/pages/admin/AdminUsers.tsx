@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { profileStatusForAction } from "@/lib/admin-user-status";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -149,7 +150,7 @@ export default function AdminUsers() {
   // Suspend/Ban user mutation
   const suspendMutation = useMutation({
     mutationFn: async ({ userId, action, reason }: { userId: string; action: "suspend" | "ban" | "activate"; reason?: string }) => {
-      const status = action === "activate" ? "active" : action;
+      const status = profileStatusForAction(action);
       
       const { error: profileError } = await supabase
         .from("profiles")

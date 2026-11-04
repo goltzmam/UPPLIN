@@ -120,7 +120,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         
         {/* Cover upload button */}
-        <label className="absolute top-2 right-2 cursor-pointer">
+        <label className="absolute top-[calc(var(--safe-top)_+_0.5rem)] right-2 cursor-pointer">
           <input
             type="file"
             accept="image/*"

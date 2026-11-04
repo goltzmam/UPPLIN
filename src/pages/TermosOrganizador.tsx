@@ -8,7 +8,7 @@ export default function TermosOrganizador() {
       metaDescription="Regras, comissões, repasses e obrigações para organizadores que publicam eventos na Upplin."
       canonical="https://www.upplin.com/termos/organizador"
       badge="Termos · Organizador"
-      updatedAt="07 de junho de 2026"
+      updatedAt="1 de novembro de 2026"
       backTo="/termos"
     >
       <LegalSection title="1. Objeto">
@@ -81,6 +81,9 @@ export default function TermosOrganizador() {
           A Upplin pode suspender eventos, remover conteúdos, congelar repasses ou encerrar a
           conta em caso de violação destes Termos, denúncias graves, fraude ou risco a
           consumidores. Repasses devidos serão liberados após análise.
+        </p>
+        <p>
+          A Upplin não tolera conteúdo ofensivo nem usuários abusivos. Denúncias são analisadas em até 24 horas; conteúdo que viole estes Termos é removido e a conta responsável pode ser suspensa ou banida.
         </p>
       </LegalSection>
 

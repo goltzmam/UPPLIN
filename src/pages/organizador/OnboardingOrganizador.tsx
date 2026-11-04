@@ -152,7 +152,7 @@ export default function OnboardingOrganizador() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
-      <div className="bg-card border-b border-border py-6">
+      <div className="bg-card border-b border-border py-6 pt-[calc(var(--safe-top)_+_1.5rem)]">
         <div className="container px-4">
           <div className="flex items-center gap-4 mb-6">
             <div

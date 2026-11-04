@@ -34,7 +34,7 @@ export function RoleSelector({
       </Helmet>
 
       <main className="min-h-[100dvh] bg-background text-foreground lg:ml-[72px]">
-        <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 lg:py-12">
+        <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 pt-[calc(var(--safe-top)_+_1.5rem)] lg:py-12 lg:pt-[calc(var(--safe-top)_+_3rem)]">
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
