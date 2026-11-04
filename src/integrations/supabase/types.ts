@@ -359,6 +359,7 @@ export type Database = {
           created_at: string
           event_id: string
           id: string
+          moderation_status: string
           parent_id: string | null
           updated_at: string
           user_id: string
@@ -368,6 +369,7 @@ export type Database = {
           created_at?: string
           event_id: string
           id?: string
+          moderation_status?: string
           parent_id?: string | null
           updated_at?: string
           user_id: string
@@ -377,6 +379,7 @@ export type Database = {
           created_at?: string
           event_id?: string
           id?: string
+          moderation_status?: string
           parent_id?: string | null
           updated_at?: string
           user_id?: string

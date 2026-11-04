@@ -331,7 +331,11 @@ export default function OrganizadorLogin() {
             Entrar com Google
           </Button>
           <AppleSignInButton redirectTo={buildPublicAppUrl("/organizador/onboarding")} disabled={loading || googleLoading} />
-
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            Ao continuar, você concorda com os{" "}
+            <Link to="/termos/organizador" className="underline hover:text-foreground">Termos de Uso</Link> e a{" "}
+            <Link to="/privacidade/organizador" className="underline hover:text-foreground">Política de Privacidade</Link>.
+          </p>
 
           {/* Footer Links */}
           <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-border text-center space-y-2 sm:space-y-3">

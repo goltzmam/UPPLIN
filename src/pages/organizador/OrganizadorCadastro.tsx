@@ -588,6 +588,11 @@ export default function OrganizadorCadastro() {
                     Cadastrar com Google
                   </Button>
           <AppleSignInButton redirectTo={buildPublicAppUrl("/organizador/onboarding")} disabled={loading || googleLoading} />
+                  <p className="text-xs text-muted-foreground text-center">
+                    Ao continuar com Google ou Apple, você concorda com os{" "}
+                    <Link to="/termos/organizador" className="underline hover:text-foreground">Termos de Uso</Link> e a{" "}
+                    <Link to="/privacidade/organizador" className="underline hover:text-foreground">Política de Privacidade</Link>.
+                  </p>
                 </motion.form>
               )}
 
@@ -725,6 +730,11 @@ export default function OrganizadorCadastro() {
                       )}
                     </Button>
                   </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Ao continuar, você concorda com os{" "}
+                    <Link to="/termos/organizador" className="underline hover:text-foreground">Termos de Uso</Link> e a{" "}
+                    <Link to="/privacidade/organizador" className="underline hover:text-foreground">Política de Privacidade</Link>.
+                  </p>
                 </motion.form>
               )}
             </AnimatePresence>

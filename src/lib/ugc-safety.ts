@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
-export type ReportKind = "post" | "comment" | "profile" | "review";
+export type ReportKind = "post" | "comment" | "profile" | "review" | "event_comment";
 export const REPORT_REASONS = [
   ["sexual", "Conteúdo sexual ou exploração"], ["violence", "Violência ou ameaça"],
   ["hate", "Discurso de ódio"], ["harassment", "Assédio ou intimidação"],
