@@ -20,9 +20,9 @@ const channels = [
   {
     icon: Phone,
     title: "Telefone",
-    value: "(85) 92010-3399",
+    value: "(85) 2010-3399",
     description: "Seg a Sex, 9h às 18h (BRT)",
-    href: "tel:+5585920103399",
+    href: "tel:+558520103399",
   },
 ];
 

@@ -433,9 +433,9 @@ export default function AssinaturasContent() {
             </a>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <a href="tel:+5585920103399">
+            <a href="tel:+558520103399">
               <Phone className="h-4 w-4 mr-2" />
-              (85) 92010-3399
+              (85) 2010-3399
             </a>
           </Button>
           <Button variant="outline" size="sm" asChild>
