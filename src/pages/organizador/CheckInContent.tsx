@@ -65,15 +65,24 @@ export default function CheckInContent() {
         .from("tickets")
         .select(`
           *,
-          ticket_types(name),
-          profiles:buyer_user_id(full_name, email)
+          ticket_types(name)
         `)
         .eq("event_id", selectedEvent)
         .order("issued_at", { ascending: false });
       if (error) throw error;
-      return data || [];
+      const { data: leads } = await supabase.rpc("get_organizer_leads", {
+        p_organizer_id: organizer.id,
+      });
+      const buyers = new Map<string, { full_name: string | null; email: string | null }>();
+      (leads || []).forEach((l: any) =>
+        buyers.set(l.buyer_user_id, { full_name: l.full_name, email: l.email })
+      );
+      return (data || []).map((t: any) => ({
+        ...t,
+        profiles: buyers.get(t.buyer_user_id) ?? null,
+      }));
     },
-    enabled: !!selectedEvent,
+    enabled: !!selectedEvent && !!organizer,
   });
 
   const { data: ticketStats, refetch: refetchStats } = useQuery({
