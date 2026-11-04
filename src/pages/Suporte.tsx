@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Mail, MessageCircle, Phone, HelpCircle, Clock, Shield, FileText, Sparkles } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { BackBar } from "@/components/legal/BackBar";
 
 const channels = [
   {
@@ -29,6 +30,7 @@ const channels = [
 export default function Suporte() {
   return (
     <div className="min-h-screen bg-background text-foreground lg:ml-[72px] pb-24 lg:pb-12">
+      <BackBar fallback="/" sidebarGap />
       <Helmet>
         <title>Suporte UPPLIN — Fale com a gente</title>
         <meta
