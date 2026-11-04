@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { BackBar } from "@/components/legal/BackBar";
 import { Button } from "@/components/ui/button";
 export default function ExcluirConta() {
   const [status, setStatus] = useState<string | null>(null);
@@ -18,8 +19,8 @@ export default function ExcluirConta() {
     };
     void poll();return () => { active = false;clearTimeout(timer); };
   }, []);
-  return <main className="min-h-[100dvh] bg-background text-foreground px-5 py-12"><Helmet><title>Excluir sua conta no UPPLIN</title><meta name="description" content="Como excluir sua conta UPPLIN pelo aplicativo ou por email. Saiba quais dados são apagados e quais registros têm retenção legal." /><link rel="canonical" href="https://www.upplin.com/excluir-conta" /></Helmet>
-    <article className="max-w-3xl mx-auto space-y-7 leading-relaxed">
+  return <main className="min-h-[100dvh] bg-background text-foreground pb-12"><BackBar fallback="/" /><Helmet><title>Excluir sua conta no UPPLIN</title><meta name="description" content="Como excluir sua conta UPPLIN pelo aplicativo ou por email. Saiba quais dados são apagados e quais registros têm retenção legal." /><link rel="canonical" href="https://www.upplin.com/excluir-conta" /></Helmet>
+    <article className="max-w-3xl mx-auto px-5 pt-6 space-y-7 leading-relaxed">
       <Link to="/" className="text-primary font-bold text-2xl">UPPLIN</Link><h1 className="text-3xl font-bold">Excluir sua conta no UPPLIN</h1><p>Esta página é do app UPPLIN, da UPPLIN LTDA.</p>
       {status && <section role="status" className="rounded-xl border border-primary/40 p-5"><h2 className="font-semibold text-xl">{status === "completed" ? "Sua conta foi excluída" : "Solicitação de exclusão recebida"}</h2><p>{status === "completed" ? "O acesso à conta e os dados pessoais associados foram excluídos. Os registros com retenção legal seguem os prazos descritos nesta página." : "Estamos processando a exclusão. A conclusão ocorre em até 30 dias corridos, e avisaremos por email."}</p></section>}
       <section className="space-y-3"><h2 className="font-semibold text-xl">Como pedir</h2><p><strong>No app:</strong> Perfil → Configurações → Excluir conta, e confirme. No painel do organizador, acesse Configurações → Excluir conta.</p><p><strong>Sem o app:</strong> mande um email para <a className="text-primary underline" href="mailto:suporte@upplin.com?subject=Excluir%20minha%20conta">suporte@upplin.com</a>, a partir do email da sua conta, com o assunto “Excluir minha conta”. Respondemos em até <strong>2 dias úteis</strong>, concluímos a exclusão em até <strong>30 dias corridos</strong> e avisamos por email quando terminar. Podemos pedir uma confirmação de identidade para proteger sua conta.</p></section>

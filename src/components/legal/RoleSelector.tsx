@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Users, Building2, Shield } from "lucide-react";
+import { BackBar } from "./BackBar";
+import { ArrowRight, Users, Building2, Shield } from "lucide-react";
 
 interface RoleSelectorProps {
   title: string;
@@ -34,16 +35,9 @@ export function RoleSelector({
       </Helmet>
 
       <main className="min-h-[100dvh] bg-background text-foreground lg:ml-[72px]">
-        <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 pt-[calc(var(--safe-top)_+_1.5rem)] lg:py-12 lg:pt-[calc(var(--safe-top)_+_3rem)]">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Voltar
-          </Link>
-
-          <header className="mt-6 mb-10 space-y-3">
+        <BackBar fallback="/" />
+        <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 pt-4 lg:py-12 lg:pt-8">
+          <header className="mt-2 mb-10 space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-xs text-muted-foreground">
               <Shield className="h-3.5 w-3.5" />
               Escolha seu perfil
