@@ -1,5 +1,6 @@
+import { SmartVideo } from "@/components/feed/SmartVideo";
 import { useEffect, useState } from "react";
-import { AlertCircle, PlayCircle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 interface PostMediaProps {
   mediaUrl: string;
@@ -53,22 +54,9 @@ export function PostMedia({
             />
           </>
         ) : (
-          <video
-            src={mediaUrl}
-            className={`h-full w-full bg-black object-contain ${className}`.trim()}
-            controls
-            playsInline
-            preload="metadata"
-            onError={() => setHasError(true)}
-          />
+          <SmartVideo src={mediaUrl} fit="contain" label={alt} className={`h-full w-full ${className}`} />
         )}
 
-        {!hasError && mediaType === "video" && (
-          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-1 rounded-full border border-border bg-background/85 px-2 py-1 text-[11px] font-medium text-foreground shadow-soft">
-            <PlayCircle className="h-3.5 w-3.5 text-primary" />
-            Vídeo
-          </div>
-        )}
       </div>
     </div>
   );

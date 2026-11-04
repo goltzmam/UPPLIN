@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog,
@@ -195,6 +196,8 @@ export function PhotoEditorDialog({
         type: blob.type,
       });
       await onConfirm(edited);
+    } catch {
+      toast.error("Não foi possível salvar a imagem. Verifique o arquivo e tente novamente.");
     } finally {
       setIsExporting(false);
     }

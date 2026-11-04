@@ -35,21 +35,23 @@ try:
  order=rest('/rest/v1/orders',{'event_id':event['id'],'buyer_user_id':users[0],'status':'paid','total_cents':0})[0];orders.append(order['id'])
  ticket_type=rest('/rest/v1/ticket_types',{'event_id':event['id'],'name':'Ingresso técnico','quantity_total':10,'price_cents':0})[0]
  rest('/rest/v1/tickets',{'order_id':order['id'],'event_id':event['id'],'ticket_type_id':ticket_type['id'],'buyer_user_id':users[0],'status':'used','used_at':'2026-10-31T12:00:00Z'})
- review=rest('/rest/v1/event_reviews',{'event_id':event['id'],'user_id':users[0],'rating':5,'comment':'Conteúdo sexual explícito — exemplo técnico'},token=a)[0]
- assert review['moderation_status']=='pending' and rest('/rest/v1/event_reviews?id=eq.'+review['id'],token=b)==[]
+ denied(lambda:rest('/rest/v1/event_reviews',{'event_id':event['id'],'user_id':users[0],'rating':5,'comment':'Conteúdo sexual explícito — exemplo técnico'},token=a))
+ review=rest('/rest/v1/event_reviews',{'event_id':event['id'],'user_id':users[0],'rating':5,'comment':'Experiência de teste'},token=a)[0]
+ assert review['moderation_status']=='approved'
  rest('/rest/v1/rpc/review_ugc',{'p_kind':'review','p_id':review['id'],'p_action':'approve'},token=staff)
  assert rest('/rest/v1/event_reviews?id=eq.'+review['id'],token=b)
  cid=rest('/rest/v1/rpc/start_chat',{'p_type':'user_organizer','p_event_id':event['id']},token=a);convs.append(cid)
  rest('/rest/v1/messages',{'conversation_id':cid,'sender_id':users[0],'content':'Mensagem técnica de verificação'},token=a)
  post=rest('/rest/v1/user_posts',{'user_id':users[1],'content':'Publicação de verificação','media_url':'https://www.upplin.com/pwa-192x192.png','media_type':'image','moderation_status':'approved'},token=b)[0];posts.append(post['id'])
- assert post['moderation_status']=='pending';assert rest('/rest/v1/user_posts?id=eq.'+post['id'],token=a)==[];assert rest('/rest/v1/user_posts?id=eq.'+post['id'],token=anon)==[]
- denied(lambda:rest('/rest/v1/user_posts?id=eq.'+post['id'],{'moderation_status':'approved'},token=b,method='PATCH'))
+ assert post['moderation_status']=='approved';assert rest('/rest/v1/user_posts?id=eq.'+post['id'],token=a);assert rest('/rest/v1/user_posts?id=eq.'+post['id'],token=anon)
+ denied(lambda:rest('/rest/v1/user_posts?id=eq.'+post['id'],{'moderation_status':'hidden'},token=b,method='PATCH'))
  denied(lambda:rest('/rest/v1/rpc/review_ugc',{'p_kind':'post','p_id':post['id'],'p_action':'approve'},token=a))
  denied(lambda:rest('/rest/v1/rpc/moderation_queue',{},token=a))
  rest('/rest/v1/rpc/review_ugc',{'p_kind':'post','p_id':post['id'],'p_action':'approve'},token=staff)
  assert rest('/rest/v1/user_posts?id=eq.'+post['id'],token=a)
- c=rest('/rest/v1/user_post_comments',{'post_id':post['id'],'user_id':users[0],'content':'Exemplo técnico: conteúdo sexual explícito','moderation_status':'approved'},token=a)[0]
- assert c['moderation_status']=='pending';assert rest('/rest/v1/user_post_comments?id=eq.'+c['id'],token=b)==[]
+ denied(lambda:rest('/rest/v1/user_post_comments',{'post_id':post['id'],'user_id':users[0],'content':'Exemplo técnico: conteúdo sexual explícito'},token=a))
+ c=rest('/rest/v1/user_post_comments',{'post_id':post['id'],'user_id':users[0],'content':'Comentário de teste','moderation_status':'approved'},token=a)[0]
+ assert c['moderation_status']=='approved';assert rest('/rest/v1/user_post_comments?id=eq.'+c['id'],token=b)
  rest('/rest/v1/rpc/review_ugc',{'p_kind':'comment','p_id':c['id'],'p_action':'approve'},token=staff)
  assert rest('/rest/v1/user_post_comments?id=eq.'+c['id'],token=b)
  ids=[]
@@ -62,7 +64,7 @@ try:
  rest('/rest/v1/rpc/review_ugc',{'p_kind':'post','p_id':post['id'],'p_action':'hide','p_report_id':ids[0],'p_note':'Verificação concluída'},token=staff)
  assert rest('/rest/v1/user_posts?id=eq.'+post['id'],token=a)==[]
  rest('/rest/v1/rpc/review_ugc',{'p_kind':'post','p_id':post['id'],'p_action':'approve'},token=staff)
- print('UGC filter and review: pending media/text withheld, status bypass rejected, authorized approval/hide and all report types passed.',flush=True)
+ print('UGC filter and review: immediate media publication, prohibited text rejected, status bypass rejected, authorized approval/hide and all report types passed.',flush=True)
  denied(lambda:rest('/rest/v1/rpc/set_user_block',{'p_user_id':users[0],'p_blocked':True},token=a))
  denied(lambda:rest('/rest/v1/rpc/set_user_block',{'p_user_id':users[2],'p_blocked':True},token=a))
  rest('/rest/v1/rpc/set_user_block',{'p_user_id':users[1],'p_blocked':True},token=a)
@@ -78,13 +80,13 @@ try:
  print('Blocking: bilateral content/profile hiding, two-way message rejection, chat-start rejection, preserved orders and unblock passed.',flush=True)
  # Profile filtering also applies to Auth-triggered initial names.
  rest('/rest/v1/profiles?id=eq.'+users[0],{'photo_url':'https://www.upplin.com/pwa-192x192.png'},token=a,method='PATCH')
- masked=rest('/rest/v1/profiles_public?id=eq.'+users[0],token=b)[0];assert masked['photo_url'] is None
+ masked=rest('/rest/v1/profiles_public?id=eq.'+users[0],token=b)[0];assert masked['photo_url'] is not None
  identities=rest('/rest/v1/rpc/get_chat_identities',{'p_conversation_ids':[cid]},token=b)
- assert next(p for p in identities if p['user_id']==users[0])['photo_url'] is None
- assert any(p['kind']=='profile' and p['id']==users[0] for p in rest('/rest/v1/rpc/moderation_queue',{},token=staff)['pending'])
+ assert next(p for p in identities if p['user_id']==users[0])['photo_url'] is not None
+ assert not any(p['kind']=='profile' and p['id']==users[0] for p in rest('/rest/v1/rpc/moderation_queue',{},token=staff)['pending'])
  rest('/rest/v1/rpc/review_ugc',{'p_kind':'profile','p_id':users[0],'p_action':'approve'},token=staff)
  assert rest('/rest/v1/profiles_public?id=eq.'+users[0],token=b)[0]['photo_url']
- print('Profile media pending/approved visibility passed.',flush=True)
+ print('Profile media publishes without prior approval; support controls preserved.',flush=True)
  support_conv=rest('/rest/v1/conversations',{'type':'user_admin','participant_1_id':users[0],'participant_2_id':users[2]})[0]['id'];convs.append(support_conv)
  rest('/rest/v1/profiles?id=eq.'+users[0],{'moderation_status':'hidden'},method='PATCH')
  rest('/rest/v1/messages',{'conversation_id':support_conv,'sender_id':users[0],'content':'Contato técnico com suporte da conta restrita'},token=a)

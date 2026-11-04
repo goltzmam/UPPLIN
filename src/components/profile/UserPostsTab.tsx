@@ -1,7 +1,8 @@
+import { MomentComposer } from "./MomentComposer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -10,7 +11,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageLoading } from "@/components/ui/loading";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Send, Trash2, MoreVertical, Loader2, Pencil } from "lucide-react";
+import { Camera, Trash2, MoreVertical, Loader2, Pencil } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
@@ -22,9 +23,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PostLikeButton } from "./PostLikeButton";
 import { PostComments } from "./PostComments";
-import { MentionInput, renderTextWithMentions } from "@/components/ui/mention-input";
+import { renderTextWithMentions } from "@/components/ui/mention-input";
 import { PostMedia } from "./PostMedia";
-import { createUserPost, deleteUserPost, getPostMediaValidationError, invalidateSocialQueries } from "@/lib/social-posts";
+import { deleteUserPost, invalidateSocialQueries } from "@/lib/social-posts";
 interface UserPost {
   id: string;
   user_id: string;
@@ -49,16 +50,9 @@ export function UserPostsTab() {
   const [editingPost, setEditingPost] = useState<UserPost | null>(null);
   const [editContent, setEditContent] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
-  const [content, setContent] = useState("");
-  const [mediaUrl, setMediaUrl] = useState<string | null>(null);
-  const [mediaType, setMediaType] = useState<"image" | "video" | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isCreating, setIsCreating] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [submittingPost, setSubmittingPost] = useState(false);
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [expandedComments, setExpandedComments] = useState<Set<string>>(new Set());
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Navigate to organizer profile when mention is clicked
   const handleMentionClick = (slug: string) => {
@@ -86,39 +80,6 @@ export function UserPostsTab() {
     },
     enabled: !!user,
   });
-
-  const resetComposer = () => {
-    setContent("");
-    setMediaUrl(previous => { if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous); return null; });
-    setMediaType(null);
-    setSelectedFile(null);
-    setIsCreating(false);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  };
-
-  const handleCreatePost = async () => {
-    if (!user || submittingPost) return;
-
-    setSubmittingPost(true);
-
-    try {
-      const post = await createUserPost({
-        userId: user.id,
-        content,
-        file: selectedFile,
-      });
-
-      await invalidateSocialQueries(queryClient, user.id);
-      resetComposer();
-      toast.success(post.moderation_status === "pending" ? "Publicação em análise. O suporte revisará antes de ficar pública." : "Publicação criada.");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Não foi possível publicar o post.");
-    } finally {
-      setSubmittingPost(false);
-    }
-  };
 
   const handleDeletePost = async (postId: string) => {
     if (!user || deletingPostId) return;
@@ -150,28 +111,6 @@ export function UserPostsTab() {
     finally { setSavingEdit(false); }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const validationError = getPostMediaValidationError(file);
-    if (validationError) {
-      toast.error(validationError);
-      return;
-    }
-
-    try {
-      setUploading(true);
-      setSelectedFile(file);
-      setMediaUrl(previous => { if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous); return URL.createObjectURL(file); });
-      setMediaType(file.type.startsWith("image/") ? "image" : "video");
-    } catch (error) {
-      console.error("Upload error:", error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
   if (isLoading) return <PageLoading />;
   if (isError) return <div role="alert" className="p-4 space-y-3 text-center"><p>Não foi possível carregar seus posts.</p><Button variant="outline" onClick={() => void refetch()}>Tentar novamente</Button></div>;
 
@@ -183,109 +122,11 @@ export function UserPostsTab() {
           <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={savingEdit} onClick={() => setEditingPost(null)}>Cancelar</Button><Button type="button" disabled={savingEdit || (!editContent.trim() && !editingPost?.media_url)} onClick={() => void saveEdit()}>Salvar alterações</Button></div>
         </DialogContent>
       </Dialog>
-      {/* Create Post Card */}
-      <Card className="bg-card border-border">
-        <CardContent className="p-4">
-          {isCreating ? (
-            <div className="space-y-4">
-              <MentionInput
-                placeholder="O que você está pensando? Use @ para marcar organizadores"
-                value={content}
-                onChange={setContent}
-                className="bg-background border-border"
-                minHeight="100px"
-              />
-
-              {mediaUrl && (
-                <div className="relative">
-                  <PostMedia
-                    mediaUrl={mediaUrl}
-                    mediaType={mediaType}
-                    alt="Preview"
-                  />
-                  <Button
-                    size="icon"
-                    variant="destructive"
-                    className="absolute top-2 right-2"
-                    onClick={() => {
-                      setMediaUrl(previous => { if (previous?.startsWith("blob:")) URL.revokeObjectURL(previous); return null; });
-                      setMediaType(null);
-                      setSelectedFile(null);
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                      accept="image/*,video/mp4,video/webm,video/ogg"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    disabled={uploading}
-                  />
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                  >
-                    {uploading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Camera className="h-4 w-4" />
-                      )}
-                      Mídia
-                  </Button>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      resetComposer();
-
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    size="sm"
-                    className="btn-gradient gap-2"
-                    onClick={handleCreatePost}
-                    disabled={submittingPost || (!content.trim() && !selectedFile)}
-                  >
-                    {submittingPost ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                    Publicar
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div
-              className="flex items-center gap-3 cursor-pointer"
-              onClick={() => setIsCreating(true)}
-            >
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={profile?.photo_url || undefined} />
-                <AvatarFallback className="bg-primary/20 text-primary">
-                  {profile?.full_name?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 px-4 py-2 bg-muted rounded-full text-muted-foreground text-sm">
-                Compartilhe algo...
-              </div>
-              <Camera className="h-5 w-5 text-muted-foreground" />
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <MomentComposer open={isCreating} onOpenChange={setIsCreating} />
+      <button type="button" onClick={() => setIsCreating(true)} className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-4 text-left">
+        <Avatar className="h-10 w-10 shrink-0"><AvatarImage src={profile?.photo_url || undefined} /><AvatarFallback>{profile?.full_name?.charAt(0) || "U"}</AvatarFallback></Avatar>
+        <span className="min-w-0 flex-1 rounded-full bg-muted px-4 py-3 text-sm text-muted-foreground">Compartilhe um momento...</span><Camera className="h-5 w-5 shrink-0 text-muted-foreground" />
+      </button>
 
       {/* Posts List */}
       {posts.length === 0 ? (
@@ -347,7 +188,6 @@ export function UserPostsTab() {
                   </DropdownMenu>
                 </div>
 
-                {post.moderation_status === "pending" && <p className="mb-3 text-xs text-amber-400">Em análise pelo suporte · visível apenas para você</p>}
                 {post.moderation_status === "hidden" && <p className="mb-3 text-xs text-muted-foreground">Oculto pelo suporte · revise o conteúdo ou entre em contato.</p>}
                 {post.content && (
                   <p className="text-sm mb-3 whitespace-pre-wrap break-words">

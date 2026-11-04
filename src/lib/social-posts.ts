@@ -2,7 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const MAX_POST_MEDIA_SIZE = 50 * 1024 * 1024;
-const SUPPORTED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg"];
+const SUPPORTED_VIDEO_TYPES = ["video/mp4", "video/webm", "video/ogg", "video/quicktime"];
 
 export function getPostMediaValidationError(file: File) {
   if (file.size > MAX_POST_MEDIA_SIZE) {
@@ -17,11 +17,8 @@ export function getPostMediaValidationError(file: File) {
     return null;
   }
 
-  if (file.type === "video/quicktime") {
-    return "Vídeos .mov não são suportados. Use MP4 ou WebM.";
-  }
 
-  return "Formato de mídia não suportado. Envie imagem ou vídeo MP4/WebM.";
+  return "Formato de mídia não suportado. Envie imagem ou vídeo MP4, MOV ou WebM.";
 }
 
 export async function uploadUserPostMedia(userId: string, file: File) {
@@ -97,7 +94,7 @@ export async function createUserPost({
 
   if (error) {
     if (storagePath) await supabase.storage.from("user-posts").remove([storagePath]);
-    throw new Error("Não foi possível publicar agora. Tente novamente.");
+    throw new Error(error.code === "23514" ? "Revise o texto: ele contém conteúdo que não é permitido na UPPLIN." : "Não foi possível publicar agora. Tente novamente.");
   }
 
   return data;

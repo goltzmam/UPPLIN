@@ -8,15 +8,14 @@ Cada denúncia tem motivo, detalhes opcionais, evidência disponível no momento
 
 A equipe precisa acompanhar a fila e tomar as medidas dentro do prazo operacional. O código não substitui atendimento humano e não garante aprovação pelas lojas. Cada denúncia nova gera uma notificação no aplicativo e um email para as contas administrativas, com o link da fila. Denúncia repetida do mesmo usuário sobre o mesmo alvo aberto não gera novo alerta. Se o alerta falhar, a denúncia continua registrada; o alerta avisa, mas não substitui o acompanhamento da fila.
 
-## Filtro e aprovação
+## Publicação imediata e filtro (atualização de 04/11/2026)
 
-Texto passa por triagem lexical no banco, incluindo normalização de caixa, acentos e caracteres de compatibilidade. Termos sinalizados ficam pendentes. Isso não é classificação semântica por IA e não identifica todas as formas possíveis de abuso; denúncias e revisão humana complementam o filtro.
+Após aplicar a migração 20261104200000_instant_social_publication, deixa de haver aprovação prévia de conteúdo social comum. Fotos, vídeos, capas e logos não exigem revisão antes de aparecer. O filtro lexical normaliza caixa, acentos e caracteres de compatibilidade; texto proibido é rejeitado automaticamente com mensagem em português. Isso não é classificação semântica por IA: denúncias e atendimento humano continuam necessários.
 
-Fotos, vídeos, capas e logos novos/alterados aguardam aprovação. Conteúdo pendente só fica completo para o autor e o suporte. Perfis públicos recebem apresentação neutra durante a análise. Uma atualização não permite ao autor se autoaprovar ou publicar de novo um conteúdo ocultado sem revisão. Eventos continuam na fila de aprovação de eventos já existente; alterações por API também precisam respeitar essa revisão.
+O usuário não pode alterar diretamente seu estado de moderação ou restaurar conteúdo ocultado. Conteúdo anteriormente pendente e permitido é liberado, exceto conteúdos/autores com denúncias abertas e registros ocultos. Eventos continuam com a fila editorial já existente, sem alteração de pagamentos ou taxas.
 
-Avaliações de eventos também podem ser denunciadas e entram na triagem de texto. Avaliações pendentes/ocultas não participam da média exibida. Comentários de eventos seguem a mesma regra: entram na triagem de texto, podem ser denunciados e aparecem na fila como Comentário do evento.
+Avaliações e comentários de eventos também podem ser denunciados; conteúdo oculto não participa da média exibida. O suporte mantém as ferramentas de análise e ocultação após publicação. Arquivos continuam com caminhos únicos e proteção contra substituição de um endereço referenciado.
 
-Abra todas as mídias, confira texto/nome/capa/logo e só então aprove. Arquivos têm URLs imutáveis: uma mídia revisada não pode ser substituída no mesmo endereço, inclusive por apagar e reenviar. Uploads de avatar/capa/logo usam novos nomes. O filtro não altera permissões de pagamento nem acrescenta taxas.
 
 ## Bloqueios
 

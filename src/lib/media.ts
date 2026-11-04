@@ -15,40 +15,12 @@ function stopMediaElement(el: HTMLMediaElement) {
   } catch {
     // ignore
   }
-
-  try {
-    // If it was playing a MediaStream
-    (el as any).srcObject = null;
-  } catch {
-    // ignore
-  }
-
-  try {
-    el.currentTime = 0;
-  } catch {
-    // ignore
-  }
-
-  try {
-    el.removeAttribute("src");
-    // Some browsers keep decoders alive; load() forces teardown
-    el.load();
-  } catch {
-    // ignore
-  }
 }
 
 export function stopAllMediaPipelines() {
   if (typeof document === "undefined") return;
 
+  document.dispatchEvent(new Event("upplin:media-stop"));
   const els = Array.from(document.querySelectorAll<HTMLMediaElement>("video, audio"));
-  for (const el of els) stopMediaElement(el);
-
-  // Double-tap: schedule another pass in case something re-attaches src on the same tick
-  if (typeof requestAnimationFrame !== "undefined") {
-    requestAnimationFrame(() => {
-      const again = Array.from(document.querySelectorAll<HTMLMediaElement>("video, audio"));
-      for (const el of again) stopMediaElement(el);
-    });
-  }
+  for (const el of els) { if (!el.hasAttribute("data-camera")) stopMediaElement(el); }
 }

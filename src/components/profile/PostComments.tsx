@@ -1,6 +1,8 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Link } from "react-router-dom";
 import { SafetyActions } from "@/components/safety/SafetyActions";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -66,7 +68,8 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
         .from("user_post_comments")
         .select("*")
         .eq("post_id", postId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .limit(100);
 
       if (error) throw error;
 
@@ -102,7 +105,7 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
     setIsSubmitting(true);
 
     try {
-      const { data: comment, error } = await supabase.from("user_post_comments").insert({
+      const { error } = await supabase.from("user_post_comments").insert({
         post_id: postId,
         user_id: user.id,
         content: newComment.trim(),
@@ -111,10 +114,10 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
       if (error) throw error;
 
       setNewComment("");
-      toast.success(comment?.moderation_status === "pending" ? "Comentário em análise antes de ficar público." : "Comentário publicado.");
+      toast.success("Comentário publicado.");
       await refreshComments();
     } catch (error) {
-      toast.error("Não foi possível publicar o comentário. Tente novamente.");
+      toast.error((error as { code?: string })?.code === "23514" ? "Revise o texto: ele contém conteúdo que não é permitido na UPPLIN." : "Não foi possível publicar o comentário. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -143,8 +146,23 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
     }
   };
 
+  const composer = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isExpanded) return;
+    const viewport = window.visualViewport;
+    const fit = () => {
+      const dialog = composer.current?.closest<HTMLElement>('[role="dialog"]');
+      if (dialog && viewport) {
+        dialog.style.height = `${Math.min(viewport.height - 16, 720)}px`;
+        dialog.style.setProperty("bottom", `${Math.max(0, window.innerHeight - viewport.offsetTop - viewport.height)}px`, "important");
+      }
+    };
+    fit(); viewport?.addEventListener("resize", fit); viewport?.addEventListener("scroll", fit);
+    return () => { viewport?.removeEventListener("resize", fit); viewport?.removeEventListener("scroll", fit); };
+  }, [isExpanded]);
+
   return (
-    <div className="flex-1 min-w-0">
+    <div className="shrink-0">
       <Button
         variant="ghost"
         size="sm"
@@ -156,105 +174,29 @@ export function PostComments({ postId, isExpanded, onToggle }: PostCommentsProps
         <span className="text-xs">{commentCount}</span>
       </Button>
 
-      {isExpanded && (
-        <div className="mt-3 space-y-4 rounded-xl border border-border bg-muted/20 p-3 sm:p-4">
-          {/* Comments List */}
-          {isLoading ? (
-            <div className="flex justify-center py-4">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : isError ? (
-            <div role="alert" className="space-y-2"><p className="text-sm">Não foi possível carregar os comentários.</p><Button size="sm" variant="outline" onClick={() => void refetch()}>Tentar novamente</Button></div>
-          ) : comments.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              Seja o primeiro a comentar!
-            </p>
-          ) : (
-            <div className="space-y-3 max-h-60 overflow-y-auto">
-              {comments.map((comment) => (
-                <div key={comment.id} className="flex gap-2 group">
-                  <Avatar className="h-7 w-7 flex-shrink-0">
-                    <AvatarImage src={comment.profile?.photo_url || undefined} />
-                    <AvatarFallback className="text-xs bg-primary/20 text-primary">
-                      {comment.profile?.full_name?.charAt(0) || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    {comment.moderation_status === "pending" && <p className="text-xs text-amber-400">Em análise pelo suporte · visível apenas para você</p>}
-                    {comment.moderation_status === "hidden" && <p className="text-xs text-muted-foreground">Oculto pelo suporte</p>}
-                    <div className="bg-muted rounded-lg px-3 py-2">
-                      <p className="text-xs font-medium break-words">
-                        {comment.profile?.full_name || "Usuário"}
-                      </p>
-                      <p className="text-sm break-words">
-                        {renderTextWithMentions(comment.content, handleMentionClick)}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground">
-                        {formatDistanceToNow(new Date(comment.created_at), {
-                          addSuffix: true,
-                          locale: ptBR,
-                        })}
-                      </span>
-                      {comment.user_id === user?.id && (
-                        <button
-                          onClick={() => handleDeleteComment(comment.id)}
-                          disabled={deletingCommentId === comment.id}
-                          className="text-xs text-destructive min-h-9 px-1"
-                        >
-                          Excluir
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                  <SafetyActions kind="comment" targetId={comment.id} userId={comment.user_id} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Add Comment Form */}
-          {user && (
-            <div className="flex items-start gap-2 pt-2">
-              <Avatar className="h-7 w-7 flex-shrink-0">
-                <AvatarImage src={profile?.photo_url || undefined} />
-                <AvatarFallback className="text-xs bg-primary/20 text-primary">
-                  {profile?.full_name?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex min-w-0 flex-1 items-end gap-2">
-                <MentionInput
-                  placeholder="Escreva um comentário... Use @ para marcar"
-                  value={newComment}
-                  onChange={setNewComment}
-                  className="min-w-0 text-sm bg-muted border-0"
-                  minHeight="36px"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      if (newComment.trim()) handleAddComment();
-                    }
-                  }}
-                />
-                <Button
-                  size="icon"
-                  aria-label="Enviar comentário"
-                  className="h-9 w-9 flex-shrink-0 self-end btn-gradient"
-                  onClick={handleAddComment}
-                  disabled={!newComment.trim() || isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <Send className="h-4 w-4" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+      <Dialog open={isExpanded} onOpenChange={open => { if (open !== isExpanded) onToggle(); }}>
+        <DialogContent className="!fixed !left-0 !top-auto !bottom-0 !flex h-[min(82dvh,720px)] !w-full !max-w-none !translate-x-0 !translate-y-0 !flex-col gap-0 overflow-hidden rounded-t-3xl border-b-0 p-0 sm:!left-1/2 sm:!w-[min(100%-2rem,560px)] sm:!max-w-[560px] sm:!-translate-x-1/2 sm:rounded-2xl sm:border-b">
+          <DialogHeader className="shrink-0 border-b border-border px-5 py-4 text-left">
+            <div className="mx-auto mb-2 h-1 w-10 rounded-full bg-white/20 sm:hidden" />
+            <DialogTitle className="text-center">{commentCount} {commentCount === 1 ? "comentário" : "comentários"}</DialogTitle>
+            <DialogDescription className="sr-only">Converse sobre esta publicação. Os comentários mais recentes aparecem primeiro.</DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-4 py-5">
+            {isLoading ? <div className="flex justify-center py-8"><Loader2 aria-label="Carregando comentários" className="h-5 w-5 animate-spin" /></div>
+              : isError ? <div role="alert" className="space-y-2 text-center"><p>Não foi possível carregar os comentários.</p><Button variant="outline" onClick={() => void refetch()}>Tentar novamente</Button></div>
+              : !comments.length ? <div className="flex h-full min-h-32 flex-col items-center justify-center gap-3 text-center"><MessageCircle className="h-10 w-10 text-muted-foreground/40" /><p className="font-semibold">Comece a conversa</p><p className="text-sm text-muted-foreground">Compartilhe sua opinião sobre esta publicação.</p></div>
+              : comments.map(comment => <div key={comment.id} className="flex items-start gap-3">
+                <Avatar className="h-9 w-9 shrink-0"><AvatarImage src={comment.profile?.photo_url || undefined} /><AvatarFallback>{comment.profile?.full_name?.charAt(0) || "U"}</AvatarFallback></Avatar>
+                <div className="min-w-0 flex-1"><p className="text-xs font-semibold text-muted-foreground">{comment.profile?.full_name || "Usuário"}</p><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed">{renderTextWithMentions(comment.content, handleMentionClick)}</p><div className="mt-2 flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground"><time>{formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ptBR })}</time>{comment.user_id === user?.id && <button type="button" className="min-h-8 text-muted-foreground hover:text-destructive" disabled={deletingCommentId === comment.id} onClick={() => void handleDeleteComment(comment.id)}>Excluir</button>}</div></div>
+                <SafetyActions kind="comment" targetId={comment.id} userId={comment.user_id} />
+              </div>)}
+          </div>
+          <div ref={composer} className="shrink-0 border-t border-border bg-background px-4 py-3 pb-[max(12px,var(--safe-bottom))]">
+            {user ? <div className="flex items-end gap-2"><Avatar className="mb-1 h-8 w-8 shrink-0"><AvatarImage src={profile?.photo_url || undefined} /><AvatarFallback>{profile?.full_name?.charAt(0) || "U"}</AvatarFallback></Avatar><div className="min-w-0 flex-1"><MentionInput suggestionsPosition="top" placeholder="Adicione um comentário..." value={newComment} onChange={setNewComment} disabled={isSubmitting} minHeight="44px" className="max-h-28 min-w-0 rounded-2xl border-border bg-muted/40 !text-base" onKeyDown={event => { if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) { event.preventDefault(); void handleAddComment(); } }} /></div><Button type="button" size="icon" aria-label="Enviar comentário" className="h-11 w-11 shrink-0 rounded-full btn-gradient" disabled={!newComment.trim() || isSubmitting} onClick={() => void handleAddComment()}>{isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</Button></div>
+              : <p className="py-2 text-center text-sm"><Link className="text-primary underline" to="/login">Entre na sua conta</Link> para comentar.</p>}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

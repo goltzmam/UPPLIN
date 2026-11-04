@@ -39,7 +39,7 @@ export function ProfileTabs({
               className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <Newspaper className="h-4 w-4" />
-              <span className="text-[9px]">Feed</span>
+              <span className="text-[9px]">Início</span>
             </TabsTrigger>
             <TabsTrigger 
               value="historico" 
@@ -53,14 +53,14 @@ export function ProfileTabs({
               className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <Camera className="h-4 w-4" />
-              <span className="text-[9px]">Posts</span>
+              <span className="text-[9px]">Publicações</span>
             </TabsTrigger>
             <TabsTrigger 
               value="checkins" 
               className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <CheckCircle className="h-4 w-4" />
-              <span className="text-[9px]">Check-ins</span>
+              <span className="text-[9px]">Presenças</span>
             </TabsTrigger>
             <TabsTrigger 
               value="seguindo" 
@@ -74,7 +74,7 @@ export function ProfileTabs({
               className="flex flex-col items-center gap-0.5 py-1.5 px-2.5 rounded-lg font-medium transition-all data-[state=active]:btn-gradient data-[state=active]:text-white data-[state=active]:shadow-sm text-muted-foreground hover:text-foreground"
             >
               <Settings className="h-4 w-4" />
-              <span className="text-[9px]">Config</span>
+              <span className="text-[9px]">Configurações</span>
             </TabsTrigger>
           </TabsList>
         </div>

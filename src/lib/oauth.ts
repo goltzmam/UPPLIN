@@ -5,26 +5,31 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { NATIVE_AUTH_CALLBACK, nativeAuthCode, safeAppPath } from "./native-auth-url";
 
+import { createCallbackProcessor } from "./oauth-callback";
+
 const RETURN_PATH = "upplin:oauth-return-path";
 let initialization: Promise<void> | undefined;
-let exchangingCode: string | undefined;
-
-async function handleNativeCallback(url: string) {
-  const code = nativeAuthCode(url);
-  if (!code || code === exchangingCode) return;
-  exchangingCode = code;
-  try {
+const processCallback = createCallbackProcessor({
+  exchange: async code => {
+    // A stale launch URL may be returned again after the web view reloads.
+    const { data } = await supabase.auth.getSession();
+    if (data.session && !localStorage.getItem(RETURN_PATH)) return false;
     const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (error) throw error;
+    return !error;
+  },
+  hasSession: async () => Boolean((await supabase.auth.getSession()).data.session),
+  complete: async () => {
     await Browser.close().catch(() => undefined);
     const path = safeAppPath(localStorage.getItem(RETURN_PATH));
     localStorage.removeItem(RETURN_PATH);
     window.location.replace(path);
-  } catch {
-    toast.error("Não foi possível concluir o login. Tente entrar novamente.");
-  } finally {
-    exchangingCode = undefined;
-  }
+  },
+  fail: () => toast.error("Não foi possível concluir o login. Tente entrar novamente."),
+});
+
+async function handleNativeCallback(url: string) {
+  const code = nativeAuthCode(url);
+  if (code) await processCallback(code);
 }
 
 export function initializeNativeAuth(): Promise<void> {

@@ -23,6 +23,7 @@ interface MentionInputProps {
   onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   disabled?: boolean;
   minHeight?: string;
+  suggestionsPosition?: "top" | "bottom";
 }
 
 export function MentionInput({
@@ -33,6 +34,7 @@ export function MentionInput({
   onKeyDown,
   disabled,
   minHeight = "100px",
+  suggestionsPosition = "bottom",
 }: MentionInputProps) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -210,7 +212,7 @@ export function MentionInput({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 right-0 top-full mt-1 z-50 bg-popover border border-border rounded-lg shadow-xl overflow-hidden"
+            className={cn("absolute left-0 right-0 z-50 bg-popover border border-border rounded-lg shadow-xl overflow-hidden", suggestionsPosition === "top" ? "bottom-full mb-1" : "top-full mt-1")}
           >
             {isLoading ? (
               <div className="flex items-center justify-center py-4">

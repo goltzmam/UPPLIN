@@ -1,3 +1,5 @@
+import { ProfilePhotoPicker } from "./ProfilePhotoPicker";
+import { PhotoEditorDialog } from "@/components/feed/PhotoEditorDialog";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Camera } from "lucide-react";
@@ -30,6 +32,8 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
   const { toast } = useToast();
   const navigate = useNavigate();
   
+  const [photoTarget, setPhotoTarget] = useState<"avatar" | "cover" | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [pendingAvatarFile, setPendingAvatarFile] = useState<File | null>(null);
@@ -40,9 +44,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
     return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
   };
 
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const uploadCoverFile = async (file: File) => {
 
     setUploadingCover(true);
     try {
@@ -62,7 +64,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
       await onProfileUpdate({ cover_photo_url: publicUrl } as any);
       toast({ title: "Capa atualizada!" });
     } catch (error: any) {
-      toast({ title: "Erro ao atualizar capa", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao atualizar capa", description: "Não foi possível enviar a imagem. Tente novamente.", variant: "destructive" });
     } finally {
       setUploadingCover(false);
     }
@@ -86,20 +88,11 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
       await onProfileUpdate({ photo_url: `${publicUrl}?t=${Date.now()}` });
       toast({ title: "Foto atualizada!" });
     } catch (error: any) {
-      toast({ title: "Erro ao atualizar foto", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao atualizar foto", description: "Não foi possível enviar a imagem. Tente novamente.", variant: "destructive" });
       throw error;
     } finally {
       setUploadingAvatar(false);
     }
-  };
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPendingAvatarFile(file);
-    setIsCropOpen(true);
-    e.target.value = "";
   };
 
   return (
@@ -108,33 +101,28 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
       animate={{ opacity: 1 }}
       className="relative w-full overflow-hidden"
     >
+      <ProfilePhotoPicker open={photoTarget !== null} onOpenChange={value => { if (!value) setPhotoTarget(null); }} onSelect={file => { if (photoTarget === "cover") setCoverFile(file); else { setPendingAvatarFile(file); setIsCropOpen(true); } }} />
+      <PhotoEditorDialog file={coverFile} open={!!coverFile} onOpenChange={value => { if (!value) setCoverFile(null); }} onConfirm={async file => { await uploadCoverFile(file); setCoverFile(null); }} />
       {/* Cover Photo */}
       <div className="relative h-28 sm:h-40 bg-gradient-to-br from-muted to-muted-foreground/20 overflow-hidden">
         {(profile as any).cover_photo_url && (
           <img
             src={(profile as any).cover_photo_url}
-            alt="Cover"
+            alt="Capa do perfil"
             className="absolute inset-0 w-full h-full object-cover"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 to-transparent" />
         
         {/* Cover upload button */}
-        <label className="absolute top-[calc(var(--safe-top)_+_0.5rem)] right-2 cursor-pointer">
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleCoverUpload}
-            disabled={uploadingCover}
-          />
+        <button type="button" aria-label="Alterar capa do perfil" className="absolute top-[calc(var(--safe-top)_+_0.5rem)] right-2" disabled={uploadingCover} onClick={() => setPhotoTarget("cover")}>
           <div className={cn(
             "h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm flex items-center justify-center text-foreground transition-colors hover:bg-background",
             uploadingCover && "animate-pulse"
           )}>
             <Camera className="h-4 w-4" />
           </div>
-        </label>
+        </button>
       </div>
 
       {/* Profile Info - Centered layout for mobile */}
@@ -144,7 +132,7 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
           <div className="relative">
             <div className="avatar-ring-gradient p-[3px] rounded-full">
               <Avatar className="h-20 w-20 sm:h-28 sm:w-28 border-4 border-background">
-                <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "User"} className="object-cover object-center" />
+                <AvatarImage src={profile.photo_url || undefined} alt={profile.full_name || "Usuário"} className="object-cover object-center" />
                 <AvatarFallback
                   className="text-xl sm:text-2xl font-bold text-accent-foreground"
                   style={{ backgroundImage: "var(--gradient-social)" }}
@@ -155,21 +143,14 @@ export function ProfileHeader({ profile, stats, onProfileUpdate }: ProfileHeader
             </div>
             
             {/* Avatar upload button */}
-            <label className="absolute bottom-0 right-0 cursor-pointer">
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-                disabled={uploadingAvatar}
-              />
+            <button type="button" aria-label="Alterar foto do perfil" className="absolute bottom-0 right-0" disabled={uploadingAvatar} onClick={() => setPhotoTarget("avatar")}>
               <div className={cn(
                 "h-7 w-7 rounded-full bg-background text-foreground border border-border flex items-center justify-center transition-transform hover:scale-110",
                 uploadingAvatar && "animate-pulse"
               )}>
                 <Camera className="h-3.5 w-3.5" />
               </div>
-            </label>
+            </button>
           </div>
 
           {/* Name and Email */}
