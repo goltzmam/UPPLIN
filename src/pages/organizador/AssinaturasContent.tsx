@@ -427,15 +427,15 @@ export default function AssinaturasContent() {
         </p>
         <div className="flex flex-wrap gap-3">
           <Button variant="outline" size="sm" asChild>
-            <a href="https://wa.me/558520103399?text=Olá! Preciso de ajuda com minha assinatura UPPLIN." target="_blank" rel="noopener noreferrer">
+            <a href="https://wa.me/5585920103399?text=Olá! Preciso de ajuda com minha assinatura UPPLIN." target="_blank" rel="noopener noreferrer">
               <MessageCircle className="h-4 w-4 mr-2" />
               WhatsApp
             </a>
           </Button>
           <Button variant="outline" size="sm" asChild>
-            <a href="tel:+558520103399">
+            <a href="tel:+5585920103399">
               <Phone className="h-4 w-4 mr-2" />
-              (85) 2010-3399
+              (85) 92010-3399
             </a>
           </Button>
           <Button variant="outline" size="sm" asChild>

@@ -180,7 +180,7 @@ export default function PoliticaPlano() {
         <div className="text-center space-y-4 py-6">
           <p className="text-sm text-muted-foreground">
             Dúvidas? Entre em contato pelo{" "}
-            <a href="https://wa.me/558520103399" target="_blank" rel="noopener noreferrer" className="text-primary underline">
+            <a href="https://wa.me/5585920103399" target="_blank" rel="noopener noreferrer" className="text-primary underline">
               WhatsApp
             </a>{" "}
             ou por{" "}
