@@ -30,7 +30,7 @@ const channels = [
 export default function Suporte() {
   return (
     <div className="min-h-screen bg-background text-foreground lg:ml-[72px] pb-24 lg:pb-12">
-      <BackBar fallback="/" />
+      <BackBar fallback="/" sidebarGap />
       <Helmet>
         <title>Suporte UPPLIN — Fale com a gente</title>
         <meta

@@ -35,7 +35,7 @@ export function RoleSelector({
       </Helmet>
 
       <main className="min-h-[100dvh] bg-background text-foreground lg:ml-[72px]">
-        <BackBar fallback="/" />
+        <BackBar fallback="/" sidebarGap />
         <div className="mx-auto w-full max-w-3xl px-4 py-6 pb-24 pt-4 lg:py-12 lg:pt-8">
           <header className="mt-2 mb-10 space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/40 px-3 py-1 text-xs text-muted-foreground">
